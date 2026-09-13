@@ -1,0 +1,26 @@
+# secrets
+.env
+.env.*
+!.env.example
+.vercel/
+
+# dependencies & build output
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
+# go
+/api/tmp/
+/api/bin/
+
+# local runtime data
+/deploy/data/
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/
+*.log

@@ -1,0 +1,21 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/werun-mockup",
+      "destination": "/werun-mockup.html"
+    },
+    {
+      "source": "/mockup",
+      "destination": "/werun-mockup.html"
+    },
+    {
+      "source": "/design",
+      "destination": "/werun-mockup.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    }
+  ]
+}

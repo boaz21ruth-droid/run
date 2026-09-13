@@ -1,0 +1,1883 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeRun - Run for a Brighter Tomorrow | Official Registration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<!-- Canvas Confetti for Celebration -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+  :root {
+    --primary: #0284C7;
+    --primary-hover: #0369A1;
+    --primary-light: #F0F9FF;
+    --primary-border: #BAE6FD;
+    --dark: #0F172A;
+    --slate: #334155;
+    --muted: #64748B;
+    --light-bg: #F8FAFC;
+    --card-border: #E2E8F0;
+    --radius-lg: 20px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 4px 20px rgba(2, 132, 199, 0.06);
+    --shadow-card: 0 8px 30px rgba(15, 23, 42, 0.05);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #F4F8FC;
+    color: var(--dark);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  a { text-decoration: none; color: inherit; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+  /* ================== Top Navigation Header ================== */
+  .site-header {
+    background: #FFFFFF;
+    border-bottom: 1px solid rgba(2, 132, 199, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0.85rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    cursor: pointer;
+  }
+  .brand-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0284C7, #38BDF8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+  }
+  .brand-text b {
+    display: block;
+    font-size: 1.45rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: #0284C7;
+    line-height: 1.1;
+  }
+  .brand-text b span { color: #0F172A; }
+  .brand-text small {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+  .nav-links button, .nav-links a {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--slate);
+    transition: color 0.15s;
+    padding: 0.2rem 0;
+  }
+  .nav-links button:hover, .nav-links a:hover, .nav-links .active {
+    color: var(--primary);
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+  }
+  .lang-picker {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--slate);
+    padding: 0.4rem 0.65rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--card-border);
+    background: #FFFFFF;
+    transition: all 0.15s;
+  }
+  .lang-picker:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+  .lang-dropdown {
+    position: absolute;
+    top: 110%;
+    right: 140px;
+    background: #FFFFFF;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    padding: 0.4rem;
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 140px;
+    z-index: 101;
+  }
+  .lang-dropdown.open { display: flex; }
+  .lang-opt {
+    padding: 0.45rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--slate);
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .lang-opt:hover, .lang-opt.active {
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+
+  .btn-login {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--slate);
+    padding: 0.5rem 1.1rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--card-border);
+    transition: all 0.15s;
+  }
+  .btn-login:hover {
+    background: #F1F5F9;
+    border-color: #CBD5E1;
+  }
+  .btn-signup {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    background: var(--primary);
+    padding: 0.55rem 1.3rem;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 3px 12px rgba(2, 132, 199, 0.3);
+    transition: all 0.15s;
+  }
+  .btn-signup:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+  }
+
+  /* ================== Hero Sky Section ================== */
+  .hero-sky {
+    background: linear-gradient(180deg, #DDF2FE 0%, #E8F5FD 40%, #F4F8FC 100%);
+    position: relative;
+    padding: 3.5rem 1.5rem 4.5rem;
+    border-bottom: 1px solid rgba(2, 132, 199, 0.08);
+  }
+  .hero-sky-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .hero-sky-text {
+    max-width: 38rem;
+    position: relative;
+    z-index: 2;
+  }
+  .hero-sky-h1 {
+    font-size: clamp(2.3rem, 4.8vw, 3.2rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    color: #0B2A4A;
+    line-height: 1.12;
+    margin-bottom: 0.6rem;
+  }
+  .hero-sky-sub {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #3B6B94;
+    letter-spacing: -0.01em;
+  }
+  .hero-sky-quote {
+    position: absolute;
+    right: 1.5rem;
+    top: 0.5rem;
+    text-align: right;
+    font-family: 'Caveat', cursive;
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: #0284C7;
+    line-height: 1.15;
+    transform: rotate(-3deg);
+  }
+
+  /* Background Skyline & Runners Graphic Silhouette */
+  .hero-silhouette-bg {
+    position: absolute;
+    right: 5%;
+    bottom: 0;
+    width: 520px;
+    height: 180px;
+    pointer-events: none;
+    opacity: 0.28;
+    background-image: radial-gradient(#0284C7 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
+
+  /* ================== 3-Column Main Layout ================== */
+  .main-container {
+    max-width: 1240px;
+    margin: -2.5rem auto 4rem;
+    padding: 0 1.5rem;
+    position: relative;
+    z-index: 10;
+  }
+  .layout-grid {
+    display: grid;
+    grid-template-columns: 210px 1fr 320px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media (max-width: 1080px) {
+    .layout-grid { grid-template-columns: 1fr 320px; }
+    .sidebar-left { display: none; }
+  }
+  @media (max-width: 820px) {
+    .layout-grid { grid-template-columns: 1fr; }
+    .sidebar-right { order: -1; }
+  }
+
+  /* ================== Left Sidebar Steps ================== */
+  .sidebar-left {
+    background: #FFFFFF;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--card-border);
+    padding: 1.75rem 1.25rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 580px;
+  }
+  .steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+    position: relative;
+  }
+  .steps-list::before {
+    content: "";
+    position: absolute;
+    left: 17px;
+    top: 20px;
+    bottom: 20px;
+    width: 2px;
+    background: #E2E8F0;
+    z-index: 1;
+  }
+  .step-node {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+  }
+  .step-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    border: 2px solid #CBD5E1;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .step-node.active .step-circle {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #FFFFFF;
+    box-shadow: 0 0 0 4px #BAE6FD;
+  }
+  .step-node.done .step-circle {
+    background: #10B981;
+    border-color: #10B981;
+    color: #FFFFFF;
+  }
+  .step-info {
+    margin-top: 2px;
+  }
+  .step-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--dark);
+    line-height: 1.2;
+    transition: color 0.15s;
+  }
+  .step-node:hover .step-name { color: var(--primary); }
+  .step-node:not(.active):not(.done) .step-name {
+    color: var(--muted);
+  }
+  .step-hint {
+    font-size: 0.74rem;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  .sidebar-quote-box {
+    margin-top: 2rem;
+    padding-top: 1.2rem;
+    border-top: 1px dashed #E2E8F0;
+  }
+  .sidebar-quote {
+    font-family: 'Caveat', cursive;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0284C7;
+    line-height: 1.2;
+  }
+
+  /* ================== Center Main Card ================== */
+  .center-card {
+    background: #FFFFFF;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--card-border);
+    padding: 2rem;
+    box-shadow: var(--shadow-card);
+    min-height: 580px;
+  }
+  .section-heading {
+    font-size: 1.55rem;
+    font-weight: 900;
+    color: #0F172A;
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.02em;
+  }
+  .section-sub {
+    font-size: 0.92rem;
+    color: var(--muted);
+    margin-bottom: 1.4rem;
+  }
+
+  /* Event Banner */
+  .event-banner-card {
+    background: linear-gradient(135deg, #F8FAFC 0%, #F0F9FF 100%);
+    border: 1px solid #BAE6FD;
+    border-radius: var(--radius-md);
+    padding: 0.9rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    margin-bottom: 1.6rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .date-badge {
+    background: #FFFFFF;
+    border: 1.5px solid #0284C7;
+    border-radius: 10px;
+    padding: 0.4rem 0.65rem;
+    text-align: center;
+    min-width: 62px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.12);
+  }
+  .date-badge-sun {
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: #0284C7;
+    text-transform: uppercase;
+    display: block;
+  }
+  .date-badge-day {
+    font-size: 1.45rem;
+    font-weight: 900;
+    color: #0F172A;
+    line-height: 1;
+    display: block;
+    margin: 1px 0;
+  }
+  .date-badge-mo {
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: block;
+  }
+  .event-banner-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .event-banner-title {
+    font-size: 1.12rem;
+    font-weight: 800;
+    color: #0F172A;
+    margin-bottom: 2px;
+  }
+  .event-banner-loc {
+    font-size: 0.82rem;
+    color: var(--slate);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-bottom: 2px;
+  }
+  .event-banner-tagline {
+    font-size: 0.78rem;
+    color: #0284C7;
+    font-style: italic;
+    font-weight: 600;
+  }
+  .event-banner-img {
+    width: 140px;
+    height: 70px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  @media (max-width: 640px) {
+    .event-banner-img { display: none; }
+  }
+
+  /* Form Labels */
+  .form-label {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #0F172A;
+    display: block;
+    margin-bottom: 0.6rem;
+  }
+
+  /* Distance Cards Grid */
+  .distance-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.6rem;
+  }
+  @media (max-width: 640px) {
+    .distance-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  .distance-card {
+    background: #FFFFFF;
+    border: 1.5px solid #E2E8F0;
+    border-radius: var(--radius-md);
+    padding: 1.1rem 0.6rem;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .distance-card:hover {
+    border-color: #0284C7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.1);
+  }
+  .distance-card.active {
+    border-color: #0284C7;
+    background: #F0F9FF;
+    box-shadow: 0 0 0 1px #0284C7;
+  }
+  .distance-card.active .check-badge {
+    display: flex;
+  }
+  .check-badge {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #0284C7;
+    color: #FFFFFF;
+    font-size: 0.7rem;
+    font-weight: 900;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4);
+  }
+  .dist-runner-ico {
+    width: 28px;
+    height: 28px;
+    margin: 0 auto 0.4rem;
+    color: #0284C7;
+  }
+  .dist-val-text {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: #0F172A;
+    display: block;
+    line-height: 1.1;
+  }
+  .dist-name-text {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--muted);
+    display: block;
+    margin-top: 3px;
+  }
+  .dist-price-tag {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #0284C7;
+    display: block;
+    margin-top: 0.4rem;
+  }
+
+  /* Category Radios */
+  .category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin-bottom: 1.6rem;
+  }
+  .category-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.8rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--slate);
+    transition: background 0.15s;
+  }
+  .category-item:hover {
+    background: #F8FAFC;
+  }
+  .category-item input[type="radio"] {
+    width: 1.15rem;
+    height: 1.15rem;
+    accent-color: #0284C7;
+    cursor: pointer;
+  }
+
+  /* T-Shirt Size Selector */
+  .size-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.6rem;
+  }
+  .size-guide-link {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #0284C7;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .size-pills {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+  .size-pill {
+    flex: 1;
+    min-width: 52px;
+    padding: 0.65rem 0.8rem;
+    border: 1.5px solid #CBD5E1;
+    border-radius: var(--radius-sm);
+    background: #FFFFFF;
+    color: #334155;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .size-pill:hover {
+    border-color: #0284C7;
+  }
+  .size-pill.active {
+    background: #F0F9FF;
+    border-color: #0284C7;
+    color: #0284C7;
+    box-shadow: 0 0 0 1px #0284C7;
+  }
+
+  /* Form Step Inputs */
+  .form-step-pane { display: none; }
+  .form-step-pane.active { display: block; }
+
+  .form-input-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 640px) {
+    .form-input-grid { grid-template-columns: 1fr; }
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #0F172A;
+  }
+  .form-group label span { color: #E11D48; }
+  .form-control {
+    background: #F8FAFC;
+    border: 1px solid #CBD5E1;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 0.92rem;
+    color: #0F172A;
+    outline: none;
+    transition: all 0.15s;
+    width: 100%;
+  }
+  .form-control:focus {
+    border-color: #0284C7;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  }
+
+  /* Submit & Back Actions */
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid #F1F5F9;
+  }
+  .btn-back {
+    background: #F1F5F9;
+    color: #475569;
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 0.8rem 1.6rem;
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.15s;
+  }
+  .btn-back:hover { background: #E2E8F0; color: #0F172A; }
+  .btn-next {
+    background: var(--primary);
+    color: #FFFFFF;
+    font-size: 1rem;
+    font-weight: 800;
+    padding: 0.85rem 2.4rem;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+    margin-left: auto;
+  }
+  .btn-next:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
+  }
+  .btn-next:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ================== Right Sticky Summary Card ================== */
+  .sidebar-right {
+    background: #FFFFFF;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--card-border);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 5.5rem;
+  }
+  .summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .summary-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0F172A;
+  }
+  .btn-edit {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #0284C7;
+    cursor: pointer;
+  }
+
+  .summary-mini-card {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #F1F5F9;
+    margin-bottom: 0.8rem;
+  }
+  .summary-thumb {
+    width: 68px;
+    height: 52px;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+  .summary-ev-name {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #0F172A;
+    line-height: 1.2;
+    margin-bottom: 2px;
+  }
+  .summary-ev-date, .summary-ev-loc {
+    font-size: 0.74rem;
+    color: var(--muted);
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.45rem 0;
+    font-size: 0.85rem;
+  }
+  .summary-row-label { color: var(--muted); font-weight: 500; }
+  .summary-row-val { color: #0F172A; font-weight: 700; }
+
+  .summary-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-top: 0.85rem;
+    margin-top: 0.5rem;
+    border-top: 2px solid #E2E8F0;
+  }
+  .summary-total-label {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #0F172A;
+  }
+  .summary-total-price {
+    font-size: 1.45rem;
+    font-weight: 900;
+    color: #0284C7;
+  }
+
+  /* Promo Box Accordion */
+  .promo-accordion {
+    margin-top: 1rem;
+    background: #F8FAFC;
+    border: 1px dashed #CBD5E1;
+    border-radius: var(--radius-sm);
+    padding: 0.65rem 0.85rem;
+    font-size: 0.82rem;
+    color: var(--slate);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+  .promo-input-box {
+    margin-top: 0.5rem;
+    display: none;
+    gap: 0.4rem;
+  }
+  .promo-input-box.open { display: flex; }
+  .promo-input-box input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+  }
+  .promo-input-box button {
+    background: #0284C7;
+    color: #fff;
+    padding: 0.5rem 0.9rem;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  /* Motivation Postcard */
+  .motivation-postcard {
+    margin-top: 1.2rem;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    position: relative;
+    height: 120px;
+    background: #0284C7;
+  }
+  .motivation-postcard img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.75;
+  }
+  .motivation-text {
+    position: absolute;
+    inset: 0;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Caveat', cursive;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    text-align: center;
+    line-height: 1.15;
+    transform: rotate(-2deg);
+  }
+
+  /* Trust Badges */
+  .trust-badges {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-top: 1.4rem;
+    padding-top: 1rem;
+    border-top: 1px solid #F1F5F9;
+    text-align: center;
+  }
+  .trust-badge-item svg {
+    width: 22px;
+    height: 22px;
+    color: #0284C7;
+    margin: 0 auto 3px;
+    display: block;
+  }
+  .trust-badge-item span {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--muted);
+    display: block;
+    line-height: 1.2;
+  }
+
+  /* ================== Modals ================== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-card {
+    background: #FFFFFF;
+    border-radius: var(--radius-lg);
+    max-width: 540px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 2rem;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    position: relative;
+    animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes modalPop {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .modal-close {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    font-size: 1.5rem;
+    color: #94A3B8;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .modal-close:hover { color: #0F172A; }
+
+  /* ================== Footer ================== */
+  .site-footer {
+    background: #FFFFFF;
+    border-top: 1px solid var(--card-border);
+    padding: 2.5rem 1.5rem;
+    margin-top: 4rem;
+  }
+  .footer-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+  .footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+  .footer-links {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .footer-links button:hover, .footer-links a:hover { color: var(--primary); }
+  .footer-socials {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .footer-social-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #F0F9FF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0284C7;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+  <!-- ================== Top Navigation Header ================== -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand" onclick="scrollToTop()">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+            <path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.8-1.6 8.1-4.9-.9-.4 2 6.5 1.2z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <b>We<span>Run</span></b>
+          <small>Run Together A Better Cambodia</small>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <button onclick="scrollToTop()" class="active" id="nav-home">Home</button>
+        <button onclick="goToStep(1)" id="nav-events">Events</button>
+        <button onclick="openModal('modal-about')" id="nav-about">About</button>
+        <button onclick="openModal('modal-news')" id="nav-news">News</button>
+        <button onclick="openModal('modal-contact')" id="nav-contact">Contact</button>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="lang-picker" onclick="toggleLangDropdown(event)">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span id="current-lang-text">EN</span>
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+
+        <div class="lang-dropdown" id="lang-dropdown">
+          <div class="lang-opt active" onclick="setLanguage('en')">🇺🇸 English</div>
+          <div class="lang-opt" onclick="setLanguage('km')">🇰🇭 ភាសាខ្មែរ</div>
+          <div class="lang-opt" onclick="setLanguage('zh')">🇹🇼 繁體中文</div>
+        </div>
+
+        <button class="btn-login" onclick="openModal('modal-login')">Login</button>
+        <button class="btn-signup" onclick="goToStep(1)">Sign Up</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================== Hero Sky Banner ================== -->
+  <section class="hero-sky">
+    <div class="hero-sky-inner">
+      <div class="hero-sky-text">
+        <h1 class="hero-sky-h1" id="hero-title">Run for a Brighter Tomorrow</h1>
+        <p class="hero-sky-sub" id="hero-sub">People. Community. A Healthier Cambodia.</p>
+      </div>
+      <div class="hero-sky-quote" id="hero-quote">
+        More Than a Race,<br>A Stronger Community
+      </div>
+    </div>
+    <div class="hero-silhouette-bg"></div>
+  </section>
+
+  <!-- ================== 3-Column Main Layout ================== -->
+  <main class="main-container">
+    <div class="layout-grid">
+
+      <!-- ================== 1. Left Sidebar Steps ================== -->
+      <aside class="sidebar-left">
+        <div class="steps-list" id="sidebar-steps">
+          <!-- Step 1 (Active) -->
+          <div class="step-node active" onclick="goToStep(1)" data-step="1">
+            <div class="step-circle">1</div>
+            <div class="step-info">
+              <div class="step-name">Event & Category</div>
+              <div class="step-hint">Select your event</div>
+            </div>
+          </div>
+          <!-- Step 2 -->
+          <div class="step-node" onclick="goToStep(2)" data-step="2">
+            <div class="step-circle">2</div>
+            <div class="step-info">
+              <div class="step-name">Personal Information</div>
+              <div class="step-hint">Tell us about yourself</div>
+            </div>
+          </div>
+          <!-- Step 3 -->
+          <div class="step-node" onclick="goToStep(3)" data-step="3">
+            <div class="step-circle">3</div>
+            <div class="step-info">
+              <div class="step-name">Additional Information</div>
+              <div class="step-hint">Emergency & others</div>
+            </div>
+          </div>
+          <!-- Step 4 -->
+          <div class="step-node" onclick="goToStep(4)" data-step="4">
+            <div class="step-circle">4</div>
+            <div class="step-info">
+              <div class="step-name">Terms & Agreement</div>
+              <div class="step-hint">Read and confirm</div>
+            </div>
+          </div>
+          <!-- Step 5 -->
+          <div class="step-node" onclick="goToStep(5)" data-step="5">
+            <div class="step-circle">5</div>
+            <div class="step-info">
+              <div class="step-name">Payment</div>
+              <div class="step-hint">Complete your registration</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-quote-box">
+          <div class="sidebar-quote">
+            Good Runners<br>Build Brighter<br>Communities
+          </div>
+        </div>
+      </aside>
+
+      <!-- ================== 2. Center Main Form Card ================== -->
+      <section class="center-card">
+
+        <!-- STEP 1: Event & Category -->
+        <div class="form-step-pane active" id="pane-step-1">
+          <h2 class="section-heading">1. Event & Category</h2>
+          <p class="section-sub">Choose the event and category you would like to join.</p>
+
+          <!-- Selected Event Banner -->
+          <div class="event-banner-card">
+            <div class="date-badge">
+              <span class="date-badge-sun">SUN</span>
+              <span class="date-badge-day">15</span>
+              <span class="date-badge-mo">DEC 2024</span>
+            </div>
+            <div class="event-banner-info">
+              <div class="event-banner-title">Phnom Penh City Run 2024</div>
+              <div class="event-banner-loc">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="#0284C7"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+                <span>Riverside, Phnom Penh, Cambodia</span>
+              </div>
+              <div class="event-banner-tagline">Run the City. Feel the Energy.</div>
+            </div>
+            <img class="event-banner-img" src="assets/hero-desktop.webp" alt="Phnom Penh City Run">
+          </div>
+
+          <!-- Select Distance -->
+          <label class="form-label">Select Distance</label>
+          <div class="distance-grid" id="distance-grid">
+            <!-- 5K -->
+            <div class="distance-card" data-dist="5K" data-sub="Fun Run" data-price="25">
+              <div class="check-badge">✓</div>
+              <svg class="dist-runner-ico" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.8-1.6 8.1-4.9-.9-.4 2 6.5 1.2z"/>
+              </svg>
+              <span class="dist-val-text">5K</span>
+              <span class="dist-name-text">Fun Run</span>
+              <span class="dist-price-tag">$25.00</span>
+            </div>
+            <!-- 10K (Active) -->
+            <div class="distance-card active" data-dist="10K" data-sub="Challenge" data-price="35">
+              <div class="check-badge">✓</div>
+              <svg class="dist-runner-ico" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.8-1.6 8.1-4.9-.9-.4 2 6.5 1.2z"/>
+              </svg>
+              <span class="dist-val-text">10K</span>
+              <span class="dist-name-text">Challenge</span>
+              <span class="dist-price-tag">$35.00</span>
+            </div>
+            <!-- 21K -->
+            <div class="distance-card" data-dist="21K" data-sub="Half Marathon" data-price="50">
+              <div class="check-badge">✓</div>
+              <svg class="dist-runner-ico" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.8-1.6 8.1-4.9-.9-.4 2 6.5 1.2z"/>
+              </svg>
+              <span class="dist-val-text">21K</span>
+              <span class="dist-name-text">Half Marathon</span>
+              <span class="dist-price-tag">$50.00</span>
+            </div>
+            <!-- 42K -->
+            <div class="distance-card" data-dist="42K" data-sub="Marathon" data-price="70">
+              <div class="check-badge">✓</div>
+              <svg class="dist-runner-ico" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.8-1.6 8.1-4.9-.9-.4 2 6.5 1.2z"/>
+              </svg>
+              <span class="dist-val-text">42K</span>
+              <span class="dist-name-text">Marathon</span>
+              <span class="dist-price-tag">$70.00</span>
+            </div>
+          </div>
+
+          <!-- Select Category -->
+          <label class="form-label">Select Category</label>
+          <div class="category-list" id="category-list">
+            <label class="category-item">
+              <input type="radio" name="race_category" value="Individual (General)" checked>
+              <span>Individual (General) · Standard Runner</span>
+            </label>
+            <label class="category-item">
+              <input type="radio" name="race_category" value="Student (with valid ID)">
+              <span>Student (with valid ID) · Student Discount</span>
+            </label>
+            <label class="category-item">
+              <input type="radio" name="race_category" value="Group / Team">
+              <span>Group / Team · 3+ Runners (15% OFF)</span>
+            </label>
+            <label class="category-item">
+              <input type="radio" name="race_category" value="Corporate">
+              <span>Corporate · Corporate Relay</span>
+            </label>
+            <label class="category-item">
+              <input type="radio" name="race_category" value="Elite / Competitive">
+              <span>Elite / Competitive · World Athletics Certified</span>
+            </label>
+          </div>
+
+          <!-- T-Shirt Size -->
+          <div class="size-header">
+            <label class="form-label" style="margin-bottom:0">T-Shirt Size <span style="font-weight:400;color:var(--muted)">ⓘ</span></label>
+            <span class="size-guide-link" onclick="openModal('modal-sizeguide')">Size Guide</span>
+          </div>
+          <div class="size-pills" id="size-pills">
+            <div class="size-pill" data-size="XS">XS</div>
+            <div class="size-pill" data-size="S">S</div>
+            <div class="size-pill active" data-size="M">M</div>
+            <div class="size-pill" data-size="L">L</div>
+            <div class="size-pill" data-size="XL">XL</div>
+            <div class="size-pill" data-size="XXL">XXL</div>
+          </div>
+
+          <!-- Action Button -->
+          <div class="form-actions">
+            <button class="btn-next" onclick="goToStep(2)">
+              <span>Next Step: Personal Info</span>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2: Personal Information -->
+        <div class="form-step-pane" id="pane-step-2">
+          <h2 class="section-heading">2. Personal Information</h2>
+          <p class="section-sub">Please provide your official legal details for race timing and insurance.</p>
+
+          <div class="form-input-grid">
+            <div class="form-group full">
+              <label>Full Legal Name (as on Passport/ID) <span>*</span></label>
+              <input type="text" class="form-control" id="runner-name" placeholder="e.g. SOK DARA" value="SOK DARA">
+            </div>
+            <div class="form-group">
+              <label>Legal ID / Passport Number <span>*</span></label>
+              <input type="text" class="form-control" id="runner-id" placeholder="e.g. N12345678" value="KH8899201">
+            </div>
+            <div class="form-group">
+              <label>Nationality <span>*</span></label>
+              <select class="form-control" id="runner-nation">
+                <option value="Cambodia">🇰🇭 Cambodia (កម្ពុជា)</option>
+                <option value="China">🇨🇳 China (中国)</option>
+                <option value="United States">🇺🇸 United States</option>
+                <option value="France">🇫🇷 France</option>
+                <option value="Japan">🇯🇵 Japan</option>
+                <option value="Other">🌍 Other Nationality</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Gender <span>*</span></label>
+              <select class="form-control" id="runner-gender">
+                <option value="Male">Male (男)</option>
+                <option value="Female">Female (女)</option>
+                <option value="Non-binary">Non-binary</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Date of Birth <span>*</span></label>
+              <input type="date" class="form-control" id="runner-dob" value="1995-08-15">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-back" onclick="goToStep(1)">← Back to Event</button>
+            <button class="btn-next" onclick="goToStep(3)">
+              <span>Next Step: Emergency Info</span>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Additional & Emergency Information -->
+        <div class="form-step-pane" id="pane-step-3">
+          <h2 class="section-heading">3. Additional & Emergency Details</h2>
+          <p class="section-sub">Required for emergency medical dispatch and safety compliance.</p>
+
+          <div class="form-input-grid">
+            <div class="form-group">
+              <label>Mobile Phone (with country code) <span>*</span></label>
+              <input type="tel" class="form-control" id="runner-phone" placeholder="+855 12 345 678" value="+855 12 345 678">
+            </div>
+            <div class="form-group">
+              <label>Email Address (for Digital Bib & Pass) <span>*</span></label>
+              <input type="email" class="form-control" id="runner-email" placeholder="runner@werun.com.kh" value="sok.dara@werun.com.kh">
+            </div>
+            <div class="form-group">
+              <label>Emergency Contact Name <span>*</span></label>
+              <input type="text" class="form-control" id="runner-ec" placeholder="e.g. Sok Srey" value="Sok Srey">
+            </div>
+            <div class="form-group">
+              <label>Emergency Contact Phone <span>*</span></label>
+              <input type="tel" class="form-control" id="runner-ecp" placeholder="+855 12 987 654" value="+855 12 987 654">
+            </div>
+            <div class="form-group full">
+              <label>Medical Conditions / Allergies (Optional)</label>
+              <input type="text" class="form-control" placeholder="e.g. Asthma, Penicillin allergy (None if healthy)">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-back" onclick="goToStep(2)">← Back to Personal Info</button>
+            <button class="btn-next" onclick="goToStep(4)">
+              <span>Next Step: Terms & Rules</span>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 4: Terms & Agreement -->
+        <div class="form-step-pane" id="pane-step-4">
+          <h2 class="section-heading">4. Terms & Agreement</h2>
+          <p class="section-sub">Please review and acknowledge the mandatory official regulations.</p>
+
+          <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:14px;padding:1.2rem;display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem">
+            <label style="display:flex;align-items:flex-start;gap:.75rem;cursor:pointer;font-size:.88rem;color:#334155">
+              <input type="checkbox" id="chk-rules" checked onchange="validateStep4()" style="margin-top:3px;width:1.2rem;height:1.2rem;accent-color:#0284C7">
+              <span><b>I have read and agree to the <a href="javascript:void(0)" onclick="openModal('modal-rules')" style="color:#0284C7;text-decoration:underline">WeRun Race Rules & Regulations</a> (20 Clauses).</b><br><small style="color:#64748B">我已閱讀並同意《WeRun 賽事參賽規章》（共 20 條官方規範）。</small></span>
+            </label>
+
+            <label style="display:flex;align-items:flex-start;gap:.75rem;cursor:pointer;font-size:.88rem;color:#334155">
+              <input type="checkbox" id="chk-health" checked onchange="validateStep4()" style="margin-top:3px;width:1.2rem;height:1.2rem;accent-color:#0284C7">
+              <span><b>I acknowledge the risks associated with participating and confirm my physical preparedness.</b><br><small style="color:#64748B">我已知悉長距離耐力運動相關風險，並確認自身健康與體能狀況良好、適合參賽。</small></span>
+            </label>
+
+            <label style="display:flex;align-items:flex-start;gap:.75rem;cursor:pointer;font-size:.88rem;color:#334155">
+              <input type="checkbox" id="chk-legal" checked onchange="validateStep4()" style="margin-top:3px;width:1.2rem;height:1.2rem;accent-color:#0284C7">
+              <span><b>I agree to the <a href="javascript:void(0)" onclick="openModal('modal-terms')" style="color:#0284C7;text-decoration:underline">Terms & Conditions</a>, <a href="javascript:void(0)" onclick="openModal('modal-privacy')" style="color:#0284C7;text-decoration:underline">Privacy Policy</a>, and <a href="javascript:void(0)" onclick="openModal('modal-refund')" style="color:#0284C7;text-decoration:underline">Refund Policy</a>.</b><br><small style="color:#64748B">我同意本賽事之《使用條款》、《個人資料隱私政策》及《退款政策》。</small></span>
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-back" onclick="goToStep(3)">← Back to Emergency Info</button>
+            <button class="btn-next" id="btn-to-pay" onclick="goToStep(5)">
+              <span>Proceed to Payment</span>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 5: Payment & Instant Pass -->
+        <div class="form-step-pane" id="pane-step-5">
+          <h2 class="section-heading">5. KHQR Payment & Confirmation</h2>
+          <p class="section-sub">Scan the official Bakong KHQR code with any banking app in Cambodia.</p>
+
+          <div style="background:linear-gradient(135deg,#F0F9FF,#FFFFFF);border:1.5px solid #BAE6FD;border-radius:18px;padding:1.8rem;text-align:center;max-width:420px;margin:0 auto 1.5rem">
+            <div style="font-size:.82rem;font-weight:700;color:#0284C7;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.4rem">Bakong KHQR Universal Pay</div>
+            <div style="font-size:2rem;font-weight:900;color:#0F172A;margin-bottom:.8rem" id="pay-display-amount">$35.00</div>
+
+            <div style="background:#FFFFFF;border:2px solid #E2E8F0;border-radius:12px;padding:1.2rem;display:inline-block;box-shadow:0 4px 16px rgba(0,0,0,0.06);margin-bottom:1rem">
+              <!-- KHQR Vector Representation -->
+              <svg viewBox="0 0 100 100" width="160" height="160" fill="#0F172A">
+                <rect width="100" height="100" fill="#fff"/>
+                <path d="M10 10h30v30h-30zM15 15v20h20v-20zM20 20h10v10h-10zM60 10h30v30h-30zM65 15v20h20v-20zM70 20h10v10h-10zM10 60h30v30h-30zM15 65v20h20v-20zM20 70h10v10h-10zM45 10h10v10h-10zM45 25h10v15h-10zM10 45h10v10h-10zM25 45h20v10h-20zM45 45h10v10h-10zM60 45h10v10h-10zM75 45h15v10h-15zM45 60h10v10h-10zM60 60h10v20h-10zM75 60h20v10h-20zM45 75h10v15h-10zM75 75h15v15h-15z"/>
+                <circle cx="50" cy="50" r="10" fill="#0284C7"/>
+              </svg>
+            </div>
+
+            <div style="font-size:.82rem;color:#64748B;margin-bottom:1.2rem">
+              ⏱️ Payment session expires in: <b style="color:#E11D48" id="pay-timer">09:59</b>
+            </div>
+
+            <button class="btn-signup" style="width:100%;padding:.85rem 1rem;font-size:1rem;background:linear-gradient(135deg,#10B981,#0284C7)" onclick="simulatePaymentSuccess()">
+              ⚡ Simulate Instant KHQR Payment (模拟扫码出票)
+            </button>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-back" onclick="goToStep(4)">← Back to Agreement</button>
+          </div>
+        </div>
+
+        <!-- STEP 6: Confirmation Screen -->
+        <div class="form-step-pane" id="pane-step-success">
+          <div style="text-align:center;padding:1.5rem 0">
+            <div style="width:72px;height:72px;border-radius:50%;background:#ECFDF5;color:#059669;font-size:2.2rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 4px 16px rgba(16,185,129,0.25)">
+              ✓
+            </div>
+            <h2 style="font-size:1.6rem;font-weight:900;color:#0F172A;margin-bottom:.4rem">Registration Confirmed! 🎉</h2>
+            <p style="font-size:.92rem;color:#64748B;margin-bottom:1.5rem">Your official Digital Race Pass and Bib Number are generated.</p>
+
+            <div style="background:linear-gradient(135deg,#0F172A,#1E293B);color:#fff;border-radius:18px;padding:1.5rem;text-align:left;max-width:380px;margin:0 auto 1.5rem;box-shadow:0 8px 30px rgba(0,0,0,0.15);position:relative;overflow:hidden">
+              <div style="font-size:.72rem;font-weight:800;letter-spacing:.1em;color:#38BDF8;text-transform:uppercase">WeRun Official Race Pass</div>
+              <div style="font-size:1.4rem;font-weight:900;color:#fff;margin:0.2rem 0">SOK DARA</div>
+              <div style="display:flex;justify-content:space-between;margin:1rem 0;border-top:1px dashed rgba(255,255,255,0.2);padding-top:1rem">
+                <div><small style="color:#94A3B8;font-size:.72rem">BIB NUMBER</small><b style="display:block;font-size:1.5rem;color:#34D399;font-family:monospace">#1024</b></div>
+                <div><small style="color:#94A3B8;font-size:.72rem">DISTANCE</small><b style="display:block;font-size:1.1rem;color:#fff" id="ticket-dist">10K Challenge</b></div>
+                <div><small style="color:#94A3B8;font-size:.72rem">T-SHIRT</small><b style="display:block;font-size:1.1rem;color:#fff" id="ticket-size">M</b></div>
+              </div>
+              <div style="font-size:.75rem;color:#94A3B8">Phnom Penh City Run 2024 · 15 DEC 2024</div>
+            </div>
+
+            <button class="btn-signup" onclick="goToStep(1)">Register Another Runner</button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================== 3. Right Sticky Summary Card ================== -->
+      <aside class="sidebar-right">
+        <div class="summary-header">
+          <div class="summary-title">Your Registration</div>
+          <span class="btn-edit" onclick="goToStep(1)">Edit</span>
+        </div>
+
+        <!-- Mini Event Summary -->
+        <div class="summary-mini-card">
+          <img class="summary-thumb" src="assets/hero-mobile.webp" alt="Phnom Penh City Run">
+          <div>
+            <div class="summary-ev-name">Phnom Penh City Run 2024</div>
+            <div class="summary-ev-date">📅 15 December 2024</div>
+            <div class="summary-ev-loc">📍 Riverside, Phnom Penh</div>
+          </div>
+        </div>
+
+        <!-- Itemized Rows -->
+        <div class="summary-row">
+          <span class="summary-row-label">Distance</span>
+          <span class="summary-row-val" id="summary-distance">10K Challenge</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-row-label">Category</span>
+          <span class="summary-row-val" id="summary-category">Individual (General)</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-row-label">T-Shirt Size</span>
+          <span class="summary-row-val" id="summary-size">M</span>
+        </div>
+
+        <div class="summary-row" id="row-discount" style="display:none;color:#059669">
+          <span class="summary-row-label" style="color:#059669">Discount</span>
+          <span class="summary-row-val" id="summary-discount" style="color:#059669">-$0.00</span>
+        </div>
+
+        <!-- Total Price -->
+        <div class="summary-total-row">
+          <span class="summary-total-label">Registration Fee</span>
+          <span class="summary-total-price" id="summary-fee">$35.00</span>
+        </div>
+
+        <!-- Promo Code Box Accordion -->
+        <div class="promo-accordion" onclick="togglePromoBox()">
+          <span style="display:flex;align-items:center;gap:.4rem">
+            <span>🎁</span> <span>Have a promo code?</span>
+          </span>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="promo-input-box" id="promo-input-box">
+          <input type="text" id="promo-code-input" placeholder="VIP100 / GROUP15">
+          <button onclick="applyPromoCode()">Apply</button>
+        </div>
+
+        <!-- Motivation Postcard Banner -->
+        <div class="motivation-postcard">
+          <img src="assets/hero-desktop.webp" alt="River Scene">
+          <div class="motivation-text">
+            Same Roads<br>Stronger People
+          </div>
+        </div>
+
+        <!-- Trust Badges -->
+        <div class="trust-badges">
+          <div class="trust-badge-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Secure Payment</span>
+          </div>
+          <div class="trust-badge-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span>Your Data is Protected</span>
+          </div>
+          <div class="trust-badge-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Support Local Events</span>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- ================== Site Footer ================== -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand" onclick="scrollToTop()" style="cursor:pointer">
+        <div class="brand-icon" style="width:2rem;height:2rem">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.8-1.6 8.1-4.9-.9-.4 2 6.5 1.2z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <b style="font-size:1.15rem">We<span>Run</span></b>
+          <small>Run Together A Better Cambodia</small>
+        </div>
+      </div>
+
+      <div class="footer-links">
+        <button onclick="openModal('modal-privacy')">Privacy Policy</button>
+        <button onclick="openModal('modal-terms')">Terms & Conditions</button>
+        <button onclick="openModal('modal-rules')">Race Rules (20 Clauses)</button>
+        <button onclick="openModal('modal-faq')">FAQ</button>
+        <button onclick="openModal('modal-contact')">Contact</button>
+      </div>
+
+      <div class="footer-socials">
+        <div class="footer-social-icon" onclick="alert('Opening WeRun Facebook')">f</div>
+        <div class="footer-social-icon" onclick="alert('Opening WeRun Instagram')">📷</div>
+        <div class="footer-social-icon" onclick="alert('Opening WeRun Telegram: @werun_cambodia_official')">✈️</div>
+        <span>#WeRunCambodia</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================== MODALS ================== -->
+
+  <!-- 1. About Modal -->
+  <div class="modal-overlay" id="modal-about" onclick="closeModalOnOverlay(event, 'modal-about')">
+    <div class="modal-card">
+      <span class="modal-close" onclick="closeModal('modal-about')">&times;</span>
+      <h3 style="font-size:1.35rem;font-weight:900;color:#0F172A;margin-bottom:.4rem">關於我們 About Us</h3>
+      <p style="font-size:.9rem;font-weight:700;color:#0284C7;margin-bottom:1rem">Built in Cambodia, for the community. ❤️</p>
+      <div style="font-size:.92rem;color:#334155;line-height:1.75;display:flex;flex-direction:column;gap:.8rem">
+        <p><b>WeRun 由三位生活在柬埔寨的外國人共同創立。</b></p>
+        <p>因為長期生活、工作並參與柬埔寨的運動與社群活動，我們發現許多活動的報名流程仍然分散在不同的平台、表單與付款方式之間。對參加者而言不夠方便，對活動主辦方而言，也需要投入大量時間處理報名與資訊。</p>
+        <p><b>因此，我們創立了 WeRun。</b></p>
+        <p>我們希望打造一個更簡單、更友善、更適合柬埔寨的活動報名與管理平台，讓跑者與參加者可以輕鬆找到活動、完成註冊，也讓主辦方能更有效率地管理自己的活動。</p>
+        <p>WeRun — Register. Connect. Move Together.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. News Modal -->
+  <div class="modal-overlay" id="modal-news" onclick="closeModalOnOverlay(event, 'modal-news')">
+    <div class="modal-card">
+      <span class="modal-close" onclick="closeModal('modal-news')">&times;</span>
+      <h3 style="font-size:1.35rem;font-weight:900;color:#0F172A;margin-bottom:.4rem">Latest News & Updates</h3>
+      <p style="font-size:.85rem;color:#64748B;margin-bottom:1.2rem">Stay updated with WeRun announcements and upcoming events.</p>
+      <div style="display:flex;flex-direction:column;gap:1rem">
+        <div style="padding:1rem;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px">
+          <b style="color:#0284C7;display:block">🎉 Early Bird Registration Open for Phnom Penh City Run 2024</b>
+          <small style="color:#64748B">December 15, 2024 · Riverside</small>
+          <p style="font-size:.85rem;color:#334155;margin-top:.4rem">First 500 runners receive official technical running singlet and finisher medal.</p>
+        </div>
+        <div style="padding:1rem;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px">
+          <b style="color:#059669;display:block">🤝 Community Free Saturday Morning Run (Every Saturday 05:45 AM)</b>
+          <small style="color:#64748B">Weekly Community Run · Free Admission</small>
+          <p style="font-size:.85rem;color:#334155;margin-top:.4rem">Join 100+ local runners along Tonle Sap river. Free hydration and bag drop provided.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Contact Modal -->
+  <div class="modal-overlay" id="modal-contact" onclick="closeModalOnOverlay(event, 'modal-contact')">
+    <div class="modal-card">
+      <span class="modal-close" onclick="closeModal('modal-contact')">&times;</span>
+      <h3 style="font-size:1.35rem;font-weight:900;color:#0F172A;margin-bottom:.4rem">Contact WeRun Support</h3>
+      <p style="font-size:.85rem;color:#64748B;margin-bottom:1.2rem">We are here to help runners and event organizers.</p>
+      <div style="font-size:.9rem;color:#334155;line-height:1.7;display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.2rem">
+        <div>🏢 <b>Company:</b> WeRun Technology (Cambodia) Co., Ltd.</div>
+        <div>📍 <b>Location:</b> Riverside Boardwalk, Phnom Penh, Cambodia</div>
+        <div>📧 <b>Email:</b> <a href="mailto:contact@werun.com.kh" style="color:#0284C7">contact@werun.com.kh</a></div>
+        <div>✈️ <b>Telegram:</b> <a href="https://t.me/werun_cambodia_official" target="_blank" style="color:#0284C7">@werun_cambodia_official</a></div>
+      </div>
+      <button class="btn-signup" style="width:100%" onclick="alert('Message sent to support! We will reply within 2 hours.');closeModal('modal-contact')">Send Support Message</button>
+    </div>
+  </div>
+
+  <!-- 4. Login Modal -->
+  <div class="modal-overlay" id="modal-login" onclick="closeModalOnOverlay(event, 'modal-login')">
+    <div class="modal-card" style="max-width:400px">
+      <span class="modal-close" onclick="closeModal('modal-login')">&times;</span>
+      <h3 style="font-size:1.35rem;font-weight:900;color:#0F172A;margin-bottom:.4rem">Runner Login</h3>
+      <p style="font-size:.85rem;color:#64748B;margin-bottom:1.2rem">Access your registrations, Bib numbers, and certificates.</p>
+      <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.2rem">
+        <div class="form-group">
+          <label>Email or Mobile Phone</label>
+          <input type="text" class="form-control" value="sok.dara@werun.com.kh">
+        </div>
+        <div class="form-group">
+          <label>Password / SMS Code</label>
+          <input type="password" class="form-control" value="••••••••">
+        </div>
+      </div>
+      <button class="btn-signup" style="width:100%" onclick="alert('Logged in as SOK DARA!');closeModal('modal-login')">Log In to WeRun</button>
+    </div>
+  </div>
+
+  <!-- 5. Size Guide Modal -->
+  <div class="modal-overlay" id="modal-sizeguide" onclick="closeModalOnOverlay(event, 'modal-sizeguide')">
+    <div class="modal-card">
+      <span class="modal-close" onclick="closeModal('modal-sizeguide')">&times;</span>
+      <h3 style="font-size:1.35rem;font-weight:900;color:#0F172A;margin-bottom:.4rem">T-Shirt Size Guide (Unisex)</h3>
+      <p style="font-size:.85rem;color:#64748B;margin-bottom:1.2rem">Official athletic breathable technical shirt dimensions.</p>
+      <table style="width:100%;border-collapse:collapse;font-size:.88rem;text-align:left">
+        <thead>
+          <tr style="background:#F0F9FF;border-bottom:2px solid #BAE6FD">
+            <th style="padding:.6rem .8rem">Size</th>
+            <th style="padding:.6rem .8rem">Chest (cm)</th>
+            <th style="padding:.6rem .8rem">Length (cm)</th>
+            <th style="padding:.6rem .8rem">Height (cm)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #E2E8F0"><td style="padding:.5rem .8rem"><b>XS</b></td><td style="padding:.5rem .8rem">88 cm</td><td style="padding:.5rem .8rem">64 cm</td><td style="padding:.5rem .8rem">155–165 cm</td></tr>
+          <tr style="border-bottom:1px solid #E2E8F0"><td style="padding:.5rem .8rem"><b>S</b></td><td style="padding:.5rem .8rem">94 cm</td><td style="padding:.5rem .8rem">67 cm</td><td style="padding:.5rem .8rem">165–172 cm</td></tr>
+          <tr style="border-bottom:1px solid #E2E8F0;background:#F0FDF4"><td style="padding:.5rem .8rem"><b>M (Default)</b></td><td style="padding:.5rem .8rem">100 cm</td><td style="padding:.5rem .8rem">70 cm</td><td style="padding:.5rem .8rem">172–178 cm</td></tr>
+          <tr style="border-bottom:1px solid #E2E8F0"><td style="padding:.5rem .8rem"><b>L</b></td><td style="padding:.5rem .8rem">106 cm</td><td style="padding:.5rem .8rem">73 cm</td><td style="padding:.5rem .8rem">178–185 cm</td></tr>
+          <tr style="border-bottom:1px solid #E2E8F0"><td style="padding:.5rem .8rem"><b>XL</b></td><td style="padding:.5rem .8rem">112 cm</td><td style="padding:.5rem .8rem">76 cm</td><td style="padding:.5rem .8rem">185–190 cm</td></tr>
+          <tr><td style="padding:.5rem .8rem"><b>XXL</b></td><td style="padding:.5rem .8rem">118 cm</td><td style="padding:.5rem .8rem">79 cm</td><td style="padding:.5rem .8rem">190+ cm</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 6. 20-Clause Rules Modal -->
+  <div class="modal-overlay" id="modal-rules" onclick="closeModalOnOverlay(event, 'modal-rules')">
+    <div class="modal-card" style="max-width:600px">
+      <span class="modal-close" onclick="closeModal('modal-rules')">&times;</span>
+      <h3 style="font-size:1.35rem;font-weight:900;color:#0F172A;margin-bottom:.4rem">WeRun 賽事參賽規章 (20 Clauses)</h3>
+      <p style="font-size:.85rem;color:#0284C7;font-weight:700;margin-bottom:1rem">Race Rules & Regulations</p>
+      <div style="font-size:.86rem;color:#334155;line-height:1.7;display:flex;flex-direction:column;gap:.8rem;max-height:60vh;overflow-y:auto;padding-right:.5rem">
+        <div><b>1. 參賽資格 (Eligibility):</b> 參賽者必須符合各組別規定的最低年齡及參賽資格。未滿 18 歲者，主辦方可要求提供家長或法定監護人同意。</div>
+        <div><b>2. 健康與身體狀況 (Health):</b> 參賽者應自行評估身體狀況是否適合參賽，必要時尋求專業醫療建議。</div>
+        <div><b>3. 報名資料 (Data):</b> 須提供真實合法身分證件／護照、電子郵箱與緊急聯絡人。</div>
+        <div><b>4. 號碼布 (BIB):</b> 必須佩戴於正面，嚴禁私自修改、複製或遮蔽。</div>
+        <div><b>5. BIB 轉讓:</b> 嚴禁私下出售、交換或轉讓參賽資格。</div>
+        <div><b>6. 起跑規定:</b> 依指定時間及起跑區集合，嚴禁跨區搶跑。</div>
+        <div><b>7. 賽道路線:</b> 必須依照官方路線完成比賽，不得抄捷徑或使用交通工具。</div>
+        <div><b>8. 計時與成績:</b> 以晶片計時毯為準，缺少打卡紀錄視為 DNF 或取消資格。</div>
+        <div><b>9. 關門時間 (Cut-off Time):</b> 超過關門時間者須停止比賽並搭乘收容車。</div>
+        <div><b>10. 補給規定:</b> 於官方補給站領取，不得阻礙其他選手。</div>
+        <div><b>11. 外部協助:</b> 嚴禁非官方不公平協助。</div>
+        <div><b>12. 配速與陪跑:</b> 嚴禁未授權自行車或機車陪跑。</div>
+        <div><b>13. 安全與工作人員指示:</b> 必須服從裁判、工作人員及醫療人員指示。</div>
+        <div><b>14. 禁止行為:</b> 嚴禁作弊、替跑、騷擾或破壞設施。</div>
+        <div><b>15. 耳機及個人設備:</b> 須能注意周圍交通與緊急廣播。</div>
+        <div><b>16. 垃圾與環境:</b> 垃圾丟棄於指定垃圾桶，保持無痕賽道。</div>
+        <div><b>17. 天氣及不可抗力:</b> 遇極端天候主辦方有權調整路線或延期。</div>
+        <div><b>18. 退賽 (DNF):</b> 無法繼續者通報最近工作人員離開賽道。</div>
+        <div><b>19. 成績申訴:</b> 於公布期限內依官方程序申訴。</div>
+        <div><b>20. 取消資格 (DSQ):</b> 嚴重違規行為取消資格與成績。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================== Interactive JavaScript ================== -->
+  <script>
+    let currentStep = 1;
+    let basePrice = 35;
+    let discountAmount = 0;
+    let currentDistance = "10K Challenge";
+    let currentCategory = "Individual (General)";
+    let currentSize = "M";
+
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goToStep(step) {
+      if (step < 1 || step > 5) return;
+      currentStep = step;
+
+      // Update panes
+      for (let i = 1; i <= 5; i++) {
+        const pane = document.getElementById(`pane-step-${i}`);
+        if (pane) pane.classList.remove('active');
+      }
+      const activePane = document.getElementById(`pane-step-${step}`);
+      if (activePane) activePane.classList.add('active');
+
+      const successPane = document.getElementById('pane-step-success');
+      if (successPane) successPane.classList.remove('active');
+
+      // Update sidebar step circles
+      const stepNodes = document.querySelectorAll('.step-node');
+      stepNodes.forEach((node, idx) => {
+        const nodeStep = idx + 1;
+        node.classList.remove('active', 'done');
+        if (nodeStep === step) {
+          node.classList.add('active');
+        } else if (nodeStep < step) {
+          node.classList.add('done');
+        }
+      });
+
+      // Update payment display if entering step 5
+      if (step === 5) {
+        updateSummary();
+        startPayTimer();
+      }
+
+      // Scroll to main card
+      document.querySelector('.center-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Distance Selection
+    const distanceCards = document.querySelectorAll('.distance-card');
+    distanceCards.forEach(card => {
+      card.addEventListener('click', () => {
+        distanceCards.forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        const dist = card.getAttribute('data-dist');
+        const sub = card.getAttribute('data-sub');
+        basePrice = parseFloat(card.getAttribute('data-price'));
+        currentDistance = `${dist} ${sub}`;
+        updateSummary();
+      });
+    });
+
+    // Category Selection
+    const categoryRadios = document.querySelectorAll('input[name="race_category"]');
+    categoryRadios.forEach(radio => {
+      radio.addEventListener('change', () => {
+        currentCategory = radio.value;
+        if (radio.value === 'Group / Team') {
+          discountAmount = basePrice * 0.15;
+        }
+        updateSummary();
+      });
+    });
+
+    // Size Selection
+    const sizePills = document.querySelectorAll('.size-pill');
+    sizePills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        sizePills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        currentSize = pill.getAttribute('data-size');
+        updateSummary();
+      });
+    });
+
+    function updateSummary() {
+      const distEl = document.getElementById('summary-distance');
+      const catEl = document.getElementById('summary-category');
+      const sizeEl = document.getElementById('summary-size');
+      const feeEl = document.getElementById('summary-fee');
+      const payDisplay = document.getElementById('pay-display-amount');
+      const discRow = document.getElementById('row-discount');
+      const discEl = document.getElementById('summary-discount');
+
+      if (distEl) distEl.textContent = currentDistance;
+      if (catEl) catEl.textContent = currentCategory;
+      if (sizeEl) sizeEl.textContent = currentSize;
+
+      const finalPrice = Math.max(0, basePrice - discountAmount);
+      const formatted = `$${finalPrice.toFixed(2)}`;
+
+      if (feeEl) feeEl.textContent = formatted;
+      if (payDisplay) payDisplay.textContent = formatted;
+
+      if (discountAmount > 0 && discRow && discEl) {
+        discRow.style.display = 'flex';
+        discEl.textContent = `-$${discountAmount.toFixed(2)}`;
+      } else if (discRow) {
+        discRow.style.display = 'none';
+      }
+    }
+
+    // Promo Code Box
+    function togglePromoBox() {
+      const box = document.getElementById('promo-input-box');
+      if (box) box.classList.toggle('open');
+    }
+
+    function applyPromoCode() {
+      const inp = document.getElementById('promo-code-input');
+      if (!inp) return;
+      const code = inp.value.trim().toUpperCase();
+      if (!code) return;
+
+      if (code === 'VIP100') {
+        discountAmount = basePrice;
+        updateSummary();
+        alert('🎉 100% VIP Waiver Applied! Total is now $0.00');
+      } else if (code === 'GROUP15') {
+        discountAmount = basePrice * 0.15;
+        updateSummary();
+        alert('🎉 15% Group Discount Applied!');
+      } else if (code === 'RUN2026') {
+        discountAmount = 5.00;
+        updateSummary();
+        alert('🎉 $5.00 Welcome Discount Applied!');
+      } else {
+        alert('Invalid Promo Code. Try: VIP100, GROUP15, or RUN2026');
+      }
+    }
+
+    function validateStep4() {
+      const c1 = document.getElementById('chk-rules').checked;
+      const c2 = document.getElementById('chk-health').checked;
+      const c3 = document.getElementById('chk-legal').checked;
+      const btn = document.getElementById('btn-to-pay');
+      if (btn) btn.disabled = !(c1 && c2 && c3);
+    }
+
+    // Payment Simulation
+    function simulatePaymentSuccess() {
+      if (window.confetti) {
+        window.confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
+      }
+      document.getElementById('ticket-dist').textContent = currentDistance;
+      document.getElementById('ticket-size').textContent = currentSize;
+
+      // Switch to success pane
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById(`pane-step-${i}`).classList.remove('active');
+      }
+      document.getElementById('pane-step-success').classList.add('active');
+
+      const stepNodes = document.querySelectorAll('.step-node');
+      stepNodes.forEach(node => node.classList.add('done'));
+      document.querySelector('.center-card').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Payment Timer
+    let timerInterval = null;
+    function startPayTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      let seconds = 599;
+      const timerEl = document.getElementById('pay-timer');
+      timerInterval = setInterval(() => {
+        seconds--;
+        if (seconds <= 0) {
+          clearInterval(timerInterval);
+          if (timerEl) timerEl.textContent = '00:00 (Expired)';
+          return;
+        }
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        if (timerEl) timerEl.textContent = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+      }, 1000);
+    }
+
+    // Language Dropdown
+    function toggleLangDropdown(e) {
+      e.stopPropagation();
+      document.getElementById('lang-dropdown').classList.toggle('open');
+    }
+
+    document.addEventListener('click', () => {
+      const dd = document.getElementById('lang-dropdown');
+      if (dd) dd.classList.remove('open');
+    });
+
+    function setLanguage(lang) {
+      const textEl = document.getElementById('current-lang-text');
+      const heroTitle = document.getElementById('hero-title');
+      const heroSub = document.getElementById('hero-sub');
+      const heroQuote = document.getElementById('hero-quote');
+
+      if (lang === 'zh') {
+        textEl.textContent = '繁中';
+        heroTitle.textContent = '每一步，都值得被記錄';
+        heroSub.textContent = '跑者 · 社群 · 更健康的柬埔寨';
+        heroQuote.innerHTML = '不僅是一場比賽，<br>更是並肩前行的社群';
+      } else if (lang === 'km') {
+        textEl.textContent = 'ខ្មែរ';
+        heroTitle.textContent = 'រត់ដើម្បីអនាគតដ៏ភ្លឺស្វាង';
+        heroSub.textContent = 'មនុស្ស · សហគមន៍ · កម្ពុជាកាន់តែមានសុខភាពល្អ';
+        heroQuote.innerHTML = 'លើសពីការប្រកួត<br>ជាសហគមន៍កាន់តែរឹងមាំ';
+      } else {
+        textEl.textContent = 'EN';
+        heroTitle.textContent = 'Run for a Brighter Tomorrow';
+        heroSub.textContent = 'People. Community. A Healthier Cambodia.';
+        heroQuote.innerHTML = 'More Than a Race,<br>A Stronger Community';
+      }
+    }
+
+    // Modal Handlers
+    function openModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.add('open');
+    }
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.remove('open');
+    }
+    function closeModalOnOverlay(e, id) {
+      if (e.target.classList.contains('modal-overlay')) {
+        closeModal(id);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Sans+Khmer:wght@400;700&display=swap">
+  <style>
+:root{
+  --paper:#F6F8FA;--card:#FFFFFF;--sunk:#EFF3F7;
+  --ink:#101820;--ink-mid:#3D5468;--ink-mute:#5F6E7E;
+  --line:#E4E9EE;--line-hard:#CBD5DE;
+  --brand:#0F66AE;--brand-fill:#0877FF;--brand-deep:#0A4D85;--brand-tint:#E8F1FB;
+  --lime:#D7FF3F;--lime-ink:#101820;
+  --sky-1:#6FC1F2;--sky-2:#A9DCF8;--sky-3:#DDF1FD;
+  --sun:#FFB93D;--sun-tint:#FFF3DD;--leaf:#3EB489;--leaf-tint:#E2F6EE;
+  --night:#12395C;--night-2:#17486F;
+  --warn:#C0770A;--warn-tint:#FFF3DE;--stop:#CE4E3B;--stop-tint:#FDEBE7;
+  --r:14px;
+  --shadow:0 6px 22px rgba(21,105,175,.09);
+  --shadow-lift:0 12px 32px rgba(21,105,175,.16);
+  --sans:Inter,"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--brand);text-decoration:none}a:hover{color:var(--brand-deep)}
+h1,h2,h3,h4,p{margin:0}
+img{display:block;max-width:100%}
+.phone{width:390px;position:relative;background:var(--paper);overflow:hidden}
+.desk{width:1440px;position:relative;background:var(--paper);overflow:hidden}
+.shell{max-width:1184px;margin:0 auto;padding:0 40px}
+
+/* header */
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(246,248,250,.92);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:8px}
+.mark{width:28px;height:28px;border-radius:8px;background:var(--brand-fill);display:flex;align-items:center;justify-content:center}
+.wordmark{font-weight:800;font-size:19px;letter-spacing:-.02em;line-height:1;color:var(--ink)}
+.wordmark b{color:var(--brand);font-weight:800}
+.lang{display:flex;gap:2px;background:var(--sunk);border:1px solid var(--line);border-radius:100px;padding:2px;margin-left:auto}
+.lang span{font-size:12px;line-height:1;padding:7px 10px;border-radius:100px;color:var(--ink-mute);font-weight:500}
+.lang span.km{font-family:"Noto Sans Khmer",var(--sans);padding-top:5px;padding-bottom:5px}
+.lang .on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(16,24,32,.08)}
+.nav{display:flex;gap:28px;margin-left:auto;align-items:center}
+.nav span{font-size:14px;color:var(--ink-mid);font-weight:500;padding:4px 0;border-bottom:2px solid transparent}
+.nav span.on{color:var(--brand);border-bottom-color:var(--brand-fill)}
+
+/* type */
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.28em;color:var(--brand);text-transform:uppercase;line-height:1.4}
+.eyebrow.mute{color:var(--ink-mute)}
+.h-lat{font-family:Inter,var(--sans);font-weight:800;letter-spacing:-.02em;text-transform:uppercase;line-height:1.05}
+.h-zh{font-weight:700;letter-spacing:.01em;line-height:1.35}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.mute{color:var(--ink-mute)}.mid{color:var(--ink-mid)}
+.s12{font-size:12px}.s13{font-size:13px}.s14{font-size:14px}.s16{font-size:16px}.s18{font-size:18px}
+
+/* controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 22px;border-radius:100px;background:var(--brand);color:#fff;font-weight:600;font-size:15px;letter-spacing:.02em;border:1px solid var(--brand);white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--brand)}
+.btn.white{background:#fff;color:var(--brand-deep);border-color:#fff}
+.btn.night{background:var(--night);border-color:var(--night)}
+.btn.quiet{background:transparent;border-color:transparent;color:var(--ink-mid);padding:0 12px}
+.btn.wide{width:100%}
+.btn.sm{height:44px;padding:0 18px;font-size:13px}
+.btn.lg{height:52px;padding:0 28px;font-size:16px}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.04em;line-height:1;white-space:nowrap}
+.tag.lime{background:var(--lime);color:var(--lime-ink)}
+.tag.tint{background:var(--brand-tint);color:var(--brand-deep)}
+.tag.leaf{background:var(--leaf-tint);color:#1E7A56}
+.tag.warn{background:var(--warn-tint);color:#8A5407}
+.tag.stop{background:var(--stop-tint);color:var(--stop)}
+.tag.night{background:var(--night);color:#fff}
+.tag.ghost{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.35)}
+.chip{display:inline-flex;align-items:center;height:44px;padding:0 16px;border-radius:100px;border:1px solid var(--line-hard);background:#fff;font-size:13px;color:var(--ink-mid);font-weight:500;white-space:nowrap}
+.chip.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13px;font-weight:600;color:var(--ink)}
+.field label small{font-weight:400;color:var(--ink-mute);margin-left:6px}
+.input{height:46px;border:1px solid var(--line-hard);border-radius:10px;background:#fff;padding:0 14px;display:flex;align-items:center;font-size:15px;color:var(--ink)}
+.input.ph{color:var(--ink-mute)}
+.input.focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint)}
+.seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1px solid var(--line-hard);border-radius:10px;overflow:hidden}
+.seg div{height:44px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:var(--ink-mid);background:#fff}
+.seg .on{background:var(--brand);color:#fff;font-weight:600}
+.note{border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6}
+.note.tint{background:var(--brand-tint);color:var(--brand-deep)}
+.note.warn{background:var(--warn-tint);color:#7A4D06}
+.note.leaf{background:var(--leaf-tint);color:#1E5E42}
+.hr{height:1px;background:var(--line)}
+.row{display:flex;align-items:center;gap:8px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.col{display:flex;flex-direction:column}
+.sec{padding:40px 20px 44px;border-bottom:1px solid var(--line)}
+.sec-hd{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:20px}
+.sec-hd h2{font-size:24px;font-weight:700;line-height:1.3;margin-top:6px}
+.sec-hd p{font-size:13px;color:var(--ink-mute);margin-top:4px}
+.stack{display:flex;flex-direction:column;gap:12px}
+
+/* mobile nav */
+.mnav{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:rgba(255,255,255,.96);border-top:1px solid var(--line-hard);padding:4px 0 14px}
+.mnav div{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:48px;font-size:11px;color:var(--ink-mute);position:relative}
+.mnav div.on{color:var(--brand);font-weight:600}
+.mnav div.on::before{content:"";position:absolute;top:-5px;width:24px;height:2px;border-radius:2px;background:var(--brand-fill)}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.steps i{display:block;height:3px;border-radius:2px;background:var(--line-hard)}
+.steps i.done{background:var(--brand-fill)}
+.steps i.cur{background:var(--sky-2)}
+.ph-note{position:absolute;left:12px;top:12px;font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:#fff;background:rgba(16,24,32,.55);padding:3px 8px;border-radius:4px}
+</style>
+</helmet>
+
+<div class="phone" style="min-height:1100px">
+  
+<div class="hdr">
+  <div class="brand">
+    <div class="mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l6-6 4 4 6-8"/><path d="M15 7h5v5"/></svg></div>
+    <div class="wordmark"><b>We</b>Run</div>
+  </div>
+  <div class="lang">
+    <span>EN</span><span class="km">ខ្មែរ</span><span class="on">繁中</span>
+  </div>
+</div>
+  <div style="padding:14px 20px 0">
+    <div class="steps"><i class="cur"></i><i></i><i></i><i></i></div>
+    <div class="between" style="margin-top:8px"><span class="s12 mute">第 <b class="num" style="color:var(--ink)">1</b> 步 / 共 4 步 · 參賽者與組別</span><span class="s12 mute row" style="gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg> 賽事詳情</span></div>
+  </div>
+  <div style="padding:22px 20px 0">
+    <h1 class="h-zh" style="font-size:26px">誰要參加？</h1>
+    <p class="s14 mute" style="margin-top:6px">金邊濱河半程馬拉松 2026 · 11 月 15 日 · 支持個人與跑團團購（單筆最多 5 人，滿 3 人享團購優惠）</p>
+    <div class="note leaf" style="margin-top:14px"><b>無需註冊即可報名。</b>完成付款後可以建立 RUN 帳號，保存成績、證書和比賽照片。</div>
+  </div>
+
+  <div class="card" style="margin:18px 16px 0;overflow:hidden">
+    <div class="between" style="padding:12px 16px;background:var(--sunk);border-bottom:1px solid var(--line)">
+      <span class="eyebrow mute" style="letter-spacing:.18em">Participant 1</span><span style="font-weight:700">SOK DARA</span>
+    </div>
+    <div class="stack" style="padding:16px;gap:16px">
+      
+<div class="field">
+  <label>姓名（拉丁字母）<small>與證件一致，將印在號碼布上</small></label>
+  <div class="input  focus">SOK DARA</div>
+</div>
+      <div class="field"><label>參賽者類型</label><div class="seg"><div class="on">Cambodian · 本地</div><div>International</div></div>
+        <div class="note warn" style="margin-top:4px">領取 Race Pack 時需出示柬埔寨身份證件核驗，核驗不通過需現場補差價。</div></div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+        
+<div class="field">
+  <label>出生日期<small>以比賽當天判斷</small></label>
+  <div class="input  ">1996 / 03 / 12</div>
+</div>
+        
+<div class="field">
+  <label>性別</label>
+  <div class="input  ">男</div>
+</div>
+      </div>
+      
+<div class="field">
+  <label>Telegram 號碼<small>接收參賽憑證與提醒</small></label>
+  <div class="input  ">+855 12 345 678</div>
+</div>
+      <div class="field"><label>組別</label>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+          <div class="seg" style="grid-template-columns:1fr"><div class="on col" style="height:56px;line-height:1.2"><b class="num">21K</b><span class="s12" style="opacity:.85">US$15</span></div></div>
+          <div class="seg" style="grid-template-columns:1fr"><div class="col" style="height:56px;line-height:1.2"><b class="num">10K</b><span class="s12 mute">US$12</span></div></div>
+          <div class="seg" style="grid-template-columns:1fr"><div class="col" style="height:56px;line-height:1.2"><b class="num">5K</b><span class="s12 mute">US$12</span></div></div>
+        </div></div>
+      <div class="field"><label>T 恤尺碼<small>亞洲版型，偏小建議加一號</small></label>
+        <div class="row" style="gap:8px"><span class="chip " style="padding:0 0;width:52px;justify-content:center">XS</span><span class="chip " style="padding:0 0;width:52px;justify-content:center">S</span><span class="chip on" style="padding:0 0;width:52px;justify-content:center">M</span><span class="chip " style="padding:0 0;width:52px;justify-content:center">L</span><span class="chip " style="padding:0 0;width:52px;justify-content:center">XL</span></div></div>
+    </div>
+  </div>
+
+  <div style="padding:14px 16px 0"><div class="btn ghost wide row" style="gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> 再加一位參賽者（跑團團購）</div></div>
+
+  <div style="position:absolute;left:0;right:0;bottom:66px;padding:12px 16px;background:rgba(255,255,255,.96);border-top:1px solid var(--line)" class="between">
+    <div><div class="s12 mute">1 位參賽者 · 21K</div><div class="num" style="font-weight:700;font-size:18px">US$15</div></div>
+    <div class="btn lg" style="min-width:170px">下一步 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></div>
+  </div>
+  <div class="mnav"><div class=""><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>首頁</span></div><div class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/></svg><span>賽事</span></div><div class=""><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>照片</span></div><div class=""><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>成績</span></div><div class=""><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg><span>我的</span></div></div>
+</div>
+</x-dc>
+</body>
+</html>

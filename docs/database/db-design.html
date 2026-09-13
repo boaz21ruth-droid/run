@@ -1,0 +1,460 @@
+<title>WeRun 数据库设计</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#F6F8FA; --card:#FFFFFF; --sunk:#EFF3F7;
+  --ink:#101820; --ink-mid:#3D5468; --ink-mute:#5F6E7E;
+  --line:#E4E9EE; --line-hard:#CBD5DE;
+  --brand:#0F66AE; --brand-tint:#E8F1FB; --brand-deep:#0A4D85;
+  --lime:#D7FF3F; --lime-ink:#101820;
+  --ok:#1E7A56; --ok-tint:#E2F6EE;
+  --warn:#9A5A00; --warn-tint:#FFF3DE;
+  --stop:#B8412F; --stop-tint:#FDEBE7;
+  --code-bg:#0F2233; --code-ink:#DCE8F2; --code-key:#7FC4F5; --code-com:#8AA0B3; --code-str:#C9F27A;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --lat:Inter,var(--sans);
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#0F1720; --card:#16212C; --sunk:#1C2933;
+  --ink:#E8EEF4; --ink-mid:#B8C6D3; --ink-mute:#93A3B4;
+  --line:#243240; --line-hard:#34465A;
+  --brand:#6FC1F2; --brand-tint:#17334A; --brand-deep:#A9DCF8;
+  --ok:#5CCB98; --ok-tint:#173428; --warn:#F0B24E; --warn-tint:#3A2C12; --stop:#F08A78; --stop-tint:#3A1F1A;
+  --code-bg:#0A131B; --code-ink:#DCE8F2;
+}}
+:root[data-theme="dark"]{
+  --paper:#0F1720; --card:#16212C; --sunk:#1C2933;
+  --ink:#E8EEF4; --ink-mid:#B8C6D3; --ink-mute:#93A3B4;
+  --line:#243240; --line-hard:#34465A;
+  --brand:#6FC1F2; --brand-tint:#17334A; --brand-deep:#A9DCF8;
+  --ok:#5CCB98; --ok-tint:#173428; --warn:#F0B24E; --warn-tint:#3A2C12; --stop:#F08A78; --stop-tint:#3A1F1A;
+  --code-bg:#0A131B; --code-ink:#DCE8F2;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.75 var(--sans);-webkit-font-smoothing:antialiased;padding-inline:20px}
+h1,h2,h3,p{margin:0}
+a{color:var(--brand)} a:hover{color:var(--brand-deep)}
+a:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:3px}
+code,.mono{font-family:var(--mono);font-size:.88em}
+code{background:var(--sunk);padding:1px 5px;border-radius:4px;color:var(--ink)}
+
+.page{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:200px minmax(0,1fr);gap:56px;padding-block:48px 96px}
+nav.toc{position:sticky;top:24px;align-self:start;font-size:13px}
+nav.toc p{font:600 11px/1 var(--lat);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:12px}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px;border-left:1px solid var(--line)}
+nav.toc a{display:block;padding:4px 0 4px 14px;margin-left:-1px;border-left:2px solid transparent;color:var(--ink-mid);text-decoration:none}
+nav.toc a:hover{color:var(--brand);border-left-color:var(--brand)}
+main{display:grid;gap:64px;min-width:0}
+
+/* header */
+.eyebrow{font:600 11px/1.4 var(--lat);letter-spacing:.24em;text-transform:uppercase;color:var(--brand)}
+header.top h1{font:800 40px/1.15 var(--lat);letter-spacing:-.02em;margin-top:10px;text-wrap:balance}
+header.top h1 span{font-family:var(--sans);font-weight:700}
+header.top .lead{max-width:64ch;color:var(--ink-mid);margin-top:14px;font-size:16px}
+.stats{display:flex;flex-wrap:wrap;gap:0;margin-top:28px;border-block:1px solid var(--line)}
+.stats div{padding:14px 28px 14px 0;margin-right:28px;border-right:1px solid var(--line)}
+.stats div:last-child{border-right:0}
+.stats b{display:block;font:700 26px/1.1 var(--mono);font-variant-numeric:tabular-nums}
+.stats span{font-size:12px;color:var(--ink-mute)}
+.stats .pass b{color:var(--ok)}
+.path{margin-top:16px;font-size:13px;color:var(--ink-mute)}
+
+/* sections */
+section{display:grid;gap:20px;scroll-margin-top:24px}
+section > h2{font-size:24px;font-weight:700;line-height:1.3;text-wrap:balance;display:flex;align-items:baseline;gap:12px}
+section > h2 small{font:500 12px/1 var(--mono);color:var(--ink-mute)}
+section > p.intro{max-width:68ch;color:var(--ink-mid)}
+h3{font-size:16px;font-weight:700}
+
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.rules div{background:var(--card);padding:16px 18px}
+.rules b{display:block;font-size:14px;margin-bottom:4px}
+.rules p{font-size:13.5px;color:var(--ink-mid)}
+
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{font:600 11px/1.3 var(--lat);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-mute);text-align:left;padding:10px 14px;border-bottom:1px solid var(--line-hard);background:var(--sunk);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+td .mono{color:var(--ink)}
+
+.chip{display:inline-block;font:600 11px/1 var(--mono);padding:4px 7px;border-radius:4px;white-space:nowrap;letter-spacing:.02em}
+.c-check{background:var(--brand-tint);color:var(--brand)}
+.c-uniq{background:var(--ok-tint);color:var(--ok)}
+.c-trig{background:var(--warn-tint);color:var(--warn)}
+.c-app{background:var(--sunk);color:var(--ink-mid)}
+.phase1{background:var(--lime);color:var(--lime-ink)}
+.phase2{background:var(--sunk);color:var(--ink-mute);border:1px solid var(--line-hard)}
+.pass{color:var(--ok);font-weight:600}
+
+/* module table catalogue */
+.modules{display:grid;gap:28px}
+.mod{display:grid;grid-template-columns:210px minmax(0,1fr);gap:24px;padding-top:20px;border-top:1px solid var(--line)}
+.mod header h3{margin-bottom:4px}
+.mod header .mono{font-size:12px;color:var(--ink-mute)}
+.mod header p{font-size:13px;color:var(--ink-mid);margin-top:8px}
+.mod ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px 24px}
+.mod li{font-size:13.5px;color:var(--ink-mid);line-height:1.55}
+.mod li code{display:block;background:none;padding:0;font-weight:600;font-size:13px;color:var(--ink);margin-bottom:1px}
+
+/* diagrams + code */
+.figure{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;overflow-x:auto}
+.figure pre.mermaid{margin:0;background:none;text-align:center}
+.figcap{font-size:12.5px;color:var(--ink-mute);margin-top:10px}
+pre.sql{margin:0;background:var(--code-bg);color:var(--code-ink);border-radius:10px;padding:18px 20px;overflow-x:auto;font:13px/1.65 var(--mono);tab-size:2}
+pre.sql .k{color:var(--code-key)} pre.sql .c{color:var(--code-com)} pre.sql .s{color:var(--code-str)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;align-items:start}
+.steps h3{margin-bottom:8px}
+.steps p{font-size:13.5px;color:var(--ink-mid);margin-bottom:10px}
+
+/* bib range illustration */
+.bib{display:grid;gap:8px}
+.bib-bar{position:relative;height:34px;border-radius:6px;background:var(--brand-tint);border:1px solid var(--line-hard)}
+.bib-res{position:absolute;top:0;bottom:0;left:9%;width:1%;min-width:10px;background:var(--warn-tint);border-inline:2px solid var(--warn)}
+.bib-used{position:absolute;top:0;bottom:0;left:0;width:5.1%;background:var(--brand);opacity:.35;border-radius:5px 0 0 5px}
+.bib-legend{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:12.5px;color:var(--ink-mute)}
+.bib-legend span{font-family:var(--mono)}
+
+.open{display:grid;gap:12px;counter-reset:q}
+.open div{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--ok);border-radius:6px;padding:14px 18px}
+.open b{display:block;margin-bottom:4px}
+.open p{font-size:13.5px;color:var(--ink-mid);max-width:72ch}
+
+@media (max-width: 900px){
+  .page{grid-template-columns:1fr;gap:32px;padding-block:28px 64px}
+  nav.toc{position:static}
+  nav.toc ol{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));border-left:0}
+  nav.toc a{padding-left:0;border-left:0}
+  .mod{grid-template-columns:1fr;gap:12px}
+  header.top h1{font-size:30px}
+}
+@media (max-width: 480px){
+  .stats div{padding-right:16px;margin-right:16px}
+  .stats b{font-size:21px}
+}
+</style>
+
+<div class="page">
+<nav class="toc" aria-label="目录">
+  <p>目录</p>
+  <ol>
+    <li><a href="#conv">通用约定</a></li>
+    <li><a href="#overview">模块总览</a></li>
+    <li><a href="#er">核心关系</a></li>
+    <li><a href="#state">订单状态机</a></li>
+    <li><a href="#tx">关键事务</a></li>
+    <li><a href="#guards">数据库守住的规则</a></li>
+    <li><a href="#tables">全部 69 张表</a></li>
+    <li><a href="#app">应用层负责的规则</a></li>
+    <li><a href="#decisions">已确认的决定</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="top">
+  <p class="eyebrow">WeRun · PostgreSQL 16 · Go + sqlc</p>
+  <h1>WeRun <span>数据库设计</span></h1>
+  <p class="lead">按 Demo 里 <code>run-domain.js</code> 的业务规则建模，支付改为「扫固定收款码 → 上传截图 → 财务人工审核」。能交给数据库守住的规则，都用约束或触发器写死，不只依赖 Go 代码。</p>
+  <div class="stats">
+    <div><b>69</b><span>张表</span></div>
+    <div><b>9</b><span>个迁移文件</span></div>
+    <div><b>13</b><span>个业务模块</span></div>
+    <div class="pass"><b>23/23</b><span>约束测试通过</span></div>
+  </div>
+  <p class="path">建表脚本：<code>docs/database/migrations/0001…0009_*.sql</code>（goose 格式，已在 postgres:16 容器中按顺序执行）</p>
+</header>
+
+<section id="conv">
+  <h2>通用约定</h2>
+  <div class="rules">
+    <div><b>主键与编号</b><p><code>bigint identity</code> 做主键，只在库内使用。对用户展示的一律是 <code>order_no</code>、<code>reg_no</code> 这类编号，二维码内容用随机的 <code>ticket_code</code>。</p></div>
+    <div><b>金额</b><p><code>*_cents bigint</code> 加 <code>currency char(3)</code>。$21.93 存成 <code>2193</code>，不用浮点。柬埔寨同时有 USD 和 KHR 收款户。</p></div>
+    <div><b>枚举</b><p>用 <code>text + CHECK</code>，不用 PG enum。增减状态只需改约束，迁移成本低。</p></div>
+    <div><b>三语文案</b><p><code>jsonb</code>：<code>{"zh","en","km"}</code>。赛事名、组别名、价格档名、商品名都按这个格式存。</p></div>
+    <div><b>个人信息</b><p>证件号存两列：<code>id_no_enc</code> 是 AES-GCM 密文，<code>id_no_hash</code> 是 HMAC，用于现场核验比对，不需要解密。个人信息长期保留，不做定时清理。</p></div>
+    <div><b>留痕</b><p><code>audit_logs</code>、<code>registration_changes</code>、扫码流水、签署记录由触发器禁止 UPDATE/DELETE，只能追加。</p></div>
+  </div>
+</section>
+
+<section id="overview">
+  <h2>模块总览 <small>13 modules</small></h2>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>模块</th><th>迁移</th><th>主要表</th><th>表数</th><th>阶段</th></tr></thead>
+    <tbody>
+      <tr><td>账号 · 员工 · 审计</td><td class="mono">0001</td><td class="mono">users, staff, sessions, audit_logs, files</td><td class="num">9</td><td><span class="chip phase1">一期</span></td></tr>
+      <tr><td>赛事 · 组别 · 价格档</td><td class="mono">0002</td><td class="mono">events, event_categories, price_rules, coupons</td><td class="num">8</td><td><span class="chip phase1">一期</span></td></tr>
+      <tr><td>报名订单</td><td class="mono">0003</td><td class="mono">reg_orders, registrations, free_signups</td><td class="num">7</td><td><span class="chip phase1">一期</span></td></tr>
+      <tr><td>周边商品</td><td class="mono">0004</td><td class="mono">merch_skus, merch_orders, inventory_adjustments</td><td class="num">5</td><td><span class="chip phase1">一期</span></td></tr>
+      <tr><td>收款审核</td><td class="mono">0005</td><td class="mono">payment_proofs, payment_receipts, payment_exceptions</td><td class="num">4</td><td><span class="chip phase1">一期</span></td></tr>
+      <tr><td>银行流水对账</td><td class="mono">0005</td><td class="mono">bank_statement_lines, reconciliations</td><td class="num">4</td><td><span class="chip phase2">可后置</span></td></tr>
+      <tr><td>退款 · 纠错 · 协助请求</td><td class="mono">0006</td><td class="mono">reg_refunds, merch_refunds, refund_corrections</td><td class="num">4</td><td><span class="chip phase1">一期</span></td></tr>
+      <tr><td>号码布 · 现场领物</td><td class="mono">0007</td><td class="mono">bib_ranges, bib_assignments, race_pack_facts</td><td class="num">6</td><td><span class="chip phase1">一期</span></td></tr>
+      <tr><td>成绩</td><td class="mono">0008</td><td class="mono">result_batches, results, result_claim_cases</td><td class="num">3</td><td><span class="chip phase1">一期</span></td></tr>
+      <tr><td>赛道照片</td><td class="mono">0008</td><td class="mono">photos, photo_bib_tags, photo_removal_requests</td><td class="num">5</td><td><span class="chip phase1">一期</span></td></tr>
+      <tr><td>官方内容 · 跑友活动</td><td class="mono">0009</td><td class="mono">contents, community_activities, disclaimer_signatures</td><td class="num">8</td><td><span class="chip phase1">一期</span></td></tr>
+      <tr><td>留言板 · 跑后故事</td><td class="mono">0009</td><td class="mono">event_comments, stories, story_likes</td><td class="num">4</td><td><span class="chip phase2">可后置</span></td></tr>
+      <tr><td>通知 · 告警</td><td class="mono">0009</td><td class="mono">notification_logs, ops_alerts</td><td class="num">2</td><td><span class="chip phase1">一期</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="er">
+  <h2>核心关系：报名 → 付款 → 参赛</h2>
+  <p class="intro">一张订单可以包含多名参赛人。参赛人拆成两张表：<code>order_participants</code> 是下单时冻结的财务快照，<code>registrations</code> 是可以修改、可以转让的参赛资料。号码布、领物、成绩都挂在 <code>registrations</code> 上。</p>
+  <div class="figure">
+<pre class="mermaid">
+erDiagram
+  events ||--o{ event_categories : "组别·名额"
+  events ||--o{ price_rules : "价格档·配额"
+  event_categories }o--o{ price_rules : category_price_rules
+  events ||--o{ reg_orders : ""
+  reg_orders ||--|{ order_participants : "财务快照"
+  order_participants ||--|| registrations : "参赛资料"
+  registrations ||--o{ bib_assignments : "当前号 + 历史号"
+  registrations ||--o| race_pack_facts : "领物事实"
+  registrations ||--o{ registration_changes : "改资料·转让"
+  reg_orders ||--o{ payment_proofs : "截图凭证"
+  payment_proofs ||--o| payment_receipts : "审核通过=到账"
+  payment_receipts ||--o{ payment_exceptions : "多付·少付·迟到"
+  order_participants ||--o{ reg_refunds : "线下退款"
+  reg_refunds ||--o{ refund_corrections : "补退·纠错"
+  payment_accounts ||--o{ payment_proofs : "固定收款码"
+</pre>
+  </div>
+</section>
+
+<section id="state">
+  <h2>报名订单状态机 <small>reg_orders.status</small></h2>
+  <p class="intro">和 Demo 的 10 分钟支付窗口不同，人工审核需要多一个"待审核"阶段。<b>名额从下单起就锁住</b>，审核期间一直保持。只有上传期或重传期超时才会释放名额，而且只释放一次。</p>
+  <div class="figure">
+<pre class="mermaid">
+stateDiagram-v2
+  [*] --> PENDING_PAYMENT: 下单·预留名额与配额
+  PENDING_PAYMENT --> PROOF_SUBMITTED: 上传截图
+  PROOF_SUBMITTED --> PAID: 财务通过·RESERVED→CONSUMED
+  PROOF_SUBMITTED --> PROOF_REJECTED: 驳回(原因码)
+  PROOF_REJECTED --> PROOF_SUBMITTED: 重新上传
+  PENDING_PAYMENT --> EXPIRED: 上传期超时·释放
+  PROOF_REJECTED --> EXPIRED: 重传期超时·释放
+  PENDING_PAYMENT --> CANCELLED: 付款前取消·释放
+  EXPIRED --> PAID: 迟到到账恢复(重新占名额)
+  PAID --> PARTIALLY_REFUNDED: 部分参赛人退款结算
+  PARTIALLY_REFUNDED --> REFUNDED
+  PAID --> REFUNDED
+</pre>
+    <p class="figcap"><code>deadline_at</code> 始终表示"当前阶段的截止时间"：下单后是上传期（默认 30 分钟），被驳回后是重传期（默认 24 小时），审核中为 NULL。时长配置在 <code>system_settings</code>。免费活动没有支付动作，不建订单，报名直接写入 <code>free_signups</code>。</p>
+  </div>
+</section>
+
+<section id="tx">
+  <h2>关键事务</h2>
+  <div class="steps">
+    <div>
+      <h3>占名额：条件更新，不先查再改</h3>
+      <p>一单里同组别的人合并成一次更新，影响行数为 0 就说明名额不够，整单回滚。<code>CHECK (used_count + reserved_count &lt;= capacity)</code> 是最后一道兜底。</p>
+<pre class="sql"><span class="k">UPDATE</span> event_categories
+   <span class="k">SET</span> reserved_count = reserved_count + $2
+ <span class="k">WHERE</span> id = $1
+   <span class="k">AND</span> used_count + reserved_count + $2 &lt;= capacity
+<span class="k">RETURNING</span> capacity - used_count - reserved_count <span class="k">AS</span> left;
+<span class="c">-- price_rules 同理；任一返回 0 行 → ROLLBACK</span></pre>
+    </div>
+    <div>
+      <h3>超时释放：恰好一次</h3>
+      <p>River 定时任务取出到期订单，跳过被其他进程锁住的行。以 <code>reservation_state</code> 从 RESERVED 改成 RELEASED 作为锚点，重复执行也不会释放第二次。</p>
+<pre class="sql"><span class="k">SELECT</span> id <span class="k">FROM</span> reg_orders
+ <span class="k">WHERE</span> status <span class="k">IN</span> (<span class="s">'PENDING_PAYMENT'</span>,<span class="s">'PROOF_REJECTED'</span>)
+   <span class="k">AND</span> deadline_at &lt;= now()
+ <span class="k">ORDER BY</span> deadline_at <span class="k">LIMIT</span> 100
+   <span class="k">FOR UPDATE SKIP LOCKED</span>;
+
+<span class="k">UPDATE</span> reg_orders
+   <span class="k">SET</span> status=<span class="s">'EXPIRED'</span>, reservation_state=<span class="s">'RELEASED'</span>,
+       reservation_release_kind=<span class="s">'ORDER_EXPIRED'</span>, expired_at=now()
+ <span class="k">WHERE</span> id=$1 <span class="k">AND</span> reservation_state=<span class="s">'RESERVED'</span>;
+<span class="c">-- 影响 1 行才去扣减各组别 reserved_count</span></pre>
+    </div>
+    <div>
+      <h3>财务通过一份凭证</h3>
+      <p>在一个事务里完成，任何一步失败就整体回滚：</p>
+<pre class="sql"><span class="c">-- 1 锁订单，确认仍是 PROOF_SUBMITTED</span>
+<span class="k">SELECT</span> … <span class="k">FROM</span> reg_orders <span class="k">WHERE</span> id=$1 <span class="k">FOR UPDATE</span>;
+<span class="c">-- 2 凭证 → APPROVED（reviewed_by 必填）</span>
+<span class="c">-- 3 写 payment_receipts：同收款户同交易号唯一</span>
+<span class="c">-- 4 金额不符 → payment_exceptions(OVERPAID/UNDERPAID)</span>
+<span class="c">-- 5 组别/价格档 reserved → used，优惠码 CONSUMED</span>
+<span class="c">-- 6 订单 PAID、reservation CONSUMED、deadline NULL</span>
+<span class="c">-- 7 registrations PENDING → CONFIRMED</span>
+<span class="c">-- 8 audit_logs + River 任务：发凭证、分配号码布</span>
+<span class="k">COMMIT</span>;</pre>
+    </div>
+  </div>
+</section>
+
+<section id="guards">
+  <h2>数据库守住的规则</h2>
+  <p class="intro">这些规则即使 Go 代码写错也绕不过去。下表最后一列是在 postgres:16 容器里用测试数据实际触发的结果；对应审核报告里的 P0 问题，比如"退款可以超过已付款"，这里直接在库里拦住。</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>规则</th><th>机制</th><th>约束 / 触发器</th><th>实测</th></tr></thead>
+    <tbody>
+      <tr><td>组别名额不超卖（已确认 + 预留 ≤ 名额）</td><td><span class="chip c-check">CHECK</span></td><td class="mono">event_categories_no_oversell</td><td class="pass">拦截</td></tr>
+      <tr><td>价格档配额、优惠码次数、周边库存不超卖</td><td><span class="chip c-check">CHECK</span></td><td class="mono">price_rules_no_oversell · merch_skus_no_oversell</td><td class="pass">拦截</td></tr>
+      <tr><td>应付 = 挂牌价 − 优惠；已过期/已取消订单必须已释放名额</td><td><span class="chip c-check">CHECK</span></td><td class="mono">reg_orders_check*</td><td class="pass">拦截</td></tr>
+      <tr><td>识别分不超过 50 美分，应付 = 明细合计 − 识别分（报名、周边订单相同）</td><td><span class="chip c-check">CHECK</span></td><td class="mono">ident_offset_cents BETWEEN 0 AND 50</td><td class="pass">拦截</td></tr>
+      <tr><td>付费赛事只能建订单，免费活动只能走免费报名和候补</td><td><span class="chip c-trig">TRIGGER</span></td><td class="mono">*_event_type</td><td class="pass">拦截</td></tr>
+      <tr><td>免费活动同一分组内，同一手机号 + 同一姓名只保留一条有效报名</td><td><span class="chip c-uniq">UNIQUE</span></td><td class="mono">free_signups_one_active</td><td class="pass">拦截</td></tr>
+      <tr><td>不需要审核的跑友活动不能处于审核中或被驳回</td><td><span class="chip c-check">CHECK</span></td><td class="mono">community_activities_check*</td><td class="pass">拦截</td></tr>
+      <tr><td>参赛人财务快照不可修改、不可删除</td><td><span class="chip c-trig">TRIGGER</span></td><td class="mono">order_participants_immutable</td><td class="pass">拦截</td></tr>
+      <tr><td>同一交易号不能用在两份有效凭证上</td><td><span class="chip c-uniq">UNIQUE</span></td><td class="mono">payment_proofs_txn_ref_uniq</td><td class="pass">拦截</td></tr>
+      <tr><td>一张订单同时只有一份待审凭证；驳回必须带原因码</td><td><span class="chip c-uniq">UNIQUE</span> <span class="chip c-check">CHECK</span></td><td class="mono">payment_proofs_one_pending_reg</td><td class="pass">拦截</td></tr>
+      <tr><td>一笔银行流水只入账一次</td><td><span class="chip c-uniq">UNIQUE</span></td><td class="mono">payment_receipts (account, txn_ref)</td><td class="pass">拦截</td></tr>
+      <tr><td>累计实退 ≤ 参赛人实付（或 ≤ 异常到账金额），补退也算在内</td><td><span class="chip c-trig">TRIGGER</span></td><td class="mono">reg_refunds_amount_cap</td><td class="pass">拦截</td></tr>
+      <tr><td>同一参赛人只允许一笔进行中的退款；结算必须有打款凭证</td><td><span class="chip c-uniq">UNIQUE</span> <span class="chip c-check">CHECK</span></td><td class="mono">reg_refunds_one_open</td><td class="pass">拦截</td></tr>
+      <tr><td>周边退款结算金额必须与应退金额逐分一致；迟到到账的退款不能拒绝</td><td><span class="chip c-check">CHECK</span></td><td class="mono">merch_refunds_check*</td><td>—</td></tr>
+      <tr><td>号码布在同一赛事内唯一，历史号（已替换、已作废）永不复用</td><td><span class="chip c-uniq">UNIQUE</span></td><td class="mono">bib_assignments (event_id, bib_number)</td><td class="pass">拦截</td></tr>
+      <tr><td>一个报名只有一个当前号码布；同一赛事号段不重叠</td><td><span class="chip c-uniq">UNIQUE</span> <span class="chip c-check">EXCLUDE</span></td><td class="mono">bib_assignments_one_current · bib_ranges_no_overlap</td><td class="pass">拦截</td></tr>
+      <tr><td>同一退款的退货只入库一次</td><td><span class="chip c-uniq">UNIQUE</span></td><td class="mono">inventory_return_once</td><td>—</td></tr>
+      <tr><td>审计、资料变更、扫码流水、免责签署只能追加</td><td><span class="chip c-trig">TRIGGER</span></td><td class="mono">*_append_only</td><td class="pass">拦截</td></tr>
+      <tr><td>同一组别同时只有一个已发布的成绩批次</td><td><span class="chip c-uniq">UNIQUE</span></td><td class="mono">result_batches_one_published</td><td>—</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="bib" aria-label="号码布号段示意">
+    <h3>号码布号段示例：欢乐 10K</h3>
+    <div class="bib-bar"><div class="bib-used"></div><div class="bib-res"></div></div>
+    <div class="bib-legend"><span>2000</span><span>已分配 2000–2050</span><span>预留段 2090–2099（嘉宾 / 配速员）</span><span>2999</span></div>
+  </div>
+</section>
+
+<section id="tables">
+  <h2>全部 69 张表</h2>
+  <div class="modules">
+    <div class="mod"><header><h3>账号 · 员工 · 审计</h3><span class="mono">0001_foundation</span><p>7 个后台角色固定写在 CHECK 里，权限矩阵写在 Go 代码中。</p></header>
+      <ul>
+        <li><code>files</code>本地磁盘文件的元数据：公开/私有、sha256、感知哈希</li>
+        <li><code>users</code>跑者账号，手机号或 Telegram 登录</li>
+        <li><code>runner_profiles</code>常用参赛人资料，报名时直接选</li>
+        <li><code>auth_otps</code>短信验证码，只存哈希</li>
+        <li><code>staff</code>后台员工，每人一个角色，argon2id 密码 + TOTP</li>
+        <li><code>sessions</code>用户和员工共用的 refresh token</li>
+        <li><code>audit_logs</code>两端共用的审计流水，财务动作单独打标</li>
+        <li><code>idempotency_keys</code>弱网重复提交不生成第二张订单</li>
+        <li><code>system_settings</code>付款窗口、重传期、审核时限等配置</li>
+      </ul></div>
+    <div class="mod"><header><h3>赛事</h3><span class="mono">0002_events</span><p>免费活动也存在 events 里（event_type = FREE_ACTIVITY），但报名不建订单。</p></header>
+      <ul>
+        <li><code>events</code>状态只有草稿/已发布，报名开关和公开展示是独立字段；community_review_required 控制跑友活动是否审核</li>
+        <li><code>event_categories</code>组别：名额、已确认数、预留数、年龄门槛</li>
+        <li><code>price_rules</code>价格档：适用人群（全部/本地）、配额</li>
+        <li><code>category_price_rules</code>组别适用哪些价格档</li>
+        <li><code>sponsors</code> / <code>event_sponsors</code>赞助商、照片水印、免费领取照片</li>
+        <li><code>coupons</code>折扣、立减、免单码</li>
+        <li><code>staff_event_assignments</code>摄影师和现场人员只能看被指派且在有效期内的赛事</li>
+      </ul></div>
+    <div class="mod"><header><h3>报名</h3><span class="mono">0003_registration</span><p>财务快照和参赛资料分表：改名、转让不影响已付金额。</p></header>
+      <ul>
+        <li><code>reg_orders</code>订单：状态、预留状态、识别分（≤ 50 美分）、当前阶段截止时间</li>
+        <li><code>order_participants</code>参赛人财务快照：命中的价格档、分摊后的实付</li>
+        <li><code>registrations</code>参赛资料：holder_id 表示身份，ticket_code 用于凭证二维码</li>
+        <li><code>registration_changes</code>改拼写、改资料、转让的前后记录</li>
+        <li><code>coupon_redemptions</code>优惠码占用状态，跟随订单预留一起变化</li>
+        <li><code>free_signups</code>免费活动报名：不建订单，名额同样占用组别计数，支持现场签到</li>
+        <li><code>waitlist_entries</code>免费活动满员后的候补，转正后关联到 free_signups</li>
+      </ul></div>
+    <div class="mod"><header><h3>收款审核</h3><span class="mono">0005_payments</span><p>凭证是用户自称付过款，到账记录是财务确认钱已到，两者分表。</p></header>
+      <ul>
+        <li><code>payment_accounts</code>固定收款码（ABA / Bakong，USD 和 KHR 分开）</li>
+        <li><code>payment_proofs</code>截图、交易号、声明金额，审核结果和驳回原因码</li>
+        <li><code>payment_receipts</code>确认到账的钱，只有财务或系统能写</li>
+        <li><code>payment_exceptions</code>多付、少付、重复付、迟到到账、无法匹配</li>
+        <li><code>bank_statement_imports</code> / <code>bank_statement_lines</code>导入的 ABA 商户流水</li>
+        <li><code>reconciliations</code> / <code>reconciliation_discrepancies</code>按日对账和差异处理</li>
+      </ul></div>
+    <div class="mod"><header><h3>退款</h3><span class="mono">0006_refunds</span><p>钱通过线下转账退回，系统只登记，并要求上传打款凭证。</p></header>
+      <ul>
+        <li><code>reg_refunds</code>报名退款：申请、批准、实退三个金额分列</li>
+        <li><code>refund_corrections</code>实际打款少了要补退，多了要追回</li>
+        <li><code>merch_refunds</code>周边整单退款，退款和退货入库分开记录</li>
+        <li><code>support_requests</code>用户"帮我退款 / 帮我查付款"的诉求，不是退款单</li>
+      </ul></div>
+    <div class="mod"><header><h3>周边</h3><span class="mono">0004_merch</span><p>可购数量 = 库存 − 预留，不单独存列。</p></header>
+      <ul>
+        <li><code>merch_products</code> / <code>merch_skus</code>商品和规格，价格挂在规格上</li>
+        <li><code>merch_orders</code>订单状态、履约状态、退款状态分成三个字段</li>
+        <li><code>merch_order_items</code>下单时冻结的明细快照</li>
+        <li><code>inventory_adjustments</code>入库、盘点、损耗、退货入库，记录前后数量</li>
+      </ul></div>
+    <div class="mod"><header><h3>号码布 · 领物</h3><span class="mono">0007_bib_racepack</span><p>领物名单由报名数据推出，这里只存领没领、证件核验过没有。</p></header>
+      <ul>
+        <li><code>import_jobs</code>号码布 CSV、成绩 CSV、银行流水的导入任务和逐行错误</li>
+        <li><code>bib_ranges</code>每个组别的号段、预留段、分配方式</li>
+        <li><code>bib_assignments</code>预留 / 已分配 / 已替换 / 已作废，永不删除</li>
+        <li><code>race_pack_facts</code>当前领物和证件核验状态</li>
+        <li><code>race_pack_scan_logs</code>扫码流水，client_event_id 保证离线重传幂等</li>
+        <li><code>race_pack_conflicts</code>多台设备离线重复发包时的裁决记录</li>
+      </ul></div>
+    <div class="mod"><header><h3>成绩 · 照片</h3><span class="mono">0008_results_photos</span><p>一期只做"赛事 → 号码布 → 照片"，不卖照片；标签只存号码，不存姓名。</p></header>
+      <ul>
+        <li><code>result_batches</code>草稿 → 已校验 → 已发布 → 已撤回</li>
+        <li><code>results</code>枪声成绩、净成绩、三种排名，分段成绩存 jsonb</li>
+        <li><code>result_claim_cases</code>历史成绩认领：客服受理，运营最终绑定</li>
+        <li><code>photo_batches</code> / <code>photos</code>原图私有，水印预览图公开</li>
+        <li><code>photo_bib_tags</code>一张照片可以标多个号码布，按赛事 + 号码建索引</li>
+        <li><code>photo_removal_requests</code> / <code>photo_user_actions</code>下架申请、"不是我"、免费领取</li>
+      </ul></div>
+    <div class="mod"><header><h3>内容 · 社区 · 通知</h3><span class="mono">0009_content_community</span><p>跑友活动发布前必须签署免责声明，签署记录和全文哈希永久保存。</p></header>
+      <ul>
+        <li><code>contents</code>官方代发内容，冻结时记录原因和恢复条件</li>
+        <li><code>disclaimer_versions</code> / <code>disclaimer_signatures</code>声明版本（三语）和签署记录</li>
+        <li><code>community_activities</code>跑友活动：发布时冻结是否需要审核（按赛事开关或全局默认），冻结单独一个字段</li>
+        <li><code>community_activity_images</code> / <code>_joins</code> / <code>community_reports</code>图片、报名、举报</li>
+        <li><code>contact_view_logs</code>谁在什么时候看了组织者的联系方式</li>
+        <li><code>event_comments</code> / <code>stories</code> / <code>story_likes</code> / <code>story_comments</code>留言板和跑后故事</li>
+        <li><code>notification_logs</code>Telegram、短信、邮件发送记录，dedupe_key 防重复发送</li>
+        <li><code>ops_alerts</code>审核超时、计数偏差、离线冲突等后台告警</li>
+      </ul></div>
+  </div>
+</section>
+
+<section id="app">
+  <h2>应用层负责的规则</h2>
+  <p class="intro">下面这些规则跨行或跨表，写成数据库约束代价太高，由 Go 的领域模块负责，并配单元测试。</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>规则</th><th>做法</th></tr></thead>
+    <tbody>
+      <tr><td>价格档匹配</td><td>组别允许的价格档 ∩ 身份可用 ∩ 配额有剩余，取最低价。结果写进 <code>order_participants.price_rule_id</code>，之后不再重算</td></tr>
+      <tr><td>优惠分摊</td><td>按分分摊到每个参赛人，余数放在第一行；保证 Σ<code>paid_cents</code> = <code>amount_cents</code></td></tr>
+      <tr><td>识别分分配</td><td>在同一收款户、同一挂牌金额的待付款订单里，挑一个没被占用的 1–50 美分；全被占用时取 0，只靠交易号匹配</td></tr>
+      <tr><td>年龄资格</td><td>按比赛当天的年龄和 <code>min_age</code> 比较</td></tr>
+      <tr><td>改拼写还是换人</td><td>规范化姓名后，编辑距离 ≤ 2 或只是词序不同算改拼写；否则只能走转让，并生成新的 <code>holder_id</code>，证件核验需要重做</td></tr>
+      <tr><td>并发退款</td><td>发起或结算前先 <code>SELECT … FOR UPDATE</code> 锁住参赛人行，避免两个财务同时结算绕过金额上限触发器</td></tr>
+      <tr><td>计数偏差</td><td>每晚按参赛人和订单重新统计 <code>used_count</code> / <code>reserved_count</code>，和计数列对不上就写 <code>ops_alerts</code></td></tr>
+      <tr><td>重复截图</td><td>上传时按 sha256 精确匹配、按感知哈希找相似图，命中就标记 <code>dup_file_hit</code>，提示审核员</td></tr>
+      <tr><td>可见范围</td><td>摄影师和现场人员的查询统一加赛事指派过滤；摄影师的接口不返回姓名、手机号、证件号</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="decisions">
+  <h2>已确认的决定 <small>2026-09-13</small></h2>
+  <div class="open">
+    <div><b>跑友活动是否审核，由赛事开关决定</b><p>每个赛事有 <code>community_review_required</code> 开关，打开就需要平台审核。不挂在赛事下的活动使用全局默认值 <code>community.review_required_default</code>。活动发布时把当时的规则写进 <code>review_required</code>，之后改开关不影响已发布的活动。</p></div>
+    <div><b>启用识别分，最多 50 美分</b><p>报名订单和周边订单都有 <code>ident_offset_cents</code>，范围 0–50，计入优惠，用户只会少付不会多付。交易号唯一仍是判断重复付款的硬约束。</p></div>
+    <div><b>免费活动不生成订单</b><p>没有支付动作，报名写入 <code>free_signups</code>，名额照样占用组别计数。数据库触发器保证付费赛事只能建订单、免费活动只能走免费报名。</p></div>
+    <div><b>一期不卖照片</b><p>没有照片订单相关的表，只保留免费领取、下载和"不是我"的记录。</p></div>
+    <div><b>个人信息长期保留</b><p>不做定时清理。证件号仍然加密存储，后台按角色脱敏展示，查看和导出都写入审计。</p></div>
+  </div>
+</section>
+</main>
+</div>

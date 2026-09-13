@@ -1,0 +1,22 @@
+{
+  "pages": [
+    { "id": "page-1", "name": "v7 主流程 · 手機 + 桌面" },
+    { "id": "page-2", "name": "設計系統 v7" }
+  ],
+  "artboards": [
+    { "file": "Main.dc.html", "title": "01 首頁 · 手機", "x": 0, "y": 0, "w": 390, "h": 5180, "page": "page-1" },
+    { "file": "Races.dc.html", "title": "02 全部賽事", "x": 470, "y": 0, "w": 390, "h": 1700, "page": "page-1" },
+    { "file": "Detail.dc.html", "title": "03 賽事詳情", "x": 940, "y": 0, "w": 390, "h": 1720, "page": "page-1" },
+    { "file": "Register.dc.html", "title": "04 報名 · 第 1 步", "x": 1410, "y": 0, "w": 390, "h": 1100, "page": "page-1" },
+    { "file": "Pay.dc.html", "title": "05 確認訂單 · KHQR", "x": 1880, "y": 0, "w": 390, "h": 1260, "page": "page-1" },
+    { "file": "Done.dc.html", "title": "06 報名成功 · 參賽憑證", "x": 2350, "y": 0, "w": 390, "h": 1290, "page": "page-1" },
+    { "file": "HomeDesktop.dc.html", "title": "07 首頁 · 桌面 1440", "x": 0, "y": 5340, "w": 1440, "h": 3140, "page": "page-1" },
+    { "file": "System.dc.html", "title": "設計系統 v7 · Token / 字體 / 控件", "x": 0, "y": 0, "w": 1200, "h": 1560, "page": "page-2" }
+  ],
+  "annotations": [
+    { "id": "why-v7", "x": 0, "y": -820, "w": 440, "page": "page-1", "text": "現狀診斷 · 為什麼要做 v7\n\n1. index.html 裡疊了三套色板：v6 RUN Blue token 層（第 80 行）、WeRun Sky Blue mockup（第 2238 行）、Soothing Green（第 2663 行）。第 2663 行的 :root 排在後面，把 --brand / --ink / --paper / --r 全部覆蓋掉，v6 算好的 AA 對比度實際上沒有生效（線上 --brand 是 #0284C7，不是 #0F66AE）。\n2. 首頁疊了兩個 hero（00 天空 banner + 01 照片 hero），運動分類 pills 也出現兩次。\n3. 底部導航 / 標題 / 按鈕大量用 emoji 當圖標（旗子、碼錶、相機、跑鞋、人像、閃光、獎牌、國旗）。\n4. 繁中頁面的頭部卻是英文 Home / Events / Moments / Sign Up；手機上 Sign Up 折成兩行。\n5. 圓角 / 按鈕形狀不統一：首頁 10px 方角、其他頁 100px 藥丸；底部導航的選中色是螢光綠 #00E599。" },
+    { "id": "what-v7", "x": 540, "y": -820, "w": 440, "page": "page-1", "text": "v7 做了什麼（不新造顏色，只回到 v6 token 層）\n\n· 一頁一個 hero：照片 hero + 壓底的「下一場賽事」卡，天空漸層改做頁尾 CTA。\n· 品牌只剩 RUN Blue：#0F66AE 承擔文字與按鈕，#0877FF 只做指示條 / 路線等圖形；Lime 只做「報名中」等標籤。\n· 圖標全部換成 24px 描邊 SVG，介面文案不再夾 emoji。\n· 統一藥丸按鈕、14px 卡片圓角、44px 觸控高度、數字 mono + tabular-nums。\n· 頭部只放品牌 + 語言切換；賽事詳情 / 報名 / 付款底部都是「價格 + 主動作」的固定條。\n· 報名成功頁把「參賽憑證」做成一張可存圖的票卡（號碼布 + QR + 發槍時間）。\n· 桌面版 hero 右側直接放下一場賽事卡，數字統計併入 hero，不再單獨一條。" },
+    { "id": "rollout", "x": 1080, "y": -820, "w": 440, "page": "page-1", "text": "落地順序建議（改 index.html）\n\n1. 刪掉或作用域化第 2238 / 2663 / 2855 行三個 :root 覆蓋塊，讓第 80 行的 v6 token 生效；順手把 inline 的 #0284C7 / #0F172A / #475569 換回 var(--brand) / var(--ink) / var(--ink-mid)。\n2. 移除 #s-home 裡的「00 · SKY BANNER」section，只保留 .h6 hero；把 hero 裡重複的 sports-pills 刪掉一組。\n3. .mnav 的 <i> emoji 換成 SVG；頭部改成品牌 + lang6 + 單一主按鈕，按當前語言出文案。\n4. 全站 .btn 統一回 border-radius:100px，去掉 inline 的 10px / 8px 覆蓋。\n5. 素材：assets/ 下照片仍是 AI 佔位，v7 稿裡保留了「不可上線」水印，換真實賽事照片前不要去掉。" }
+  ],
+  "launch": { "view": "canvas", "page": "page-1" }
+}

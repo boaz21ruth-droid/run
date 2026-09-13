@@ -1,0 +1,370 @@
+<title>WeRun 全端审核报告</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --paper:#F6F8FA;--card:#FFFFFF;--sunk:#EFF3F7;--ink:#101820;--ink-mid:#3D5468;--ink-mute:#5F6E7E;
+  --line:#E4E9EE;--line-hard:#CBD5DE;--brand:#0F66AE;--brand-tint:#E8F1FB;--brand-deep:#0A4D85;
+  --p0:#CE4E3B;--p0-tint:#FDEBE7;--p1:#C0770A;--p1-tint:#FFF3DE;--p2:#0F66AE;--p2-tint:#E8F1FB;--p3:#5F6E7E;--p3-tint:#EFF3F7;
+  --ok:#1E7A56;--ok-tint:#E2F6EE;--night:#12395C;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;--lat:Inter,var(--sans);
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0F1720;--card:#16212C;--sunk:#1C2933;--ink:#E8EEF4;--ink-mid:#B8C6D3;--ink-mute:#93A3B4;
+  --line:#243240;--line-hard:#34465A;--brand:#6FC1F2;--brand-tint:#17334A;--brand-deep:#A9DCF8;
+  --p0:#F08A78;--p0-tint:#3A1F1A;--p1:#F0B24E;--p1-tint:#3A2C12;--p2:#6FC1F2;--p2-tint:#17334A;--p3:#93A3B4;--p3-tint:#1C2933;
+  --ok:#5CCB98;--ok-tint:#173428;--night:#0B2238;}}
+:root[data-theme="dark"]{
+  --paper:#0F1720;--card:#16212C;--sunk:#1C2933;--ink:#E8EEF4;--ink-mid:#B8C6D3;--ink-mute:#93A3B4;
+  --line:#243240;--line-hard:#34465A;--brand:#6FC1F2;--brand-tint:#17334A;--brand-deep:#A9DCF8;
+  --p0:#F08A78;--p0-tint:#3A1F1A;--p1:#F0B24E;--p1-tint:#3A2C12;--p2:#6FC1F2;--p2-tint:#17334A;--p3:#93A3B4;--p3-tint:#1C2933;
+  --ok:#5CCB98;--ok-tint:#173428;--night:#0B2238;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+a{color:var(--brand)}a:hover{color:var(--brand-deep)}
+h1,h2,h3,p{margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+.num,.loc,code{font-family:var(--mono);font-variant-numeric:tabular-nums}
+code{font-size:.86em;background:var(--sunk);padding:1px 5px;border-radius:4px}
+.eyebrow{font-family:var(--lat);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--brand);font-weight:600}
+header.hero{padding:56px 0 36px;border-bottom:1px solid var(--line)}
+header.hero h1{font-size:34px;font-weight:700;line-height:1.25;letter-spacing:.01em;margin-top:10px;text-wrap:balance}
+header.hero p.lead{max-width:62ch;color:var(--ink-mid);margin-top:14px;font-size:15.5px}
+.meta{display:flex;gap:26px;flex-wrap:wrap;margin-top:22px;font-size:13px;color:var(--ink-mute)}
+.meta b{display:block;color:var(--ink);font-weight:600;font-family:var(--lat)}
+.bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar .wrap{display:flex;align-items:center;gap:10px;padding-top:10px;padding-bottom:10px;flex-wrap:wrap}
+.bar nav{display:flex;gap:4px;flex-wrap:wrap}
+.bar nav a{font-size:13px;color:var(--ink-mid);text-decoration:none;padding:6px 10px;border-radius:100px}
+.bar nav a:hover{background:var(--sunk);color:var(--ink)}
+.filters{margin-left:auto;display:flex;gap:6px;align-items:center}
+.filters span{font-size:12px;color:var(--ink-mute);margin-right:4px}
+.fbtn{font:inherit;font-size:12px;font-weight:600;padding:5px 11px;border-radius:100px;border:1px solid var(--line-hard);background:var(--card);color:var(--ink-mid);cursor:pointer}
+.fbtn[aria-pressed="true"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.fbtn:focus-visible,.bar nav a:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+section{padding:44px 0 8px}
+section > .wrap > h2{font-size:24px;font-weight:700;line-height:1.3;margin-top:6px}
+section > .wrap > p.sub{color:var(--ink-mute);font-size:14px;margin-top:6px;max-width:70ch}
+.score{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:22px}
+.score a{display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 16px 14px;text-decoration:none;color:inherit}
+.score a:hover{border-color:var(--line-hard)}
+.score .t{font-weight:700;font-size:15px}
+.score .f{font-size:12px;color:var(--ink-mute);font-family:var(--lat)}
+.score .row{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:6px;font-family:var(--lat);font-size:11.5px;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+.pill.P0{background:var(--p0-tint);color:var(--p0)}.pill.P1{background:var(--p1-tint);color:var(--p1)}.pill.P2{background:var(--p2-tint);color:var(--p2)}.pill.P3{background:var(--p3-tint);color:var(--p3)}
+.pill.ok{background:var(--ok-tint);color:var(--ok)}.pill.chk{background:var(--sunk);color:var(--ink-mute);font-weight:600}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:18px;font-size:13px;color:var(--ink-mid)}
+.top{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:22px}
+.top article{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start;min-width:0}
+.top article > div{min-width:0}
+.top .loc{word-break:break-all}
+.top .n{font-family:var(--lat);font-size:22px;font-weight:700;color:var(--brand);line-height:1.1;min-width:32px}
+.top h3{font-size:15px;font-weight:700;line-height:1.45}
+.top p{font-size:13.5px;color:var(--ink-mid);margin-top:4px}
+.top .loc{display:block;font-size:12px;color:var(--ink-mute);margin-top:6px}
+table.f{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px}
+table.f th{text-align:left;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mute);font-weight:600;font-family:var(--lat);padding:0 10px 8px;border-bottom:1px solid var(--line-hard)}
+table.f td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.6}
+table.f td.s{width:64px;white-space:nowrap}
+table.f td.l{width:230px;font-family:var(--mono);font-size:12px;color:var(--ink-mute);word-break:break-all}
+table.f tr.hide{display:none}
+.tbl{overflow-x:auto}
+.grp{margin-top:30px}
+.grp h3{font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px}
+.grp h3 small{font-family:var(--lat);font-size:12px;color:var(--ink-mute);font-weight:500}
+.good{margin-top:22px;padding:14px 18px;border-radius:12px;background:var(--ok-tint);color:var(--ink);font-size:13.5px;border:1px solid color-mix(in srgb,var(--ok) 25%,transparent)}
+.good b{color:var(--ok)}
+.road{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:22px}
+.road article{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+.road .eyebrow{color:var(--ink-mute)}
+.road h3{font-size:17px;margin-top:6px}
+.road p.when{font-size:12.5px;color:var(--ink-mute);margin-top:2px}
+.road ol{margin:12px 0 0;padding-left:20px;font-size:13.5px;color:var(--ink-mid)}
+.road li{margin-bottom:6px}
+.road li b{color:var(--ink);font-weight:600}
+.method{margin-top:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;font-size:13.5px;color:var(--ink-mid)}
+.method div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.method b{display:block;color:var(--ink);font-weight:600;margin-bottom:4px}
+.matrix{font-size:12px;border-collapse:collapse;margin-top:14px;font-family:var(--lat)}
+.matrix th,.matrix td{border:1px solid var(--line);padding:4px 8px;text-align:center}
+.matrix th{background:var(--sunk);font-weight:600}
+.matrix td:first-child{text-align:left;font-family:var(--mono);color:var(--ink-mid)}
+.matrix .W{color:var(--ok);font-weight:700}.matrix .R{color:var(--ink-mute)}.matrix .N{color:var(--line-hard)}
+footer{padding:40px 0 60px;color:var(--ink-mute);font-size:12.5px;border-top:1px solid var(--line);margin-top:40px}
+@media (max-width:860px){.score{grid-template-columns:repeat(2,minmax(0,1fr))}.top,.road,.method{grid-template-columns:1fr}table.f td.l{width:150px}.wrap{padding:0 18px}header.hero h1{font-size:27px}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+</style>
+
+<header class="hero"><div class="wrap">
+  <div class="eyebrow">WeRun · RUN Platform · Deep Audit</div>
+  <h1>WeRun 全端审核报告</h1>
+  <p class="lead">覆盖官网（桌面）、H5（移动网页）、Telegram MiniApp、运营后台四个端，以及支撑四端的共享业务域 <code>run-domain.js</code>。四路静态审查 + 浏览器实测交叉验证，所有结论均附文件行号，标注「已实测」者已在浏览器中复现。</p>
+  <div class="meta">
+    <div>审核日期<b>2026-09-12</b></div>
+    <div>index.html<b class="num">14,553 行 · 753 KB · gzip 216 KB</b></div>
+    <div>admin.html<b class="num">8,672 行 · 589 KB · gzip 172 KB</b></div>
+    <div>run-domain.js<b class="num">3,016 行 · 174 KB · gzip 51 KB</b></div>
+    <div>发现总数<b class="num" id="total">—</b></div>
+  </div>
+</div></header>
+
+<div class="bar"><div class="wrap">
+  <nav>
+    <a href="#summary">总览</a><a href="#top10">十大必修</a><a href="#site">官网 · H5 共用</a><a href="#h5">H5 移动端</a><a href="#mini">MiniApp</a><a href="#admin">后台</a><a href="#domain">共享业务域</a><a href="#roadmap">修复路线</a>
+  </nav>
+  <div class="filters" role="group" aria-label="按严重度筛选"><span>筛选</span>
+    <button class="fbtn" data-f="all" aria-pressed="true">全部</button><button class="fbtn" data-f="P0">P0</button><button class="fbtn" data-f="P1">P1</button><button class="fbtn" data-f="P2">P2</button>
+  </div>
+</div></div>
+
+<section id="summary"><div class="wrap">
+  <div class="eyebrow">Summary</div>
+  <h2>一句话结论：骨架扎实，但三处安全缺口和「多套系统叠加」把它拖回了原型水平</h2>
+  <p class="sub">业务语义层、RBAC 闸门、报名主链路的状态机都比一般原型认真得多；拖后腿的是后期叠加进来的东西：三套设计系统互相覆盖、两条底栏同时渲染、Telegram 集成只有空壳、UGC 与后台各有一处存储型 XSS、退款金额没有上限。</p>
+  <div class="score" id="score"></div>
+  <div class="legend"><span class="pill P0">P0</span>上线前必须修（安全 / 主流程断裂 / 资金）<span class="pill P1">P1</span>影响核心体验或合规<span class="pill P2">P2</span>质量与一致性<span class="pill P3">P3</span>整洁度<span class="pill ok">已实测</span>浏览器中复现<span class="pill chk">待确认</span>静态推断，未闭环</div>
+</div></section>
+
+<section id="top10"><div class="wrap">
+  <div class="eyebrow">Must fix</div>
+  <h2>十大必修项</h2>
+  <div class="top">
+    <article><div class="n">01</div><div><h3>用户端存储型 XSS：跑友活动标题 / 地点 / 集合点 / 距离未转义直接进 innerHTML</h3><p>项目有转义函数 <code>h()</code>（207 处在用），唯独 UGC 链路 4 个渲染函数全部漏掉，数据还持久化在 localStorage。</p><span class="loc">index.html:9861-9866 · 10480 · 10675-10683 · 10556</span></div></article>
+    <article><div class="n">02</div><div><h3>后台存储型 XSS：<code>esc()</code> 不转义单引号，25+ 处单引号属性拼接用户可编辑字段</h3><p>转让参赛人时填 <code>x' onfocus='…</code> 即可写入共享域；周边留痕表与订单历史的 <code>detail</code> 更是完全未转义。</p><span class="loc">admin.html:1077 · 6689-6699 · 7382 · 7286</span></div></article>
+    <article><div class="n">03</div><div><h3>退款可以退超已付款：审批 / 结算 / 返还 / 补退金额都没有「≤ 已付」约束</h3><p>后台填 999 即可把 15 美元的参赛人退成 999，订单被聚合成 REFUNDED；纠错单金额用 <code>parseFloat</code> 连负数都放行。</p><span class="loc">admin.html:4481-4497 · 4553-4571 · 5996 · 3982</span></div></article>
+    <article><div class="n">04</div><div><h3>页头「Moments / Rules」、首页 CTA、报名第 2 步的《参赛规章》链接全部静默跳回首页</h3><p><code>moments</code>、<code>rules</code>、<code>storydetail</code>、<code>publishmodal</code> 四个屏幕存在于 DOM，但不在 <code>SCREENS</code> 路由表里。用户在同意条款那一步点「规章」会被踢回首页。</p><span class="loc">index.html:7491 · 3183 · 3216 · 3708 · 3447</span></div></article>
+    <article><div class="n">05</div><div><h3>Telegram MiniApp 是空壳：SDK 从未加载，<code>initMiniApp</code> 永远走空分支</h3><p>无 ready/expand、主题、视口高度、BackButton、start_param 深链、initData 校验；「凭证推送到 Telegram」只是一条文案。</p><span class="loc">index.html:5172 · 5177-5184 · 9811</span></div></article>
+    <article><div class="n">06</div><div><h3>移动端两条底栏叠在同一位置，可见的那条没有翻译、高亮永远停在首页</h3><p><code>.mnav</code>（已做三语）被 z-index 999 的 <code>.miniapp-bar</code> 盖住；底栏又压住了 toast（z 400）和弹窗遮罩（z 300），表单校验错误在手机上根本看不见。</p><span class="loc">index.html:1679 · 3087 · 3082 · 951 · 5186</span></div></article>
+    <article><div class="n">07</div><div><h3>语言切换只改首页：<code>lang</code> 属性只挂在 <code>#s-home</code>，其余 46 屏永远 zh-Hant</h3><p>高棉文的字号 / 行高 / 断词规则只在首页生效；标记里 459 个非 i18n 中文节点仅 15% 能被翻译表命中；页面自称繁体，实际约 90% 是简体。</p><span class="loc">index.html:6362 · 2 · 5732</span></div></article>
+    <article><div class="n">08</div><div><h3>三套设计系统叠加：后加的 <code>:root</code> 覆盖 v6 Token 层 21 个变量，主按钮最终是黑色</h3><p><code>--brand</code> 从 5.94:1 的 #0F66AE 变成 4.10:1 的 #0284C7 跌破 AA；<code>.btn</code> 定义三次（蓝 → 绿蓝渐变 → 纯黑）；60 个选择器重复、64 个死类、20 个从未使用的变量。</p><span class="loc">index.html:2663 · 2681 · 304 / 2741 / 2990</span></div></article>
+    <article><div class="n">09</div><div><h3>「一键重置」不清理含姓名 / 电话 / 证件号的共享 localStorage</h3><p>用户端 <code>resetDemo</code> 只删 <code>run-demo-v3</code>，不调用 <code>RD.reset()</code>；<code>run-demo-domain-v1</code> 里的 <code>idNo</code>、DOB、紧急联系人明文留在共享设备上。</p><span class="loc">index.html:7212-7218 · run-domain.js:29 · 97-113</span></div></article>
+    <article><div class="n">10</div><div><h3>7 个字体文件只有 2 份内容：Inter 四个字重、Khmer 三个字重分别是同一个文件</h3><p>MD5 完全一致。浏览器为 600/700/800 各下载一次同样字节（多下约 262 KB），preload 的 700 与 800 是同一文件下两次，正文用的 400 反而没预加载，粗体全是伪粗。</p><span class="loc">assets/fonts/* · index.html:19-61</span></div></article>
+  </div>
+</div></section>
+
+<section id="site"><div class="wrap">
+  <div class="eyebrow">index.html · shared by desktop site and H5</div>
+  <h2>官网 · H5 共用层</h2>
+  <p class="sub">桌面官网与 H5 是同一份 index.html，这一节的问题两端同时存在：设计系统、路由、国际化、安全、性能、代码质量。</p>
+  <div id="site-tables"></div>
+  <div class="good"><b>做得对的：</b>47 个屏幕在 390px 下无一横向溢出（已实测）；无控制台错误；所有 img 有 alt、无重复 id、无 target=_blank 漏 rel；<code>prefers-reduced-motion</code> 双层处理正确；付费报名主链路 reg1→reg2→reg4→pay→done 与共享域衔接严谨，超时释放恰好一次；页面有 noindex。</div>
+</div></section>
+
+<section id="h5"><div class="wrap">
+  <div class="eyebrow">Mobile web</div>
+  <h2>H5 移动端专属</h2>
+  <p class="sub">底部导航、响应式断点、表单与支付、移动网络下的加载、PWA 能力。</p>
+  <div id="h5-tables"></div>
+  <div class="good"><b>做得对的：</b>KHQR 倒计时按订单 deadline 派生，休眠后恢复真实剩余；模拟支付按钮有「原型模拟」标注；「人工核查」正确地不确认到账；电话 / 邮箱输入类型正确；号码布输入用 <code>inputmode=numeric</code>；T 恤尺码用胶囊选择，触控友好。</div>
+</div></section>
+
+<section id="mini"><div class="wrap">
+  <div class="eyebrow">Telegram Mini App</div>
+  <h2>MiniApp</h2>
+  <p class="sub">已实现：SDK 存在时的 ready/expand 调用骨架（但 SDK 从未加载）。已 mock：凭证推送、分享、渠道标签。缺失：其余全部。</p>
+  <div id="mini-tables"></div>
+</div></section>
+
+<section id="admin"><div class="wrap">
+  <div class="eyebrow">admin.html · operations back office</div>
+  <h2>运营后台</h2>
+  <p class="sub">7 个角色、43 项操作的权限矩阵与 149 个处理器的执行期闸门是这个项目最扎实的部分；问题集中在脱敏绕过、金额校验、过期弹窗越状态执行、XSS，以及平板端可用性。</p>
+  <div id="admin-tables"></div>
+  <details style="margin-top:22px"><summary style="cursor:pointer;font-weight:600;font-size:14px">附：从代码提取的权限矩阵（admin.html:753-789 · 6299-6313）</summary>
+  <div class="tbl"><table class="matrix"><thead><tr><th>操作</th><th>ADMIN</th><th>OPS</th><th>FINANCE</th><th>SUPPORT</th><th>RACE_SUP</th><th>RACE_STAFF</th><th>PHOTO</th></tr></thead><tbody id="matrix"></tbody></table></div>
+  <p style="font-size:12.5px;color:var(--ink-mute);margin-top:8px">W 可执行 · R 只读 · — 不可见。工作区可见性另由 <code>NAV_ACL</code> 决定（实测：11 个导航项对所有角色都渲染，无权限的以「无权访问」锁定样式显示，点击无响应）。</p></details>
+  <div class="good"><b>做得对的：</b>FINANCE 独占全部资金操作；RACE_SUPERVISOR 所有退款操作为「—」（D-016）；PHOTOGRAPHER 照片表姓名列显式遮蔽、批次抽屉只出 Bib，且只看到被指派赛事（已实测）；成绩发布前置在执行期复检；换号 / 分配 / CSV 共用同一校验；空状态覆盖良好；禁用原因写在按钮旁；高影响动作有影响预览。</div>
+</div></section>
+
+<section id="domain"><div class="wrap">
+  <div class="eyebrow">assets/run-domain.js · D-092</div>
+  <h2>共享业务域（横切四端）</h2>
+  <p class="sub">它承诺「同一条业务规则只能有一处实现」，实际只把周边（merch）域和报名侧的预留 / 付款窗口 / 号码布 / 领物收进来了；报名退款状态机、订单聚合、赛事发布仍在后台直接改写 <code>RD.state</code>。130 个导出中 45 个两端都未使用。</p>
+  <div id="domain-tables"></div>
+  <div class="good"><b>做得对的：</b>名额 / 配额写入边界与整单预留「全有或全无」；预留 exactly-once；周边侧退款 SETTLED 不加库存、退货只入库一次、LATE_ARRIVAL 不可拒绝；orderNo / PAID / EXPIRED / CANCELLED 均有幂等重入；Bib 号段 / 历史永不复用 / 赛内唯一校验完整。</div>
+</div></section>
+
+<section id="roadmap"><div class="wrap">
+  <div class="eyebrow">Roadmap</div>
+  <h2>修复路线（按依赖顺序）</h2>
+  <div class="road">
+    <article><div class="eyebrow">Phase 0</div><h3>止血</h3><p class="when">1–2 天 · 不动架构</p><ol>
+      <li><b>补转义</b>：UGC 四个渲染函数套 <code>h()</code>；后台 <code>esc()</code> 加 <code>'</code>，留痕 / 历史 <code>detail</code> 与 toast 全部转义。</li>
+      <li><b>金额上限</b>：审批 ≤ 申请 ≤ 已付；结算 ≤ 批准；返还 / 补退 ≤ 差额；纠错单改用 <code>parseSettleAmount</code>。</li>
+      <li><b>路由</b>：把 moments / rules / storydetail / publishmodal 加进 <code>SCREENS</code>，或删掉指向它们的 7 个入口。</li>
+      <li><b>重置清 PII</b>：<code>resetDemo</code> 追加 <code>RD.reset()</code> 与 <code>werun_*</code> 键清理。</li>
+      <li><b>后台加 noindex</b>；vercel 的 <code>/admin</code> 路由加访问保护。</li>
+      <li><b>字体</b>：换成真正的分字重文件，preload 改为 400 + 700。</li>
+    </ol></article>
+    <article><div class="eyebrow">Phase 1</div><h3>收口</h3><p class="when">1 周 · 对应 v7 视觉方案</p><ol>
+      <li><b>设计系统</b>：删除 2238 / 2663 / 2855 三个 <code>:root</code> 覆盖块，清 64 个死类、60 个重复定义，inline hex 回 token。</li>
+      <li><b>底栏二选一</b>：保留 <code>.mnav</code>（已三语），删 <code>.miniapp-bar</code>；底栏 z-index 降到 modal / toast 之下；staff-mode 一并隐藏。</li>
+      <li><b>首页单 hero</b>：移除 00 · SKY BANNER，去掉重复的 sports-pills。</li>
+      <li><b>i18n</b>：<code>setLang</code> 同步 <code>document.documentElement.lang</code>；先统一简 / 繁，再把 388 个未命中节点纳入字典。</li>
+      <li><b>过期弹窗复检</b>：13 个 <code>*ok</code> 处理器在执行前重读状态。</li>
+      <li><b>脱敏统一</b>：6 处绕过 <code>pii()</code> 的弹窗 / toast 收口。</li>
+    </ol></article>
+    <article><div class="eyebrow">Phase 2</div><h3>补齐</h3><p class="when">2–3 周 · 需产品决策</p><ol>
+      <li><b>Telegram 实装</b>：加载 SDK，ready/expand/theme/viewport/BackButton/MainButton/start_param；initData 校验留给服务端。</li>
+      <li><b>业务域收编</b>：报名退款状态机、订单聚合、换号 / 作废、赛事发布迁入 run-domain.js；EVENT_MAP 改为数据。</li>
+      <li><b>免费活动进共享域</b>：目前只写本地 <code>S.regs</code>，后台看不到。</li>
+      <li><b>后台平板</b>：≤1024 收起侧栏、顶部控件换行、按钮 ≥ 44px、弹窗焦点管理与 Esc。</li>
+      <li><b>性能</b>：拆分 527 KB 内联 JS，<code>paintAll</code> 只画当前屏并对 resize 去抖，图片补 width/height。</li>
+      <li><b>PWA</b>：manifest、theme-color、apple-touch-icon。</li>
+    </ol></article>
+  </div>
+  <div class="method">
+    <div><b>审核方法</b>四路静态审查分别覆盖 index.html、admin.html、run-domain.js、MiniApp/H5 层，逐行读取并用脚本统计（选择器重复、i18n 键集、字体 MD5、对比度）；浏览器实测在 390 / 820 / 1280 / 1440 四种宽度下跑完 47 个用户端屏幕与 7 个后台角色，收集溢出、控制台错误、无障碍计数、网络请求与 localStorage。</div>
+    <div><b>范围说明</b>docs/ 目录不在仓库内，报告中所有 docs/12、docs/14、D-xxx 决策引用均无法核验，只标记代码与注释的自相矛盾之处。设计层面的改法见另一份「WeRun v7 視覺方案」画布。标注「待确认」的条目为静态推断，建议在修复前先复现。</div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">WeRun 全端审核报告 · 2026-09-12 · 基于仓库当前工作副本（非 git 管理）。数据来源：index.html / admin.html / assets/run-domain.js / vercel.json / assets/fonts。</div></footer>
+
+<script>
+// surface: site | h5 | mini | admin | domain ; v: 1 = 已实测, 2 = 待确认
+const F = [
+// ===== site =====
+{s:"site",g:"安全与数据",p:"P0",v:1,t:"存储型 XSS：跑友活动的 title/loc/meet/dist 未经 h() 直接拼进 innerHTML（ugcCard / renderUgcDetail / renderMePosts / renderPostDone），并持久化在 localStorage。",l:"index.html:9861-9866 · 10480 · 10675 · 10556"},
+{s:"site",g:"安全与数据",p:"P1",v:0,t:"192 个 innerHTML sink 中，报名 / 订单 / 工作台链路已用 h()，唯独 UGC 链路 0 次，同一文件两套标准。",l:"index.html:11044 · 9847-10706"},
+{s:"site",g:"安全与数据",p:"P1",v:1,t:"localStorage 明文 PII：run-demo-v3 存参赛者姓名、帖子里的 Telegram 与手机；run-demo-domain-v1 存 name/phone/dob/idNo/email/紧急联系人，默认证件号 012345678，无过期无清理。",l:"index.html:6916 · 10849-10860 · run-domain.js:97-106"},
+{s:"site",g:"安全与数据",p:"P2",v:2,t:"FileReader.readAsDataURL 结果直接拼进 <img src>，未校验 MIME / 大小。",l:"index.html:8675-8681 · 10317"},
+{s:"site",g:"安全与数据",p:"P2",v:0,t:"硬编码演示 PII：DEMO.user 含手机、证件号、紧急联系人姓名与电话。",l:"index.html:5259-5262"},
+{s:"site",g:"信息架构与路由",p:"P0",v:1,t:"SCREENS 43 项，DOM 里 #s-* 47 个：moments / storydetail / publishmodal / rules 不可路由，guard() 静默回首页。实测 #/moments、#/rules 均落到 s-home。",l:"index.html:7491 · 7502"},
+{s:"site",g:"信息架构与路由",p:"P0",v:1,t:"7 个入口指向断链：页头 Moments / Rules、首页 Hero CTA「跑者圈日记」、报名第 2 步同意条款里的《Race Rules》链接、页脚「賽事規章」。",l:"index.html:3183 · 3187 · 3216 · 3708 · 3447"},
+{s:"site",g:"信息架构与路由",p:"P1",v:1,t:"首页两个 hero 并存（00 · SKY BANNER 366px + 01 · HERO 684px），各含一个 h1，00 区无任何 data-i18n。",l:"index.html:3204 · 3227"},
+{s:"site",g:"信息架构与路由",p:"P2",v:1,t:"页头导航英文硬编码（Home / Events / Moments ✨ / Photos / Results / About / Rules / Contact / Log In / Sign Up），Log In→me、Sign Up→races，无鉴权语义；手机上 Sign Up 折成两行。",l:"index.html:3181-3191"},
+{s:"site",g:"信息架构与路由",p:"P2",v:0,t:"13 个 v5 遗留屏（history / resultev / presult / racepack / bibmgmt / faq / contact / terms / privacy / security / refund / acts / staff）仍随包发布，头注释承认「34 个 screen 版式未改」。",l:"index.html:7495-7496 · 12"},
+{s:"site",g:"信息架构与路由",p:"P2",v:0,t:"原型 chrome（proto-bar / proto-fab / proto-panel / demo-tag）仍在 DOM 与事件绑定中，仅靠 display:none !important 隐藏，无运行时开关。",l:"index.html:3167 · 5081 · 2864"},
+{s:"site",g:"信息架构与路由",p:"P3",v:0,t:"语言开关默认 data-lang=en 高亮，而 restoreLang 默认 zh，首帧闪一下 EN。",l:"index.html:3190 · 11032"},
+{s:"site",g:"设计系统 / CSS",p:"P1",v:1,t:"第 2663 行 :root 覆盖 v6 Token 层 40 个变量中的 21 个（brand / ink / paper / line / shadow / r …）。实测线上 --brand = #0284C7、--r = 16px，v6 算好的 AA 对比度未生效。",l:"index.html:2663 · 对照 64-124"},
+{s:"site",g:"设计系统 / CSS",p:"P1",v:1,t:".btn 定义三次：蓝（Token）→ 绿蓝渐变 → 纯黑 #121820，最终主按钮为黑色，与「RUN Blue」规范冲突。",l:"index.html:304 · 2741 · 2990"},
+{s:"site",g:"设计系统 / CSS",p:"P1",v:0,t:"60 个顶层选择器重复定义（.opt.sel ×4、.hdr ×3、.logo ×3、.card ×3、.lang6 ×3、.miniapp-bar ×3、body ×2 …），最后者胜，无单一真源。",l:"index.html:2234-3163"},
+{s:"site",g:"设计系统 / CSS",p:"P2",v:0,t:"20 个自定义属性定义后从未使用（--wr-* 7 个、--brand-green 等 8 个、--brand-primary 等 5 个）；2 个使用但从未定义：var(--ok)、var(--panel2)。",l:"index.html:2238 · 2673 · 2855 · 3620 · 11547"},
+{s:"site",g:"设计系统 / CSS",p:"P2",v:0,t:"64 个死类：旧 hero、.ad-banner、.merch-*、.reg-layout-grid、.dist-*、.m-card（Moments）、.comment-box 等整块死区；.statbar 两块逐字相同且标记里没有。",l:"index.html:269 · 342/548 · 836 · 2270 · 2499 · 2620"},
+{s:"site",g:"设计系统 / CSS",p:"P2",v:1,t:"内联 hex 绕过 token：CSS 非 :root 区 287 处、标记 style 属性 125 个含 hex（实测首页 135 个）、JS 字符串 68 处；高频 #0284C7 / #121820 / #00E599 / #059669。",l:"index.html:3204-3226 等"},
+{s:"site",g:"设计系统 / CSS",p:"P2",v:0,t:"z-index 层级错序：proto 200 < modal 300 < toast 400 < miniapp-bar 999；底栏高于模态遮罩与 toast。",l:"index.html:950-956 · 3082 · 3131"},
+{s:"site",g:"国际化",p:"P1",v:1,t:"<html lang=\"zh-Hant\"> 固定不变；setLang 只给 #s-home 挂 lang。实测切到 km 后 #s-races 仍是 zh-Hant、Inter 字体、1.7 行高。",l:"index.html:2 · 6361-6362"},
+{s:"site",g:"国际化",p:"P1",v:0,t:"覆盖率：标记里 459 个非 data-i18n 中文节点仅 71 个（15%）被 GLOBAL_I18N_MAP 命中；rules 43/43、detail 32/35、pay 27/27、reg4 18/18、reg1 13/13 全部未翻译。JS 侧 2,318 个含中文字面量。",l:"index.html:5732 · 6098 · 7853 · 8476"},
+{s:"site",g:"国际化",p:"P1",v:0,t:"简繁混用：报名 340 vs 報名 22、成绩 210 vs 成績 10、赛事 261 vs 賽事 30、订单 160 vs 訂單 0；繁体只集中在首页 hero / 统计 / mnav，页面却声明 zh-Hant。",l:"index.html:3248-3260 · 5073-5077"},
+{s:"site",g:"国际化",p:"P2",v:1,t:"miniapp 底栏的 data-i18n 键 m.home / m.races / m.results / m.me 在任何字典里都不存在，「照片」连键都没有；实测 km 下 mnav 是高棉文、可见的 miniapp 栏仍是简体中文。",l:"index.html:14533-14549"},
+{s:"site",g:"国际化",p:"P2",v:0,t:"I18N.km 的 about.lead 是英文；11 个死翻译键（nav.reg / nav.shop / ft.who …）无对应元素；翻译靠整段精确匹配，带变量的文本永远不命中。",l:"index.html:5369 · 5372-5374 · 6098-6135"},
+{s:"site",g:"无障碍",p:"P1",v:1,t:"go() 不做焦点管理、无 aria-live、无 <main>、无跳转链接；表单 58 个控件 47 个无标签，label[for] 为 0。",l:"index.html:7549-7642 · 3607-3730 · 11535"},
+{s:"site",g:"无障碍",p:"P2",v:1,t:"emoji 当图标：标记 91 个、JS 350 个；mnav 五个 tab 用 <i>🏁</i> 且无 aria-hidden，读屏会念「chequered flag 賽事」。首页可见 emoji 11 个。",l:"index.html:5073-5077"},
+{s:"site",g:"无障碍",p:"P2",v:0,t:"对比度：--brand #0284C7 白底 4.10:1 用于正文链接；#94A3B8 作文字 2.9:1；<12px 字号声明 51 处；.lang6 按钮约 22px 高、.btn.sm 32px、.tab 29px，均低于 44px。",l:"index.html:2681 · 245 · 332 · 918"},
+{s:"site",g:"性能",p:"P1",v:1,t:"字体文件冒充分包：Inter 400/600/700/800 四个文件 MD5 相同，Noto Khmer 400/600/700 三个 MD5 相同；preload 700 与 800 是同一文件下两次，正文 400 未预加载；粗体全是伪粗。",l:"assets/fonts/* · index.html:19-61"},
+{s:"site",g:"性能",p:"P2",v:1,t:"手机首屏同时下载 hero-mobile.webp（100 KB）与 hero-desktop.webp（91 KB，被 .werun-hero-sky::after 当装饰背景引用）；8 个 img 全部无 width/height。",l:"index.html:2255 · 3231-3234"},
+{s:"site",g:"性能",p:"P2",v:1,t:"单文件 753 KB（JS 527 KB）+ run-domain 174 KB 同步阻塞解析，47 个屏幕常驻 DOM；BUILD.commit 占位符未替换。冷加载原始约 1.23 MB。",l:"index.html:10 · 5172-5173 · 5215"},
+{s:"site",g:"性能",p:"P2",v:0,t:"TIMERS.t 只增不减，只有 resetDemo 清理；RD.watch 回调对任何域变更都 toast + 全量重渲染当前屏。",l:"index.html:5223 · 5232 · 13882"},
+{s:"site",g:"代码质量",p:"P1",v:0,t:"\"use strict\" 位于 IIFE 内第 27 行、在两个函数之后，不是指令序言，严格模式实际未启用。",l:"index.html:5174 · 5200"},
+{s:"site",g:"代码质量",p:"P2",v:0,t:"死函数 syncMiniAppTabs、空壳 syncLangNote、为调用空壳而给 go 打的猴子补丁；与 run-domain 同名的本地 pad / save / requestPaymentCheck。",l:"index.html:5186 · 6413 · 6699"},
+{s:"site",g:"代码质量",p:"P2",v:1,t:"design.html / mockup.html / werun-mockup.html 三个 69.6 KB 文件内容完全相同（MD5 一致），vercel.json 三条路由指向同一份。",l:"项目根 · vercel.json"},
+{s:"site",g:"业务逻辑",p:"P1",v:0,t:"免费活动完全绕过共享域：报名与候补只写本地 S.regs，seatsLeft 本地计算，后台看不到免费报名。",l:"index.html:8506 · 8537 · 11173"},
+{s:"site",g:"业务逻辑",p:"P2",v:0,t:"容量两套真相：usedSeats() 自行遍历 RD.state.orders，域已导出 capOccupied / quotaOccupied 未用；S.regs 又镜像一份订单。",l:"index.html:11173-11190 · 10896"},
+{s:"site",g:"业务逻辑",p:"P2",v:2,t:"pay-amt 显示 money(total() || 30)：合计为 0 时显示 $30；pt.size 未选尺码时 split 抛 TypeError 中断进付款。",l:"index.html:8054 · 10858"},
+{s:"site",g:"业务逻辑",p:"P2",v:0,t:"照片链路与冻结范围矛盾：头注释「一期冻结自拍找照片」，但 ph-selfie-go、FileReader 预览、simSteps 识别模拟仍完整可用。",l:"index.html:15 · 8675"},
+{s:"site",g:"业务逻辑",p:"P2",v:0,t:"RUNDomain 138 个导出 index.html 只用 58 个；cancelRegistrationOrderBeforePayment 未用，用户无法主动放弃待付订单只能等超时。",l:"run-domain.js:2932-3016"},
+// ===== h5 =====
+{s:"h5",g:"底部导航",p:"P0",v:1,t:"≤640px 时 .mnav（z150）与 .miniapp-bar（z999）同时渲染在 bottom:0；实测两者 top 分别 794 / 786，完全重叠，mnav 仍在无障碍树与 Tab 焦点序列里。",l:"index.html:1679-1683 · 3087-3088 · 3135-3136"},
+{s:"h5",g:"底部导航",p:"P1",v:1,t:"底栏 z-index 999 压住 toast（z400，bottom 2rem）与 modal 遮罩（z300）：实测报名第 1 步空表单点「下一步」看不到任何反馈，校验 toast 被底栏遮住。",l:"index.html:951-954 · 961 · 3082 · 11574"},
+{s:"h5",g:"底部导航",p:"P1",v:1,t:"syncMiniAppTabs 从未被调用，go() 只调 syncMnav，miniapp 栏高亮永远停在「首页」；两栏条目不一致（mnav 有「活動」，miniapp 没有），acts 相关屏在可见栏无入口。",l:"index.html:5186-5197 · 7645 · 14530-14550"},
+{s:"h5",g:"底部导航",p:"P1",v:1,t:"staff-mode 隐藏 .mnav 并归零 body padding，但不隐藏 .miniapp-bar：实测 staff 屏 mnav=none、miniapp=flex，工作人员界面底部仍被深色栏覆盖。",l:"index.html:1701-1702 · 7646-7647"},
+{s:"h5",g:"底部导航",p:"P1",v:0,t:".miniapp-bar 三次定义互相冲突（高度 60→58、padding 70→64），且标记位于主脚本之后，启动时 translateDOMTree 执行时该 DOM 尚不存在。",l:"index.html:2838 · 3070 · 3119 · 14529"},
+{s:"h5",g:"底部导航",p:"P2",v:0,t:"641–768px 区间顶部桌面导航与底栏同时出现；.miniapp-bar 是 <div>，无 role=navigation / aria-current。",l:"index.html:238-241 · 3087 · 14530"},
+{s:"h5",g:"响应式",p:"P1",v:0,t:".hero-callout-quote 依赖 .hide-s，但唯一规则 .hdr nav .hide-s 作用域限于头部；该元素 absolute 定位，360–390px 会压在 H1 与运动 pills 上。",l:"index.html:3219-3222 · 239"},
+{s:"h5",g:"响应式",p:"P2",v:0,t:"断点混用 520 / 640 / 720 / 768 / 860 / 900 / 1024 / 1100 与 22rem / 26rem / 40rem / 48rem / 56rem，「手机」语义分别落在 640 / 720 / 768。",l:"index.html:238-3231"},
+{s:"h5",g:"响应式",p:"P2",v:0,t:"未包 .scroll-x 的 table.tbl（min-width 22rem）在 360px 溢出，被全局 overflow-x:hidden 直接截断；三层 backdrop-filter 固定层同屏。",l:"index.html:14013 · 1445 · 2897 · 3080 · 1685"},
+{s:"h5",g:"响应式",p:"P2",v:0,t:".hdr 定义两次；.lang6 移动端压缩规则被后文同权重规则覆盖，640px 以下语言切换器未按预期缩小。",l:"index.html:207 · 2893 · 244-245 · 2931-2940"},
+{s:"h5",g:"表单与支付",p:"P1",v:0,t:"全站 autocomplete 仅 6 处且全是 off，报名表单无 name / bday / email / tel 自动填充；证件号 type=text 无 inputmode。",l:"index.html:11521-11551"},
+{s:"h5",g:"表单与支付",p:"P2",v:0,t:"KHQR 二维码是 canvas 伪随机图案，不是 EMVCo / Bakong payload；「长按保存二维码」无处理器且 canvas 无法长按保存，死控件。",l:"index.html:3750-3752 · 7361-7368"},
+{s:"h5",g:"表单与支付",p:"P2",v:0,t:"viewport meta 无 viewport-fit=cover（iOS 上 env(safe-area-inset-bottom) 恒为 0）、无 interactive-widget，键盘弹出时固定底栏覆盖靠下输入框。",l:"index.html:5"},
+{s:"h5",g:"表单与支付",p:"P2",v:2,t:"#/pay 刷新会让 bootRoute → startPay → reserveRegOrder 重新建单，是否重复占名额取决于去重逻辑。",l:"index.html:14479-14486 · 8039-8048"},
+{s:"h5",g:"表单与支付",p:"P2",v:0,t:"「模拟支付成功」「人工核查」等 Demo 按钮对终端用户可见；done 页「凭证已推送到 Telegram」缺「演示模拟」标注。",l:"index.html:3778-3785 · 3806 · 5030"},
+{s:"h5",g:"高棉文排版",p:"P1",v:0,t:"底栏 font-size .68rem、line-height 1.2、高度固定 58px，高棉 coeng / 上标元音会被裁；:lang(km) 规则只在首页生效（见共用层）。",l:"index.html:1689-1693 · 3121-3126"},
+{s:"h5",g:"性能",p:"P1",v:0,t:"paintAll() 遍历全文档所有 canvas（含隐藏屏）逐个重绘，并绑定在 resize 上：安卓地址栏显隐即触发全量重绘 13 个静态 + 动态赛事卡 canvas。",l:"index.html:7354-7381 · 14523-14525"},
+{s:"h5",g:"性能",p:"P2",v:1,t:"首屏预算（中文冷加载）：HTML 771 KB + JS 174 KB + Inter ×4 189 KB + hero 98 KB ≈ 原始 1.23 MB / 压缩后约 500 KB；1.5 Mbps 下传输 3–4 s，中低端安卓 TTI 估计 5–6 s（未实测）。",l:"index.html:5172 · assets/"},
+{s:"h5",g:"PWA",p:"P2",v:0,t:"无 manifest、无 Service Worker、无 theme-color、无 apple-touch-icon / favicon；H5 无法「添加到主屏」。",l:"index.html:1-22"},
+{s:"h5",g:"原型残留",p:"P1",v:1,t:"「一键重置」只删 run-demo-v3，未调用 RD.reset()：run-demo-domain-v1 里的姓名 / 电话 / 证件号 / DOB 及 werun_* 键在重置后仍留在设备。",l:"index.html:7212-7218 · run-domain.js:655"},
+{s:"h5",g:"原型残留",p:"P2",v:0,t:"两个重置入口对终端用户均不可达（proto-panel 隐藏、dash 屏只能从面板进入），共享设备上的 PII 无用户可用的清除方式。",l:"index.html:5167 · 5092 · 9480-9483"},
+// ===== mini =====
+{s:"mini",g:"Telegram 集成",p:"P0",v:1,t:"未加载 telegram-web-app.js，全文件唯一外链脚本是本地 run-domain.js；实测 typeof Telegram === 'undefined'。initMiniApp 仅在 SDK 存在时调 ready()/expand()，因此从未执行，Telegram 内 WebView 停在半屏。",l:"index.html:5172 · 5177-5184"},
+{s:"mini",g:"Telegram 集成",p:"P1",v:0,t:"无 themeParams / colorScheme / setHeaderColor 处理；页面强制 color-scheme:light，Telegram 深色主题下出现深色顶栏 + 白页割裂。",l:"index.html:64-65"},
+{s:"mini",g:"Telegram 集成",p:"P1",v:0,t:"无 viewportStableHeight / viewportChanged 监听、无 safeAreaInset；无 BackButton 映射，SPA 靠 hash 历史，安卓物理返回会直接关掉 Mini App（待确认，随客户端版本不同）。",l:"index.html:5 · 7591 · 8270"},
+{s:"mini",g:"Telegram 集成",p:"P1",v:0,t:"initData 无校验（也无服务端）；channel:\"telegram-miniapp\" 只是同意书 mock 里的字符串。正式版必须服务端 HMAC 校验并绑定 Telegram user id 后才可能「推送凭证」。",l:"index.html:9811"},
+{s:"mini",g:"Telegram 集成",p:"P1",v:0,t:"无 start_param / tgWebAppStartParam 解析；hash 只带屏名不带实体 id，「当前赛事」来自 localStorage，分享 / 深链无法定位具体赛事、成绩或照片，收链接的人打开的是自己上次看的那一场。",l:"index.html:7681-7683 · 7575 · 11019-11023"},
+{s:"mini",g:"Telegram 集成",p:"P2",v:0,t:"无 MainButton（去付款 / 我已付款都是页内按钮）、无 openLink 拉起银行 App、无 HapticFeedback、无 enableClosingConfirmation（KHQR 10 分钟内下滑即关闭）。",l:"index.html:11003 · 3780 · 8877 · 8039-8098"},
+{s:"mini",g:"Telegram 集成",p:"P2",v:0,t:"「分享到 Telegram」只是打开复制文案的弹窗（4473 自述不会真的调用 Telegram），未用 t.me/share/url。",l:"index.html:8265-8272 · 4473"},
+{s:"mini",g:"Telegram 集成",p:"P2",v:0,t:"「MiniApp 栏」无任何 Telegram 环境检测，仅按 max-width:768px 显示，本质是普通移动端底栏。",l:"index.html:3087 · 3135"},
+{s:"mini",g:"Telegram 集成",p:"P2",v:0,t:"Telegram 凭证推送三处均为纯文案 mock，done 页那条没有「演示模拟」标注。",l:"index.html:3806 · 3932 · 10593"},
+// ===== admin =====
+{s:"admin",g:"安全与隐私",p:"P1",v:1,t:"esc() 不转义单引号，≥25 处用单引号包裹 esc 后的用户可编辑值（参赛人姓名 / 电话 / 国籍、内容标题 / 正文、商品名、<option value>）：属性逃逸型存储 XSS，数据同时被 index.html 读取。",l:"admin.html:1077 · 6689-6699 · 5495-5501 · 7497 · 6804-6840"},
+{s:"admin",g:"安全与隐私",p:"P1",v:0,t:"含用户输入的 detail 未转义直接 innerHTML：周边留痕表、订单历史；RD 返回的 msg 14 处未转义进 toast。System 页审计表却 esc(a.detail)，策略不一致。",l:"admin.html:7382 · 7286 · 4424 · 3966"},
+{s:"admin",g:"安全与隐私",p:"P2",v:1,t:"无 <meta name=robots content=noindex>，vercel.json 把 /admin 公开重写到 admin.html；无 CSP / X-Frame-Options。",l:"admin.html:3-6 · vercel.json:16-19"},
+{s:"admin",g:"安全与隐私",p:"P2",v:0,t:"审计 / 告警明细含明文 PII（资料修改记录电话 / DOB 的 before→after、转让记录姓名、退款申请姓名 + 金额），持久化在与公开用户页同源的 localStorage。",l:"admin.html:6752-6754 · 6846 · 4440"},
+{s:"admin",g:"安全与隐私",p:"P2",v:0,t:"SUPPORT 手机号搜索神谕：搜索按完整手机匹配而显示只给后四位，可逐一验证 / 枚举完整号码。",l:"admin.html:2817 · 1303-1311"},
+{s:"admin",g:"安全与隐私",p:"P2",v:0,t:"demo_reset 对 7 个角色全部 W：最低权限（PHOTOGRAPHER / RACE_STAFF）可一键清空用户端 + 后台共享全域。",l:"admin.html:6313 · 3790-3793"},
+{s:"admin",g:"RBAC",p:"P1",v:0,t:"「＋ 新建赛事」「＋ 新建优惠码」按钮渲染了但没有 H.evnew / H.cpnew 处理器（死按钮），且被登记为只读处理器不挂闸门；注释 D-118 R9 又明写「不做新建赛事」。",l:"admin.html:2642-2643 · 2778 · 8353 · 4092"},
+{s:"admin",g:"RBAC",p:"P1",v:0,t:"脱敏绕过 ×6：H.rfnew 弹窗 esc(f.p.name)（SUPPORT 见全名）、H.bibswap 弹窗 esc(b.name)（RACE_SUPERVISOR 见全名）、H.verify / issue / undopack 的 toast 直接输出 res.row.name（RACE_STAFF 见全名）。",l:"admin.html:4400 · 5065 · 4944-4990"},
+{s:"admin",g:"RBAC",p:"P2",v:1,t:"order_view / roster_export 两行矩阵零调用（导出名单无任何按钮）；NAV_ACL.orders 排除 RACE_STAFF 但 PERM 给其 R；实测 11 个导航项对所有角色都渲染，无权限的以锁定样式显示。",l:"admin.html:755 · 758 · 736 · 3826"},
+{s:"admin",g:"RBAC",p:"P2",v:0,t:"注释「SUPPORT 只有两项写权限」与矩阵不符（实有 refund_request / prepay_cancel / claim_case_create / merch_refund_request 四项 W）；RACE_SUPERVISOR 在 Orders 页能看到退款状态与历史，注释称「整行都是 —」。",l:"admin.html:726 · 1335-1337 · 2877-2895"},
+{s:"admin",g:"RBAC",p:"P2",v:0,t:"§13.4 数据范围不是矩阵而是 6 处硬编码角色数组（seeMoney / seePII / seeBankRef / policyRoles / seeAllAsg / || ADMIN || OPS）；UNGUARDED_HANDLERS 自检数组只计算从不断言。",l:"admin.html:810-811 · 1313 · 3599 · 8473-8475"},
+{s:"admin",g:"业务闭环",p:"P0",v:0,t:"退款金额无上限：审批 apamt 与结算 amt 只要求正数，不校验 ≤ 申请额 / ≤ p.paid；recalcOrder 按 SUM 聚合可把订单翻成 REFUNDED。可退超已付款。",l:"admin.html:4481-4497 · 4553-4571 · 3982-3995"},
+{s:"admin",g:"业务闭环",p:"P1",v:0,t:"资金异常返还 retok 与补退 supnewok 金额任意；corrrecok 用 parseFloat 而非 parseSettleAmount，允许 0 / 负数 / NaN，直接违反本文件 F-004。",l:"admin.html:4697-4707 · 5910-5916 · 5996"},
+{s:"admin",g:"业务闭环",p:"P1",v:0,t:"过期弹窗可越状态执行（13 个 *ok 处理器不复检状态）：ccbindok 可重复 BOUND、bibvoidok 不检查状态、runpubok 可对 DRAFT 批次「撤回」、prdownok / prrejok 可把 TAKEN_DOWN 改成 REJECTED、supnewok 可对已 RESOLVED 的纠错再开补退 …",l:"admin.html:5326 · 5122 · 5281 · 5446 · 5908 · 5994"},
+{s:"admin",g:"业务闭环",p:"P2",v:0,t:"换号在 admin 内自行实现（不走 RD 原语），注释称同步照片标注与成绩，实际 tags 与 resultBatches.bibs 均未更新；作废不清 p.bib 镜像，Orders 列表继续显示已作废的号。",l:"admin.html:5083-5094 · 5128-5131 · 2874"},
+{s:"admin",g:"业务闭环",p:"P2",v:0,t:"UI-only 闭环：RefundCorrection 只能来自种子无 UI 创建；对账差异「转支付异常队列」不会真的创建异常，bankTotal / matched 为静态字段；成绩导入固定造 120 行、无文件输入；批次上传张数来自文本框。",l:"admin.html:3105 · 5833-5853 · 5154-5177 · 5356"},
+{s:"admin",g:"业务闭环",p:"P2",v:0,t:"双时钟：业务判定用 state.today 演示日期，时间戳用真实 now() → 审计出现「2026-09-xx 发布了已于 2026-11-15 结束的赛事」；两套审计写入器（logAudit vs RD.audit）同一动作两条留痕、fin 分类口径不一致。",l:"admin.html:2292 · 1079-1083 · 1095-1110 · 4943-4964"},
+{s:"admin",g:"业务闭环",p:"P2",v:0,t:"reconcileExpiredRegistrationOrders 在每次同步 / 聚焦 / 定时到点以 SYSTEM 身份改写共享域并落盘，任何角色打开后台都会触发跨端可见的业务写入；所有处理器（含只读）都包一层 RD.save()。",l:"admin.html:8125-8140 · 8225 · 8482-8497"},
+{s:"admin",g:"业务闭环",p:"P2",v:0,t:"撤销指派、「模拟支付超时」、补退审批均无确认即时生效。",l:"admin.html:6236-6245 · 7669-7680 · 5923-5930"},
+{s:"admin",g:"数据与共享状态",p:"P2",v:0,t:"admin 完全不用 EVENT_MAP，4 处硬编码 \"EV-A\" 兜底；TRANSFER_CFG 只键 EV-A / EV-B；ID 生成用「前缀 + 数组长度」7 处（nextRefundId 注释已承认会撞号），RD.nextId 未用。",l:"admin.html:6954 · 7048 · 6502 · 5174 · 5368 · 6218"},
+{s:"admin",g:"数据与共享状态",p:"P2",v:0,t:"adminSeed 存进 RD.state.admin 无版本号，ensureShape 不校验 → 代码更新后老用户的后台种子永久陈旧；syncFromDomain 重绑引用后弹窗内捕获的旧对象写入丢失（待确认）。",l:"admin.html:854-1029 · 8225-8232 · 7086"},
+{s:"admin",g:"工作台 UX",p:"P1",v:1,t:"平板 820px 实测：页面宽 1222px 横向溢出，侧栏不收起，.top-controls 四组下拉 nowrap；最小按钮高度 26px，11 处字号 <12px；状态含义 / 负责人 / 下一步只放在 title=（触屏无 title，CSS 注释 191 自己承认）。",l:"admin.html:73-75 · 295-301 · 135 · 191 · 2265"},
+{s:"admin",g:"工作台 UX",p:"P2",v:1,t:"角色切换提示框堆积：实测连续切换后 8 条 toast 叠在右下角不消失；错误态只有 4.2s 自动消失的 toast（innerHTML，无 aria-live），无持久错误区。",l:"admin.html:1084-1093 · 310"},
+{s:"admin",g:"工作台 UX",p:"P2",v:0,t:"全站无排序、无分页、无 CSV 导出（头注释承诺「读对账单与 CSV」）；Audit Log 渲染全部行且随点击持续增长；筛选无日期区间、无赛事维度。",l:"admin.html:26 · 3963-3968 · 5154 · 2810-2822"},
+{s:"admin",g:"工作台 UX",p:"P2",v:0,t:"键盘：仅搜索框支持 Enter；无 Esc 关闭弹窗 / 抽屉；打开弹窗不移焦点；可点击行 <tr data-h> 不可聚焦。",l:"admin.html:8534-8540 · 1125-1143 · 3033"},
+{s:"admin",g:"工作台 UX",p:"P2",v:0,t:"术语混用：导航英文（Registrations & Orders / System & Access）vs H1 中文；Race Pack / 赛包 / 领物 / 发包并用；EN/KM 下 BUTTON_I18N 缺 19 个按钮，弹窗与正文仍中文；货币 money()=\"$\"+v 后再拼 \"USD\" 出现「$22 USD」，KHR 零出现。",l:"admin.html:2409-2416 · 1183-1243 · 1289-1293 · 2838"},
+{s:"admin",g:"无障碍",p:"P2",v:1,t:"0 个 caption、0 个 th scope、0 个 aria-*、0 个 role；弹窗无 role=dialog / 焦点陷阱；禁用按钮对比度 3.37:1、锁定导航 2.66:1（均不达 AA）；html lang 固定 zh-CN，EN/KM 不切换。",l:"admin.html:1125-1143 · 149-151 · 109-110 · 2"},
+{s:"admin",g:"代码质量",p:"P2",v:0,t:"单文件 8.4k 行内联脚本；D-092 区块在 6270 之后追加改写 PERM / NAV_ACL / NAV / STATUS，定义依赖执行顺序；≥20 个处理器 filter()[0] 后直接取属性无空值保护，TypeError 静默吞掉点击；三套状态词典、三套 i18n 机制。",l:"admin.html:6299-6337 · 5063 · 2197-2258"},
+{s:"admin",g:"文档漂移",p:"P2",v:0,t:"docs/12 ×85、docs/14 ×26 引用与 60+ 个 D-xxx 决策 ID 均无法核验（docs/ 不在仓库）；代码与注释自相矛盾 10 处：SUPPORT 写权限数、新建赛事按钮、换号同步范围、小字号颜色、成绩发布前置「四条」实为 5、「灰底四行」实为 6 …",l:"admin.html:726 · 4092 · 5093 · 27-28 · 3441 · 3875"},
+// ===== domain =====
+{s:"domain",g:"不变量",p:"P0",v:0,t:"「退款 ≤ 已付」在报名侧任何地方都不校验；域层没有金额上限函数，后台可把 15 美元参赛人结算成 999 美元并让订单变 REFUNDED（具体序列见后台 P0）。",l:"run-domain.js:801-804 · admin.html:4480-4571"},
+{s:"domain",g:"不变量",p:"P0",v:0,t:"订单金额由调用方决定：createRegistrationOrder({…, amount:0}) → $0 订单，再 confirmRegistrationPayment(id,{role:\"PAYMENT_PROVIDER\"}) → PAID；discount / discountCode 同样不复算、不校验优惠码。",l:"run-domain.js:1759-1762 · 1794-1795 · index.html:10850"},
+{s:"domain",g:"不变量",p:"P1",v:0,t:"角色可自报：canConfirmReceipt({role:\"FINANCE\"}) 即通过，actor 完全由调用方构造；原语裸导出无锚点：RD.releaseCapacity(\"EV-A\",\"C-21K\",100) 随时把 used 减到 0。",l:"run-domain.js:2015-2017 · 1841 · 838-845"},
+{s:"domain",g:"不变量",p:"P1",v:0,t:"一人多单 / 多预留无约束，幂等只按 orderNo；周边 LATE_ARRIVAL 可对同一订单重复登记且第二条永远无法关闭。",l:"run-domain.js:1706-1722 · 1290-1311 · 1573-1585"},
+{s:"domain",g:"不变量",p:"P2",v:0,t:"adjustInventory 无幂等键、无 delta 校验（双击双倍入库）；退款 REQUESTED/APPROVED 期间仍可交付随后结算 → 钱退货也交；payMerchOrder 用 Math.max(0,…) 掩盖负库存。",l:"run-domain.js:1107-1133 · 2601-2618 · 1335-1337"},
+{s:"domain",g:"状态机",p:"P1",v:0,t:"报名侧 Refund / opStatus / Order 聚合状态机整体不在共享层，admin 直接 push / 改写 DB.refunds 与 p.opStatus，用户端只能读，「两边走同一函数」的承诺落空。",l:"admin.html:4430-4436 · 4571-4578 · 3982"},
+{s:"domain",g:"状态机",p:"P1",v:0,t:"Bib RESERVED 状态定义但无任何创建路径，且 validateBibAssignment 拒绝把 RESERVED 号分配给任何人 → 预留给嘉宾 / 配速员的号永远发不出去。",l:"run-domain.js:2262 · admin.html:2224"},
+{s:"domain",g:"状态机",p:"P1",v:0,t:"createRegistrationOrder 只检查 registrationOpen 不检查 status === PUBLISHED，DRAFT 赛事可建单；种子 EV-B 是 DRAFT 却 registrationOpen:true 且已有 PAID 订单、号段、照片批次。",l:"run-domain.js:1735-1739 · 151-163 · 300-308"},
+{s:"domain",g:"状态机",p:"P2",v:0,t:"终态可继续改写：supportRequestClose 无守卫可重复关闭且不写 Audit；Bib VOIDED 后 p.bib 镜像不清理；transferred() 按 holder !== name 判定，拼写更正也会显示「已转让」（待确认）。",l:"run-domain.js:2639-2645 · 2277 · 1012"},
+{s:"domain",g:"持久化",p:"P1",v:0,t:"SCHEMA 不匹配或 ensureShape 抛异常即静默整份回落种子（丢数据），无迁移无提示；下次 save 直接覆盖用户数据。",l:"run-domain.js:503-504 · 594 · 627-636"},
+{s:"domain",g:"持久化",p:"P1",v:0,t:"跨标签页最后写入者胜：两端各自在内存改完再全量 save()，中间另一端的改动被覆盖；writing 标志无效（storage 事件不在写入方触发）。",l:"run-domain.js:638-644 · 664-673"},
+{s:"domain",g:"持久化",p:"P2",v:0,t:"save() 吞掉 QuotaExceeded 静默丢写，audit 数组无上限；评论 / 故事函数裸用 localStorage 无 try/catch；注释 2453 声称不留存证件号，与 106 行明文 idNo 矛盾。",l:"run-domain.js:638-653 · 2840-2928 · 2453 · 106"},
+{s:"domain",g:"API 与重复实现",p:"P2",v:0,t:"130 个导出中 45 个两端均未使用（createEvent / createCoupon / allocateAmounts / audit / nextId / 6 个评论故事函数 …）；regExceptions 与 registrationExceptions 是同一函数的两个名字。",l:"run-domain.js:2932-3013"},
+{s:"domain",g:"API 与重复实现",p:"P2",v:0,t:"两端各自重写：now()、money() / fmtAmount 三处、ageOnRaceDay 两份、退款 ID 两套生成器（域 seq.RF 从未使用）、订单状态聚合只在 admin、状态文案字典只在 admin。",l:"run-domain.js:38 · 121 · 1487 · admin.html:1079 · 4010 · 3982 · 670"},
+{s:"domain",g:"ID 映射",p:"P1",v:0,t:"EVENT_MAP 只有 e1↔EV-A、e3↔EV-B；用户端 e2/e4/e5/e6/f1-f3 无后台对应；createEvent 生成 EV-C 但不更新映射；adminEventId 未映射返回 null 时 createRegistrationOrder 用 \"EV-A\" 兜底，未映射赛事的结账会静默记到 EV-A 并占其名额。",l:"run-domain.js:34-35 · 1719 · 2649 · index.html:10847"},
+{s:"domain",g:"ID 映射",p:"P2",v:0,t:"语义不一致：e1「金边滨河半马 09.20 $15」↔ EV-A「11-15 早鸟 $15 售罄实际 $22」；CAT_MAP 把 2k 映射到 C-5K；CM-4/5 与 ST-102 挂在 e3 却描述湄公河夜跑（e5）。",l:"index.html:5275-5281 · run-domain.js:130-141 · 1702 · 2765"},
+{s:"domain",g:"金额与时间",p:"P2",v:0,t:"币种硬编码 USD、金额用浮点；verifyCoupon 从不校验 validUntil、used 永不递增、quota 形同虚设；时间为本地墙钟字符串无时区，无 Asia/Phnom_Penh 处理。",l:"run-domain.js:1176 · 1181 · 2717-2755 · 38-57"},
+{s:"domain",g:"金额与时间",p:"P2",v:0,t:"种子 PENDING 订单 ORD-1004/1005 没有 deadline → pastDeadline 永远 false → 回填的 reserved 名额永久占用（与 D-111「消灭幽灵预留」矛盾）；ts() 解析失败返回 0 被当作「无截止」。",l:"run-domain.js:249-263 · 53-70 · 593-611"},
+{s:"domain",g:"种子质量",p:"P2",v:0,t:"类别 used 合计 1842 ≠ 价格档 used 合计 1560；ORD-2001/2002 单人 paid 30 高于任何挂牌价，形成「挂牌 15 实付 30」伪事实；周边流水号用 Math.random，演示不可复现。",l:"run-domain.js:132-141 · 236-251 · 1300 · 1348"},
+{s:"domain",g:"代码质量",p:"P2",v:0,t:"返回形状不统一（{ok,why} / {ok,msg} / {ok,errs} / {released,msg}）；域层 msg 内嵌 HTML 并拼接业务数据，调用方 innerHTML 直渲染即有注入面；createEvent / createCoupon 自行 save() 而其余写入由调用方落盘。",l:"run-domain.js:827 · 1108 · 1461-1466 · 2685 · 2713"},
+];
+
+const SURF = {site:["官网 · H5 共用","index.html","#site"],h5:["H5 移动端","index.html · mobile","#h5"],mini:["MiniApp","Telegram WebApp","#mini"],admin:["运营后台","admin.html","#admin"],domain:["共享业务域","run-domain.js","#domain"]};
+const pill = p => `<span class="pill ${p}">${p}</span>`;
+const vtag = v => v===1?' <span class="pill ok">已实测</span>':(v===2?' <span class="pill chk">待确认</span>':'');
+document.getElementById('total').textContent = F.length + ' 条';
+// scorecard
+const sc = document.getElementById('score');
+for (const k in SURF){const rows=F.filter(f=>f.s===k);const c={P0:0,P1:0,P2:0,P3:0};rows.forEach(r=>c[r.p]++);
+  sc.insertAdjacentHTML('beforeend',`<a href="${SURF[k][2]}"><div class="t">${SURF[k][0]}</div><div class="f">${SURF[k][1]} · ${rows.length} 条</div><div class="row">${['P0','P1','P2'].filter(p=>c[p]).map(p=>`<span class="pill ${p}">${p} × ${c[p]}</span>`).join('')}</div></a>`);}
+// tables per surface grouped by g
+for (const k in SURF){const host=document.getElementById(k+'-tables');const rows=F.filter(f=>f.s===k);const groups=[...new Set(rows.map(r=>r.g))];
+  host.innerHTML=groups.map(g=>{const gr=rows.filter(r=>r.g===g);return `<div class="grp"><h3>${g}<small>${gr.length} 条</small></h3><div class="tbl"><table class="f"><thead><tr><th>级别</th><th>发现</th><th>位置</th></tr></thead><tbody>${gr.map(r=>`<tr data-p="${r.p}"><td class="s">${pill(r.p)}</td><td>${r.t}${vtag(r.v)}</td><td class="l">${r.l}</td></tr>`).join('')}</tbody></table></div></div>`;}).join('');}
+// filter
+document.querySelectorAll('.fbtn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.fbtn').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');const f=b.dataset.f;document.querySelectorAll('table.f tr[data-p]').forEach(tr=>tr.classList.toggle('hide',f!=='all'&&tr.dataset.p!==f));document.querySelectorAll('.grp').forEach(g=>{g.style.display=[...g.querySelectorAll('tr[data-p]')].some(t=>!t.classList.contains('hide'))?'':'none';});}));
+// matrix
+const M=[["event_publish","R","W","—","R","—","—","—"],["event_config","R","W","R","—","—","—","—"],["order_view","R","R","R","R","R","R","—"],["roster_export","R","W","—","—","W","—","—"],["manual_confirm","—","—","W","—","—","—","—"],["refund_request","—","—","W","W","—","—","—"],["refund_reject","—","—","W","R","—","—","—"],["refund_approve","—","R","W","R","—","—","—"],["refund_settle","—","R","W","R","—","—","—"],["exception_return","—","—","W","R","—","—","—"],["prepay_cancel","R","W","R","W","—","—","—"],["order_archive","R","W","R","R","—","—","—"],["bib_assign","R","W","—","—","—","—","—"],["bib_swap","R","W","—","—","W","—","—"],["bib_void","R","W","—","—","—","—","—"],["racepack_issue","—","R","—","R","W","W","—"],["racepack_undo","—","W","—","—","W","—","—"],["offline_conflict","R","W","—","—","W","—","—"],["result_import","R","W","—","R","—","—","—"],["result_publish","R","W","—","R","—","—","—"],["result_unpublish","W","W","—","—","—","—","—"],["claim_case_create","R","W","—","W","—","—","—"],["claim_bind","R","W","—","R","—","—","—"],["photo_upload","R","W","—","—","—","—","W"],["photo_tag","R","W","—","—","—","—","W"],["photo_removal_review","W","W","—","—","—","—","—"],["content_manage","R","W","—","—","—","—","—"],["access_manage","W","—","—","—","—","—","—"],["recon_close","R","—","W","—","—","—","—"],["recon_resolve","R","—","W","—","—","—","—"],["refund_correction","—","—","W","R","—","—","—"],["audit_view","W","R","R","—","—","—","—"],["participant_edit","R","W","—","R","—","—","—"],["participant_transfer","R","W","—","—","—","—","—"],["bib_settings","R","W","—","—","R","—","—"],["merch_product","R","W","R","R","—","—","—"],["merch_inventory","R","W","R","—","—","—","—"],["merch_order_ops","R","W","R","R","R","R","—"],["merch_payment_exc","R","R","W","R","—","—","—"],["merch_refund_request","—","—","W","W","—","—","—"],["merch_refund","R","R","W","R","—","—","—"],["merch_handoff","R","W","R","R","W","W","—"],["merch_return","R","W","R","—","—","—","—"],["demo_reset","W","W","W","W","W","W","W"]];
+document.getElementById('matrix').innerHTML=M.map(r=>`<tr><td>${r[0]}</td>${r.slice(1).map(c=>`<td class="${c==='W'?'W':c==='R'?'R':'N'}">${c}</td>`).join('')}</tr>`).join('');
+</script>
