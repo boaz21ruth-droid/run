@@ -1,0 +1,25 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - errorlint
+    - misspell
+    - noctx
+    - unconvert
+  exclusions:
+    generated: lax
+    presets:
+      - std-error-handling
+    paths:
+      - internal/httpapi/apigen
+      - internal/.*/store
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
