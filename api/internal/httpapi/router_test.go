@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"werun/api/internal/httpapi"
+	"werun/api/internal/platform/apperr"
 	"werun/api/internal/platform/dbtest"
 	"werun/api/internal/platform/httpx"
 	"werun/api/internal/platform/i18n"
@@ -90,4 +92,20 @@ func TestClientIPTrustsOnlyPrivateProxies(t *testing.T) {
 	assert.Equal(t, "203.0.113.9", clientIP("172.18.0.5:41234"))
 	// 来自公网的直连请求：伪造的 X-Forwarded-For 不被采信
 	assert.Equal(t, "198.51.100.7", clientIP("198.51.100.7:41234"))
+}
+
+func TestOversizedRequestBodyIsRejected(t *testing.T) {
+	r := newRouter(t, nil)
+
+	body := strings.NewReader(strings.Repeat("a", (1<<20)+1)) // 1 MiB + 1 字节
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/api/admin/auth/login", body)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(httpx.HeaderClient, "admin")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code, rec.Body.String())
+	var errBody httpx.ErrorBody
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &errBody))
+	assert.Equal(t, apperr.CodeBadRequest, errBody.Error.Code)
 }

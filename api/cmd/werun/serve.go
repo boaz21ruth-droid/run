@@ -72,6 +72,8 @@ func runServe(ctx context.Context, args []string, stderr io.Writer) int {
 		Addr:              app.Cfg.HTTPAddr,
 		Handler:           newRouter(app),
 		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 
 	serveErr := make(chan error, 1)

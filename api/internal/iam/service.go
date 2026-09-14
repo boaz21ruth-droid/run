@@ -143,7 +143,10 @@ func (s *Service) Login(ctx context.Context, username, password string, meta htt
 	row, err := s.q.GetStaffByUsername(ctx, username)
 	if errors.Is(err, pgx.ErrNoRows) {
 		// 做一次同等开销的哈希，避免通过响应时间判断用户名是否存在。
-		_, _ = VerifyPassword(dummyHash(), password)
+		_, verifyErr := verifyPasswordLimited(ctx, dummyHash(), password)
+		if errors.Is(verifyErr, errArgon2Busy) {
+			return "", Staff{}, apperr.New(http.StatusTooManyRequests, apperr.CodeRateLimited)
+		}
 		released = true
 		s.limiter.Failure(username)
 		slog.WarnContext(ctx, "staff login with unknown username",
@@ -155,7 +158,10 @@ func (s *Service) Login(ctx context.Context, username, password string, meta htt
 	}
 
 	staff := Staff{ID: row.ID, Username: row.Username, FullName: row.FullName, Role: Role(row.Role)}
-	ok, err := VerifyPassword(row.PasswordHash, password)
+	ok, err := verifyPasswordLimited(ctx, row.PasswordHash, password)
+	if errors.Is(err, errArgon2Busy) {
+		return "", Staff{}, apperr.New(http.StatusTooManyRequests, apperr.CodeRateLimited)
+	}
 	if err != nil {
 		return "", Staff{}, fmt.Errorf("iam: verify password of staff %d: %w", row.ID, err)
 	}

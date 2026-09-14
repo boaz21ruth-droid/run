@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -33,6 +34,13 @@ type authFixture struct {
 
 func newAuthFixture(t *testing.T) authFixture {
 	t.Helper()
+	return newAuthFixtureWithEnv(t, "dev")
+}
+
+// newAuthFixtureWithEnv 与 newAuthFixture 相同，但可以指定 RouterDeps.Env（例如 "prod"
+// 用来验证会话 Cookie 的 Secure 属性）。
+func newAuthFixtureWithEnv(t *testing.T, env string) authFixture {
+	t.Helper()
 	pool := dbtest.NewPool(t)
 	cat, err := i18n.LoadCatalog()
 	require.NoError(t, err)
@@ -44,7 +52,7 @@ func newAuthFixture(t *testing.T) authFixture {
 		Catalog: cat,
 		Pool:    pool,
 		IAM:     svc,
-		Env:     "dev",
+		Env:     env,
 	})
 	return authFixture{router: router, svc: svc, cat: cat}
 }
@@ -132,6 +140,20 @@ func TestAdminLoginSetsSessionCookie(t *testing.T) {
 	assert.Equal(t, apigen.AccessWrite, me.Permissions["event_publish"])
 }
 
+func TestAdminLoginSetsSecureCookieInProd(t *testing.T) {
+	f := newAuthFixtureWithEnv(t, "prod")
+	rec := f.do(request{
+		method:   http.MethodPost,
+		target:   "/api/admin/auth/login",
+		body:     `{"username":"ops.chan","password":"correct-horse-1"}`,
+		asClient: true,
+	})
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+
+	cookie := sessionCookie(t, rec)
+	assert.True(t, cookie.Secure, "prod environment")
+}
+
 func TestAdminLoginWrongPasswordIsLocalized(t *testing.T) {
 	f := newAuthFixture(t)
 	rec := f.do(request{
@@ -212,7 +234,7 @@ func TestAuthMiddlewarePermissions(t *testing.T) {
 	auths := map[string]apigen.OperationAuth{
 		"FakeWrite": {Kind: apigen.AuthPermission, Permission: string(iam.PermEventConfig), Access: string(iam.AccessWrite)},
 	}
-	mw := AuthMiddleware(f.svc, auths)
+	mw := AuthMiddleware(f.svc, auths, logx.New("error", io.Discard))
 	next := func(c *gin.Context, _ any) (any, error) {
 		staff, ok := iam.StaffFrom(c)
 		require.True(t, ok)
@@ -245,6 +267,19 @@ func TestAuthMiddlewarePermissions(t *testing.T) {
 	appErr, ok = apperr.As(err)
 	require.True(t, ok)
 	assert.Equal(t, apperr.CodeForbidden, appErr.Code)
+}
+
+// TestOperationAuthsCoversEveryStrictServerInterfaceMethod 证明 apigen.OperationAuths
+// 覆盖了 StrictServerInterface 的每一个方法：新增接口时如果忘了跑 make gen-api（或
+// permgen 忘了给某个操作打 x-permission），这个测试会先炸，而不是等到线上被 403 拦下来
+// 才发现——见 AuthMiddleware 对"映射表里查不到"的处理与其 Warn 日志。
+func TestOperationAuthsCoversEveryStrictServerInterfaceMethod(t *testing.T) {
+	typ := reflect.TypeOf((*apigen.StrictServerInterface)(nil)).Elem()
+	for i := 0; i < typ.NumMethod(); i++ {
+		name := typ.Method(i).Name
+		_, ok := apigen.OperationAuths[name]
+		assert.True(t, ok, "operation %s is missing from apigen.OperationAuths; run make gen-api", name)
+	}
 }
 
 func TestOperationAuthsUseKnownPermissions(t *testing.T) {
