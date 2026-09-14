@@ -1,0 +1,8 @@
+packages:
+  - packages/*
+  - web/*
+  - e2e
+
+# pnpm 10 默认不执行依赖的安装脚本；esbuild（Vite 使用）需要执行以校验平台二进制
+onlyBuiltDependencies:
+  - esbuild

@@ -1,24 +1,31 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-.PHONY: help setup lint lint-api test test-api migrate-up migrate-status
+.PHONY: help setup lint lint-api test test-api test-web migrate-up migrate-status
 
 help: ## 列出可用目标
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
 
-setup: ## 下载依赖；.env 不存在时从 .env.example 复制
+setup:
+	@command -v corepack >/dev/null 2>&1 && corepack enable || echo "corepack not found: install pnpm 10.34.5 manually (e.g. npx -y pnpm@10.34.5)"
+	pnpm install
 	cd api && go mod download
-	@test -f .env || cp .env.example .env
+	test -f .env || cp .env.example .env
 
-lint: lint-api ## 全部静态检查
+lint: lint-api
+	pnpm lint
 
 lint-api: ## Go 静态检查
 	cd api && go tool golangci-lint run ./...
 
-test: test-api ## 全部测试
+test: test-api test-web
 
 test-api: ## Go 测试（集成测试需要本机 Docker）
 	cd api && go test ./...
+
+test-web:
+	pnpm typecheck
+	pnpm test
 
 migrate-up: ## 执行数据库迁移（读取根目录 .env）
 	set -a; . ./.env; set +a; cd api && go run ./cmd/werun migrate up
