@@ -11,7 +11,8 @@ import (
 const usage = `werun <command> [flags]
 
 Commands:
-  serve        启动 HTTP 服务（--auto-migrate：启动前执行迁移，只用于本地开发）
+  serve        启动 HTTP 服务（--auto-migrate：启动前执行迁移，只用于本地开发；--with-worker：同一进程运行后台任务）
+  worker       只运行后台任务 worker
   migrate      数据库迁移：werun migrate up | down | status
   healthcheck  请求就绪接口，返回 200 时退出码为 0（--url 指定地址）
   create-staff 创建后台员工：--username --full-name --role [--password-stdin]
@@ -29,6 +30,8 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	switch args[0] {
 	case "serve":
 		return runServe(ctx, args[1:], stderr)
+	case "worker":
+		return runWorker(ctx, args[1:], stderr)
 	case "migrate":
 		return runMigrate(ctx, args[1:], stdout, stderr)
 	case "healthcheck":
