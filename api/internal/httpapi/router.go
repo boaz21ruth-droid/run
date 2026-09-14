@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"werun/api/internal/httpapi/apigen"
+	"werun/api/internal/iam"
 	"werun/api/internal/platform/apperr"
 	"werun/api/internal/platform/httpx"
 	"werun/api/internal/platform/i18n"
@@ -18,7 +19,9 @@ type RouterDeps struct {
 	Log     *slog.Logger
 	Catalog *i18n.Catalog
 	Pool    *pgxpool.Pool
+	IAM     *iam.Service
 	Server  *Server // 为 nil 时由 NewServer 构造
+	Env     string  // "dev" | "prod"
 }
 
 // trustedProxies：只信任本机与私有网段（compose 网络里的 Caddy）转发的 X-Forwarded-For，
@@ -36,6 +39,7 @@ func NewRouter(d RouterDeps) *gin.Engine {
 		httpx.AccessLog(d.Log),
 		httpx.Recover(d.Catalog, d.Log),
 		httpx.Locale(),
+		CSRFGuard(d.Catalog, d.Log),
 	)
 
 	server := d.Server
@@ -46,7 +50,10 @@ func NewRouter(d RouterDeps) *gin.Engine {
 	writeErr := func(c *gin.Context, err error) {
 		httpx.WriteError(c, d.Catalog, d.Log, err)
 	}
-	strict := apigen.NewStrictHandlerWithOptions(server, nil, apigen.StrictGinServerOptions{
+	middlewares := []apigen.StrictMiddlewareFunc{
+		AuthMiddleware(d.IAM, apigen.OperationAuths),
+	}
+	strict := apigen.NewStrictHandlerWithOptions(server, middlewares, apigen.StrictGinServerOptions{
 		RequestErrorHandlerFunc: func(c *gin.Context, err error) {
 			writeErr(c, apperr.New(http.StatusBadRequest, apperr.CodeBadRequest).Wrap(err))
 		},

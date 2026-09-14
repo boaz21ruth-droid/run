@@ -35,3 +35,8 @@ gen-api:
 	cd api/openapi && go tool oapi-codegen -config oapi-codegen.yaml openapi.yaml
 	cd api && go run ./internal/httpapi/cmd/permgen -spec openapi/openapi.yaml -out internal/httpapi/apigen/permissions.gen.go
 	cd api && go tool sqlc generate
+
+.PHONY: create-staff
+
+create-staff:
+	set -a; . ./.env; set +a; cd api && go run ./cmd/werun create-staff $(ARGS)

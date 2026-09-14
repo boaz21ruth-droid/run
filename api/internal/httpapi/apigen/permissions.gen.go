@@ -20,6 +20,9 @@ type OperationAuth struct {
 
 // OperationAuths 的键是 strict 中间件收到的 operationID（首字母大写的 operationId）。
 var OperationAuths = map[string]OperationAuth{
-	"GetHealthz": {Kind: AuthNone},
-	"GetReadyz":  {Kind: AuthNone},
+	"AdminGetMe":  {Kind: AuthSession},
+	"AdminLogin":  {Kind: AuthNone},
+	"AdminLogout": {Kind: AuthSession},
+	"GetHealthz":  {Kind: AuthNone},
+	"GetReadyz":   {Kind: AuthNone},
 }

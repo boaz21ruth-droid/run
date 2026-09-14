@@ -14,6 +14,7 @@ Commands:
   serve        启动 HTTP 服务（--auto-migrate：启动前执行迁移，只用于本地开发）
   migrate      数据库迁移：werun migrate up | down | status
   healthcheck  请求就绪接口，返回 200 时退出码为 0（--url 指定地址）
+  create-staff 创建后台员工：--username --full-name --role [--password-stdin]
 `
 
 func main() {
@@ -32,6 +33,12 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return runMigrate(ctx, args[1:], stdout, stderr)
 	case "healthcheck":
 		return runHealthcheck(ctx, args[1:], stdout, stderr)
+	case "create-staff":
+		if err := runCreateStaff(ctx, args[1:]); err != nil {
+			fmt.Fprintf(stderr, "create-staff: %v\n", err)
+			return 1
+		}
+		return 0
 	case "help", "-h", "--help":
 		fmt.Fprint(stdout, usage)
 		return 0

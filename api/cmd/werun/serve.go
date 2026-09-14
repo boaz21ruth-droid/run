@@ -54,6 +54,8 @@ func runServe(ctx context.Context, args []string, stderr io.Writer) int {
 			Log:     app.Log,
 			Catalog: app.Catalog,
 			Pool:    app.Pool,
+			IAM:     app.IAM,
+			Env:     app.Cfg.Env,
 		}),
 		ReadHeaderTimeout: 10 * time.Second,
 	}

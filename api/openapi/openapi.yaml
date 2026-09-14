@@ -47,6 +47,65 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /admin/auth/login:
+    post:
+      operationId: adminLogin
+      tags: [admin-auth]
+      summary: 员工登录
+      x-auth: none
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: 登录成功，响应头 Set-Cookie 下发 werun_admin_session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /admin/auth/logout:
+    post:
+      operationId: adminLogout
+      tags: [admin-auth]
+      summary: 退出登录
+      x-auth: session
+      responses:
+        "204":
+          description: 已退出
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /admin/me:
+    get:
+      operationId: adminGetMe
+      tags: [admin-auth]
+      summary: 当前员工与权限
+      x-auth: session
+      responses:
+        "200":
+          description: 当前员工
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     ErrorResponse:
@@ -71,3 +130,44 @@ components:
       properties:
         status:
           type: string
+    Role:
+      type: string
+      enum: [ADMIN, OPS, FINANCE, SUPPORT, RACE_SUPERVISOR, RACE_STAFF, PHOTOGRAPHER]
+    Access:
+      type: string
+      enum: [read, write]
+    Staff:
+      type: object
+      required: [id, username, fullName, role]
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        fullName:
+          type: string
+        role:
+          $ref: "#/components/schemas/Role"
+    Me:
+      type: object
+      required: [staff, permissions]
+      properties:
+        staff:
+          $ref: "#/components/schemas/Staff"
+        permissions:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/Access"
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 64
+        password:
+          type: string
+          minLength: 1
+          maxLength: 256
