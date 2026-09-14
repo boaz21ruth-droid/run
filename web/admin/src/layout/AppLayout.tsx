@@ -1,9 +1,9 @@
-import { CalendarOutlined, LogoutOutlined } from "@ant-design/icons";
+import { CalendarOutlined, LogoutOutlined, WalletOutlined } from "@ant-design/icons";
 import { Button, Layout, Menu, Space, Tag, Typography, type MenuProps } from "antd";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useLocation, useNavigate } from "react-router";
-import { PERM_EVENT_CONFIG, can, type Access } from "../auth/can";
+import { PERM_EVENT_CONFIG, PERM_PAYMENT_ACCOUNT_MANAGE, can, type Access } from "../auth/can";
 import { useLogout, useMe } from "../auth/useMe";
 import { LanguageSwitch } from "./LanguageSwitch";
 
@@ -18,6 +18,13 @@ interface MenuEntry {
 /** 菜单项声明所需权限；没有权限的菜单项不渲染 */
 const MENU: MenuEntry[] = [
   { key: "/events", labelKey: "events.title", permission: PERM_EVENT_CONFIG, access: "read", icon: <CalendarOutlined /> },
+  {
+    key: "/payment-accounts",
+    labelKey: "paymentAccounts.title",
+    permission: PERM_PAYMENT_ACCOUNT_MANAGE,
+    access: "read",
+    icon: <WalletOutlined />,
+  },
 ];
 
 export function AppLayout() {

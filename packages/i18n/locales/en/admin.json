@@ -145,5 +145,51 @@
       "validUntil": "Valid until",
       "status": "Status"
     }
+  },
+  "paymentAccounts": {
+    "title": "Payment accounts",
+    "create": "New payment account",
+    "createTitle": "New payment account",
+    "editTitle": "Edit payment account",
+    "edit": "Edit",
+    "empty": "No payment accounts yet",
+    "created": "Payment account created",
+    "updated": "Payment account saved",
+    "submit": "Save",
+    "cancel": "Cancel",
+    "global": "All events",
+    "active": "Active",
+    "inactive": "Inactive",
+    "currencyNote": "Payments are collected in US dollars (USD). Orders use an active account bound to the event first, then an account shared by all events.",
+    "col": {
+      "qr": "QR code",
+      "name": "Name",
+      "provider": "Provider",
+      "accountName": "Account name",
+      "accountNoMasked": "Account ending",
+      "scope": "Used for",
+      "event": "Event",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "provider": { "ABA": "ABA", "ACLEDA": "ACLEDA", "WING": "Wing", "BAKONG": "Bakong", "OTHER": "Other" },
+    "scope": { "REGISTRATION": "Registration", "MERCH": "Merchandise", "ALL": "Registration and merchandise" },
+    "form": {
+      "name": "Name",
+      "nameHelp": "Shown only in admin, e.g. ABA USD main account",
+      "provider": "Provider",
+      "accountName": "Account name",
+      "accountNoMasked": "Account ending",
+      "accountNoMaskedHelp": "Enter the masked number only, e.g. *** 123",
+      "scope": "Used for",
+      "eventId": "Event",
+      "eventIdHelp": "Leave empty to use it for all events",
+      "active": "Active",
+      "qr": "Payment QR code",
+      "qrHelp": "PNG, JPG or WebP, up to 2 MB",
+      "qrKeepHelp": "Keep the current QR code unless you choose a new image",
+      "qrRequired": "Upload the payment QR code",
+      "chooseQr": "Choose image"
+    }
   }
 }

@@ -8,6 +8,7 @@ export const opsMe: Schemas["Me"] = {
     order_view: "read",
     price_config: "write",
     coupon_manage: "write",
+    payment_account_manage: "read",
   },
 };
 
@@ -19,12 +20,25 @@ export const adminMe: Schemas["Me"] = {
     access_manage: "write",
     price_config: "read",
     coupon_manage: "read",
+    payment_account_manage: "read",
   },
 };
 
 export const photographerMe: Schemas["Me"] = {
   staff: { id: 9, username: "photog.sok", fullName: "Sokha Ith", role: "PHOTOGRAPHER" },
   permissions: { photo_upload: "write", photo_tag: "write" },
+};
+
+export const financeMe: Schemas["Me"] = {
+  staff: { id: 3, username: "finance.mao", fullName: "Maolin Tep", role: "FINANCE" },
+  permissions: {
+    event_config: "read",
+    order_view: "read",
+    price_config: "read",
+    coupon_manage: "read",
+    payment_account_manage: "write",
+    proof_review: "write",
+  },
 };
 
 export const draftEvent: Schemas["AdminEvent"] = {
@@ -95,6 +109,20 @@ export const earlyCoupon: Schemas["Coupon"] = {
   status: "ACTIVE",
   usedCount: 3,
   reservedCount: 1,
+};
+
+export const abaAccount: Schemas["PaymentAccount"] = {
+  id: 5,
+  name: "ABA USD 主收款户",
+  provider: "ABA",
+  accountName: "WERUN SPORTS CO LTD",
+  accountNoMasked: "*** 123",
+  currency: "USD",
+  qrFileId: 88,
+  scope: "REGISTRATION",
+  eventId: null,
+  active: true,
+  createdAt: "2026-09-14T03:00:00Z",
 };
 
 export function jsonResponse(status: number, body: unknown): Response {

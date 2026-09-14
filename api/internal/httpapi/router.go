@@ -12,6 +12,7 @@ import (
 	"werun/api/internal/event"
 	"werun/api/internal/httpapi/apigen"
 	"werun/api/internal/iam"
+	"werun/api/internal/payment"
 	"werun/api/internal/platform/apperr"
 	"werun/api/internal/platform/httpx"
 	"werun/api/internal/platform/i18n"
@@ -55,6 +56,7 @@ type RouterDeps struct {
 	IAM     *iam.Service
 	Events  *event.Service
 	Pricing *pricing.Service
+	Payment *payment.Service
 	Server  *Server // 为 nil 时由 NewServer 构造
 	Env     string  // "dev" | "prod"
 }

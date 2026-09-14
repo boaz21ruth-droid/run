@@ -20,11 +20,13 @@ import (
 	"werun/api/internal/httpapi"
 	"werun/api/internal/httpapi/apigen"
 	"werun/api/internal/iam"
+	"werun/api/internal/payment"
 	"werun/api/internal/platform/apperr"
 	"werun/api/internal/platform/dbtest"
 	"werun/api/internal/platform/httpx"
 	"werun/api/internal/platform/i18n"
 	"werun/api/internal/platform/logx"
+	"werun/api/internal/platform/storage"
 	"werun/api/internal/pricing"
 )
 
@@ -43,6 +45,8 @@ func newEventsEnv(t *testing.T) eventsEnv {
 	require.NoError(t, err)
 
 	iamSvc := iam.NewService(pool, []byte(strings.Repeat("k", 32)), iam.NewLoginLimiter(time.Now), time.Now)
+	files, err := storage.NewDisk(t.TempDir())
+	require.NoError(t, err)
 	router := httpapi.NewRouter(httpapi.RouterDeps{
 		Log:     logx.New("error", io.Discard),
 		Catalog: catalog,
@@ -50,6 +54,7 @@ func newEventsEnv(t *testing.T) eventsEnv {
 		IAM:     iamSvc,
 		Events:  event.NewService(pool),
 		Pricing: pricing.NewService(pool, time.Now),
+		Payment: payment.NewService(pool, files, time.Now),
 		Env:     "dev",
 	})
 	return eventsEnv{router: router, iam: iamSvc, catalog: catalog, pool: pool}

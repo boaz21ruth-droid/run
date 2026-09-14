@@ -14,6 +14,7 @@ import (
 	"werun/api/internal/event"
 	"werun/api/internal/iam"
 	"werun/api/internal/jobs"
+	"werun/api/internal/payment"
 	"werun/api/internal/platform/config"
 	"werun/api/internal/platform/db"
 	"werun/api/internal/platform/i18n"
@@ -35,6 +36,7 @@ type App struct {
 	IAM      *iam.Service
 	Events   *event.Service
 	Pricing  *pricing.Service
+	Payment  *payment.Service
 }
 
 // Bootstrap 读取配置、创建日志器、加载文案、连接数据库并构造各服务。
@@ -74,6 +76,7 @@ func Bootstrap(ctx context.Context) (*App, error) {
 	app.IAM = iam.NewService(app.Pool, []byte(app.Cfg.SessionSecret), iam.NewLoginLimiter(time.Now), time.Now)
 	app.Events = event.NewService(app.Pool)
 	app.Pricing = pricing.NewService(app.Pool, time.Now)
+	app.Payment = payment.NewService(app.Pool, app.Store, time.Now)
 	return app, nil
 }
 

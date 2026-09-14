@@ -8,6 +8,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"time"
 
@@ -163,6 +165,54 @@ func (e DiscountType) Valid() bool {
 	}
 }
 
+// Defines values for PaymentAccountScope.
+const (
+	PaymentAccountScopeALL          PaymentAccountScope = "ALL"
+	PaymentAccountScopeMERCH        PaymentAccountScope = "MERCH"
+	PaymentAccountScopeREGISTRATION PaymentAccountScope = "REGISTRATION"
+)
+
+// Valid indicates whether the value is a known member of the PaymentAccountScope enum.
+func (e PaymentAccountScope) Valid() bool {
+	switch e {
+	case PaymentAccountScopeALL:
+		return true
+	case PaymentAccountScopeMERCH:
+		return true
+	case PaymentAccountScopeREGISTRATION:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PaymentProvider.
+const (
+	PaymentProviderABA    PaymentProvider = "ABA"
+	PaymentProviderACLEDA PaymentProvider = "ACLEDA"
+	PaymentProviderBAKONG PaymentProvider = "BAKONG"
+	PaymentProviderOTHER  PaymentProvider = "OTHER"
+	PaymentProviderWING   PaymentProvider = "WING"
+)
+
+// Valid indicates whether the value is a known member of the PaymentProvider enum.
+func (e PaymentProvider) Valid() bool {
+	switch e {
+	case PaymentProviderABA:
+		return true
+	case PaymentProviderACLEDA:
+		return true
+	case PaymentProviderBAKONG:
+		return true
+	case PaymentProviderOTHER:
+		return true
+	case PaymentProviderWING:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PriceAudience.
 const (
 	PriceAudienceALL   PriceAudience = "ALL"
@@ -208,6 +258,42 @@ func (e Role) Valid() bool {
 	case RoleRACESUPERVISOR:
 		return true
 	case RoleSUPPORT:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminCreatePaymentAccountMultipartBodyActive.
+const (
+	AdminCreatePaymentAccountMultipartBodyActiveFalse AdminCreatePaymentAccountMultipartBodyActive = "false"
+	AdminCreatePaymentAccountMultipartBodyActiveTrue  AdminCreatePaymentAccountMultipartBodyActive = "true"
+)
+
+// Valid indicates whether the value is a known member of the AdminCreatePaymentAccountMultipartBodyActive enum.
+func (e AdminCreatePaymentAccountMultipartBodyActive) Valid() bool {
+	switch e {
+	case AdminCreatePaymentAccountMultipartBodyActiveFalse:
+		return true
+	case AdminCreatePaymentAccountMultipartBodyActiveTrue:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminUpdatePaymentAccountMultipartBodyActive.
+const (
+	AdminUpdatePaymentAccountMultipartBodyActiveFalse AdminUpdatePaymentAccountMultipartBodyActive = "false"
+	AdminUpdatePaymentAccountMultipartBodyActiveTrue  AdminUpdatePaymentAccountMultipartBodyActive = "true"
+)
+
+// Valid indicates whether the value is a known member of the AdminUpdatePaymentAccountMultipartBodyActive enum.
+func (e AdminUpdatePaymentAccountMultipartBodyActive) Valid() bool {
+	switch e {
+	case AdminUpdatePaymentAccountMultipartBodyActiveFalse:
+		return true
+	case AdminUpdatePaymentAccountMultipartBodyActiveTrue:
 		return true
 	default:
 		return false
@@ -363,6 +449,34 @@ type Me struct {
 	Staff       Staff             `json:"staff"`
 }
 
+// PaymentAccount defines model for PaymentAccount.
+type PaymentAccount struct {
+	AccountName     string          `json:"accountName"`
+	AccountNoMasked string          `json:"accountNoMasked"`
+	Active          bool            `json:"active"`
+	CreatedAt       time.Time       `json:"createdAt"`
+	Currency        string          `json:"currency"`
+	EventId         *int64          `json:"eventId"`
+	Id              int64           `json:"id"`
+	Name            string          `json:"name"`
+	Provider        PaymentProvider `json:"provider"`
+
+	// QrFileId 二维码地址为 /api/files/{qrFileId}
+	QrFileId int64               `json:"qrFileId"`
+	Scope    PaymentAccountScope `json:"scope"`
+}
+
+// PaymentAccountList defines model for PaymentAccountList.
+type PaymentAccountList struct {
+	Items []PaymentAccount `json:"items"`
+}
+
+// PaymentAccountScope defines model for PaymentAccountScope.
+type PaymentAccountScope string
+
+// PaymentProvider defines model for PaymentProvider.
+type PaymentProvider string
+
 // PriceAudience defines model for PriceAudience.
 type PriceAudience string
 
@@ -462,6 +576,42 @@ type AdminListCouponsParams struct {
 	EventId *int64 `form:"eventId,omitempty" json:"eventId,omitempty"`
 }
 
+// AdminCreatePaymentAccountMultipartBody defines parameters for AdminCreatePaymentAccount.
+type AdminCreatePaymentAccountMultipartBody struct {
+	AccountName     string                                       `json:"accountName"`
+	AccountNoMasked string                                       `json:"accountNoMasked"`
+	Active          AdminCreatePaymentAccountMultipartBodyActive `json:"active"`
+
+	// EventId 绑定的赛事 id；空串或缺省表示全局
+	EventId  *string         `json:"eventId,omitempty"`
+	Name     string          `json:"name"`
+	Provider PaymentProvider `json:"provider"`
+
+	// Qr 收款二维码图片，JPEG / PNG / WebP，≤ 2 MB
+	Qr    openapi_types.File  `json:"qr"`
+	Scope PaymentAccountScope `json:"scope"`
+}
+
+// AdminCreatePaymentAccountMultipartBodyActive defines parameters for AdminCreatePaymentAccount.
+type AdminCreatePaymentAccountMultipartBodyActive string
+
+// AdminUpdatePaymentAccountMultipartBody defines parameters for AdminUpdatePaymentAccount.
+type AdminUpdatePaymentAccountMultipartBody struct {
+	AccountName     string                                       `json:"accountName"`
+	AccountNoMasked string                                       `json:"accountNoMasked"`
+	Active          AdminUpdatePaymentAccountMultipartBodyActive `json:"active"`
+
+	// EventId 绑定的赛事 id；空串或缺省表示全局
+	EventId  *string             `json:"eventId,omitempty"`
+	Name     string              `json:"name"`
+	Provider PaymentProvider     `json:"provider"`
+	Qr       *openapi_types.File `json:"qr,omitempty"`
+	Scope    PaymentAccountScope `json:"scope"`
+}
+
+// AdminUpdatePaymentAccountMultipartBodyActive defines parameters for AdminUpdatePaymentAccount.
+type AdminUpdatePaymentAccountMultipartBodyActive string
+
 // AdminLoginJSONRequestBody defines body for AdminLogin for application/json ContentType.
 type AdminLoginJSONRequestBody = LoginRequest
 
@@ -479,6 +629,12 @@ type AdminCreatePriceRuleJSONRequestBody = PriceRuleInput
 
 // AdminUpdateEventRegistrationJSONRequestBody defines body for AdminUpdateEventRegistration for application/json ContentType.
 type AdminUpdateEventRegistrationJSONRequestBody = UpdateEventRegistrationRequest
+
+// AdminCreatePaymentAccountMultipartRequestBody defines body for AdminCreatePaymentAccount for multipart/form-data ContentType.
+type AdminCreatePaymentAccountMultipartRequestBody AdminCreatePaymentAccountMultipartBody
+
+// AdminUpdatePaymentAccountMultipartRequestBody defines body for AdminUpdatePaymentAccount for multipart/form-data ContentType.
+type AdminUpdatePaymentAccountMultipartRequestBody AdminUpdatePaymentAccountMultipartBody
 
 // AdminUpdatePriceRuleJSONRequestBody defines body for AdminUpdatePriceRule for application/json ContentType.
 type AdminUpdatePriceRuleJSONRequestBody = PriceRuleInput
@@ -524,6 +680,15 @@ type ServerInterface interface {
 	// AdminGetMe 当前员工与权限
 	// (GET /admin/me)
 	AdminGetMe(c *gin.Context)
+	// AdminListPaymentAccounts 收款账户列表
+	// (GET /admin/payment-accounts)
+	AdminListPaymentAccounts(c *gin.Context)
+	// AdminCreatePaymentAccount 新建收款账户（上传二维码，币种固定 USD）
+	// (POST /admin/payment-accounts)
+	AdminCreatePaymentAccount(c *gin.Context)
+	// AdminUpdatePaymentAccount 修改收款账户（带 qr 时更换二维码，旧文件保留）
+	// (PUT /admin/payment-accounts/{id})
+	AdminUpdatePaymentAccount(c *gin.Context, id int64)
 	// AdminUpdatePriceRule 修改价格档（已有占用时不可改价格、人群、关联组别）
 	// (PUT /admin/price-rules/{id})
 	AdminUpdatePriceRule(c *gin.Context, id int64)
@@ -533,6 +698,9 @@ type ServerInterface interface {
 	// GetPublicEvent 赛事详情（含组别）
 	// (GET /events/{slug})
 	GetPublicEvent(c *gin.Context, slug string)
+	// GetPublicFile 公开文件（收款二维码）；私有或不存在返回 404；响应头 Cache-Control public, max-age=86400
+	// (GET /files/{id})
+	GetPublicFile(c *gin.Context, id int64)
 	// GetHealthz 进程存活检查
 	// (GET /healthz)
 	GetHealthz(c *gin.Context)
@@ -805,6 +973,57 @@ func (siw *ServerInterfaceWrapper) AdminGetMe(c *gin.Context) {
 	siw.Handler.AdminGetMe(c)
 }
 
+// AdminListPaymentAccounts operation middleware
+func (siw *ServerInterfaceWrapper) AdminListPaymentAccounts(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminListPaymentAccounts(c)
+}
+
+// AdminCreatePaymentAccount operation middleware
+func (siw *ServerInterfaceWrapper) AdminCreatePaymentAccount(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminCreatePaymentAccount(c)
+}
+
+// AdminUpdatePaymentAccount operation middleware
+func (siw *ServerInterfaceWrapper) AdminUpdatePaymentAccount(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminUpdatePaymentAccount(c, id)
+}
+
 // AdminUpdatePriceRule operation middleware
 func (siw *ServerInterfaceWrapper) AdminUpdatePriceRule(c *gin.Context) {
 
@@ -866,6 +1085,31 @@ func (siw *ServerInterfaceWrapper) GetPublicEvent(c *gin.Context) {
 	}
 
 	siw.Handler.GetPublicEvent(c, slug)
+}
+
+// GetPublicFile operation middleware
+func (siw *ServerInterfaceWrapper) GetPublicFile(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetPublicFile(c, id)
 }
 
 // GetHealthz operation middleware
@@ -939,6 +1183,10 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/admin/coupons", wrapper.AdminListCoupons)
 	router.POST(options.BaseURL+"/admin/coupons", wrapper.AdminCreateCoupon)
 	router.PUT(options.BaseURL+"/admin/coupons/:id", wrapper.AdminUpdateCoupon)
+	router.GET(options.BaseURL+"/files/:id", wrapper.GetPublicFile)
+	router.GET(options.BaseURL+"/admin/payment-accounts", wrapper.AdminListPaymentAccounts)
+	router.POST(options.BaseURL+"/admin/payment-accounts", wrapper.AdminCreatePaymentAccount)
+	router.PUT(options.BaseURL+"/admin/payment-accounts/:id", wrapper.AdminUpdatePaymentAccount)
 }
 
 type AdminLoginRequestObject struct {
@@ -1442,6 +1690,123 @@ func (response AdminGetMedefaultJSONResponse) VisitAdminGetMeResponse(w http.Res
 	return err
 }
 
+type AdminListPaymentAccountsRequestObject struct {
+}
+
+type AdminListPaymentAccountsResponseObject interface {
+	VisitAdminListPaymentAccountsResponse(w http.ResponseWriter) error
+}
+
+type AdminListPaymentAccounts200JSONResponse PaymentAccountList
+
+func (response AdminListPaymentAccounts200JSONResponse) VisitAdminListPaymentAccountsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListPaymentAccountsdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminListPaymentAccountsdefaultJSONResponse) VisitAdminListPaymentAccountsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminCreatePaymentAccountRequestObject struct {
+	Body *multipart.Reader
+}
+
+type AdminCreatePaymentAccountResponseObject interface {
+	VisitAdminCreatePaymentAccountResponse(w http.ResponseWriter) error
+}
+
+type AdminCreatePaymentAccount201JSONResponse PaymentAccount
+
+func (response AdminCreatePaymentAccount201JSONResponse) VisitAdminCreatePaymentAccountResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminCreatePaymentAccountdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminCreatePaymentAccountdefaultJSONResponse) VisitAdminCreatePaymentAccountResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdatePaymentAccountRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *multipart.Reader
+}
+
+type AdminUpdatePaymentAccountResponseObject interface {
+	VisitAdminUpdatePaymentAccountResponse(w http.ResponseWriter) error
+}
+
+type AdminUpdatePaymentAccount200JSONResponse PaymentAccount
+
+func (response AdminUpdatePaymentAccount200JSONResponse) VisitAdminUpdatePaymentAccountResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdatePaymentAccountdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminUpdatePaymentAccountdefaultJSONResponse) VisitAdminUpdatePaymentAccountResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AdminUpdatePriceRuleRequestObject struct {
 	Id   int64 `json:"id"`
 	Body *AdminUpdatePriceRuleJSONRequestBody
@@ -1548,6 +1913,52 @@ type GetPublicEventdefaultJSONResponse struct {
 }
 
 func (response GetPublicEventdefaultJSONResponse) VisitGetPublicEventResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPublicFileRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type GetPublicFileResponseObject interface {
+	VisitGetPublicFileResponse(w http.ResponseWriter) error
+}
+
+type GetPublicFile200ImageResponse struct {
+	Body          io.Reader
+	ContentType   string
+	ContentLength int64
+}
+
+func (response GetPublicFile200ImageResponse) VisitGetPublicFileResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", response.ContentType)
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
+type GetPublicFiledefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response GetPublicFiledefaultJSONResponse) VisitGetPublicFileResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -1690,6 +2101,15 @@ type StrictServerInterface interface {
 	// AdminGetMe 当前员工与权限
 	// (GET /admin/me)
 	AdminGetMe(ctx context.Context, request AdminGetMeRequestObject) (AdminGetMeResponseObject, error)
+	// AdminListPaymentAccounts 收款账户列表
+	// (GET /admin/payment-accounts)
+	AdminListPaymentAccounts(ctx context.Context, request AdminListPaymentAccountsRequestObject) (AdminListPaymentAccountsResponseObject, error)
+	// AdminCreatePaymentAccount 新建收款账户（上传二维码，币种固定 USD）
+	// (POST /admin/payment-accounts)
+	AdminCreatePaymentAccount(ctx context.Context, request AdminCreatePaymentAccountRequestObject) (AdminCreatePaymentAccountResponseObject, error)
+	// AdminUpdatePaymentAccount 修改收款账户（带 qr 时更换二维码，旧文件保留）
+	// (PUT /admin/payment-accounts/{id})
+	AdminUpdatePaymentAccount(ctx context.Context, request AdminUpdatePaymentAccountRequestObject) (AdminUpdatePaymentAccountResponseObject, error)
 	// AdminUpdatePriceRule 修改价格档（已有占用时不可改价格、人群、关联组别）
 	// (PUT /admin/price-rules/{id})
 	AdminUpdatePriceRule(ctx context.Context, request AdminUpdatePriceRuleRequestObject) (AdminUpdatePriceRuleResponseObject, error)
@@ -1699,6 +2119,9 @@ type StrictServerInterface interface {
 	// GetPublicEvent 赛事详情（含组别）
 	// (GET /events/{slug})
 	GetPublicEvent(ctx context.Context, request GetPublicEventRequestObject) (GetPublicEventResponseObject, error)
+	// GetPublicFile 公开文件（收款二维码）；私有或不存在返回 404；响应头 Cache-Control public, max-age=86400
+	// (GET /files/{id})
+	GetPublicFile(ctx context.Context, request GetPublicFileRequestObject) (GetPublicFileResponseObject, error)
 	// GetHealthz 进程存活检查
 	// (GET /healthz)
 	GetHealthz(ctx context.Context, request GetHealthzRequestObject) (GetHealthzResponseObject, error)
@@ -2132,6 +2555,94 @@ func (sh *strictHandler) AdminGetMe(ctx *gin.Context) {
 	}
 }
 
+// AdminListPaymentAccounts operation middleware
+func (sh *strictHandler) AdminListPaymentAccounts(ctx *gin.Context) {
+	var request AdminListPaymentAccountsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminListPaymentAccounts(ctx, request.(AdminListPaymentAccountsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminListPaymentAccounts")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminListPaymentAccountsResponseObject); ok {
+		if err := validResponse.VisitAdminListPaymentAccountsResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminCreatePaymentAccount operation middleware
+func (sh *strictHandler) AdminCreatePaymentAccount(ctx *gin.Context) {
+	var request AdminCreatePaymentAccountRequestObject
+
+	if reader, err := ctx.Request.MultipartReader(); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	} else {
+		request.Body = reader
+	}
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminCreatePaymentAccount(ctx, request.(AdminCreatePaymentAccountRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminCreatePaymentAccount")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminCreatePaymentAccountResponseObject); ok {
+		if err := validResponse.VisitAdminCreatePaymentAccountResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminUpdatePaymentAccount operation middleware
+func (sh *strictHandler) AdminUpdatePaymentAccount(ctx *gin.Context, id int64) {
+	var request AdminUpdatePaymentAccountRequestObject
+
+	request.Id = id
+
+	if reader, err := ctx.Request.MultipartReader(); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	} else {
+		request.Body = reader
+	}
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminUpdatePaymentAccount(ctx, request.(AdminUpdatePaymentAccountRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminUpdatePaymentAccount")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminUpdatePaymentAccountResponseObject); ok {
+		if err := validResponse.VisitAdminUpdatePaymentAccountResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // AdminUpdatePriceRule operation middleware
 func (sh *strictHandler) AdminUpdatePriceRule(ctx *gin.Context, id int64) {
 	var request AdminUpdatePriceRuleRequestObject
@@ -2208,6 +2719,32 @@ func (sh *strictHandler) GetPublicEvent(ctx *gin.Context, slug string) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(GetPublicEventResponseObject); ok {
 		if err := validResponse.VisitGetPublicEventResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetPublicFile operation middleware
+func (sh *strictHandler) GetPublicFile(ctx *gin.Context, id int64) {
+	var request GetPublicFileRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetPublicFile(ctx, request.(GetPublicFileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetPublicFile")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(GetPublicFileResponseObject); ok {
+		if err := validResponse.VisitGetPublicFileResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

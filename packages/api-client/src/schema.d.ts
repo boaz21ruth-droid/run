@@ -262,6 +262,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/files/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 公开文件（收款二维码）；私有或不存在返回 404；响应头 Cache-Control public, max-age=86400 */
+        get: operations["getPublicFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/payment-accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 收款账户列表 */
+        get: operations["adminListPaymentAccounts"];
+        put?: never;
+        /** 新建收款账户（上传二维码，币种固定 USD） */
+        post: operations["adminCreatePaymentAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/payment-accounts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 修改收款账户（带 qr 时更换二维码，旧文件保留） */
+        put: operations["adminUpdatePaymentAccount"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -512,6 +564,33 @@ export interface components {
         };
         CouponList: {
             items: components["schemas"]["Coupon"][];
+        };
+        /** @enum {string} */
+        PaymentProvider: "ABA" | "ACLEDA" | "WING" | "BAKONG" | "OTHER";
+        /** @enum {string} */
+        PaymentAccountScope: "REGISTRATION" | "MERCH" | "ALL";
+        PaymentAccount: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            provider: components["schemas"]["PaymentProvider"];
+            accountName: string;
+            accountNoMasked: string;
+            currency: string;
+            /**
+             * Format: int64
+             * @description 二维码地址为 /api/files/{qrFileId}
+             */
+            qrFileId: number;
+            scope: components["schemas"]["PaymentAccountScope"];
+            /** Format: int64 */
+            eventId: number | null;
+            active: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        PaymentAccountList: {
+            items: components["schemas"]["PaymentAccount"][];
         };
     };
     responses: never;
@@ -1084,6 +1163,161 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Coupon"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getPublicFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 图片内容 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/*": string;
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminListPaymentAccounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 收款账户列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentAccountList"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminCreatePaymentAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    name: string;
+                    provider: components["schemas"]["PaymentProvider"];
+                    accountName: string;
+                    accountNoMasked: string;
+                    scope: components["schemas"]["PaymentAccountScope"];
+                    /** @description 绑定的赛事 id；空串或缺省表示全局 */
+                    eventId?: string;
+                    /** @enum {string} */
+                    active: "true" | "false";
+                    /**
+                     * Format: binary
+                     * @description 收款二维码图片，JPEG / PNG / WebP，≤ 2 MB
+                     */
+                    qr: string;
+                };
+            };
+        };
+        responses: {
+            /** @description 已创建 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentAccount"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminUpdatePaymentAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    name: string;
+                    provider: components["schemas"]["PaymentProvider"];
+                    accountName: string;
+                    accountNoMasked: string;
+                    scope: components["schemas"]["PaymentAccountScope"];
+                    /** @description 绑定的赛事 id；空串或缺省表示全局 */
+                    eventId?: string;
+                    /** @enum {string} */
+                    active: "true" | "false";
+                    /** Format: binary */
+                    qr?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description 已保存 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentAccount"];
                 };
             };
             /** @description 错误 */

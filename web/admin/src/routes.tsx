@@ -1,5 +1,5 @@
 import { Navigate, type RouteObject } from "react-router";
-import { PERM_EVENT_CONFIG } from "./auth/can";
+import { PERM_EVENT_CONFIG, PERM_PAYMENT_ACCOUNT_MANAGE } from "./auth/can";
 import { RequireAuth } from "./auth/RequireAuth";
 import { RequirePermission } from "./auth/RequirePermission";
 import { AppLayout } from "./layout/AppLayout";
@@ -7,6 +7,7 @@ import { EventCreatePage } from "./pages/EventCreatePage";
 import { EventDetailPage } from "./pages/EventDetailPage";
 import { EventsPage } from "./pages/EventsPage";
 import { LoginPage } from "./pages/LoginPage";
+import { PaymentAccountsPage } from "./pages/PaymentAccountsPage";
 
 export const routes: RouteObject[] = [
   { path: "/login", element: <LoginPage /> },
@@ -38,6 +39,14 @@ export const routes: RouteObject[] = [
             element: (
               <RequirePermission permission={PERM_EVENT_CONFIG} access="read">
                 <EventDetailPage />
+              </RequirePermission>
+            ),
+          },
+          {
+            path: "payment-accounts",
+            element: (
+              <RequirePermission permission={PERM_PAYMENT_ACCOUNT_MANAGE} access="read">
+                <PaymentAccountsPage />
               </RequirePermission>
             ),
           },

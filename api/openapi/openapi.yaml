@@ -444,6 +444,149 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /files/{id}:
+    get:
+      operationId: getPublicFile
+      summary: 公开文件（收款二维码）；私有或不存在返回 404；响应头 Cache-Control public, max-age=86400
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 图片内容
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/payment-accounts:
+    get:
+      operationId: adminListPaymentAccounts
+      summary: 收款账户列表
+      x-permission: payment_account_manage
+      x-access: read
+      responses:
+        '200':
+          description: 收款账户列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentAccountList'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: adminCreatePaymentAccount
+      summary: 新建收款账户（上传二维码，币种固定 USD）
+      x-permission: payment_account_manage
+      x-access: write
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [name, provider, accountName, accountNoMasked, scope, active, qr]
+              properties:
+                name:
+                  type: string
+                provider:
+                  $ref: '#/components/schemas/PaymentProvider'
+                accountName:
+                  type: string
+                accountNoMasked:
+                  type: string
+                scope:
+                  $ref: '#/components/schemas/PaymentAccountScope'
+                eventId:
+                  type: string
+                  description: 绑定的赛事 id；空串或缺省表示全局
+                active:
+                  type: string
+                  enum: ['true', 'false']
+                qr:
+                  type: string
+                  format: binary
+                  description: 收款二维码图片，JPEG / PNG / WebP，≤ 2 MB
+      responses:
+        '201':
+          description: 已创建
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentAccount'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/payment-accounts/{id}:
+    put:
+      operationId: adminUpdatePaymentAccount
+      summary: 修改收款账户（带 qr 时更换二维码，旧文件保留）
+      x-permission: payment_account_manage
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [name, provider, accountName, accountNoMasked, scope, active]
+              properties:
+                name:
+                  type: string
+                provider:
+                  $ref: '#/components/schemas/PaymentProvider'
+                accountName:
+                  type: string
+                accountNoMasked:
+                  type: string
+                scope:
+                  $ref: '#/components/schemas/PaymentAccountScope'
+                eventId:
+                  type: string
+                  description: 绑定的赛事 id；空串或缺省表示全局
+                active:
+                  type: string
+                  enum: ['true', 'false']
+                qr:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentAccount'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     ErrorResponse:
@@ -914,3 +1057,49 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Coupon'
+    PaymentProvider:
+      type: string
+      enum: [ABA, ACLEDA, WING, BAKONG, OTHER]
+    PaymentAccountScope:
+      type: string
+      enum: [REGISTRATION, MERCH, ALL]
+    PaymentAccount:
+      type: object
+      required: [id, name, provider, accountName, accountNoMasked, currency, qrFileId, scope, eventId, active, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        provider:
+          $ref: '#/components/schemas/PaymentProvider'
+        accountName:
+          type: string
+        accountNoMasked:
+          type: string
+        currency:
+          type: string
+        qrFileId:
+          type: integer
+          format: int64
+          description: 二维码地址为 /api/files/{qrFileId}
+        scope:
+          $ref: '#/components/schemas/PaymentAccountScope'
+        eventId:
+          type: integer
+          format: int64
+          nullable: true
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    PaymentAccountList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentAccount'

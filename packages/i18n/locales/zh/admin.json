@@ -145,5 +145,51 @@
       "validUntil": "失效时间",
       "status": "状态"
     }
+  },
+  "paymentAccounts": {
+    "title": "收款账户",
+    "create": "新建收款账户",
+    "createTitle": "新建收款账户",
+    "editTitle": "编辑收款账户",
+    "edit": "编辑",
+    "empty": "还没有收款账户",
+    "created": "收款账户已创建",
+    "updated": "收款账户已保存",
+    "submit": "保存",
+    "cancel": "取消",
+    "global": "所有赛事",
+    "active": "启用",
+    "inactive": "停用",
+    "currencyNote": "收款币种固定为美元（USD）。跑者下单时优先使用绑定该赛事的启用账户，其次使用所有赛事通用的账户。",
+    "col": {
+      "qr": "二维码",
+      "name": "名称",
+      "provider": "渠道",
+      "accountName": "户名",
+      "accountNoMasked": "账号尾号",
+      "scope": "用途",
+      "event": "适用赛事",
+      "status": "状态",
+      "actions": "操作"
+    },
+    "provider": { "ABA": "ABA", "ACLEDA": "ACLEDA", "WING": "Wing", "BAKONG": "Bakong", "OTHER": "其他" },
+    "scope": { "REGISTRATION": "报名", "MERCH": "周边", "ALL": "报名与周边" },
+    "form": {
+      "name": "名称",
+      "nameHelp": "只在后台显示，例如 ABA USD 主收款户",
+      "provider": "渠道",
+      "accountName": "户名",
+      "accountNoMasked": "账号尾号",
+      "accountNoMaskedHelp": "只填打码后的账号，例如 *** 123",
+      "scope": "用途",
+      "eventId": "适用赛事",
+      "eventIdHelp": "留空表示所有赛事都可以使用",
+      "active": "启用",
+      "qr": "收款二维码",
+      "qrHelp": "PNG、JPG 或 WebP，不超过 2 MB",
+      "qrKeepHelp": "不选择新图片则保留当前二维码",
+      "qrRequired": "请上传收款二维码",
+      "chooseQr": "选择图片"
+    }
   }
 }

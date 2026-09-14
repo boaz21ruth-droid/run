@@ -15,6 +15,7 @@ func newRouter(app *App) *gin.Engine {
 		IAM:     app.IAM,
 		Events:  app.Events,
 		Pricing: app.Pricing,
+		Payment: app.Payment,
 		Env:     app.Cfg.Env,
 	})
 }
