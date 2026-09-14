@@ -7,27 +7,35 @@ import (
 	"os"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river"
 
 	"werun/api/internal/event"
 	"werun/api/internal/iam"
+	"werun/api/internal/jobs"
 	"werun/api/internal/platform/config"
 	"werun/api/internal/platform/db"
 	"werun/api/internal/platform/i18n"
 	"werun/api/internal/platform/logx"
+	"werun/api/internal/platform/piicrypt"
+	"werun/api/internal/platform/storage"
 )
 
-// App 持有进程级依赖。后续任务会追加 Events 等字段。
+// App 持有进程级依赖。各业务服务在引入它的任务里追加字段。
 type App struct {
-	Cfg     config.Config
-	Log     *slog.Logger
-	Catalog *i18n.Catalog
-	Pool    *pgxpool.Pool
-	IAM     *iam.Service
-	Events  *event.Service
+	Cfg      config.Config
+	Log      *slog.Logger
+	Catalog  *i18n.Catalog
+	Pool     *pgxpool.Pool
+	Store    storage.Store
+	PII      *piicrypt.Cipher
+	Inserter *river.Client[pgx.Tx] // 只入队，不执行任务
+	IAM      *iam.Service
+	Events   *event.Service
 }
 
-// Bootstrap 读取配置、创建日志器、加载文案并连接数据库。
+// Bootstrap 读取配置、创建日志器、加载文案、连接数据库并构造各服务。
 func Bootstrap(ctx context.Context) (*App, error) {
 	cfg, err := config.Load()
 	if err != nil {
@@ -39,11 +47,28 @@ func Bootstrap(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load messages: %w", err)
 	}
+	files, err := storage.NewDisk(cfg.FilesDir)
+	if err != nil {
+		return nil, fmt.Errorf("open file storage: %w", err)
+	}
+	piiKey, err := cfg.PIIKeyBytes()
+	if err != nil {
+		return nil, fmt.Errorf("decode pii key: %w", err)
+	}
+	pii, err := piicrypt.New(piiKey)
+	if err != nil {
+		return nil, fmt.Errorf("create pii cipher: %w", err)
+	}
 	pool, err := db.Open(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("open database: %w", err)
 	}
-	app := &App{Cfg: cfg, Log: log, Catalog: cat, Pool: pool}
+	inserter, err := jobs.NewInserter(pool)
+	if err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("create job inserter: %w", err)
+	}
+	app := &App{Cfg: cfg, Log: log, Catalog: cat, Pool: pool, Store: files, PII: pii, Inserter: inserter}
 	app.IAM = iam.NewService(app.Pool, []byte(app.Cfg.SessionSecret), iam.NewLoginLimiter(time.Now), time.Now)
 	app.Events = event.NewService(app.Pool)
 	return app, nil

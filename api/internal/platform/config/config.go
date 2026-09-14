@@ -5,19 +5,25 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/caarlos0/env/v11"
 )
 
 // Config 是 werun 进程的全部运行配置。
 type Config struct {
-	Env           string `env:"WERUN_ENV" envDefault:"dev"`
-	HTTPAddr      string `env:"WERUN_HTTP_ADDR" envDefault:":8080"`
-	DatabaseURL   string `env:"WERUN_DATABASE_URL,required"`
-	SessionSecret string `env:"WERUN_SESSION_SECRET,required"`
-	PIIKey        string `env:"WERUN_PII_KEY,required"`
-	FilesDir      string `env:"WERUN_FILES_DIR" envDefault:"./data/files"`
-	LogLevel      string `env:"WERUN_LOG_LEVEL" envDefault:"info"`
+	Env                 string `env:"WERUN_ENV" envDefault:"dev"`
+	HTTPAddr            string `env:"WERUN_HTTP_ADDR" envDefault:":8080"`
+	DatabaseURL         string `env:"WERUN_DATABASE_URL,required"`
+	SessionSecret       string `env:"WERUN_SESSION_SECRET,required"`
+	PIIKey              string `env:"WERUN_PII_KEY,required"`
+	FilesDir            string `env:"WERUN_FILES_DIR" envDefault:"./data/files"`
+	LogLevel            string `env:"WERUN_LOG_LEVEL" envDefault:"info"`
+	TelegramBotToken    string `env:"WERUN_TELEGRAM_BOT_TOKEN,required"`
+	TelegramBotUsername string `env:"WERUN_TELEGRAM_BOT_USERNAME,required"`
+	TelegramSend        string `env:"WERUN_TELEGRAM_SEND"` // "" | on | off
+	AppBaseURL          string `env:"WERUN_APP_BASE_URL,required"`
 }
 
 // Load 解析并校验环境变量。返回的错误会列出所有不合法的变量，而不是只报第一个。
@@ -39,6 +45,16 @@ func Load() (Config, error) {
 			errs = append(errs, keyErr)
 		}
 	}
+	if cfg.TelegramSend != "" && cfg.TelegramSend != "on" && cfg.TelegramSend != "off" {
+		errs = append(errs, fmt.Errorf("WERUN_TELEGRAM_SEND must be on, off or empty, got %q", cfg.TelegramSend))
+	}
+	// 变量未设置时 env.ParseAs 已经报过 WERUN_APP_BASE_URL，不重复报
+	if err == nil || !strings.Contains(err.Error(), "WERUN_APP_BASE_URL") {
+		if baseErr := validateBaseURL(cfg.AppBaseURL); baseErr != nil {
+			errs = append(errs, baseErr)
+		}
+	}
+	cfg.AppBaseURL = strings.TrimRight(cfg.AppBaseURL, "/")
 	if len(errs) > 0 {
 		return Config{}, errors.Join(errs...)
 	}
@@ -60,4 +76,24 @@ func (c Config) PIIKeyBytes() ([]byte, error) {
 		return nil, fmt.Errorf("WERUN_PII_KEY must decode to 32 bytes, got %d", len(key))
 	}
 	return key, nil
+}
+
+// TelegramSendEnabled 表示推送是否真正调用 Telegram：显式 on/off 优先，未设置时只有 prod 发送。
+func (c Config) TelegramSendEnabled() bool {
+	switch c.TelegramSend {
+	case "on":
+		return true
+	case "off":
+		return false
+	default:
+		return c.IsProd()
+	}
+}
+
+func validateBaseURL(raw string) error {
+	u, err := url.Parse(raw)
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+		return fmt.Errorf("WERUN_APP_BASE_URL must be an absolute http(s) URL, got %q", raw)
+	}
+	return nil
 }

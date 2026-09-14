@@ -15,6 +15,8 @@
   "EVENT_ALREADY_PUBLISHED": "这场赛事已经发布过了。",
   "EVENT_NO_CATEGORY": "至少添加一个组别后才能发布。",
   "EVENT_CATEGORY_INCOMPLETE": "有组别信息不完整，补全后才能发布。",
+  "FILE_TOO_LARGE": "文件太大，不能超过 {maxMB} MB。",
+  "FILE_TYPE_NOT_ALLOWED": "只支持 JPG、PNG 或 WebP 图片。",
   "field.required": "必填。",
   "field.invalid": "格式不正确。",
   "field.too_long": "不能超过 {max} 个字符。",

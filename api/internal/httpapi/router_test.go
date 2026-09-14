@@ -1,8 +1,10 @@
 package httpapi_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -117,4 +119,45 @@ func TestOversizedRequestBodyIsRejected(t *testing.T) {
 	// 对照：同样结构、未超上限的请求体能通过解码。路由没有注入 IAM，进入 handler 后的结果不重要，只要不是 400
 	control := login((1 << 20) - 1024)
 	assert.NotEqual(t, http.StatusBadRequest, control.Code, control.Body.String())
+}
+
+// 上传接口的真实路由在 Task 6、Task 15 才注册；这里在同一个 engine 上挂 PATCH 探针路由
+// （apigen 不会给这些路径注册 PATCH），只验证中间件按路径选的上限。
+func TestUploadPathsAllowSixMiBBodies(t *testing.T) {
+	r := newRouter(t, nil)
+	probe := func(c *gin.Context) {
+		n, err := io.Copy(io.Discard, c.Request.Body)
+		if err != nil {
+			c.Status(http.StatusRequestEntityTooLarge)
+			return
+		}
+		c.String(http.StatusOK, "%d", n)
+	}
+	paths := []string{
+		"/api/app/orders/WR0000TEST/proofs",
+		"/api/admin/payment-accounts",
+		"/api/admin/payment-accounts/9",
+		"/api/admin/limit-probe",
+	}
+	for _, p := range paths {
+		r.PATCH(p, probe)
+	}
+	send := func(path string, size int) *httptest.ResponseRecorder {
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodPatch, path, bytes.NewReader(make([]byte, size)))
+		req.Header.Set(httpx.HeaderClient, "admin")
+		rec := httptest.NewRecorder()
+		r.ServeHTTP(rec, req)
+		return rec
+	}
+
+	twoMiB := 2 << 20
+	for _, p := range paths[:3] {
+		rec := send(p, twoMiB)
+		assert.Equal(t, http.StatusOK, rec.Code, p)
+		assert.Equal(t, "2097152", rec.Body.String(), p)
+	}
+	assert.Equal(t, http.StatusRequestEntityTooLarge, send("/api/admin/limit-probe", twoMiB).Code,
+		"同样大小的请求体发到其他路径被 1 MiB 上限拒绝")
+	assert.Equal(t, http.StatusRequestEntityTooLarge, send("/api/admin/payment-accounts", (6<<20)+1).Code,
+		"上传路径超过 6 MiB 同样被拒绝")
 }

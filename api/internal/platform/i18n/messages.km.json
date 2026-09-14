@@ -15,6 +15,8 @@
   "EVENT_ALREADY_PUBLISHED": "ព្រឹត្តិការណ៍នេះត្រូវបានផ្សព្វផ្សាយរួចហើយ។",
   "EVENT_NO_CATEGORY": "សូមបន្ថែមប្រភេទយ៉ាងហោចណាស់មួយ មុនពេលផ្សព្វផ្សាយ។",
   "EVENT_CATEGORY_INCOMPLETE": "ប្រភេទមួយចំនួនមិនទាន់ពេញលេញ។ សូមបំពេញមុនពេលផ្សព្វផ្សាយ។",
+  "FILE_TOO_LARGE": "ឯកសារធំពេក។ ទំហំអតិបរមាគឺ {maxMB} MB។",
+  "FILE_TYPE_NOT_ALLOWED": "អនុញ្ញាតតែរូបភាព JPG, PNG ឬ WebP ប៉ុណ្ណោះ។",
   "field.required": "ត្រូវតែបំពេញ។",
   "field.invalid": "តម្លៃមិនត្រឹមត្រូវ។",
   "field.too_long": "មិនអាចលើសពី {max} តួអក្សរ។",

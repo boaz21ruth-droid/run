@@ -15,6 +15,8 @@
   "EVENT_ALREADY_PUBLISHED": "This event has already been published.",
   "EVENT_NO_CATEGORY": "Add at least one category before publishing.",
   "EVENT_CATEGORY_INCOMPLETE": "Some categories are incomplete. Complete them before publishing.",
+  "FILE_TOO_LARGE": "The file is too large. The limit is {maxMB} MB.",
+  "FILE_TYPE_NOT_ALLOWED": "Only JPG, PNG or WebP images are allowed.",
   "field.required": "Required.",
   "field.invalid": "Invalid value.",
   "field.too_long": "Must be at most {max} characters.",

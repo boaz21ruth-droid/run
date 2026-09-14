@@ -108,6 +108,10 @@ jobs:
             echo "WERUN_USER_HOST=${WERUN_USER_HOST}"
             echo "WERUN_ADMIN_HOST=${WERUN_ADMIN_HOST}"
             echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)"
+            echo "WERUN_TELEGRAM_BOT_TOKEN=123456:e2e-test-token"
+            echo "WERUN_TELEGRAM_BOT_USERNAME=werun_e2e_bot"
+            echo "WERUN_TELEGRAM_SEND=off"
+            echo "WERUN_APP_BASE_URL=http://werun.localhost"
           } >> .env
 
       - name: Start stack

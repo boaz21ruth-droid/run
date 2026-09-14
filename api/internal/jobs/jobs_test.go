@@ -7,11 +7,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/rivertype"
 	"github.com/stretchr/testify/require"
 
 	"werun/api/internal/jobs"
+	"werun/api/internal/platform/db"
 	"werun/api/internal/platform/dbtest"
 	"werun/api/internal/platform/logx"
 )
@@ -69,7 +71,7 @@ func TestClientRunsSessionCleanupJob(t *testing.T) {
 	pool := dbtest.NewPool(t)
 	cleaner := newFakeCleaner()
 
-	client, err := jobs.NewClient(pool, logx.New("error", io.Discard), cleaner)
+	client, err := jobs.NewClient(jobs.Deps{Pool: pool, Log: logx.New("error", io.Discard), Sessions: cleaner})
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -89,4 +91,46 @@ func TestClientRunsSessionCleanupJob(t *testing.T) {
 	case <-time.After(15 * time.Second):
 		t.Fatal("15 秒内 session_cleanup 任务没有被执行")
 	}
+}
+
+// inserterProbeArgs 是只在测试里存在的任务类型：只入队客户端不认识任何 worker，也必须能插入。
+type inserterProbeArgs struct {
+	Note string `json:"note"`
+}
+
+func (inserterProbeArgs) Kind() string { return "inserter_probe" }
+
+func TestInserterInsertsAnyJobKindInsideTransaction(t *testing.T) {
+	pool := dbtest.NewPool(t)
+	ctx := context.Background()
+	inserter, err := jobs.NewInserter(pool)
+	require.NoError(t, err)
+
+	require.NoError(t, db.InTx(ctx, pool, func(tx pgx.Tx) error {
+		res, err := inserter.InsertTx(ctx, tx, inserterProbeArgs{Note: "committed"}, &river.InsertOpts{MaxAttempts: 5})
+		if err != nil {
+			return err
+		}
+		require.NotZero(t, res.Job.ID)
+		return nil
+	}))
+
+	rollback := errors.New("roll back on purpose")
+	err = db.InTx(ctx, pool, func(tx pgx.Tx) error {
+		if _, err := inserter.InsertTx(ctx, tx, inserterProbeArgs{Note: "rolled back"}, nil); err != nil {
+			return err
+		}
+		return rollback
+	})
+	require.ErrorIs(t, err, rollback)
+
+	var count, maxAttempts int
+	var state, args string
+	require.NoError(t, pool.QueryRow(ctx,
+		`SELECT count(*) OVER (), max_attempts, state::text, args::text FROM river_job WHERE kind = 'inserter_probe'`).
+		Scan(&count, &maxAttempts, &state, &args))
+	require.Equal(t, 1, count, "回滚的事务不留下任务")
+	require.Equal(t, 5, maxAttempts)
+	require.Equal(t, "available", state, "没有 worker 在跑，任务保持可执行状态")
+	require.JSONEq(t, `{"note":"committed"}`, args)
 }

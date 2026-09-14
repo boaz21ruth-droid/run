@@ -44,18 +44,25 @@ func (w *SessionCleanupWorker) Work(ctx context.Context, job *river.Job[SessionC
 	return nil
 }
 
+// Deps 是执行任务的客户端需要的依赖。后续任务只在这里加字段（Notify、Deadline）。
+type Deps struct {
+	Pool     *pgxpool.Pool
+	Log      *slog.Logger
+	Sessions SessionCleaner
+}
+
 // NewClient 创建能执行任务的 River 客户端：注册全部 worker 与周期任务，默认队列 10 个并发。
-func NewClient(pool *pgxpool.Pool, log *slog.Logger, sessions SessionCleaner) (*river.Client[pgx.Tx], error) {
+func NewClient(d Deps) (*river.Client[pgx.Tx], error) {
 	phnomPenh, err := time.LoadLocation("Asia/Phnom_Penh")
 	if err != nil {
 		return nil, fmt.Errorf("load Asia/Phnom_Penh: %w", err)
 	}
 
 	workers := river.NewWorkers()
-	river.AddWorker(workers, &SessionCleanupWorker{Sessions: sessions, Log: log})
+	river.AddWorker(workers, &SessionCleanupWorker{Sessions: d.Sessions, Log: d.Log})
 
-	client, err := river.NewClient(riverpgxv5.New(pool), &river.Config{
-		Logger: log,
+	client, err := river.NewClient(riverpgxv5.New(d.Pool), &river.Config{
+		Logger: d.Log,
 		Queues: map[string]river.QueueConfig{
 			river.QueueDefault: {MaxWorkers: 10},
 		},
@@ -70,6 +77,16 @@ func NewClient(pool *pgxpool.Pool, log *slog.Logger, sessions SessionCleaner) (*
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create river client: %w", err)
+	}
+	return client, nil
+}
+
+// NewInserter 创建只用于 InsertTx 的客户端：不注册 worker、不开队列，不需要 Start。
+// 不设 Workers 时 River 跳过“任务类型必须有 worker”的检查，所以 HTTP 进程可以入队任意任务。
+func NewInserter(pool *pgxpool.Pool) (*river.Client[pgx.Tx], error) {
+	client, err := river.NewClient(riverpgxv5.New(pool), &river.Config{Logger: slog.Default()})
+	if err != nil {
+		return nil, fmt.Errorf("create river inserter: %w", err)
 	}
 	return client, nil
 }

@@ -3,6 +3,7 @@ package httpapi
 import (
 	"log/slog"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -16,17 +17,30 @@ import (
 	"werun/api/internal/platform/i18n"
 )
 
-// maxRequestBodyBytes 限制 /api/* 请求体大小：没有这个上限的话，一个超大请求体在被
-// 参数校验拒绝之前就要被完整读入内存（且可能先跑到 argon2 这类昂贵的处理之前），本身
-// 就是一种放大攻击。
-const maxRequestBodyBytes = 1 << 20 // 1 MiB
+// 请求体上限：没有上限的话，一个超大请求体在被参数校验拒绝之前就要被完整读入内存
+// （且可能先跑到 argon2 这类昂贵的处理之前），本身就是一种放大攻击。
+const (
+	maxRequestBodyBytes = 1 << 20 // 1 MiB：普通 JSON 接口
+	maxUploadBodyBytes  = 6 << 20 // 6 MiB：凭证截图（≤ 5 MB）与收款二维码（≤ 2 MB）的 multipart 接口
+)
+
+var uploadBodyPath = regexp.MustCompile(`^(?:/api/app/orders/[^/]+/proofs|/api/admin/payment-accounts(?:/[0-9]+)?)$`)
+
+// bodyLimitFor 返回路径对应的请求体上限。
+func bodyLimitFor(path string) int64 {
+	if uploadBodyPath.MatchString(path) {
+		return maxUploadBodyBytes
+	}
+	return maxRequestBodyBytes
+}
 
 // maxBodySize 给 /api/* 下的请求包一层 http.MaxBytesReader；超出大小时后续的 body 读取
-// （如 ShouldBindJSON）会失败，经由 apigen 的 RequestErrorHandlerFunc 转成 BAD_REQUEST。
-func maxBodySize(limit int64) gin.HandlerFunc {
+// （如 ShouldBindJSON）会失败，经由 apigen 的 RequestErrorHandlerFunc 转成 BAD_REQUEST，
+// 上传接口读图片时由 storage.ReadImage 转成 FILE_TOO_LARGE。
+func maxBodySize() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if strings.HasPrefix(c.Request.URL.Path, "/api/") {
-			c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, limit)
+			c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, bodyLimitFor(c.Request.URL.Path))
 		}
 		c.Next()
 	}
@@ -54,7 +68,7 @@ func NewRouter(d RouterDeps) *gin.Engine {
 		panic(err) // 列表是常量，出错说明代码写错了
 	}
 	engine.Use(
-		maxBodySize(maxRequestBodyBytes),
+		maxBodySize(),
 		httpx.RequestID(),
 		httpx.AccessLog(d.Log),
 		httpx.Recover(d.Catalog, d.Log),

@@ -25,6 +25,8 @@ const (
 	CodeEventAlreadyPublished   = "EVENT_ALREADY_PUBLISHED"
 	CodeEventNoCategory         = "EVENT_NO_CATEGORY"
 	CodeEventCategoryIncomplete = "EVENT_CATEGORY_INCOMPLETE"
+	CodeFileTooLarge            = "FILE_TOO_LARGE"
+	CodeFileTypeNotAllowed      = "FILE_TYPE_NOT_ALLOWED"
 )
 
 // AllCodes 列出全部错误码，供文案完整性测试使用。新增错误码时必须同时加到这里。
@@ -45,6 +47,8 @@ var AllCodes = []string{
 	CodeEventAlreadyPublished,
 	CodeEventNoCategory,
 	CodeEventCategoryIncomplete,
+	CodeFileTooLarge,
+	CodeFileTypeNotAllowed,
 }
 
 // FieldError 描述某个字段的错误：文案 key 与参数。
