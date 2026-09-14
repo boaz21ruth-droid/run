@@ -242,6 +242,7 @@ type DisclaimerVersion struct {
 	Items         []byte
 	TextSha256    []byte
 	CreatedAt     time.Time
+	Purpose       string
 }
 
 type Event struct {
@@ -882,6 +883,13 @@ type RegistrationChange struct {
 	ActorType      string
 	ActorID        *int64
 	CreatedAt      time.Time
+}
+
+type RegistrationConsent struct {
+	SignatureID  int64
+	RegOrderID   *int64
+	FreeSignupID *int64
+	CreatedAt    time.Time
 }
 
 type Result struct {

@@ -36,6 +36,12 @@ const (
 	PermReconResolve       Permission = "recon_resolve"
 	PermRefundCorrection   Permission = "refund_correction"
 	PermAuditView          Permission = "audit_view"
+
+	// 报名与收款凭证迭代新增（spec §8）
+	PermPriceConfig          Permission = "price_config"
+	PermCouponManage         Permission = "coupon_manage"
+	PermPaymentAccountManage Permission = "payment_account_manage"
+	PermProofReview          Permission = "proof_review"
 )
 
 // AllPermissions 与 Demo PERM 表的行顺序一致。
@@ -72,6 +78,10 @@ var AllPermissions = []Permission{
 	PermReconResolve,
 	PermRefundCorrection,
 	PermAuditView,
+	PermPriceConfig,
+	PermCouponManage,
+	PermPaymentAccountManage,
+	PermProofReview,
 }
 
 // matrix 逐格照抄 admin.html 第 753–789 行。
@@ -109,6 +119,11 @@ var matrix = map[Permission]map[Role]Access{
 	PermReconResolve:       row("R", "", "W", "", "", "", ""),
 	PermRefundCorrection:   row("", "", "W", "R", "", "", ""),
 	PermAuditView:          row("W", "R", "R", "", "", "", ""),
+
+	PermPriceConfig:          row("R", "W", "R", "", "", "", ""),
+	PermCouponManage:         row("R", "W", "R", "R", "", "", ""),
+	PermPaymentAccountManage: row("R", "R", "W", "", "", "", ""),
+	PermProofReview:          row("R", "R", "W", "R", "", "", ""),
 }
 
 func row(admin, ops, finance, support, raceSupervisor, raceStaff, photographer string) map[Role]Access {

@@ -24,7 +24,7 @@ func TestUpCreatesBusinessAndRiverTables(t *testing.T) {
 		  AND table_type = 'BASE TABLE'
 		  AND table_name NOT LIKE 'river\_%'
 		  AND table_name <> 'goose_db_version'`).Scan(&business))
-	assert.Equal(t, 69, business)
+	assert.Equal(t, 70, business)
 
 	var hasRiverJob bool
 	require.NoError(t, pool.QueryRow(ctx, `SELECT to_regclass('public.river_job') IS NOT NULL`).Scan(&hasRiverJob))
@@ -37,7 +37,7 @@ func TestStatusListsEveryMigrationAsApplied(t *testing.T) {
 	lines, err := migrate.Status(context.Background(), pool)
 
 	require.NoError(t, err)
-	require.Len(t, lines, 9)
+	require.Len(t, lines, 10)
 	assert.Equal(t, "0001_foundation.sql applied", lines[0])
 	for _, line := range lines {
 		assert.True(t, strings.HasSuffix(line, " applied"), line)
@@ -60,6 +60,6 @@ func TestDownUnmarksLatestVersion(t *testing.T) {
 
 	lines, err := migrate.Status(ctx, pool)
 	require.NoError(t, err)
-	assert.Equal(t, "0009_content_community.sql pending", lines[len(lines)-1])
-	assert.Equal(t, "0008_results_photos.sql applied", lines[len(lines)-2])
+	assert.Equal(t, "0010_registration_payment.sql pending", lines[len(lines)-1])
+	assert.Equal(t, "0009_content_community.sql applied", lines[len(lines)-2])
 }

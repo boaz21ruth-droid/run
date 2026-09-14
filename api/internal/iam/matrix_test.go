@@ -18,6 +18,11 @@ func TestMatrixCellsMatchDemo(t *testing.T) {
 		{PermPhotoUpload, map[Role]Access{RoleAdmin: AccessRead, RoleOps: AccessWrite, RolePhotographer: AccessWrite}},
 		{PermAccessManage, map[Role]Access{RoleAdmin: AccessWrite}},
 		{PermAuditView, map[Role]Access{RoleAdmin: AccessWrite, RoleOps: AccessRead, RoleFinance: AccessRead}},
+		// 报名与收款凭证迭代（spec §8）
+		{PermPriceConfig, map[Role]Access{RoleAdmin: AccessRead, RoleOps: AccessWrite, RoleFinance: AccessRead}},
+		{PermCouponManage, map[Role]Access{RoleAdmin: AccessRead, RoleOps: AccessWrite, RoleFinance: AccessRead, RoleSupport: AccessRead}},
+		{PermPaymentAccountManage, map[Role]Access{RoleAdmin: AccessRead, RoleOps: AccessRead, RoleFinance: AccessWrite}},
+		{PermProofReview, map[Role]Access{RoleAdmin: AccessRead, RoleOps: AccessRead, RoleFinance: AccessWrite, RoleSupport: AccessRead}},
 	}
 	for _, tc := range cases {
 		t.Run(string(tc.perm), func(t *testing.T) {
@@ -32,8 +37,15 @@ func TestMatrixCellsMatchDemo(t *testing.T) {
 }
 
 func TestAllPermissionsCount(t *testing.T) {
-	assert.Len(t, AllPermissions, 32)
-	assert.Len(t, matrix, 32)
+	assert.Len(t, AllPermissions, 36)
+	assert.Len(t, matrix, 36)
+	assert.Equal(t,
+		[]Permission{PermPriceConfig, PermCouponManage, PermPaymentAccountManage, PermProofReview},
+		AllPermissions[32:], "新权限追加在末尾")
+	assert.Equal(t, "price_config", string(PermPriceConfig))
+	assert.Equal(t, "coupon_manage", string(PermCouponManage))
+	assert.Equal(t, "payment_account_manage", string(PermPaymentAccountManage))
+	assert.Equal(t, "proof_review", string(PermProofReview))
 }
 
 func TestEveryPermissionGrantedToSomeRole(t *testing.T) {
