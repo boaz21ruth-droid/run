@@ -1,0 +1,7 @@
+{
+  "brand": { "name": "WeRun" },
+  "lang": { "label": "Language" },
+  "nav": { "home": "Home", "events": "Events" },
+  "state": { "loading": "Loading…", "error": "Couldn't load. Please try again." },
+  "action": { "retry": "Retry", "back": "Back" }
+}

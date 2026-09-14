@@ -26,6 +26,7 @@ test-api: ## Go 测试（集成测试需要本机 Docker）
 test-web:
 	pnpm typecheck
 	pnpm test
+	pnpm i18n:check
 
 migrate-up: ## 执行数据库迁移（读取根目录 .env）
 	set -a; . ./.env; set +a; cd api && go run ./cmd/werun migrate up

@@ -10,7 +10,8 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
     "test": "pnpm -r --if-present test",
-    "build": "pnpm -r --if-present build"
+    "build": "pnpm -r --if-present build",
+    "i18n:check": "pnpm --filter @werun/i18n check"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

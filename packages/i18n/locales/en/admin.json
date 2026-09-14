@@ -1,0 +1,50 @@
+{
+  "login": { "title": "Sign in to WeRun Admin", "username": "Username", "password": "Password", "submit": "Sign in" },
+  "layout": { "logout": "Sign out" },
+  "role": {
+    "ADMIN": "Administrator",
+    "OPS": "Operations",
+    "FINANCE": "Finance",
+    "SUPPORT": "Support",
+    "RACE_SUPERVISOR": "Race supervisor",
+    "RACE_STAFF": "Race staff",
+    "PHOTOGRAPHER": "Photographer"
+  },
+  "forbidden": { "title": "You don't have access", "body": "Your role can't view this page. Ask an administrator for access." },
+  "events": {
+    "title": "Events",
+    "create": "New event",
+    "publish": "Publish",
+    "publishedToast": "Event published",
+    "empty": "No events yet",
+    "col": { "name": "Event", "date": "Race day", "city": "City", "status": "Status", "actions": "Actions" }
+  },
+  "status": { "DRAFT": "Draft", "PUBLISHED": "Published" },
+  "form": {
+    "title": "New event",
+    "slug": "URL slug",
+    "slugHelp": "Lowercase letters, numbers and hyphens, e.g. phnom-penh-half-2026",
+    "eventType": "Event type",
+    "organizerType": "Organizer",
+    "name": "Event name",
+    "nameZh": "Chinese",
+    "nameEn": "English",
+    "nameKm": "Khmer",
+    "city": "City",
+    "raceDate": "Race day",
+    "categories": "Categories",
+    "addCategory": "Add category",
+    "removeCategory": "Remove category",
+    "categoryCode": "Category code",
+    "categoryName": "Category name",
+    "distanceM": "Distance (m)",
+    "capacity": "Spots",
+    "startAt": "Start time",
+    "cutoffAt": "Cut-off time",
+    "required": "Required",
+    "submit": "Save draft",
+    "created": "Event saved as draft"
+  },
+  "eventType": { "RACE": "Paid race", "FREE_ACTIVITY": "Free activity" },
+  "organizerType": { "OFFICIAL": "Official", "PARTNER": "Partner" }
+}

@@ -1,0 +1,15 @@
+{
+  "home": { "title": "Upcoming races", "viewAll": "See all events" },
+  "events": { "title": "All events", "empty": "No events are open right now" },
+  "event": {
+    "date": "Race day",
+    "city": "City",
+    "categories": "Categories",
+    "distance": "Distance",
+    "km": "{{km}} km",
+    "capacity": "Spots",
+    "start": "Start",
+    "cutoff": "Cut-off"
+  },
+  "notFound": { "title": "Page not found", "body": "The link may be out of date.", "home": "Back to home" }
+}

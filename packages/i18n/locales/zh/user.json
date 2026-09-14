@@ -1,0 +1,15 @@
+{
+  "home": { "title": "近期赛事", "viewAll": "查看全部赛事" },
+  "events": { "title": "全部赛事", "empty": "暂时没有开放的赛事" },
+  "event": {
+    "date": "比赛日期",
+    "city": "城市",
+    "categories": "组别",
+    "distance": "距离",
+    "km": "{{km}} 公里",
+    "capacity": "名额",
+    "start": "发枪",
+    "cutoff": "关门"
+  },
+  "notFound": { "title": "页面不存在", "body": "链接可能已经失效。", "home": "回到首页" }
+}

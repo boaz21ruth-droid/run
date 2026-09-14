@@ -1,0 +1,30 @@
+{
+  "name": "@werun/i18n",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "NODE_OPTIONS=--no-experimental-webstorage vitest run",
+    "check": "node scripts/check-keys.mjs"
+  },
+  "dependencies": {
+    "i18next": "25.10.10",
+    "react-i18next": "15.7.4"
+  },
+  "peerDependencies": {
+    "react": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.4",
+    "@types/react": "19.3.0",
+    "jsdom": "26.1.0",
+    "react": "19.3.0",
+    "typescript": "5.9.3",
+    "vite": "7.3.6",
+    "vitest": "4.1.11"
+  }
+}

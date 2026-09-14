@@ -1,0 +1,50 @@
+{
+  "login": { "title": "登录 WeRun 后台", "username": "用户名", "password": "密码", "submit": "登录" },
+  "layout": { "logout": "退出登录" },
+  "role": {
+    "ADMIN": "系统管理员",
+    "OPS": "运营",
+    "FINANCE": "财务",
+    "SUPPORT": "客服",
+    "RACE_SUPERVISOR": "现场主管",
+    "RACE_STAFF": "现场工作人员",
+    "PHOTOGRAPHER": "摄影师"
+  },
+  "forbidden": { "title": "没有访问权限", "body": "当前角色不能查看这个页面。如需开通，请联系系统管理员。" },
+  "events": {
+    "title": "赛事管理",
+    "create": "新建赛事",
+    "publish": "发布",
+    "publishedToast": "赛事已发布",
+    "empty": "还没有赛事",
+    "col": { "name": "赛事名称", "date": "比赛日期", "city": "城市", "status": "状态", "actions": "操作" }
+  },
+  "status": { "DRAFT": "草稿", "PUBLISHED": "已发布" },
+  "form": {
+    "title": "新建赛事",
+    "slug": "链接标识",
+    "slugHelp": "小写字母、数字和连字符，例如 phnom-penh-half-2026",
+    "eventType": "赛事类型",
+    "organizerType": "主办方",
+    "name": "赛事名称",
+    "nameZh": "中文",
+    "nameEn": "英文",
+    "nameKm": "高棉文",
+    "city": "城市",
+    "raceDate": "比赛日期",
+    "categories": "组别",
+    "addCategory": "添加组别",
+    "removeCategory": "删除组别",
+    "categoryCode": "组别代码",
+    "categoryName": "组别名称",
+    "distanceM": "距离（米）",
+    "capacity": "名额",
+    "startAt": "发枪时间",
+    "cutoffAt": "关门时间",
+    "required": "必填",
+    "submit": "保存草稿",
+    "created": "赛事已保存为草稿"
+  },
+  "eventType": { "RACE": "付费赛事", "FREE_ACTIVITY": "免费活动" },
+  "organizerType": { "OFFICIAL": "官方主办", "PARTNER": "合作主办" }
+}
