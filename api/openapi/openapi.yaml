@@ -273,6 +273,95 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /admin/events/{id}/price-rules:
+    get:
+      operationId: adminListPriceRules
+      summary: 赛事的价格档列表（含关联组别与计数）
+      x-permission: price_config
+      x-access: read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 价格档列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceRuleList'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: adminCreatePriceRule
+      summary: 新建价格档
+      x-permission: price_config
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PriceRuleInput'
+      responses:
+        '201':
+          description: 已创建
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceRule'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/price-rules/{id}:
+    put:
+      operationId: adminUpdatePriceRule
+      summary: 修改价格档（已有占用时不可改价格、人群、关联组别）
+      x-permission: price_config
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PriceRuleInput'
+      responses:
+        '200':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceRule'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     ErrorResponse:
@@ -532,3 +621,90 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CreateCategoryRequest'
+    PriceAudience:
+      type: string
+      enum: [ALL, LOCAL]
+    PriceRuleInput:
+      type: object
+      required: [name, audience, priceCents, categoryIds]
+      properties:
+        name:
+          $ref: '#/components/schemas/LocalizedText'
+        audience:
+          $ref: '#/components/schemas/PriceAudience'
+        priceCents:
+          type: integer
+          format: int64
+        quota:
+          type: integer
+          format: int32
+          nullable: true
+        saleStartsAt:
+          type: string
+          format: date-time
+          nullable: true
+        saleEndsAt:
+          type: string
+          format: date-time
+          nullable: true
+        sortOrder:
+          type: integer
+          format: int32
+        categoryIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+    PriceRule:
+      type: object
+      required: [id, eventId, name, audience, priceCents, currency, quota, saleStartsAt, saleEndsAt, sortOrder, categoryIds, usedCount, reservedCount]
+      properties:
+        id:
+          type: integer
+          format: int64
+        eventId:
+          type: integer
+          format: int64
+        name:
+          $ref: '#/components/schemas/LocalizedText'
+        audience:
+          $ref: '#/components/schemas/PriceAudience'
+        priceCents:
+          type: integer
+          format: int64
+        currency:
+          type: string
+        quota:
+          type: integer
+          format: int32
+          nullable: true
+        saleStartsAt:
+          type: string
+          format: date-time
+          nullable: true
+        saleEndsAt:
+          type: string
+          format: date-time
+          nullable: true
+        sortOrder:
+          type: integer
+          format: int32
+        categoryIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        usedCount:
+          type: integer
+          format: int32
+        reservedCount:
+          type: integer
+          format: int32
+    PriceRuleList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PriceRule'

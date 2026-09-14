@@ -20,6 +20,7 @@ import (
 	"werun/api/internal/platform/logx"
 	"werun/api/internal/platform/piicrypt"
 	"werun/api/internal/platform/storage"
+	"werun/api/internal/pricing"
 )
 
 // App 持有进程级依赖。各业务服务在引入它的任务里追加字段。
@@ -33,6 +34,7 @@ type App struct {
 	Inserter *river.Client[pgx.Tx] // 只入队，不执行任务
 	IAM      *iam.Service
 	Events   *event.Service
+	Pricing  *pricing.Service
 }
 
 // Bootstrap 读取配置、创建日志器、加载文案、连接数据库并构造各服务。
@@ -71,6 +73,7 @@ func Bootstrap(ctx context.Context) (*App, error) {
 	app := &App{Cfg: cfg, Log: log, Catalog: cat, Pool: pool, Store: files, PII: pii, Inserter: inserter}
 	app.IAM = iam.NewService(app.Pool, []byte(app.Cfg.SessionSecret), iam.NewLoginLimiter(time.Now), time.Now)
 	app.Events = event.NewService(app.Pool)
+	app.Pricing = pricing.NewService(app.Pool, time.Now)
 	return app, nil
 }
 

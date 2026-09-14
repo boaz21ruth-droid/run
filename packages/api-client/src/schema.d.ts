@@ -192,6 +192,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/events/{id}/price-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 赛事的价格档列表（含关联组别与计数） */
+        get: operations["adminListPriceRules"];
+        put?: never;
+        /** 新建价格档 */
+        post: operations["adminCreatePriceRule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/price-rules/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 修改价格档（已有占用时不可改价格、人群、关联组别） */
+        put: operations["adminUpdatePriceRule"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -329,6 +364,50 @@ export interface components {
             /** Format: date */
             raceDate: string;
             categories: components["schemas"]["CreateCategoryRequest"][];
+        };
+        /** @enum {string} */
+        PriceAudience: "ALL" | "LOCAL";
+        PriceRuleInput: {
+            name: components["schemas"]["LocalizedText"];
+            audience: components["schemas"]["PriceAudience"];
+            /** Format: int64 */
+            priceCents: number;
+            /** Format: int32 */
+            quota?: number | null;
+            /** Format: date-time */
+            saleStartsAt?: string | null;
+            /** Format: date-time */
+            saleEndsAt?: string | null;
+            /** Format: int32 */
+            sortOrder?: number;
+            categoryIds: number[];
+        };
+        PriceRule: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            eventId: number;
+            name: components["schemas"]["LocalizedText"];
+            audience: components["schemas"]["PriceAudience"];
+            /** Format: int64 */
+            priceCents: number;
+            currency: string;
+            /** Format: int32 */
+            quota: number | null;
+            /** Format: date-time */
+            saleStartsAt: string | null;
+            /** Format: date-time */
+            saleEndsAt: string | null;
+            /** Format: int32 */
+            sortOrder: number;
+            categoryIds: number[];
+            /** Format: int32 */
+            usedCount: number;
+            /** Format: int32 */
+            reservedCount: number;
+        };
+        PriceRuleList: {
+            items: components["schemas"]["PriceRule"][];
         };
     };
     responses: never;
@@ -701,6 +780,107 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminEvent"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminListPriceRules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 价格档列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceRuleList"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminCreatePriceRule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PriceRuleInput"];
+            };
+        };
+        responses: {
+            /** @description 已创建 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceRule"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminUpdatePriceRule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PriceRuleInput"];
+            };
+        };
+        responses: {
+            /** @description 已保存 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceRule"];
                 };
             };
             /** @description 错误 */

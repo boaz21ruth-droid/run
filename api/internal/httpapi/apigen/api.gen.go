@@ -124,6 +124,24 @@ func (e CreateEventRequestOrganizerType) Valid() bool {
 	}
 }
 
+// Defines values for PriceAudience.
+const (
+	PriceAudienceALL   PriceAudience = "ALL"
+	PriceAudienceLOCAL PriceAudience = "LOCAL"
+)
+
+// Valid indicates whether the value is a known member of the PriceAudience enum.
+func (e PriceAudience) Valid() bool {
+	switch e {
+	case PriceAudienceALL:
+		return true
+	case PriceAudienceLOCAL:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for Role.
 const (
 	RoleADMIN          Role = "ADMIN"
@@ -264,6 +282,43 @@ type Me struct {
 	Staff       Staff             `json:"staff"`
 }
 
+// PriceAudience defines model for PriceAudience.
+type PriceAudience string
+
+// PriceRule defines model for PriceRule.
+type PriceRule struct {
+	Audience      PriceAudience `json:"audience"`
+	CategoryIds   []int64       `json:"categoryIds"`
+	Currency      string        `json:"currency"`
+	EventId       int64         `json:"eventId"`
+	Id            int64         `json:"id"`
+	Name          LocalizedText `json:"name"`
+	PriceCents    int64         `json:"priceCents"`
+	Quota         *int32        `json:"quota"`
+	ReservedCount int32         `json:"reservedCount"`
+	SaleEndsAt    *time.Time    `json:"saleEndsAt"`
+	SaleStartsAt  *time.Time    `json:"saleStartsAt"`
+	SortOrder     int32         `json:"sortOrder"`
+	UsedCount     int32         `json:"usedCount"`
+}
+
+// PriceRuleInput defines model for PriceRuleInput.
+type PriceRuleInput struct {
+	Audience     PriceAudience `json:"audience"`
+	CategoryIds  []int64       `json:"categoryIds"`
+	Name         LocalizedText `json:"name"`
+	PriceCents   int64         `json:"priceCents"`
+	Quota        *int32        `json:"quota,omitempty"`
+	SaleEndsAt   *time.Time    `json:"saleEndsAt,omitempty"`
+	SaleStartsAt *time.Time    `json:"saleStartsAt,omitempty"`
+	SortOrder    *int32        `json:"sortOrder,omitempty"`
+}
+
+// PriceRuleList defines model for PriceRuleList.
+type PriceRuleList struct {
+	Items []PriceRule `json:"items"`
+}
+
 // PublicCategory defines model for PublicCategory.
 type PublicCategory struct {
 	Capacity  int32     `json:"capacity"`
@@ -312,8 +367,14 @@ type AdminLoginJSONRequestBody = LoginRequest
 // AdminCreateEventJSONRequestBody defines body for AdminCreateEvent for application/json ContentType.
 type AdminCreateEventJSONRequestBody = CreateEventRequest
 
+// AdminCreatePriceRuleJSONRequestBody defines body for AdminCreatePriceRule for application/json ContentType.
+type AdminCreatePriceRuleJSONRequestBody = PriceRuleInput
+
 // AdminUpdateEventRegistrationJSONRequestBody defines body for AdminUpdateEventRegistration for application/json ContentType.
 type AdminUpdateEventRegistrationJSONRequestBody = UpdateEventRegistrationRequest
+
+// AdminUpdatePriceRuleJSONRequestBody defines body for AdminUpdatePriceRule for application/json ContentType.
+type AdminUpdatePriceRuleJSONRequestBody = PriceRuleInput
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -332,6 +393,12 @@ type ServerInterface interface {
 	// AdminGetEvent 后台赛事详情（任意状态，含报名设置与组别）
 	// (GET /admin/events/{id})
 	AdminGetEvent(c *gin.Context, id int64)
+	// AdminListPriceRules 赛事的价格档列表（含关联组别与计数）
+	// (GET /admin/events/{id}/price-rules)
+	AdminListPriceRules(c *gin.Context, id int64)
+	// AdminCreatePriceRule 新建价格档
+	// (POST /admin/events/{id}/price-rules)
+	AdminCreatePriceRule(c *gin.Context, id int64)
 	// AdminPublishEvent 发布赛事（发布前校验）
 	// (POST /admin/events/{id}/publish)
 	AdminPublishEvent(c *gin.Context, id int64)
@@ -341,6 +408,9 @@ type ServerInterface interface {
 	// AdminGetMe 当前员工与权限
 	// (GET /admin/me)
 	AdminGetMe(c *gin.Context)
+	// AdminUpdatePriceRule 修改价格档（已有占用时不可改价格、人群、关联组别）
+	// (PUT /admin/price-rules/{id})
+	AdminUpdatePriceRule(c *gin.Context, id int64)
 	// ListPublicEvents 已发布且公开展示的赛事列表，文案按请求语言返回
 	// (GET /events)
 	ListPublicEvents(c *gin.Context)
@@ -441,6 +511,56 @@ func (siw *ServerInterfaceWrapper) AdminGetEvent(c *gin.Context) {
 	siw.Handler.AdminGetEvent(c, id)
 }
 
+// AdminListPriceRules operation middleware
+func (siw *ServerInterfaceWrapper) AdminListPriceRules(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminListPriceRules(c, id)
+}
+
+// AdminCreatePriceRule operation middleware
+func (siw *ServerInterfaceWrapper) AdminCreatePriceRule(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminCreatePriceRule(c, id)
+}
+
 // AdminPublishEvent operation middleware
 func (siw *ServerInterfaceWrapper) AdminPublishEvent(c *gin.Context) {
 
@@ -502,6 +622,31 @@ func (siw *ServerInterfaceWrapper) AdminGetMe(c *gin.Context) {
 	}
 
 	siw.Handler.AdminGetMe(c)
+}
+
+// AdminUpdatePriceRule operation middleware
+func (siw *ServerInterfaceWrapper) AdminUpdatePriceRule(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminUpdatePriceRule(c, id)
 }
 
 // ListPublicEvents operation middleware
@@ -607,6 +752,9 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/admin/events/:id", wrapper.AdminGetEvent)
 	router.PATCH(options.BaseURL+"/admin/events/:id/registration", wrapper.AdminUpdateEventRegistration)
 	router.POST(options.BaseURL+"/admin/events/:id/publish", wrapper.AdminPublishEvent)
+	router.GET(options.BaseURL+"/admin/events/:id/price-rules", wrapper.AdminListPriceRules)
+	router.POST(options.BaseURL+"/admin/events/:id/price-rules", wrapper.AdminCreatePriceRule)
+	router.PUT(options.BaseURL+"/admin/price-rules/:id", wrapper.AdminUpdatePriceRule)
 }
 
 type AdminLoginRequestObject struct {
@@ -796,6 +944,85 @@ func (response AdminGetEventdefaultJSONResponse) VisitAdminGetEventResponse(w ht
 	return err
 }
 
+type AdminListPriceRulesRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminListPriceRulesResponseObject interface {
+	VisitAdminListPriceRulesResponse(w http.ResponseWriter) error
+}
+
+type AdminListPriceRules200JSONResponse PriceRuleList
+
+func (response AdminListPriceRules200JSONResponse) VisitAdminListPriceRulesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListPriceRulesdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminListPriceRulesdefaultJSONResponse) VisitAdminListPriceRulesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminCreatePriceRuleRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminCreatePriceRuleJSONRequestBody
+}
+
+type AdminCreatePriceRuleResponseObject interface {
+	VisitAdminCreatePriceRuleResponse(w http.ResponseWriter) error
+}
+
+type AdminCreatePriceRule201JSONResponse PriceRule
+
+func (response AdminCreatePriceRule201JSONResponse) VisitAdminCreatePriceRuleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminCreatePriceRuledefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminCreatePriceRuledefaultJSONResponse) VisitAdminCreatePriceRuleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AdminPublishEventRequestObject struct {
 	Id int64 `json:"id"`
 }
@@ -902,6 +1129,46 @@ type AdminGetMedefaultJSONResponse struct {
 }
 
 func (response AdminGetMedefaultJSONResponse) VisitAdminGetMeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdatePriceRuleRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminUpdatePriceRuleJSONRequestBody
+}
+
+type AdminUpdatePriceRuleResponseObject interface {
+	VisitAdminUpdatePriceRuleResponse(w http.ResponseWriter) error
+}
+
+type AdminUpdatePriceRule200JSONResponse PriceRule
+
+func (response AdminUpdatePriceRule200JSONResponse) VisitAdminUpdatePriceRuleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdatePriceRuledefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminUpdatePriceRuledefaultJSONResponse) VisitAdminUpdatePriceRuleResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -1097,6 +1364,12 @@ type StrictServerInterface interface {
 	// AdminGetEvent 后台赛事详情（任意状态，含报名设置与组别）
 	// (GET /admin/events/{id})
 	AdminGetEvent(ctx context.Context, request AdminGetEventRequestObject) (AdminGetEventResponseObject, error)
+	// AdminListPriceRules 赛事的价格档列表（含关联组别与计数）
+	// (GET /admin/events/{id}/price-rules)
+	AdminListPriceRules(ctx context.Context, request AdminListPriceRulesRequestObject) (AdminListPriceRulesResponseObject, error)
+	// AdminCreatePriceRule 新建价格档
+	// (POST /admin/events/{id}/price-rules)
+	AdminCreatePriceRule(ctx context.Context, request AdminCreatePriceRuleRequestObject) (AdminCreatePriceRuleResponseObject, error)
 	// AdminPublishEvent 发布赛事（发布前校验）
 	// (POST /admin/events/{id}/publish)
 	AdminPublishEvent(ctx context.Context, request AdminPublishEventRequestObject) (AdminPublishEventResponseObject, error)
@@ -1106,6 +1379,9 @@ type StrictServerInterface interface {
 	// AdminGetMe 当前员工与权限
 	// (GET /admin/me)
 	AdminGetMe(ctx context.Context, request AdminGetMeRequestObject) (AdminGetMeResponseObject, error)
+	// AdminUpdatePriceRule 修改价格档（已有占用时不可改价格、人群、关联组别）
+	// (PUT /admin/price-rules/{id})
+	AdminUpdatePriceRule(ctx context.Context, request AdminUpdatePriceRuleRequestObject) (AdminUpdatePriceRuleResponseObject, error)
 	// ListPublicEvents 已发布且公开展示的赛事列表，文案按请求语言返回
 	// (GET /events)
 	ListPublicEvents(ctx context.Context, request ListPublicEventsRequestObject) (ListPublicEventsResponseObject, error)
@@ -1313,6 +1589,65 @@ func (sh *strictHandler) AdminGetEvent(ctx *gin.Context, id int64) {
 	}
 }
 
+// AdminListPriceRules operation middleware
+func (sh *strictHandler) AdminListPriceRules(ctx *gin.Context, id int64) {
+	var request AdminListPriceRulesRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminListPriceRules(ctx, request.(AdminListPriceRulesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminListPriceRules")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminListPriceRulesResponseObject); ok {
+		if err := validResponse.VisitAdminListPriceRulesResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminCreatePriceRule operation middleware
+func (sh *strictHandler) AdminCreatePriceRule(ctx *gin.Context, id int64) {
+	var request AdminCreatePriceRuleRequestObject
+
+	request.Id = id
+
+	var body AdminCreatePriceRuleJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminCreatePriceRule(ctx, request.(AdminCreatePriceRuleRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminCreatePriceRule")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminCreatePriceRuleResponseObject); ok {
+		if err := validResponse.VisitAdminCreatePriceRuleResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // AdminPublishEvent operation middleware
 func (sh *strictHandler) AdminPublishEvent(ctx *gin.Context, id int64) {
 	var request AdminPublishEventRequestObject
@@ -1389,6 +1724,39 @@ func (sh *strictHandler) AdminGetMe(ctx *gin.Context) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AdminGetMeResponseObject); ok {
 		if err := validResponse.VisitAdminGetMeResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminUpdatePriceRule operation middleware
+func (sh *strictHandler) AdminUpdatePriceRule(ctx *gin.Context, id int64) {
+	var request AdminUpdatePriceRuleRequestObject
+
+	request.Id = id
+
+	var body AdminUpdatePriceRuleJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminUpdatePriceRule(ctx, request.(AdminUpdatePriceRuleRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminUpdatePriceRule")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminUpdatePriceRuleResponseObject); ok {
+		if err := validResponse.VisitAdminUpdatePriceRuleResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

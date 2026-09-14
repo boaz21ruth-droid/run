@@ -4,11 +4,12 @@ import { useLang } from "@werun/i18n";
 import { Alert, Button, Card, Descriptions, Space, Spin, Table, Tabs, Tag, Typography, type TableProps, type TabsProps } from "antd";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router";
-import { PERM_EVENT_CONFIG, can } from "../auth/can";
+import { PERM_EVENT_CONFIG, PERM_PRICE_CONFIG, can } from "../auth/can";
 import { useMe } from "../auth/useMe";
 import { RegistrationCard } from "../events/RegistrationCard";
 import { pickText } from "../events/localize";
 import { useAdminEvent } from "../events/queries";
+import { PricingTab } from "../pricing/PricingTab";
 
 type AdminCategory = Schemas["AdminCategory"];
 
@@ -91,6 +92,13 @@ export function EventDetailPage() {
       ),
     },
   ];
+  if (can(me?.permissions, PERM_PRICE_CONFIG, "read")) {
+    items.push({
+      key: "pricing",
+      label: <span data-testid="event-tab-pricing">{t("eventDetail.tabPricing")}</span>,
+      children: <PricingTab event={event} />,
+    });
+  }
 
   return (
     <Space direction="vertical" size="middle" style={{ width: "100%" }}>

@@ -25,6 +25,7 @@ import (
 	"werun/api/internal/platform/httpx"
 	"werun/api/internal/platform/i18n"
 	"werun/api/internal/platform/logx"
+	"werun/api/internal/pricing"
 )
 
 type eventsEnv struct {
@@ -48,6 +49,7 @@ func newEventsEnv(t *testing.T) eventsEnv {
 		Pool:    pool,
 		IAM:     iamSvc,
 		Events:  event.NewService(pool),
+		Pricing: pricing.NewService(pool, time.Now),
 		Env:     "dev",
 	})
 	return eventsEnv{router: router, iam: iamSvc, catalog: catalog, pool: pool}

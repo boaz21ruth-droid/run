@@ -15,6 +15,7 @@ import (
 	"werun/api/internal/platform/apperr"
 	"werun/api/internal/platform/httpx"
 	"werun/api/internal/platform/i18n"
+	"werun/api/internal/pricing"
 )
 
 // 请求体上限：没有上限的话，一个超大请求体在被参数校验拒绝之前就要被完整读入内存
@@ -53,6 +54,7 @@ type RouterDeps struct {
 	Pool    *pgxpool.Pool
 	IAM     *iam.Service
 	Events  *event.Service
+	Pricing *pricing.Service
 	Server  *Server // 为 nil 时由 NewServer 构造
 	Env     string  // "dev" | "prod"
 }

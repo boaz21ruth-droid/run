@@ -50,6 +50,7 @@
   "eventDetail": {
     "back": "返回赛事列表",
     "tabBasic": "基本信息",
+    "tabPricing": "价格档",
     "info": {
       "title": "基本信息",
       "slug": "链接标识",
@@ -68,6 +69,43 @@
       "timeHelp": "留空表示不限",
       "save": "保存报名设置",
       "saved": "报名设置已保存"
+    }
+  },
+  "pricing": {
+    "hint": "同一组别有多个可用价格档时，跑者自动获得最低价。",
+    "create": "新建价格档",
+    "createTitle": "新建价格档",
+    "editTitle": "编辑价格档",
+    "edit": "编辑",
+    "empty": "还没有价格档",
+    "created": "价格档已创建",
+    "updated": "价格档已保存",
+    "submit": "保存",
+    "cancel": "取消",
+    "lockedHint": "这个价格档已有报名占用，价格、适用人群和关联组别不能再修改。",
+    "unlimited": "不限",
+    "col": {
+      "name": "名称",
+      "audience": "适用人群",
+      "price": "价格",
+      "quota": "已占用 / 配额",
+      "sale": "销售时间",
+      "categories": "关联组别",
+      "sortOrder": "排序",
+      "actions": "操作"
+    },
+    "audience": { "ALL": "所有人", "LOCAL": "柬埔寨国籍" },
+    "form": {
+      "name": "名称",
+      "audience": "适用人群",
+      "priceUsd": "价格（美元）",
+      "priceInvalid": "请输入金额，例如 25 或 25.50",
+      "quota": "配额",
+      "quotaHelp": "留空表示不限",
+      "sortOrder": "排序",
+      "saleStartsAt": "开始销售",
+      "saleEndsAt": "停止销售",
+      "categoryIds": "关联组别"
     }
   }
 }

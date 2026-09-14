@@ -50,6 +50,7 @@
   "eventDetail": {
     "back": "Back to events",
     "tabBasic": "Overview",
+    "tabPricing": "Price tiers",
     "info": {
       "title": "Overview",
       "slug": "URL slug",
@@ -68,6 +69,43 @@
       "timeHelp": "Leave empty for no limit",
       "save": "Save registration settings",
       "saved": "Registration settings saved"
+    }
+  },
+  "pricing": {
+    "hint": "When several tiers apply to a category, runners automatically get the lowest price.",
+    "create": "New price tier",
+    "createTitle": "New price tier",
+    "editTitle": "Edit price tier",
+    "edit": "Edit",
+    "empty": "No price tiers yet",
+    "created": "Price tier created",
+    "updated": "Price tier saved",
+    "submit": "Save",
+    "cancel": "Cancel",
+    "lockedHint": "This tier already has registrations. Price, audience and categories are locked.",
+    "unlimited": "Unlimited",
+    "col": {
+      "name": "Name",
+      "audience": "Audience",
+      "price": "Price",
+      "quota": "Taken / quota",
+      "sale": "Sale window",
+      "categories": "Categories",
+      "sortOrder": "Order",
+      "actions": "Actions"
+    },
+    "audience": { "ALL": "Everyone", "LOCAL": "Cambodian nationals" },
+    "form": {
+      "name": "Name",
+      "audience": "Audience",
+      "priceUsd": "Price (USD)",
+      "priceInvalid": "Enter an amount such as 25 or 25.50",
+      "quota": "Quota",
+      "quotaHelp": "Leave empty for no limit",
+      "sortOrder": "Order",
+      "saleStartsAt": "Sale starts",
+      "saleEndsAt": "Sale ends",
+      "categoryIds": "Categories"
     }
   }
 }

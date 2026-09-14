@@ -71,7 +71,7 @@ func TestAllCodesAreUnique(t *testing.T) {
 		assert.False(t, seen[c], "duplicate code %s", c)
 		seen[c] = true
 	}
-	assert.Len(t, apperr.AllCodes, 19)
+	assert.Len(t, apperr.AllCodes, 20)
 	assert.Contains(t, apperr.AllCodes, apperr.CodeFileTooLarge)
 	assert.Contains(t, apperr.AllCodes, apperr.CodeFileTypeNotAllowed)
 }
