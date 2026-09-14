@@ -126,14 +126,25 @@ func (s *Service) Login(ctx context.Context, username, password string, meta htt
 	if !s.limiter.AllowIP(meta.IP) {
 		return "", Staff{}, apperr.New(http.StatusTooManyRequests, apperr.CodeRateLimited)
 	}
-	if s.limiter.Locked(username) {
+	// BeginAttempt 原子地检查锁定状态并预占一个名额，避免并发请求都在各自的
+	// Locked 检查与各自的 Failure 之间抢跑，绕过"连续失败 5 次锁定"。下面每一
+	// 条退出路径都必须恰好释放一次这个名额：已知结果（失败/成功）调用
+	// Failure/Success 释放；尚未得出结果就出错的路径由 defer 里的 Release 兜底。
+	if !s.limiter.BeginAttempt(username) {
 		return "", Staff{}, apperr.New(http.StatusLocked, apperr.CodeAccountLocked)
 	}
+	released := false
+	defer func() {
+		if !released {
+			s.limiter.Release(username)
+		}
+	}()
 
 	row, err := s.q.GetStaffByUsername(ctx, username)
 	if errors.Is(err, pgx.ErrNoRows) {
 		// 做一次同等开销的哈希，避免通过响应时间判断用户名是否存在。
 		_, _ = VerifyPassword(dummyHash(), password)
+		released = true
 		s.limiter.Failure(username)
 		slog.WarnContext(ctx, "staff login with unknown username",
 			"username", username, "ip", meta.IP, "request_id", meta.RequestID)
@@ -149,6 +160,7 @@ func (s *Service) Login(ctx context.Context, username, password string, meta htt
 		return "", Staff{}, fmt.Errorf("iam: verify password of staff %d: %w", row.ID, err)
 	}
 	if !ok || row.Status != statusActive {
+		released = true
 		s.limiter.Failure(username)
 		reason := "密码错误"
 		if ok {
@@ -169,6 +181,7 @@ func (s *Service) Login(ctx context.Context, username, password string, meta htt
 		}
 		return "", Staff{}, invalidCredentials()
 	}
+	released = true
 	s.limiter.Success(username)
 
 	raw := make([]byte, tokenBytes)
