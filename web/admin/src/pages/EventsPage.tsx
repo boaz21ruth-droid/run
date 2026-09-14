@@ -3,7 +3,7 @@ import type { Schemas } from "@werun/api-client";
 import { useLang } from "@werun/i18n";
 import { Alert, App as AntdApp, Button, Space, Table, Tag, Typography, type TableProps } from "antd";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { PERM_EVENT_CONFIG, PERM_EVENT_PUBLISH, can } from "../auth/can";
 import { useMe } from "../auth/useMe";
 import { pickText } from "../events/localize";
@@ -24,7 +24,15 @@ export function EventsPage() {
   const canPublish = can(me?.permissions, PERM_EVENT_PUBLISH, "write");
 
   const columns: TableProps<AdminEvent>["columns"] = [
-    { title: t("events.col.name"), key: "name", render: (_, event) => pickText(event.name, lang) },
+    {
+      title: t("events.col.name"),
+      key: "name",
+      render: (_, event) => (
+        <Link to={`/events/${event.id}`} data-testid={`event-open-${event.slug}`}>
+          {pickText(event.name, lang)}
+        </Link>
+      ),
+    },
     { title: t("events.col.date"), dataIndex: "raceDate", key: "raceDate" },
     { title: t("events.col.city"), dataIndex: "city", key: "city" },
     {

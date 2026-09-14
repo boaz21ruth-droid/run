@@ -27,6 +27,7 @@ const (
 	CodeEventCategoryIncomplete = "EVENT_CATEGORY_INCOMPLETE"
 	CodeFileTooLarge            = "FILE_TOO_LARGE"
 	CodeFileTypeNotAllowed      = "FILE_TYPE_NOT_ALLOWED"
+	CodeRegistrationNotReady    = "REGISTRATION_NOT_READY"
 )
 
 // AllCodes 列出全部错误码，供文案完整性测试使用。新增错误码时必须同时加到这里。
@@ -49,6 +50,7 @@ var AllCodes = []string{
 	CodeEventCategoryIncomplete,
 	CodeFileTooLarge,
 	CodeFileTypeNotAllowed,
+	CodeRegistrationNotReady,
 }
 
 // FieldError 描述某个字段的错误：文案 key 与参数。

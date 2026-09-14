@@ -30,3 +30,29 @@ export function usePublishEvent() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ADMIN_EVENTS_KEY }),
   });
 }
+
+export function adminEventKey(id: number) {
+  return ["admin", "events", id] as const;
+}
+
+export function useAdminEvent(id: number) {
+  const api = useApi();
+  return useQuery({
+    queryKey: adminEventKey(id),
+    queryFn: async () => unwrap(await api.GET("/admin/events/{id}", { params: { path: { id } } })),
+    enabled: Number.isInteger(id) && id > 0,
+  });
+}
+
+export function useUpdateEventRegistration(id: number) {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: Schemas["UpdateEventRegistrationRequest"]) =>
+      unwrap(await api.PATCH("/admin/events/{id}/registration", { params: { path: { id } }, body })),
+    onSuccess: (event) => {
+      queryClient.setQueryData(adminEventKey(id), event);
+      return queryClient.invalidateQueries({ queryKey: ADMIN_EVENTS_KEY, exact: true });
+    },
+  });
+}

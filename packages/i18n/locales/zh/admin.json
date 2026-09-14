@@ -46,5 +46,28 @@
     "created": "赛事已保存为草稿"
   },
   "eventType": { "RACE": "付费赛事", "FREE_ACTIVITY": "免费活动" },
-  "organizerType": { "OFFICIAL": "官方主办", "PARTNER": "合作主办" }
+  "organizerType": { "OFFICIAL": "官方主办", "PARTNER": "合作主办" },
+  "eventDetail": {
+    "back": "返回赛事列表",
+    "tabBasic": "基本信息",
+    "info": {
+      "title": "基本信息",
+      "slug": "链接标识",
+      "eventType": "赛事类型",
+      "status": "状态",
+      "raceDate": "比赛日期",
+      "city": "城市",
+      "timezone": "时区"
+    },
+    "categories": { "title": "组别", "code": "代码", "name": "名称", "distanceM": "距离（米）", "capacity": "名额" },
+    "registration": {
+      "title": "报名设置",
+      "open": "开放报名",
+      "opensAt": "报名开始时间",
+      "closesAt": "报名截止时间",
+      "timeHelp": "留空表示不限",
+      "save": "保存报名设置",
+      "saved": "报名设置已保存"
+    }
+  }
 }

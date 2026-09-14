@@ -178,3 +178,72 @@ func TestValidateForPublish(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateRegistration(t *testing.T) {
+	require.NoError(t, event.ValidateRegistration(event.RegistrationInput{Open: true}))
+	require.NoError(t, event.ValidateRegistration(event.RegistrationInput{
+		Open: true, OpensAt: ptrTime("2026-09-20T00:00:00+07:00"), ClosesAt: ptrTime("2026-11-01T00:00:00+07:00"),
+	}))
+	require.NoError(t, event.ValidateRegistration(event.RegistrationInput{ClosesAt: ptrTime("2026-11-01T00:00:00+07:00")}))
+
+	err := event.ValidateRegistration(event.RegistrationInput{
+		Open: true, OpensAt: ptrTime("2026-11-01T00:00:00+07:00"), ClosesAt: ptrTime("2026-11-01T00:00:00+07:00"),
+	})
+	ae, ok := apperr.As(err)
+	require.True(t, ok)
+	require.Equal(t, apperr.CodeValidation, ae.Code)
+	require.Equal(t, "field.ends_before_starts", fieldKeys(t, err)["closesAt"])
+}
+
+func TestCheckRegistrationReady(t *testing.T) {
+	published := func(eventType string) event.Event {
+		return event.Event{ID: 1, Slug: "pphm-2026", EventType: eventType, Status: event.StatusPublished}
+	}
+	cases := []struct {
+		name       string
+		ev         event.Event
+		noPrice    []string
+		accounts   int64
+		missing    []string
+		categories []string
+		fields     map[string]string
+	}{
+		{name: "付费赛事全部就绪", ev: published(event.TypeRace), accounts: 1},
+		{
+			name: "草稿赛事", ev: event.Event{EventType: event.TypeRace, Status: event.StatusDraft}, accounts: 1,
+			missing: []string{"PUBLISHED"}, categories: []string{},
+			fields: map[string]string{"status": "field.event_not_published"},
+		},
+		{
+			name: "组别缺价格档且没有收款账户", ev: published(event.TypeRace), noPrice: []string{"21K", "10K"},
+			missing: []string{"PRICE_RULE", "PAYMENT_ACCOUNT"}, categories: []string{"21K", "10K"},
+			fields: map[string]string{"priceRules": "field.missing_price_rule", "paymentAccounts": "field.missing_payment_account"},
+		},
+		{name: "免费活动不检查价格档与收款账户", ev: published(event.TypeFreeActivity), noPrice: []string{"5K"}},
+		{
+			name: "免费活动也必须已发布", ev: event.Event{EventType: event.TypeFreeActivity, Status: event.StatusDraft},
+			missing: []string{"PUBLISHED"}, categories: []string{},
+			fields: map[string]string{"status": "field.event_not_published"},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := event.CheckRegistrationReady(tc.ev, tc.noPrice, tc.accounts)
+
+			if tc.missing == nil {
+				require.NoError(t, err)
+				return
+			}
+			ae, ok := apperr.As(err)
+			require.Truef(t, ok, "期望 *apperr.Error，得到 %v", err)
+			require.Equal(t, apperr.CodeRegistrationNotReady, ae.Code)
+			require.Equal(t, http.StatusUnprocessableEntity, ae.Status)
+			require.Equal(t, tc.missing, ae.Params["missing"])
+			require.Equal(t, tc.categories, ae.Params["categories"])
+			require.Equal(t, tc.fields, fieldKeys(t, err))
+			if len(tc.noPrice) > 0 {
+				require.Equal(t, "21K, 10K", ae.Fields["priceRules"].Params["categories"])
+			}
+		})
+	}
+}

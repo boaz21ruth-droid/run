@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
 
 	"werun/api/internal/event"
@@ -30,6 +31,7 @@ type eventsEnv struct {
 	router  http.Handler
 	iam     *iam.Service
 	catalog *i18n.Catalog
+	pool    *pgxpool.Pool
 }
 
 func newEventsEnv(t *testing.T) eventsEnv {
@@ -48,7 +50,7 @@ func newEventsEnv(t *testing.T) eventsEnv {
 		Events:  event.NewService(pool),
 		Env:     "dev",
 	})
-	return eventsEnv{router: router, iam: iamSvc, catalog: catalog}
+	return eventsEnv{router: router, iam: iamSvc, catalog: catalog, pool: pool}
 }
 
 func (e eventsEnv) sessionCookie(t *testing.T, role iam.Role, username string) *http.Cookie {
@@ -186,4 +188,78 @@ func TestAdminEventsRequireSession(t *testing.T) {
 
 	require.Equal(t, http.StatusUnauthorized, rec.Code, rec.Body.String())
 	require.Equal(t, apperr.CodeUnauthenticated, eventsDecode[httpx.ErrorBody](t, rec).Error.Code)
+}
+
+var adminClientHeader = http.Header{httpx.HeaderClient: []string{"admin"}}
+
+// createPublishedEvent 以 OPS 身份新建并发布 eventsCreateBody 描述的赛事，返回赛事。
+func (e eventsEnv) createPublishedEvent(t *testing.T, ops *http.Cookie) apigen.AdminEvent {
+	t.Helper()
+	rec := e.do(t, http.MethodPost, "/api/admin/events", eventsCreateBody(), ops, adminClientHeader)
+	require.Equal(t, http.StatusCreated, rec.Code, rec.Body.String())
+	created := eventsDecode[apigen.AdminEvent](t, rec)
+	rec = e.do(t, http.MethodPost, fmt.Sprintf("/api/admin/events/%d/publish", created.Id), nil, ops, adminClientHeader)
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	return eventsDecode[apigen.AdminEvent](t, rec)
+}
+
+func TestAdminEventDetailAndRegistrationSwitch(t *testing.T) {
+	env := newEventsEnv(t)
+	ctx := context.Background()
+	ops := env.sessionCookie(t, iam.RoleOps, "ops.regswitch")
+	finance := env.sessionCookie(t, iam.RoleFinance, "finance.regswitch")
+	support := env.sessionCookie(t, iam.RoleSupport, "support.regswitch")
+	ev := env.createPublishedEvent(t, ops)
+	detailPath := fmt.Sprintf("/api/admin/events/%d", ev.Id)
+	registrationPath := detailPath + "/registration"
+
+	rec := env.do(t, http.MethodGet, detailPath, nil, finance, nil)
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	detail := eventsDecode[apigen.AdminEvent](t, rec)
+	require.Equal(t, "Asia/Phnom_Penh", detail.Timezone)
+	require.False(t, detail.RegistrationOpen)
+	require.Nil(t, detail.RegistrationOpensAt)
+	require.Len(t, detail.Categories, 1)
+
+	rec = env.do(t, http.MethodGet, detailPath, nil, support, nil)
+	require.Equal(t, http.StatusForbidden, rec.Code, "SUPPORT 没有 event_config")
+
+	openBody := map[string]any{"open": true, "opensAt": "2026-09-20T08:00:00+07:00", "closesAt": nil}
+	rec = env.do(t, http.MethodPatch, registrationPath, openBody, finance, adminClientHeader)
+	require.Equal(t, http.StatusForbidden, rec.Code, "FINANCE 对 event_config 只读")
+
+	rec = env.do(t, http.MethodPatch, registrationPath+"?lang=zh", openBody, ops, adminClientHeader)
+	require.Equal(t, http.StatusUnprocessableEntity, rec.Code, rec.Body.String())
+	body := eventsDecode[httpx.ErrorBody](t, rec)
+	require.Equal(t, apperr.CodeRegistrationNotReady, body.Error.Code)
+	require.Equal(t, env.catalog.T(i18n.ZH, apperr.CodeRegistrationNotReady, nil), body.Error.Message)
+	require.Equal(t, "这些组别还没有价格档：21K。", body.Error.Fields["priceRules"])
+	require.Contains(t, body.Error.Fields, "paymentAccounts")
+
+	var ruleID, fileID int64
+	require.NoError(t, env.pool.QueryRow(ctx,
+		`INSERT INTO price_rules (event_id, name, audience, price_cents) VALUES ($1, '{"en":"Std"}', 'ALL', 2500) RETURNING id`,
+		ev.Id).Scan(&ruleID))
+	_, err := env.pool.Exec(ctx, `INSERT INTO category_price_rules (category_id, price_rule_id) VALUES ($1, $2)`,
+		ev.Categories[0].Id, ruleID)
+	require.NoError(t, err)
+	require.NoError(t, env.pool.QueryRow(ctx,
+		`INSERT INTO files (storage_key, visibility, purpose, mime_type, size_bytes, sha256, uploaded_by_type)
+		 VALUES ('2026/09/regswitch.png', 'PUBLIC', 'PAYMENT_QR', 'image/png', 10, '\x01', 'SYSTEM') RETURNING id`).Scan(&fileID))
+	_, err = env.pool.Exec(ctx,
+		`INSERT INTO payment_accounts (name, provider, account_name, account_no_masked, currency, qr_file_id, scope)
+		 VALUES ('ABA USD', 'ABA', 'WERUN CO', '***123', 'USD', $1, 'ALL')`, fileID)
+	require.NoError(t, err)
+
+	rec = env.do(t, http.MethodPatch, registrationPath, openBody, ops, adminClientHeader)
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	opened := eventsDecode[apigen.AdminEvent](t, rec)
+	require.True(t, opened.RegistrationOpen)
+	require.NotNil(t, opened.RegistrationOpensAt)
+	require.Equal(t, "2026-09-20T01:00:00Z", opened.RegistrationOpensAt.UTC().Format(time.RFC3339))
+	require.Nil(t, opened.RegistrationClosesAt)
+
+	rec = env.do(t, http.MethodGet, "/api/admin/events/999999", nil, ops, nil)
+	require.Equal(t, http.StatusNotFound, rec.Code)
+	require.Equal(t, apperr.CodeEventNotFound, eventsDecode[httpx.ErrorBody](t, rec).Error.Code)
 }

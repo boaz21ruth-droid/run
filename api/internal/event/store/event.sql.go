@@ -10,6 +10,60 @@ import (
 	"time"
 )
 
+const countRegistrationPaymentAccounts = `-- name: CountRegistrationPaymentAccounts :one
+SELECT count(*) FROM payment_accounts
+WHERE active
+  AND currency = 'USD'
+  AND scope IN ('REGISTRATION', 'ALL')
+  AND (event_id = $1::bigint OR event_id IS NULL)
+`
+
+func (q *Queries) CountRegistrationPaymentAccounts(ctx context.Context, eventID int64) (int64, error) {
+	row := q.db.QueryRow(ctx, countRegistrationPaymentAccounts, eventID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const getEventByID = `-- name: GetEventByID :one
+SELECT id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at FROM events
+WHERE id = $1
+`
+
+func (q *Queries) GetEventByID(ctx context.Context, id int64) (Event, error) {
+	row := q.db.QueryRow(ctx, getEventByID, id)
+	var i Event
+	err := row.Scan(
+		&i.ID,
+		&i.Slug,
+		&i.EventType,
+		&i.OrganizerType,
+		&i.Name,
+		&i.Summary,
+		&i.Description,
+		&i.City,
+		&i.Venue,
+		&i.RaceDate,
+		&i.Timezone,
+		&i.CoverFileID,
+		&i.Status,
+		&i.RegistrationOpen,
+		&i.PublicVisible,
+		&i.RegistrationOpensAt,
+		&i.RegistrationClosesAt,
+		&i.RacePackConfigured,
+		&i.CommunityReviewRequired,
+		&i.ActivityInfo,
+		&i.PublishedAt,
+		&i.PublishedBy,
+		&i.CreatedBy,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getEventForUpdate = `-- name: GetEventForUpdate :one
 SELECT id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at FROM events
 WHERE id = $1
@@ -236,6 +290,33 @@ func (q *Queries) ListCategoriesByEventIDs(ctx context.Context, eventIds []int64
 	return items, nil
 }
 
+const listCategoryCodesWithoutPriceRule = `-- name: ListCategoryCodesWithoutPriceRule :many
+SELECT c.code FROM event_categories c
+WHERE c.event_id = $1
+  AND NOT EXISTS (SELECT 1 FROM category_price_rules cpr WHERE cpr.category_id = c.id)
+ORDER BY c.sort_order, c.id
+`
+
+func (q *Queries) ListCategoryCodesWithoutPriceRule(ctx context.Context, eventID int64) ([]string, error) {
+	rows, err := q.db.Query(ctx, listCategoryCodesWithoutPriceRule, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var code string
+		if err := rows.Scan(&code); err != nil {
+			return nil, err
+		}
+		items = append(items, code)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEvents = `-- name: ListEvents :many
 SELECT id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at FROM events
 ORDER BY race_date DESC, id DESC
@@ -360,6 +441,63 @@ type PublishEventParams struct {
 
 func (q *Queries) PublishEvent(ctx context.Context, arg PublishEventParams) (Event, error) {
 	row := q.db.QueryRow(ctx, publishEvent, arg.PublishedAt, arg.PublishedBy, arg.ID)
+	var i Event
+	err := row.Scan(
+		&i.ID,
+		&i.Slug,
+		&i.EventType,
+		&i.OrganizerType,
+		&i.Name,
+		&i.Summary,
+		&i.Description,
+		&i.City,
+		&i.Venue,
+		&i.RaceDate,
+		&i.Timezone,
+		&i.CoverFileID,
+		&i.Status,
+		&i.RegistrationOpen,
+		&i.PublicVisible,
+		&i.RegistrationOpensAt,
+		&i.RegistrationClosesAt,
+		&i.RacePackConfigured,
+		&i.CommunityReviewRequired,
+		&i.ActivityInfo,
+		&i.PublishedAt,
+		&i.PublishedBy,
+		&i.CreatedBy,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateEventRegistration = `-- name: UpdateEventRegistration :one
+UPDATE events
+SET registration_open = $1,
+    registration_opens_at = $2,
+    registration_closes_at = $3,
+    version = version + 1,
+    updated_at = now()
+WHERE id = $4
+RETURNING id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at
+`
+
+type UpdateEventRegistrationParams struct {
+	RegistrationOpen     bool
+	RegistrationOpensAt  *time.Time
+	RegistrationClosesAt *time.Time
+	ID                   int64
+}
+
+func (q *Queries) UpdateEventRegistration(ctx context.Context, arg UpdateEventRegistrationParams) (Event, error) {
+	row := q.db.QueryRow(ctx, updateEventRegistration,
+		arg.RegistrationOpen,
+		arg.RegistrationOpensAt,
+		arg.RegistrationClosesAt,
+		arg.ID,
+	)
 	var i Event
 	err := row.Scan(
 		&i.ID,

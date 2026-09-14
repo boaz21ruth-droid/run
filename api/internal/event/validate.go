@@ -123,3 +123,43 @@ func ValidateForPublish(e Event) error {
 	}
 	return nil
 }
+
+// ValidateRegistration 校验报名时间：两者都有时截止必须晚于开始。
+func ValidateRegistration(in RegistrationInput) error {
+	if in.OpensAt != nil && in.ClosesAt != nil && !in.ClosesAt.After(*in.OpensAt) {
+		return apperr.New(http.StatusUnprocessableEntity, apperr.CodeValidation).
+			WithField("closesAt", "field.ends_before_starts", nil)
+	}
+	return nil
+}
+
+// CheckRegistrationReady 是开放报名前的校验：赛事必须已发布；付费赛事（RACE）每个组别至少有一个
+// 价格档（categoriesWithoutPriceRule 为空），且至少有一个可用于该赛事报名的启用美元收款账户。
+// 免费活动忽略后两个参数。不满足时返回 REGISTRATION_NOT_READY，Params 为 missing 与 categories，
+// 同时附带字段错误供前端逐条展示（错误响应体不包含 Params）。
+func CheckRegistrationReady(e Event, categoriesWithoutPriceRule []string, usableAccounts int64) error {
+	notReady := apperr.New(http.StatusUnprocessableEntity, apperr.CodeRegistrationNotReady)
+	missing := []string{}
+	categories := []string{}
+
+	if e.Status != StatusPublished {
+		missing = append(missing, MissingPublished)
+		notReady = notReady.WithField("status", "field.event_not_published", nil)
+	}
+	if e.EventType == TypeRace {
+		if len(categoriesWithoutPriceRule) > 0 {
+			missing = append(missing, MissingPriceRule)
+			categories = append(categories, categoriesWithoutPriceRule...)
+			notReady = notReady.WithField("priceRules", "field.missing_price_rule",
+				map[string]any{"categories": strings.Join(categoriesWithoutPriceRule, ", ")})
+		}
+		if usableAccounts == 0 {
+			missing = append(missing, MissingPaymentAccount)
+			notReady = notReady.WithField("paymentAccounts", "field.missing_payment_account", nil)
+		}
+	}
+	if len(missing) == 0 {
+		return nil
+	}
+	return notReady.WithParams(map[string]any{"missing": missing, "categories": categories})
+}

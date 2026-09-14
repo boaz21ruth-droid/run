@@ -173,17 +173,21 @@ type AdminCategory struct {
 
 // AdminEvent defines model for AdminEvent.
 type AdminEvent struct {
-	Categories    []AdminCategory         `json:"categories"`
-	City          string                  `json:"city"`
-	EventType     AdminEventEventType     `json:"eventType"`
-	Id            int64                   `json:"id"`
-	Name          LocalizedText           `json:"name"`
-	OrganizerType AdminEventOrganizerType `json:"organizerType"`
-	PublicVisible bool                    `json:"publicVisible"`
-	PublishedAt   *time.Time              `json:"publishedAt"`
-	RaceDate      openapi_types.Date      `json:"raceDate"`
-	Slug          string                  `json:"slug"`
-	Status        AdminEventStatus        `json:"status"`
+	Categories           []AdminCategory         `json:"categories"`
+	City                 string                  `json:"city"`
+	EventType            AdminEventEventType     `json:"eventType"`
+	Id                   int64                   `json:"id"`
+	Name                 LocalizedText           `json:"name"`
+	OrganizerType        AdminEventOrganizerType `json:"organizerType"`
+	PublicVisible        bool                    `json:"publicVisible"`
+	PublishedAt          *time.Time              `json:"publishedAt"`
+	RaceDate             openapi_types.Date      `json:"raceDate"`
+	RegistrationClosesAt *time.Time              `json:"registrationClosesAt"`
+	RegistrationOpen     bool                    `json:"registrationOpen"`
+	RegistrationOpensAt  *time.Time              `json:"registrationOpensAt"`
+	Slug                 string                  `json:"slug"`
+	Status               AdminEventStatus        `json:"status"`
+	Timezone             string                  `json:"timezone"`
 }
 
 // AdminEventEventType defines model for AdminEvent.EventType.
@@ -295,11 +299,21 @@ type Staff struct {
 	Username string `json:"username"`
 }
 
+// UpdateEventRegistrationRequest defines model for UpdateEventRegistrationRequest.
+type UpdateEventRegistrationRequest struct {
+	ClosesAt *time.Time `json:"closesAt,omitempty"`
+	Open     bool       `json:"open"`
+	OpensAt  *time.Time `json:"opensAt,omitempty"`
+}
+
 // AdminLoginJSONRequestBody defines body for AdminLogin for application/json ContentType.
 type AdminLoginJSONRequestBody = LoginRequest
 
 // AdminCreateEventJSONRequestBody defines body for AdminCreateEvent for application/json ContentType.
 type AdminCreateEventJSONRequestBody = CreateEventRequest
+
+// AdminUpdateEventRegistrationJSONRequestBody defines body for AdminUpdateEventRegistration for application/json ContentType.
+type AdminUpdateEventRegistrationJSONRequestBody = UpdateEventRegistrationRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -315,9 +329,15 @@ type ServerInterface interface {
 	// AdminCreateEvent 新建草稿赛事及组别
 	// (POST /admin/events)
 	AdminCreateEvent(c *gin.Context)
+	// AdminGetEvent 后台赛事详情（任意状态，含报名设置与组别）
+	// (GET /admin/events/{id})
+	AdminGetEvent(c *gin.Context, id int64)
 	// AdminPublishEvent 发布赛事（发布前校验）
 	// (POST /admin/events/{id}/publish)
 	AdminPublishEvent(c *gin.Context, id int64)
+	// AdminUpdateEventRegistration 修改报名开关与报名时间（开放前校验发布状态、价格档与收款账户）
+	// (PATCH /admin/events/{id}/registration)
+	AdminUpdateEventRegistration(c *gin.Context, id int64)
 	// AdminGetMe 当前员工与权限
 	// (GET /admin/me)
 	AdminGetMe(c *gin.Context)
@@ -396,6 +416,31 @@ func (siw *ServerInterfaceWrapper) AdminCreateEvent(c *gin.Context) {
 	siw.Handler.AdminCreateEvent(c)
 }
 
+// AdminGetEvent operation middleware
+func (siw *ServerInterfaceWrapper) AdminGetEvent(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminGetEvent(c, id)
+}
+
 // AdminPublishEvent operation middleware
 func (siw *ServerInterfaceWrapper) AdminPublishEvent(c *gin.Context) {
 
@@ -419,6 +464,31 @@ func (siw *ServerInterfaceWrapper) AdminPublishEvent(c *gin.Context) {
 	}
 
 	siw.Handler.AdminPublishEvent(c, id)
+}
+
+// AdminUpdateEventRegistration operation middleware
+func (siw *ServerInterfaceWrapper) AdminUpdateEventRegistration(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminUpdateEventRegistration(c, id)
 }
 
 // AdminGetMe operation middleware
@@ -534,6 +604,8 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/events/:slug", wrapper.GetPublicEvent)
 	router.GET(options.BaseURL+"/admin/events", wrapper.AdminListEvents)
 	router.POST(options.BaseURL+"/admin/events", wrapper.AdminCreateEvent)
+	router.GET(options.BaseURL+"/admin/events/:id", wrapper.AdminGetEvent)
+	router.PATCH(options.BaseURL+"/admin/events/:id/registration", wrapper.AdminUpdateEventRegistration)
 	router.POST(options.BaseURL+"/admin/events/:id/publish", wrapper.AdminPublishEvent)
 }
 
@@ -685,6 +757,45 @@ func (response AdminCreateEventdefaultJSONResponse) VisitAdminCreateEventRespons
 	return err
 }
 
+type AdminGetEventRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminGetEventResponseObject interface {
+	VisitAdminGetEventResponse(w http.ResponseWriter) error
+}
+
+type AdminGetEvent200JSONResponse AdminEvent
+
+func (response AdminGetEvent200JSONResponse) VisitAdminGetEventResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminGetEventdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminGetEventdefaultJSONResponse) VisitAdminGetEventResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AdminPublishEventRequestObject struct {
 	Id int64 `json:"id"`
 }
@@ -713,6 +824,46 @@ type AdminPublishEventdefaultJSONResponse struct {
 }
 
 func (response AdminPublishEventdefaultJSONResponse) VisitAdminPublishEventResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdateEventRegistrationRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminUpdateEventRegistrationJSONRequestBody
+}
+
+type AdminUpdateEventRegistrationResponseObject interface {
+	VisitAdminUpdateEventRegistrationResponse(w http.ResponseWriter) error
+}
+
+type AdminUpdateEventRegistration200JSONResponse AdminEvent
+
+func (response AdminUpdateEventRegistration200JSONResponse) VisitAdminUpdateEventRegistrationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdateEventRegistrationdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminUpdateEventRegistrationdefaultJSONResponse) VisitAdminUpdateEventRegistrationResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -943,9 +1094,15 @@ type StrictServerInterface interface {
 	// AdminCreateEvent 新建草稿赛事及组别
 	// (POST /admin/events)
 	AdminCreateEvent(ctx context.Context, request AdminCreateEventRequestObject) (AdminCreateEventResponseObject, error)
+	// AdminGetEvent 后台赛事详情（任意状态，含报名设置与组别）
+	// (GET /admin/events/{id})
+	AdminGetEvent(ctx context.Context, request AdminGetEventRequestObject) (AdminGetEventResponseObject, error)
 	// AdminPublishEvent 发布赛事（发布前校验）
 	// (POST /admin/events/{id}/publish)
 	AdminPublishEvent(ctx context.Context, request AdminPublishEventRequestObject) (AdminPublishEventResponseObject, error)
+	// AdminUpdateEventRegistration 修改报名开关与报名时间（开放前校验发布状态、价格档与收款账户）
+	// (PATCH /admin/events/{id}/registration)
+	AdminUpdateEventRegistration(ctx context.Context, request AdminUpdateEventRegistrationRequestObject) (AdminUpdateEventRegistrationResponseObject, error)
 	// AdminGetMe 当前员工与权限
 	// (GET /admin/me)
 	AdminGetMe(ctx context.Context, request AdminGetMeRequestObject) (AdminGetMeResponseObject, error)
@@ -1130,6 +1287,32 @@ func (sh *strictHandler) AdminCreateEvent(ctx *gin.Context) {
 	}
 }
 
+// AdminGetEvent operation middleware
+func (sh *strictHandler) AdminGetEvent(ctx *gin.Context, id int64) {
+	var request AdminGetEventRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminGetEvent(ctx, request.(AdminGetEventRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminGetEvent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminGetEventResponseObject); ok {
+		if err := validResponse.VisitAdminGetEventResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // AdminPublishEvent operation middleware
 func (sh *strictHandler) AdminPublishEvent(ctx *gin.Context, id int64) {
 	var request AdminPublishEventRequestObject
@@ -1149,6 +1332,39 @@ func (sh *strictHandler) AdminPublishEvent(ctx *gin.Context, id int64) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AdminPublishEventResponseObject); ok {
 		if err := validResponse.VisitAdminPublishEventResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminUpdateEventRegistration operation middleware
+func (sh *strictHandler) AdminUpdateEventRegistration(ctx *gin.Context, id int64) {
+	var request AdminUpdateEventRegistrationRequestObject
+
+	request.Id = id
+
+	var body AdminUpdateEventRegistrationJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminUpdateEventRegistration(ctx, request.(AdminUpdateEventRegistrationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminUpdateEventRegistration")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminUpdateEventRegistrationResponseObject); ok {
+		if err := validResponse.VisitAdminUpdateEventRegistrationResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

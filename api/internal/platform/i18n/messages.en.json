@@ -17,6 +17,7 @@
   "EVENT_CATEGORY_INCOMPLETE": "Some categories are incomplete. Complete them before publishing.",
   "FILE_TOO_LARGE": "The file is too large. The limit is {maxMB} MB.",
   "FILE_TYPE_NOT_ALLOWED": "Only JPG, PNG or WebP images are allowed.",
+  "REGISTRATION_NOT_READY": "Registration can't be opened yet. Fix the items listed below.",
   "field.required": "Required.",
   "field.invalid": "Invalid value.",
   "field.too_long": "Must be at most {max} characters.",
@@ -24,5 +25,9 @@
   "field.category_code_format": "Use up to 10 uppercase letters or digits, e.g. 21K.",
   "field.must_be_positive": "Must be greater than 0.",
   "field.cutoff_before_start": "Cut-off time must be after the start time.",
-  "field.category_incomplete": "Missing: {missing}."
+  "field.category_incomplete": "Missing: {missing}.",
+  "field.event_not_published": "Publish the event before opening registration.",
+  "field.missing_price_rule": "These categories have no price tier: {categories}.",
+  "field.missing_payment_account": "There is no active USD payment account for this event's registration.",
+  "field.ends_before_starts": "The end time must be after the start time."
 }

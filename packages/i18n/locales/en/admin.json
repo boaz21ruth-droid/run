@@ -46,5 +46,28 @@
     "created": "Event saved as draft"
   },
   "eventType": { "RACE": "Paid race", "FREE_ACTIVITY": "Free activity" },
-  "organizerType": { "OFFICIAL": "Official", "PARTNER": "Partner" }
+  "organizerType": { "OFFICIAL": "Official", "PARTNER": "Partner" },
+  "eventDetail": {
+    "back": "Back to events",
+    "tabBasic": "Overview",
+    "info": {
+      "title": "Overview",
+      "slug": "URL slug",
+      "eventType": "Event type",
+      "status": "Status",
+      "raceDate": "Race day",
+      "city": "City",
+      "timezone": "Time zone"
+    },
+    "categories": { "title": "Categories", "code": "Code", "name": "Name", "distanceM": "Distance (m)", "capacity": "Spots" },
+    "registration": {
+      "title": "Registration",
+      "open": "Registration open",
+      "opensAt": "Opens at",
+      "closesAt": "Closes at",
+      "timeHelp": "Leave empty for no limit",
+      "save": "Save registration settings",
+      "saved": "Registration settings saved"
+    }
+  }
 }

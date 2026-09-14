@@ -40,3 +40,30 @@ SET status = 'PUBLISHED',
     version = version + 1
 WHERE id = @id
 RETURNING *;
+
+-- name: GetEventByID :one
+SELECT * FROM events
+WHERE id = @id;
+
+-- name: UpdateEventRegistration :one
+UPDATE events
+SET registration_open = @registration_open,
+    registration_opens_at = sqlc.narg(registration_opens_at),
+    registration_closes_at = sqlc.narg(registration_closes_at),
+    version = version + 1,
+    updated_at = now()
+WHERE id = @id
+RETURNING *;
+
+-- name: ListCategoryCodesWithoutPriceRule :many
+SELECT c.code FROM event_categories c
+WHERE c.event_id = @event_id
+  AND NOT EXISTS (SELECT 1 FROM category_price_rules cpr WHERE cpr.category_id = c.id)
+ORDER BY c.sort_order, c.id;
+
+-- name: CountRegistrationPaymentAccounts :one
+SELECT count(*) FROM payment_accounts
+WHERE active
+  AND currency = 'USD'
+  AND scope IN ('REGISTRATION', 'ALL')
+  AND (event_id = @event_id::bigint OR event_id IS NULL);

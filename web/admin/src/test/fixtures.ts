@@ -23,9 +23,13 @@ export const draftEvent: Schemas["AdminEvent"] = {
   name: { zh: "金边半程马拉松 2026", en: "Phnom Penh Half Marathon 2026", km: "ម៉ារ៉ាតុងពាក់កណ្ដាលភ្នំពេញ ២០២៦" },
   city: "Phnom Penh",
   raceDate: "2026-11-15",
+  timezone: "Asia/Phnom_Penh",
   status: "DRAFT",
   publicVisible: false,
   publishedAt: null,
+  registrationOpen: false,
+  registrationOpensAt: null,
+  registrationClosesAt: null,
   categories: [
     {
       id: 11,
@@ -37,6 +41,13 @@ export const draftEvent: Schemas["AdminEvent"] = {
       cutoffAt: "2026-11-15T02:30:00Z",
     },
   ],
+};
+
+export const publishedEvent: Schemas["AdminEvent"] = {
+  ...draftEvent,
+  status: "PUBLISHED",
+  publicVisible: true,
+  publishedAt: "2026-09-14T03:00:00Z",
 };
 
 export const unauthenticated = {

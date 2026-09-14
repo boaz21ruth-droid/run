@@ -17,6 +17,7 @@
   "EVENT_CATEGORY_INCOMPLETE": "有组别信息不完整，补全后才能发布。",
   "FILE_TOO_LARGE": "文件太大，不能超过 {maxMB} MB。",
   "FILE_TYPE_NOT_ALLOWED": "只支持 JPG、PNG 或 WebP 图片。",
+  "REGISTRATION_NOT_READY": "报名还不能开放，请先补齐下面列出的项目。",
   "field.required": "必填。",
   "field.invalid": "格式不正确。",
   "field.too_long": "不能超过 {max} 个字符。",
@@ -24,5 +25,9 @@
   "field.category_code_format": "只能使用大写字母和数字，最多 10 位，例如 21K。",
   "field.must_be_positive": "必须大于 0。",
   "field.cutoff_before_start": "关门时间必须晚于发枪时间。",
-  "field.category_incomplete": "缺少：{missing}。"
+  "field.category_incomplete": "缺少：{missing}。",
+  "field.event_not_published": "赛事发布后才能开放报名。",
+  "field.missing_price_rule": "这些组别还没有价格档：{categories}。",
+  "field.missing_payment_account": "没有可用于本赛事报名的启用中美元收款账户。",
+  "field.ends_before_starts": "结束时间必须晚于开始时间。"
 }

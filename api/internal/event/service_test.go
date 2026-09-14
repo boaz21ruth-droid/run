@@ -183,3 +183,145 @@ func TestServicePublicQueriesExcludeDrafts(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, all, 2)
 }
+
+func seedPriceRuleFor(t *testing.T, pool *pgxpool.Pool, eventID, categoryID int64) {
+	t.Helper()
+	ctx := context.Background()
+	var ruleID int64
+	require.NoError(t, pool.QueryRow(ctx,
+		`INSERT INTO price_rules (event_id, name, audience, price_cents) VALUES ($1, '{"en":"Standard"}', 'ALL', 2500) RETURNING id`,
+		eventID).Scan(&ruleID))
+	_, err := pool.Exec(ctx, `INSERT INTO category_price_rules (category_id, price_rule_id) VALUES ($1, $2)`, categoryID, ruleID)
+	require.NoError(t, err)
+}
+
+func seedPaymentAccount(t *testing.T, pool *pgxpool.Pool, scope string, eventID *int64, active bool, currency string) {
+	t.Helper()
+	ctx := context.Background()
+	var fileID int64
+	require.NoError(t, pool.QueryRow(ctx,
+		`INSERT INTO files (storage_key, visibility, purpose, mime_type, size_bytes, sha256, uploaded_by_type)
+		 VALUES ('2026/09/' || md5(random()::text) || '.png', 'PUBLIC', 'PAYMENT_QR', 'image/png', 10, '\x01', 'SYSTEM')
+		 RETURNING id`).Scan(&fileID))
+	_, err := pool.Exec(ctx,
+		`INSERT INTO payment_accounts (name, provider, account_name, account_no_masked, currency, qr_file_id, scope, event_id, active)
+		 VALUES ('ABA USD', 'ABA', 'WERUN CO', '***123', $1, $2, $3, $4, $5)`,
+		currency, fileID, scope, eventID, active)
+	require.NoError(t, err)
+}
+
+func TestServiceGetAdminReturnsDraftsAndNotFound(t *testing.T) {
+	pool := dbtest.NewPool(t)
+	svc := event.NewService(pool)
+	actor := newActor(t, pool, iam.RoleOps, "ops.getadmin")
+	ctx := context.Background()
+	created, err := svc.Create(ctx, actor, validInput())
+	require.NoError(t, err)
+
+	got, err := svc.GetAdmin(ctx, created.ID)
+
+	require.NoError(t, err)
+	require.Equal(t, event.StatusDraft, got.Status)
+	require.Equal(t, "Asia/Phnom_Penh", got.Timezone)
+	require.False(t, got.RegistrationOpen)
+	require.Len(t, got.Categories, 1)
+
+	_, err = svc.GetAdmin(ctx, 999999)
+	ae, ok := apperr.As(err)
+	require.True(t, ok)
+	require.Equal(t, apperr.CodeEventNotFound, ae.Code)
+}
+
+func TestServiceUpdateRegistrationChecksReadinessThenOpens(t *testing.T) {
+	pool := dbtest.NewPool(t)
+	svc := event.NewService(pool)
+	actor := newActor(t, pool, iam.RoleOps, "ops.registration")
+	ctx := context.Background()
+	created, err := svc.Create(ctx, actor, validInput())
+	require.NoError(t, err)
+	opensAt := ptrTime("2026-09-20T08:00:00+07:00")
+	closesAt := ptrTime("2026-11-01T23:59:00+07:00")
+	open := event.RegistrationInput{Open: true, OpensAt: opensAt, ClosesAt: closesAt}
+
+	_, err = svc.UpdateRegistration(ctx, actor, created.ID, open)
+	ae, ok := apperr.As(err)
+	require.True(t, ok)
+	require.Equal(t, apperr.CodeRegistrationNotReady, ae.Code)
+	require.Equal(t, []string{"PUBLISHED", "PRICE_RULE", "PAYMENT_ACCOUNT"}, ae.Params["missing"])
+	require.Equal(t, []string{"21K"}, ae.Params["categories"])
+
+	_, err = svc.Publish(ctx, actor, created.ID)
+	require.NoError(t, err)
+	otherEvent := validInput()
+	otherEvent.Slug = "other-run"
+	other, err := svc.Create(ctx, actor, otherEvent)
+	require.NoError(t, err)
+	// 这些账户都不算：绑定其他赛事、停用、只收周边、瑞尔
+	seedPaymentAccount(t, pool, "ALL", &other.ID, true, "USD")
+	seedPaymentAccount(t, pool, "REGISTRATION", nil, false, "USD")
+	seedPaymentAccount(t, pool, "MERCH", nil, true, "USD")
+	seedPaymentAccount(t, pool, "ALL", nil, true, "KHR")
+	seedPriceRuleFor(t, pool, created.ID, created.Categories[0].ID)
+
+	_, err = svc.UpdateRegistration(ctx, actor, created.ID, open)
+	ae, ok = apperr.As(err)
+	require.True(t, ok)
+	require.Equal(t, []string{"PAYMENT_ACCOUNT"}, ae.Params["missing"])
+	require.Equal(t, 0, countRows(t, pool, `SELECT count(*) FROM audit_logs WHERE action = 'event.registration_update'`))
+
+	seedPaymentAccount(t, pool, "REGISTRATION", &created.ID, true, "USD")
+	updated, err := svc.UpdateRegistration(ctx, actor, created.ID, open)
+
+	require.NoError(t, err)
+	require.True(t, updated.RegistrationOpen)
+	require.True(t, updated.RegistrationOpensAt.Equal(*opensAt))
+	require.True(t, updated.RegistrationClosesAt.Equal(*closesAt))
+	require.Len(t, updated.Categories, 1)
+	require.Equal(t, 1, countRows(t, pool,
+		`SELECT count(*) FROM events WHERE id = $1 AND registration_open AND registration_opens_at = $2`, created.ID, *opensAt))
+	require.Equal(t, 1, countRows(t, pool,
+		`SELECT count(*) FROM audit_logs WHERE action = 'event.registration_update' AND entity_type = 'event'
+		   AND entity_id = $1 AND actor_id = $2 AND NOT is_financial
+		   AND before_data->>'open' = 'false' AND after_data->>'open' = 'true'`, created.ID, actor.ID))
+
+	closed, err := svc.UpdateRegistration(ctx, actor, created.ID, event.RegistrationInput{Open: false})
+	require.NoError(t, err)
+	require.False(t, closed.RegistrationOpen)
+	require.Nil(t, closed.RegistrationOpensAt)
+}
+
+func TestServiceUpdateRegistrationFreeActivitySkipsPricingChecks(t *testing.T) {
+	pool := dbtest.NewPool(t)
+	svc := event.NewService(pool)
+	actor := newActor(t, pool, iam.RoleOps, "ops.free")
+	ctx := context.Background()
+	in := validInput()
+	in.Slug = "sunday-fun-run"
+	in.EventType = event.TypeFreeActivity
+	created, err := svc.Create(ctx, actor, in)
+	require.NoError(t, err)
+	_, err = svc.Publish(ctx, actor, created.ID)
+	require.NoError(t, err)
+
+	updated, err := svc.UpdateRegistration(ctx, actor, created.ID, event.RegistrationInput{Open: true})
+
+	require.NoError(t, err)
+	require.True(t, updated.RegistrationOpen)
+}
+
+func TestServiceUpdateRegistrationValidationAndNotFound(t *testing.T) {
+	pool := dbtest.NewPool(t)
+	svc := event.NewService(pool)
+	actor := newActor(t, pool, iam.RoleOps, "ops.regvalidate")
+	ctx := context.Background()
+
+	_, err := svc.UpdateRegistration(ctx, actor, 1, event.RegistrationInput{
+		OpensAt: ptrTime("2026-11-01T00:00:00Z"), ClosesAt: ptrTime("2026-10-01T00:00:00Z"),
+	})
+	require.Equal(t, "field.ends_before_starts", fieldKeys(t, err)["closesAt"])
+
+	_, err = svc.UpdateRegistration(ctx, actor, 999999, event.RegistrationInput{})
+	ae, ok := apperr.As(err)
+	require.True(t, ok)
+	require.Equal(t, apperr.CodeEventNotFound, ae.Code)
+}

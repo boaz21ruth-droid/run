@@ -189,6 +189,64 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /admin/events/{id}:
+    get:
+      operationId: adminGetEvent
+      summary: 后台赛事详情（任意状态，含报名设置与组别）
+      x-permission: event_config
+      x-access: read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 赛事详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminEvent'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/events/{id}/registration:
+    patch:
+      operationId: adminUpdateEventRegistration
+      summary: 修改报名开关与报名时间（开放前校验发布状态、价格档与收款账户）
+      x-permission: event_config
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEventRegistrationRequest'
+      responses:
+        '200':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminEvent'
+        default:
+          description: 错误（未就绪时为 422 REGISTRATION_NOT_READY）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /admin/events/{id}/publish:
     post:
       operationId: adminPublishEvent
@@ -362,7 +420,7 @@ components:
           nullable: true
     AdminEvent:
       type: object
-      required: [id, slug, eventType, organizerType, name, city, raceDate, status, publicVisible, publishedAt, categories]
+      required: [id, slug, eventType, organizerType, name, city, raceDate, timezone, status, publicVisible, publishedAt, registrationOpen, registrationOpensAt, registrationClosesAt, categories]
       properties:
         id:
           type: integer
@@ -391,6 +449,18 @@ components:
           type: string
           format: date-time
           nullable: true
+        timezone:
+          type: string
+        registrationOpen:
+          type: boolean
+        registrationOpensAt:
+          type: string
+          format: date-time
+          nullable: true
+        registrationClosesAt:
+          type: string
+          format: date-time
+          nullable: true
         categories:
           type: array
           items:
@@ -403,6 +473,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AdminEvent'
+    UpdateEventRegistrationRequest:
+      type: object
+      required: [open]
+      properties:
+        open:
+          type: boolean
+        opensAt:
+          type: string
+          format: date-time
+          nullable: true
+        closesAt:
+          type: string
+          format: date-time
+          nullable: true
     CreateCategoryRequest:
       type: object
       required: [code, name, distanceM, capacity]

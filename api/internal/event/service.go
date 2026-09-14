@@ -159,6 +159,111 @@ func (s *Service) Publish(ctx context.Context, actor iam.Staff, id int64) (Event
 	return out, nil
 }
 
+// GetAdmin 返回任意状态的赛事及其组别（后台用）；不存在返回 EVENT_NOT_FOUND。
+func (s *Service) GetAdmin(ctx context.Context, id int64) (Event, error) {
+	q := store.New(s.pool)
+	row, err := q.GetEventByID(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Event{}, apperr.New(http.StatusNotFound, apperr.CodeEventNotFound)
+	}
+	if err != nil {
+		return Event{}, fmt.Errorf("get event %d: %w", id, err)
+	}
+	events, err := withCategories(ctx, q, []store.Event{row})
+	if err != nil {
+		return Event{}, err
+	}
+	return events[0], nil
+}
+
+// UpdateRegistration 修改报名开关与报名时间。设为开放时锁定赛事行并做开放前校验
+// （CheckRegistrationReady，统计用本包自己的查询，不依赖 pricing / payment 包），写审计 event.registration_update。
+func (s *Service) UpdateRegistration(ctx context.Context, actor iam.Staff, id int64, in RegistrationInput) (Event, error) {
+	if err := ValidateRegistration(in); err != nil {
+		return Event{}, err
+	}
+	var out Event
+	err := db.InTx(ctx, s.pool, func(tx pgx.Tx) error {
+		q := store.New(tx)
+		row, err := q.GetEventForUpdate(ctx, id)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return apperr.New(http.StatusNotFound, apperr.CodeEventNotFound)
+		}
+		if err != nil {
+			return fmt.Errorf("lock event %d: %w", id, err)
+		}
+		before, err := eventFromRow(row)
+		if err != nil {
+			return err
+		}
+
+		if in.Open {
+			var noPrice []string
+			var accounts int64
+			if before.EventType == TypeRace {
+				if noPrice, err = q.ListCategoryCodesWithoutPriceRule(ctx, before.ID); err != nil {
+					return fmt.Errorf("list categories without price rule: %w", err)
+				}
+				if accounts, err = q.CountRegistrationPaymentAccounts(ctx, before.ID); err != nil {
+					return fmt.Errorf("count payment accounts: %w", err)
+				}
+			}
+			if err := CheckRegistrationReady(before, noPrice, accounts); err != nil {
+				return err
+			}
+		}
+
+		updatedRow, err := q.UpdateEventRegistration(ctx, store.UpdateEventRegistrationParams{
+			RegistrationOpen:     in.Open,
+			RegistrationOpensAt:  in.OpensAt,
+			RegistrationClosesAt: in.ClosesAt,
+			ID:                   before.ID,
+		})
+		if err != nil {
+			return fmt.Errorf("update registration of event %d: %w", id, err)
+		}
+		updated, err := eventFromRow(updatedRow)
+		if err != nil {
+			return err
+		}
+		cats, err := loadCategories(ctx, q, []int64{updated.ID})
+		if err != nil {
+			return err
+		}
+		updated.Categories = cats[updated.ID]
+		out = updated
+
+		actorID := actor.ID
+		role := string(actor.Role)
+		eventID := updated.ID
+		return audit.Record(ctx, tx, audit.Entry{
+			ActorType:  "STAFF",
+			ActorID:    &actorID,
+			ActorRole:  &role,
+			Action:     "event.registration_update",
+			EntityType: "event",
+			EntityID:   updated.ID,
+			EventID:    &eventID,
+			Summary:    fmt.Sprintf("修改赛事 %s 报名设置（开放：%t）", updated.Slug, updated.RegistrationOpen),
+			Before:     registrationSnapshot(before),
+			After:      registrationSnapshot(updated),
+			Meta:       httpx.MetaOf(ctx),
+		})
+	})
+	if err != nil {
+		return Event{}, err
+	}
+	return out, nil
+}
+
+func registrationSnapshot(e Event) map[string]any {
+	return map[string]any{
+		"open":     e.RegistrationOpen,
+		"opensAt":  e.RegistrationOpensAt,
+		"closesAt": e.RegistrationClosesAt,
+	}
+}
+
 // ListAll 返回全部赛事（后台用），按比赛日期倒序。
 func (s *Service) ListAll(ctx context.Context) ([]Event, error) {
 	q := store.New(s.pool)
@@ -242,16 +347,20 @@ func eventFromRow(r store.Event) (Event, error) {
 		return Event{}, fmt.Errorf("decode name of event %d: %w", r.ID, err)
 	}
 	return Event{
-		ID:            r.ID,
-		Slug:          r.Slug,
-		EventType:     r.EventType,
-		OrganizerType: r.OrganizerType,
-		Name:          name,
-		City:          r.City,
-		RaceDate:      r.RaceDate,
-		Status:        r.Status,
-		PublicVisible: r.PublicVisible,
-		PublishedAt:   r.PublishedAt,
+		ID:                   r.ID,
+		Slug:                 r.Slug,
+		EventType:            r.EventType,
+		OrganizerType:        r.OrganizerType,
+		Name:                 name,
+		City:                 r.City,
+		RaceDate:             r.RaceDate,
+		Timezone:             r.Timezone,
+		Status:               r.Status,
+		PublicVisible:        r.PublicVisible,
+		PublishedAt:          r.PublishedAt,
+		RegistrationOpen:     r.RegistrationOpen,
+		RegistrationOpensAt:  r.RegistrationOpensAt,
+		RegistrationClosesAt: r.RegistrationClosesAt,
 	}, nil
 }
 

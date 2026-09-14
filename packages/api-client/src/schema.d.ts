@@ -141,6 +141,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/events/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 后台赛事详情（任意状态，含报名设置与组别） */
+        get: operations["adminGetEvent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/{id}/registration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 修改报名开关与报名时间（开放前校验发布状态、价格档与收款账户） */
+        patch: operations["adminUpdateEventRegistration"];
+        trace?: never;
+    };
     "/admin/events/{id}/publish": {
         parameters: {
             query?: never;
@@ -254,10 +288,23 @@ export interface components {
             publicVisible: boolean;
             /** Format: date-time */
             publishedAt: string | null;
+            timezone: string;
+            registrationOpen: boolean;
+            /** Format: date-time */
+            registrationOpensAt: string | null;
+            /** Format: date-time */
+            registrationClosesAt: string | null;
             categories: components["schemas"]["AdminCategory"][];
         };
         AdminEventList: {
             items: components["schemas"]["AdminEvent"][];
+        };
+        UpdateEventRegistrationRequest: {
+            open: boolean;
+            /** Format: date-time */
+            opensAt?: string | null;
+            /** Format: date-time */
+            closesAt?: string | null;
         };
         CreateCategoryRequest: {
             code: string;
@@ -560,6 +607,72 @@ export interface operations {
                 };
             };
             /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminGetEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 赛事详情 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminEvent"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminUpdateEventRegistration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEventRegistrationRequest"];
+            };
+        };
+        responses: {
+            /** @description 已保存 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminEvent"];
+                };
+            };
+            /** @description 错误（未就绪时为 422 REGISTRATION_NOT_READY） */
             default: {
                 headers: {
                     [name: string]: unknown;

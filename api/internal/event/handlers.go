@@ -84,6 +84,33 @@ func (h *Handlers) AdminPublishEvent(ctx context.Context, req apigen.AdminPublis
 	return apigen.AdminPublishEvent200JSONResponse(toAdminEvent(ev)), nil
 }
 
+func (h *Handlers) AdminGetEvent(ctx context.Context, req apigen.AdminGetEventRequestObject) (apigen.AdminGetEventResponseObject, error) {
+	ev, err := h.svc.GetAdmin(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+	return apigen.AdminGetEvent200JSONResponse(toAdminEvent(ev)), nil
+}
+
+func (h *Handlers) AdminUpdateEventRegistration(ctx context.Context, req apigen.AdminUpdateEventRegistrationRequestObject) (apigen.AdminUpdateEventRegistrationResponseObject, error) {
+	actor, ok := iam.StaffFrom(ctx)
+	if !ok {
+		return nil, apperr.New(http.StatusUnauthorized, apperr.CodeUnauthenticated)
+	}
+	if req.Body == nil {
+		return nil, apperr.New(http.StatusBadRequest, apperr.CodeBadRequest)
+	}
+	ev, err := h.svc.UpdateRegistration(ctx, actor, req.Id, RegistrationInput{
+		Open:     req.Body.Open,
+		OpensAt:  req.Body.OpensAt,
+		ClosesAt: req.Body.ClosesAt,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return apigen.AdminUpdateEventRegistration200JSONResponse(toAdminEvent(ev)), nil
+}
+
 func toPublicEvent(e Event, lang i18n.Lang) apigen.PublicEvent {
 	cats := make([]apigen.PublicCategory, 0, len(e.Categories))
 	for _, c := range e.Categories {
@@ -119,17 +146,21 @@ func toAdminEvent(e Event) apigen.AdminEvent {
 		})
 	}
 	return apigen.AdminEvent{
-		Id:            e.ID,
-		Slug:          e.Slug,
-		EventType:     apigen.AdminEventEventType(e.EventType),
-		OrganizerType: apigen.AdminEventOrganizerType(e.OrganizerType),
-		Name:          textToAPI(e.Name),
-		City:          e.City,
-		RaceDate:      openapi_types.Date{Time: e.RaceDate},
-		Status:        apigen.AdminEventStatus(e.Status),
-		PublicVisible: e.PublicVisible,
-		PublishedAt:   e.PublishedAt,
-		Categories:    cats,
+		Id:                   e.ID,
+		Slug:                 e.Slug,
+		EventType:            apigen.AdminEventEventType(e.EventType),
+		OrganizerType:        apigen.AdminEventOrganizerType(e.OrganizerType),
+		Name:                 textToAPI(e.Name),
+		City:                 e.City,
+		RaceDate:             openapi_types.Date{Time: e.RaceDate},
+		Timezone:             e.Timezone,
+		Status:               apigen.AdminEventStatus(e.Status),
+		PublicVisible:        e.PublicVisible,
+		PublishedAt:          e.PublishedAt,
+		RegistrationOpen:     e.RegistrationOpen,
+		RegistrationOpensAt:  e.RegistrationOpensAt,
+		RegistrationClosesAt: e.RegistrationClosesAt,
+		Categories:           cats,
 	}
 }
 
