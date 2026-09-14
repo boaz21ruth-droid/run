@@ -20,15 +20,18 @@ type OperationAuth struct {
 
 // OperationAuths 的键是 strict 中间件收到的 operationID（首字母大写的 operationId）。
 var OperationAuths = map[string]OperationAuth{
+	"AdminCreateCoupon":            {Kind: AuthPermission, Permission: "coupon_manage", Access: "write"},
 	"AdminCreateEvent":             {Kind: AuthPermission, Permission: "event_config", Access: "write"},
 	"AdminCreatePriceRule":         {Kind: AuthPermission, Permission: "price_config", Access: "write"},
 	"AdminGetEvent":                {Kind: AuthPermission, Permission: "event_config", Access: "read"},
 	"AdminGetMe":                   {Kind: AuthSession},
+	"AdminListCoupons":             {Kind: AuthPermission, Permission: "coupon_manage", Access: "read"},
 	"AdminListEvents":              {Kind: AuthPermission, Permission: "event_config", Access: "read"},
 	"AdminListPriceRules":          {Kind: AuthPermission, Permission: "price_config", Access: "read"},
 	"AdminLogin":                   {Kind: AuthNone},
 	"AdminLogout":                  {Kind: AuthSession},
 	"AdminPublishEvent":            {Kind: AuthPermission, Permission: "event_publish", Access: "write"},
+	"AdminUpdateCoupon":            {Kind: AuthPermission, Permission: "coupon_manage", Access: "write"},
 	"AdminUpdateEventRegistration": {Kind: AuthPermission, Permission: "event_config", Access: "write"},
 	"AdminUpdatePriceRule":         {Kind: AuthPermission, Permission: "price_config", Access: "write"},
 	"GetHealthz":                   {Kind: AuthNone},

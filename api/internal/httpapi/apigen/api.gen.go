@@ -88,6 +88,24 @@ func (e AdminEventStatus) Valid() bool {
 	}
 }
 
+// Defines values for CouponStatus.
+const (
+	CouponStatusACTIVE   CouponStatus = "ACTIVE"
+	CouponStatusDISABLED CouponStatus = "DISABLED"
+)
+
+// Valid indicates whether the value is a known member of the CouponStatus enum.
+func (e CouponStatus) Valid() bool {
+	switch e {
+	case CouponStatusACTIVE:
+		return true
+	case CouponStatusDISABLED:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CreateEventRequestEventType.
 const (
 	CreateEventRequestEventTypeFREEACTIVITY CreateEventRequestEventType = "FREE_ACTIVITY"
@@ -118,6 +136,27 @@ func (e CreateEventRequestOrganizerType) Valid() bool {
 	case CreateEventRequestOrganizerTypeOFFICIAL:
 		return true
 	case CreateEventRequestOrganizerTypePARTNER:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DiscountType.
+const (
+	DiscountTypeAMOUNT  DiscountType = "AMOUNT"
+	DiscountTypePERCENT DiscountType = "PERCENT"
+	DiscountTypeWAIVER  DiscountType = "WAIVER"
+)
+
+// Valid indicates whether the value is a known member of the DiscountType enum.
+func (e DiscountType) Valid() bool {
+	switch e {
+	case DiscountTypeAMOUNT:
+		return true
+	case DiscountTypePERCENT:
+		return true
+	case DiscountTypeWAIVER:
 		return true
 	default:
 		return false
@@ -222,6 +261,31 @@ type AdminEventList struct {
 	Items []AdminEvent `json:"items"`
 }
 
+// Coupon defines model for Coupon.
+type Coupon struct {
+	Code          string         `json:"code"`
+	Description   *LocalizedText `json:"description,omitempty"`
+	DiscountType  DiscountType   `json:"discountType"`
+	DiscountValue int64          `json:"discountValue"`
+	EventId       *int64         `json:"eventId"`
+	Id            int64          `json:"id"`
+	MinRunners    *int32         `json:"minRunners"`
+	Quota         int32          `json:"quota"`
+	ReservedCount int32          `json:"reservedCount"`
+	Status        CouponStatus   `json:"status"`
+	UsedCount     int32          `json:"usedCount"`
+	ValidFrom     *time.Time     `json:"validFrom"`
+	ValidUntil    *time.Time     `json:"validUntil"`
+}
+
+// CouponList defines model for CouponList.
+type CouponList struct {
+	Items []Coupon `json:"items"`
+}
+
+// CouponStatus defines model for CouponStatus.
+type CouponStatus string
+
 // CreateCategoryRequest defines model for CreateCategoryRequest.
 type CreateCategoryRequest struct {
 	Capacity  int32         `json:"capacity"`
@@ -230,6 +294,20 @@ type CreateCategoryRequest struct {
 	DistanceM int32         `json:"distanceM"`
 	Name      LocalizedText `json:"name"`
 	StartAt   *time.Time    `json:"startAt,omitempty"`
+}
+
+// CreateCouponRequest defines model for CreateCouponRequest.
+type CreateCouponRequest struct {
+	Code          string         `json:"code"`
+	Description   *LocalizedText `json:"description,omitempty"`
+	DiscountType  DiscountType   `json:"discountType"`
+	DiscountValue int64          `json:"discountValue"`
+	EventId       *int64         `json:"eventId,omitempty"`
+	MinRunners    *int32         `json:"minRunners,omitempty"`
+	Quota         int32          `json:"quota"`
+	Status        CouponStatus   `json:"status"`
+	ValidFrom     *time.Time     `json:"validFrom,omitempty"`
+	ValidUntil    *time.Time     `json:"validUntil,omitempty"`
 }
 
 // CreateEventRequest defines model for CreateEventRequest.
@@ -248,6 +326,9 @@ type CreateEventRequestEventType string
 
 // CreateEventRequestOrganizerType defines model for CreateEventRequest.OrganizerType.
 type CreateEventRequestOrganizerType string
+
+// DiscountType defines model for DiscountType.
+type DiscountType string
 
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse struct {
@@ -354,6 +435,21 @@ type Staff struct {
 	Username string `json:"username"`
 }
 
+// UpdateCouponRequest defines model for UpdateCouponRequest.
+type UpdateCouponRequest struct {
+	Description  *LocalizedText `json:"description,omitempty"`
+	DiscountType DiscountType   `json:"discountType"`
+
+	// DiscountValue PERCENT 为 1–100；AMOUNT 为美分；WAIVER 为 0
+	DiscountValue int64        `json:"discountValue"`
+	EventId       *int64       `json:"eventId,omitempty"`
+	MinRunners    *int32       `json:"minRunners,omitempty"`
+	Quota         int32        `json:"quota"`
+	Status        CouponStatus `json:"status"`
+	ValidFrom     *time.Time   `json:"validFrom,omitempty"`
+	ValidUntil    *time.Time   `json:"validUntil,omitempty"`
+}
+
 // UpdateEventRegistrationRequest defines model for UpdateEventRegistrationRequest.
 type UpdateEventRegistrationRequest struct {
 	ClosesAt *time.Time `json:"closesAt,omitempty"`
@@ -361,8 +457,19 @@ type UpdateEventRegistrationRequest struct {
 	OpensAt  *time.Time `json:"opensAt,omitempty"`
 }
 
+// AdminListCouponsParams defines parameters for AdminListCoupons.
+type AdminListCouponsParams struct {
+	EventId *int64 `form:"eventId,omitempty" json:"eventId,omitempty"`
+}
+
 // AdminLoginJSONRequestBody defines body for AdminLogin for application/json ContentType.
 type AdminLoginJSONRequestBody = LoginRequest
+
+// AdminCreateCouponJSONRequestBody defines body for AdminCreateCoupon for application/json ContentType.
+type AdminCreateCouponJSONRequestBody = CreateCouponRequest
+
+// AdminUpdateCouponJSONRequestBody defines body for AdminUpdateCoupon for application/json ContentType.
+type AdminUpdateCouponJSONRequestBody = UpdateCouponRequest
 
 // AdminCreateEventJSONRequestBody defines body for AdminCreateEvent for application/json ContentType.
 type AdminCreateEventJSONRequestBody = CreateEventRequest
@@ -384,6 +491,15 @@ type ServerInterface interface {
 	// AdminLogout 退出登录
 	// (POST /admin/auth/logout)
 	AdminLogout(c *gin.Context)
+	// AdminListCoupons 优惠码列表（eventId 为空时返回全部）
+	// (GET /admin/coupons)
+	AdminListCoupons(c *gin.Context, params AdminListCouponsParams)
+	// AdminCreateCoupon 新建优惠码（代码自动转大写）
+	// (POST /admin/coupons)
+	AdminCreateCoupon(c *gin.Context)
+	// AdminUpdateCoupon 修改优惠码（代码不可改）
+	// (PUT /admin/coupons/{id})
+	AdminUpdateCoupon(c *gin.Context, id int64)
 	// AdminListEvents 后台赛事列表（名称返回三语）
 	// (GET /admin/events)
 	AdminListEvents(c *gin.Context)
@@ -458,6 +574,71 @@ func (siw *ServerInterfaceWrapper) AdminLogout(c *gin.Context) {
 	}
 
 	siw.Handler.AdminLogout(c)
+}
+
+// AdminListCoupons operation middleware
+func (siw *ServerInterfaceWrapper) AdminListCoupons(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params AdminListCouponsParams
+
+	// ------------- Optional query parameter "eventId" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "eventId", c.Request.URL.Query(), &params.EventId, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter eventId: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminListCoupons(c, params)
+}
+
+// AdminCreateCoupon operation middleware
+func (siw *ServerInterfaceWrapper) AdminCreateCoupon(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminCreateCoupon(c)
+}
+
+// AdminUpdateCoupon operation middleware
+func (siw *ServerInterfaceWrapper) AdminUpdateCoupon(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminUpdateCoupon(c, id)
 }
 
 // AdminListEvents operation middleware
@@ -755,6 +936,9 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/admin/events/:id/price-rules", wrapper.AdminListPriceRules)
 	router.POST(options.BaseURL+"/admin/events/:id/price-rules", wrapper.AdminCreatePriceRule)
 	router.PUT(options.BaseURL+"/admin/price-rules/:id", wrapper.AdminUpdatePriceRule)
+	router.GET(options.BaseURL+"/admin/coupons", wrapper.AdminListCoupons)
+	router.POST(options.BaseURL+"/admin/coupons", wrapper.AdminCreateCoupon)
+	router.PUT(options.BaseURL+"/admin/coupons/:id", wrapper.AdminUpdateCoupon)
 }
 
 type AdminLoginRequestObject struct {
@@ -817,6 +1001,124 @@ type AdminLogoutdefaultJSONResponse struct {
 }
 
 func (response AdminLogoutdefaultJSONResponse) VisitAdminLogoutResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListCouponsRequestObject struct {
+	Params AdminListCouponsParams
+}
+
+type AdminListCouponsResponseObject interface {
+	VisitAdminListCouponsResponse(w http.ResponseWriter) error
+}
+
+type AdminListCoupons200JSONResponse CouponList
+
+func (response AdminListCoupons200JSONResponse) VisitAdminListCouponsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListCouponsdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminListCouponsdefaultJSONResponse) VisitAdminListCouponsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminCreateCouponRequestObject struct {
+	Body *AdminCreateCouponJSONRequestBody
+}
+
+type AdminCreateCouponResponseObject interface {
+	VisitAdminCreateCouponResponse(w http.ResponseWriter) error
+}
+
+type AdminCreateCoupon201JSONResponse Coupon
+
+func (response AdminCreateCoupon201JSONResponse) VisitAdminCreateCouponResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminCreateCoupondefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminCreateCoupondefaultJSONResponse) VisitAdminCreateCouponResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdateCouponRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminUpdateCouponJSONRequestBody
+}
+
+type AdminUpdateCouponResponseObject interface {
+	VisitAdminUpdateCouponResponse(w http.ResponseWriter) error
+}
+
+type AdminUpdateCoupon200JSONResponse Coupon
+
+func (response AdminUpdateCoupon200JSONResponse) VisitAdminUpdateCouponResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdateCoupondefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminUpdateCoupondefaultJSONResponse) VisitAdminUpdateCouponResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -1355,6 +1657,15 @@ type StrictServerInterface interface {
 	// AdminLogout 退出登录
 	// (POST /admin/auth/logout)
 	AdminLogout(ctx context.Context, request AdminLogoutRequestObject) (AdminLogoutResponseObject, error)
+	// AdminListCoupons 优惠码列表（eventId 为空时返回全部）
+	// (GET /admin/coupons)
+	AdminListCoupons(ctx context.Context, request AdminListCouponsRequestObject) (AdminListCouponsResponseObject, error)
+	// AdminCreateCoupon 新建优惠码（代码自动转大写）
+	// (POST /admin/coupons)
+	AdminCreateCoupon(ctx context.Context, request AdminCreateCouponRequestObject) (AdminCreateCouponResponseObject, error)
+	// AdminUpdateCoupon 修改优惠码（代码不可改）
+	// (PUT /admin/coupons/{id})
+	AdminUpdateCoupon(ctx context.Context, request AdminUpdateCouponRequestObject) (AdminUpdateCouponResponseObject, error)
 	// AdminListEvents 后台赛事列表（名称返回三语）
 	// (GET /admin/events)
 	AdminListEvents(ctx context.Context, request AdminListEventsRequestObject) (AdminListEventsResponseObject, error)
@@ -1501,6 +1812,96 @@ func (sh *strictHandler) AdminLogout(ctx *gin.Context) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AdminLogoutResponseObject); ok {
 		if err := validResponse.VisitAdminLogoutResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminListCoupons operation middleware
+func (sh *strictHandler) AdminListCoupons(ctx *gin.Context, params AdminListCouponsParams) {
+	var request AdminListCouponsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminListCoupons(ctx, request.(AdminListCouponsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminListCoupons")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminListCouponsResponseObject); ok {
+		if err := validResponse.VisitAdminListCouponsResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminCreateCoupon operation middleware
+func (sh *strictHandler) AdminCreateCoupon(ctx *gin.Context) {
+	var request AdminCreateCouponRequestObject
+
+	var body AdminCreateCouponJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminCreateCoupon(ctx, request.(AdminCreateCouponRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminCreateCoupon")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminCreateCouponResponseObject); ok {
+		if err := validResponse.VisitAdminCreateCouponResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminUpdateCoupon operation middleware
+func (sh *strictHandler) AdminUpdateCoupon(ctx *gin.Context, id int64) {
+	var request AdminUpdateCouponRequestObject
+
+	request.Id = id
+
+	var body AdminUpdateCouponJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminUpdateCoupon(ctx, request.(AdminUpdateCouponRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminUpdateCoupon")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminUpdateCouponResponseObject); ok {
+		if err := validResponse.VisitAdminUpdateCouponResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

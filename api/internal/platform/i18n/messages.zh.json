@@ -19,6 +19,7 @@
   "FILE_TYPE_NOT_ALLOWED": "只支持 JPG、PNG 或 WebP 图片。",
   "REGISTRATION_NOT_READY": "报名还不能开放，请先补齐下面列出的项目。",
   "PRICE_RULE_LOCKED": "这个价格档已有报名占用，不能再修改价格、适用人群或关联组别。",
+  "COUPON_CODE_TAKEN": "这个优惠码已经存在。",
   "field.required": "必填。",
   "field.invalid": "格式不正确。",
   "field.too_long": "不能超过 {max} 个字符。",
@@ -31,5 +32,7 @@
   "field.missing_price_rule": "这些组别还没有价格档：{categories}。",
   "field.missing_payment_account": "没有可用于本赛事报名的启用中美元收款账户。",
   "field.ends_before_starts": "结束时间必须晚于开始时间。",
-  "field.quota_below_taken": "不能少于已占用的 {min} 个名额。"
+  "field.quota_below_taken": "不能少于已占用的 {min} 个名额。",
+  "field.coupon_code_format": "3–32 位大写字母、数字、下划线或连字符，例如 EARLY_2026。",
+  "field.percent_range": "百分比必须在 1 到 100 之间。"
 }

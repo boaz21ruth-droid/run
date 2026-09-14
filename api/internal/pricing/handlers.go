@@ -4,6 +4,7 @@ import (
 	"context"
 	"math"
 	"net/http"
+	"time"
 
 	"werun/api/internal/httpapi/apigen"
 	"werun/api/internal/iam"
@@ -132,4 +133,109 @@ func textFromAPI(l apigen.LocalizedText) i18n.Text {
 		t[i18n.KM] = *l.Km
 	}
 	return t
+}
+
+func (h *Handlers) AdminListCoupons(ctx context.Context, req apigen.AdminListCouponsRequestObject) (apigen.AdminListCouponsResponseObject, error) {
+	coupons, err := h.svc.ListCoupons(ctx, req.Params.EventId)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]apigen.Coupon, 0, len(coupons))
+	for _, c := range coupons {
+		items = append(items, toAPICoupon(c))
+	}
+	return apigen.AdminListCoupons200JSONResponse{Items: items}, nil
+}
+
+func (h *Handlers) AdminCreateCoupon(ctx context.Context, req apigen.AdminCreateCouponRequestObject) (apigen.AdminCreateCouponResponseObject, error) {
+	actor, ok := iam.StaffFrom(ctx)
+	if !ok {
+		return nil, apperr.New(http.StatusUnauthorized, apperr.CodeUnauthenticated)
+	}
+	if req.Body == nil {
+		return nil, apperr.New(http.StatusBadRequest, apperr.CodeBadRequest)
+	}
+	b := req.Body
+	in, err := couponInputFromAPI(b.EventId, string(b.DiscountType), b.DiscountValue, b.Quota, b.MinRunners,
+		b.ValidFrom, b.ValidUntil, b.Description, string(b.Status))
+	if err != nil {
+		return nil, err
+	}
+	in.Code = b.Code
+	c, err := h.svc.CreateCoupon(ctx, actor, in)
+	if err != nil {
+		return nil, err
+	}
+	return apigen.AdminCreateCoupon201JSONResponse(toAPICoupon(c)), nil
+}
+
+func (h *Handlers) AdminUpdateCoupon(ctx context.Context, req apigen.AdminUpdateCouponRequestObject) (apigen.AdminUpdateCouponResponseObject, error) {
+	actor, ok := iam.StaffFrom(ctx)
+	if !ok {
+		return nil, apperr.New(http.StatusUnauthorized, apperr.CodeUnauthenticated)
+	}
+	if req.Body == nil {
+		return nil, apperr.New(http.StatusBadRequest, apperr.CodeBadRequest)
+	}
+	b := req.Body
+	in, err := couponInputFromAPI(b.EventId, string(b.DiscountType), b.DiscountValue, b.Quota, b.MinRunners,
+		b.ValidFrom, b.ValidUntil, b.Description, string(b.Status))
+	if err != nil {
+		return nil, err
+	}
+	c, err := h.svc.UpdateCoupon(ctx, actor, req.Id, in)
+	if err != nil {
+		return nil, err
+	}
+	return apigen.AdminUpdateCoupon200JSONResponse(toAPICoupon(c)), nil
+}
+
+func couponInputFromAPI(eventID *int64, discountType string, discountValue int64, quota int32, minRunners *int32,
+	validFrom, validUntil *time.Time, description *apigen.LocalizedText, status string,
+) (CouponInput, error) {
+	in := CouponInput{
+		EventID:       eventID,
+		DiscountType:  discountType,
+		DiscountValue: discountValue,
+		Quota:         quota,
+		ValidFrom:     validFrom,
+		ValidUntil:    validUntil,
+		Status:        status,
+	}
+	if minRunners != nil {
+		if *minRunners < math.MinInt16 || *minRunners > math.MaxInt16 {
+			return CouponInput{}, validationError().WithField("minRunners", "field.invalid", nil)
+		}
+		v := int16(*minRunners)
+		in.MinRunners = &v
+	}
+	if description != nil {
+		in.Description = textFromAPI(*description)
+	}
+	return in, nil
+}
+
+func toAPICoupon(c Coupon) apigen.Coupon {
+	out := apigen.Coupon{
+		Id:            c.ID,
+		Code:          c.Input.Code,
+		EventId:       c.Input.EventID,
+		DiscountType:  apigen.DiscountType(c.Input.DiscountType),
+		DiscountValue: c.Input.DiscountValue,
+		Quota:         c.Input.Quota,
+		ValidFrom:     c.Input.ValidFrom,
+		ValidUntil:    c.Input.ValidUntil,
+		Status:        apigen.CouponStatus(c.Input.Status),
+		UsedCount:     c.UsedCount,
+		ReservedCount: c.ReservedCount,
+	}
+	if c.Input.MinRunners != nil {
+		v := int32(*c.Input.MinRunners)
+		out.MinRunners = &v
+	}
+	if c.Input.Description != nil {
+		d := textToAPI(c.Input.Description)
+		out.Description = &d
+	}
+	return out
 }

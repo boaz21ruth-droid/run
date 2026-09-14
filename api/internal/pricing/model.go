@@ -32,3 +32,35 @@ type PriceRule struct {
 	UsedCount     int32
 	ReservedCount int32
 }
+
+// coupons.discount_type 与 coupons.status 的取值。
+const (
+	DiscountPercent = "PERCENT"
+	DiscountAmount  = "AMOUNT"
+	DiscountWaiver  = "WAIVER"
+
+	CouponActive   = "ACTIVE"
+	CouponDisabled = "DISABLED"
+)
+
+// CouponInput 是后台新建或修改优惠码的输入。DiscountValue：PERCENT 为 1–100，AMOUNT 为分，WAIVER 为 0。
+type CouponInput struct {
+	Code          string
+	EventID       *int64 // nil = 全场通用
+	DiscountType  string
+	DiscountValue int64
+	Quota         int32
+	MinRunners    *int16
+	ValidFrom     *time.Time
+	ValidUntil    *time.Time
+	Description   i18n.Text // 可为 nil
+	Status        string    // ACTIVE | DISABLED
+}
+
+// Coupon 是优惠码及其计数。
+type Coupon struct {
+	ID            int64
+	Input         CouponInput
+	UsedCount     int32
+	ReservedCount int32
+}

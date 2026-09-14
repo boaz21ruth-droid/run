@@ -65,6 +65,8 @@ func TestEmbeddedCatalogCoversAllCodesAndFieldKeys(t *testing.T) {
 		"field.missing_payment_account",
 		"field.ends_before_starts",
 		"field.quota_below_taken",
+		"field.coupon_code_format",
+		"field.percent_range",
 	)
 	for _, key := range keys {
 		for _, l := range []Lang{ZH, EN, KM} {

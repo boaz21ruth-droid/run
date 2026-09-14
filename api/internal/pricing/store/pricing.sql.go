@@ -31,6 +31,35 @@ func (q *Queries) EventExists(ctx context.Context, id int64) (bool, error) {
 	return exists, err
 }
 
+const getCouponForUpdate = `-- name: GetCouponForUpdate :one
+SELECT id, code, event_id, discount_type, discount_value, quota, used_count, reserved_count, min_runners, valid_from, valid_until, description, status, created_by, created_at FROM coupons
+WHERE id = $1
+FOR UPDATE
+`
+
+func (q *Queries) GetCouponForUpdate(ctx context.Context, id int64) (Coupon, error) {
+	row := q.db.QueryRow(ctx, getCouponForUpdate, id)
+	var i Coupon
+	err := row.Scan(
+		&i.ID,
+		&i.Code,
+		&i.EventID,
+		&i.DiscountType,
+		&i.DiscountValue,
+		&i.Quota,
+		&i.UsedCount,
+		&i.ReservedCount,
+		&i.MinRunners,
+		&i.ValidFrom,
+		&i.ValidUntil,
+		&i.Description,
+		&i.Status,
+		&i.CreatedBy,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getPriceRuleForUpdate = `-- name: GetPriceRuleForUpdate :one
 SELECT id, event_id, name, audience, price_cents, currency, quota, used_count, reserved_count, sale_starts_at, sale_ends_at, sort_order, created_at, updated_at FROM price_rules
 WHERE id = $1
@@ -72,6 +101,63 @@ type InsertCategoryLinkParams struct {
 func (q *Queries) InsertCategoryLink(ctx context.Context, arg InsertCategoryLinkParams) error {
 	_, err := q.db.Exec(ctx, insertCategoryLink, arg.CategoryID, arg.PriceRuleID)
 	return err
+}
+
+const insertCoupon = `-- name: InsertCoupon :one
+INSERT INTO coupons (code, event_id, discount_type, discount_value, quota, min_runners,
+                     valid_from, valid_until, description, status, created_by)
+VALUES ($1, $2, $3, $4, $5, $6,
+        $7, $8, $9, $10, $11)
+RETURNING id, code, event_id, discount_type, discount_value, quota, used_count, reserved_count, min_runners, valid_from, valid_until, description, status, created_by, created_at
+`
+
+type InsertCouponParams struct {
+	Code          string
+	EventID       *int64
+	DiscountType  string
+	DiscountValue int64
+	Quota         int32
+	MinRunners    *int16
+	ValidFrom     *time.Time
+	ValidUntil    *time.Time
+	Description   []byte
+	Status        string
+	CreatedBy     *int64
+}
+
+func (q *Queries) InsertCoupon(ctx context.Context, arg InsertCouponParams) (Coupon, error) {
+	row := q.db.QueryRow(ctx, insertCoupon,
+		arg.Code,
+		arg.EventID,
+		arg.DiscountType,
+		arg.DiscountValue,
+		arg.Quota,
+		arg.MinRunners,
+		arg.ValidFrom,
+		arg.ValidUntil,
+		arg.Description,
+		arg.Status,
+		arg.CreatedBy,
+	)
+	var i Coupon
+	err := row.Scan(
+		&i.ID,
+		&i.Code,
+		&i.EventID,
+		&i.DiscountType,
+		&i.DiscountValue,
+		&i.Quota,
+		&i.UsedCount,
+		&i.ReservedCount,
+		&i.MinRunners,
+		&i.ValidFrom,
+		&i.ValidUntil,
+		&i.Description,
+		&i.Status,
+		&i.CreatedBy,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const insertPriceRule = `-- name: InsertPriceRule :one
@@ -175,6 +261,48 @@ func (q *Queries) ListCategoryLinksByRuleIDs(ctx context.Context, ruleIds []int6
 	return items, nil
 }
 
+const listCoupons = `-- name: ListCoupons :many
+SELECT id, code, event_id, discount_type, discount_value, quota, used_count, reserved_count, min_runners, valid_from, valid_until, description, status, created_by, created_at FROM coupons
+WHERE ($1::bigint IS NULL OR event_id = $1::bigint)
+ORDER BY created_at DESC, id DESC
+`
+
+func (q *Queries) ListCoupons(ctx context.Context, eventID *int64) ([]Coupon, error) {
+	rows, err := q.db.Query(ctx, listCoupons, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Coupon
+	for rows.Next() {
+		var i Coupon
+		if err := rows.Scan(
+			&i.ID,
+			&i.Code,
+			&i.EventID,
+			&i.DiscountType,
+			&i.DiscountValue,
+			&i.Quota,
+			&i.UsedCount,
+			&i.ReservedCount,
+			&i.MinRunners,
+			&i.ValidFrom,
+			&i.ValidUntil,
+			&i.Description,
+			&i.Status,
+			&i.CreatedBy,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listPriceRulesByEvent = `-- name: ListPriceRulesByEvent :many
 SELECT id, event_id, name, audience, price_cents, currency, quota, used_count, reserved_count, sale_starts_at, sale_ends_at, sort_order, created_at, updated_at FROM price_rules
 WHERE event_id = $1
@@ -214,6 +342,68 @@ func (q *Queries) ListPriceRulesByEvent(ctx context.Context, eventID int64) ([]P
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateCoupon = `-- name: UpdateCoupon :one
+UPDATE coupons
+SET event_id = $1,
+    discount_type = $2,
+    discount_value = $3,
+    quota = $4,
+    min_runners = $5,
+    valid_from = $6,
+    valid_until = $7,
+    description = $8,
+    status = $9
+WHERE id = $10
+RETURNING id, code, event_id, discount_type, discount_value, quota, used_count, reserved_count, min_runners, valid_from, valid_until, description, status, created_by, created_at
+`
+
+type UpdateCouponParams struct {
+	EventID       *int64
+	DiscountType  string
+	DiscountValue int64
+	Quota         int32
+	MinRunners    *int16
+	ValidFrom     *time.Time
+	ValidUntil    *time.Time
+	Description   []byte
+	Status        string
+	ID            int64
+}
+
+func (q *Queries) UpdateCoupon(ctx context.Context, arg UpdateCouponParams) (Coupon, error) {
+	row := q.db.QueryRow(ctx, updateCoupon,
+		arg.EventID,
+		arg.DiscountType,
+		arg.DiscountValue,
+		arg.Quota,
+		arg.MinRunners,
+		arg.ValidFrom,
+		arg.ValidUntil,
+		arg.Description,
+		arg.Status,
+		arg.ID,
+	)
+	var i Coupon
+	err := row.Scan(
+		&i.ID,
+		&i.Code,
+		&i.EventID,
+		&i.DiscountType,
+		&i.DiscountValue,
+		&i.Quota,
+		&i.UsedCount,
+		&i.ReservedCount,
+		&i.MinRunners,
+		&i.ValidFrom,
+		&i.ValidUntil,
+		&i.Description,
+		&i.Status,
+		&i.CreatedBy,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const updatePriceRule = `-- name: UpdatePriceRule :one

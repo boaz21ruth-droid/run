@@ -51,6 +51,7 @@
     "back": "Back to events",
     "tabBasic": "Overview",
     "tabPricing": "Price tiers",
+    "tabCoupons": "Coupons",
     "info": {
       "title": "Overview",
       "slug": "URL slug",
@@ -106,6 +107,43 @@
       "saleStartsAt": "Sale starts",
       "saleEndsAt": "Sale ends",
       "categoryIds": "Categories"
+    }
+  },
+  "coupons": {
+    "hint": "Coupons created here only work for this event.",
+    "create": "New coupon",
+    "createTitle": "New coupon",
+    "editTitle": "Edit coupon",
+    "edit": "Edit",
+    "empty": "No coupons yet",
+    "created": "Coupon created",
+    "updated": "Coupon saved",
+    "submit": "Save",
+    "cancel": "Cancel",
+    "col": {
+      "code": "Code",
+      "discount": "Discount",
+      "quota": "Taken / uses",
+      "minRunners": "Min. runners",
+      "validity": "Valid",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "discountType": { "PERCENT": "Percentage", "AMOUNT": "Fixed amount", "WAIVER": "Free entry" },
+    "status": { "ACTIVE": "Active", "DISABLED": "Disabled" },
+    "form": {
+      "code": "Code",
+      "codeHelp": "3–32 letters, digits, underscores or hyphens. Saved in uppercase and can't be changed later",
+      "discountType": "Discount type",
+      "discountValue": "Discount value",
+      "percentInvalid": "Enter a whole number from 1 to 100",
+      "amountInvalid": "Enter an amount above 0, such as 5 or 5.50",
+      "quota": "Number of uses",
+      "minRunners": "Minimum runners",
+      "minRunnersHelp": "Leave empty for no minimum",
+      "validFrom": "Valid from",
+      "validUntil": "Valid until",
+      "status": "Status"
     }
   }
 }

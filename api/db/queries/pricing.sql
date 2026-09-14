@@ -47,3 +47,34 @@ WHERE price_rule_id = @price_rule_id;
 -- name: InsertCategoryLink :exec
 INSERT INTO category_price_rules (category_id, price_rule_id)
 VALUES (@category_id, @price_rule_id);
+
+-- name: InsertCoupon :one
+INSERT INTO coupons (code, event_id, discount_type, discount_value, quota, min_runners,
+                     valid_from, valid_until, description, status, created_by)
+VALUES (@code, sqlc.narg(event_id), @discount_type, @discount_value, @quota, sqlc.narg(min_runners),
+        sqlc.narg(valid_from), sqlc.narg(valid_until), sqlc.narg(description), @status, @created_by)
+RETURNING *;
+
+-- name: GetCouponForUpdate :one
+SELECT * FROM coupons
+WHERE id = @id
+FOR UPDATE;
+
+-- name: UpdateCoupon :one
+UPDATE coupons
+SET event_id = sqlc.narg(event_id),
+    discount_type = @discount_type,
+    discount_value = @discount_value,
+    quota = @quota,
+    min_runners = sqlc.narg(min_runners),
+    valid_from = sqlc.narg(valid_from),
+    valid_until = sqlc.narg(valid_until),
+    description = sqlc.narg(description),
+    status = @status
+WHERE id = @id
+RETURNING *;
+
+-- name: ListCoupons :many
+SELECT * FROM coupons
+WHERE (sqlc.narg(event_id)::bigint IS NULL OR event_id = sqlc.narg(event_id)::bigint)
+ORDER BY created_at DESC, id DESC;

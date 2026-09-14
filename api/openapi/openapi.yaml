@@ -362,6 +362,88 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /admin/coupons:
+    get:
+      operationId: adminListCoupons
+      summary: 优惠码列表（eventId 为空时返回全部）
+      x-permission: coupon_manage
+      x-access: read
+      parameters:
+        - name: eventId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 优惠码列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponList'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: adminCreateCoupon
+      summary: 新建优惠码（代码自动转大写）
+      x-permission: coupon_manage
+      x-access: write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCouponRequest'
+      responses:
+        '201':
+          description: 已创建
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coupon'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/coupons/{id}:
+    put:
+      operationId: adminUpdateCoupon
+      summary: 修改优惠码（代码不可改）
+      x-permission: coupon_manage
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCouponRequest'
+      responses:
+        '200':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coupon'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     ErrorResponse:
@@ -708,3 +790,127 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PriceRule'
+    DiscountType:
+      type: string
+      enum: [PERCENT, AMOUNT, WAIVER]
+    CouponStatus:
+      type: string
+      enum: [ACTIVE, DISABLED]
+    UpdateCouponRequest:
+      type: object
+      required: [discountType, discountValue, quota, status]
+      properties:
+        eventId:
+          type: integer
+          format: int64
+          nullable: true
+        discountType:
+          $ref: '#/components/schemas/DiscountType'
+        discountValue:
+          type: integer
+          format: int64
+          description: PERCENT 为 1–100；AMOUNT 为美分；WAIVER 为 0
+        quota:
+          type: integer
+          format: int32
+        minRunners:
+          type: integer
+          format: int32
+          nullable: true
+        validFrom:
+          type: string
+          format: date-time
+          nullable: true
+        validUntil:
+          type: string
+          format: date-time
+          nullable: true
+        description:
+          $ref: '#/components/schemas/LocalizedText'
+        status:
+          $ref: '#/components/schemas/CouponStatus'
+    CreateCouponRequest:
+      type: object
+      required: [code, discountType, discountValue, quota, status]
+      properties:
+        code:
+          type: string
+        eventId:
+          type: integer
+          format: int64
+          nullable: true
+        discountType:
+          $ref: '#/components/schemas/DiscountType'
+        discountValue:
+          type: integer
+          format: int64
+        quota:
+          type: integer
+          format: int32
+        minRunners:
+          type: integer
+          format: int32
+          nullable: true
+        validFrom:
+          type: string
+          format: date-time
+          nullable: true
+        validUntil:
+          type: string
+          format: date-time
+          nullable: true
+        description:
+          $ref: '#/components/schemas/LocalizedText'
+        status:
+          $ref: '#/components/schemas/CouponStatus'
+    Coupon:
+      type: object
+      required: [id, code, eventId, discountType, discountValue, quota, minRunners, validFrom, validUntil, status, usedCount, reservedCount]
+      properties:
+        id:
+          type: integer
+          format: int64
+        code:
+          type: string
+        eventId:
+          type: integer
+          format: int64
+          nullable: true
+        discountType:
+          $ref: '#/components/schemas/DiscountType'
+        discountValue:
+          type: integer
+          format: int64
+        quota:
+          type: integer
+          format: int32
+        minRunners:
+          type: integer
+          format: int32
+          nullable: true
+        validFrom:
+          type: string
+          format: date-time
+          nullable: true
+        validUntil:
+          type: string
+          format: date-time
+          nullable: true
+        description:
+          $ref: '#/components/schemas/LocalizedText'
+        status:
+          $ref: '#/components/schemas/CouponStatus'
+        usedCount:
+          type: integer
+          format: int32
+        reservedCount:
+          type: integer
+          format: int32
+    CouponList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coupon'

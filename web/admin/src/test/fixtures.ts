@@ -2,12 +2,24 @@ import type { Schemas } from "@werun/api-client";
 
 export const opsMe: Schemas["Me"] = {
   staff: { id: 2, username: "ops.chan", fullName: "Chanthou Ny", role: "OPS" },
-  permissions: { event_config: "write", event_publish: "write", order_view: "read", price_config: "write" },
+  permissions: {
+    event_config: "write",
+    event_publish: "write",
+    order_view: "read",
+    price_config: "write",
+    coupon_manage: "write",
+  },
 };
 
 export const adminMe: Schemas["Me"] = {
   staff: { id: 1, username: "admin.sovann", fullName: "Sovann Kea", role: "ADMIN" },
-  permissions: { event_config: "read", event_publish: "read", access_manage: "write", price_config: "read" },
+  permissions: {
+    event_config: "read",
+    event_publish: "read",
+    access_manage: "write",
+    price_config: "read",
+    coupon_manage: "read",
+  },
 };
 
 export const photographerMe: Schemas["Me"] = {
@@ -68,6 +80,21 @@ export const earlyBirdRule: Schemas["PriceRule"] = {
   categoryIds: [11],
   usedCount: 0,
   reservedCount: 0,
+};
+
+export const earlyCoupon: Schemas["Coupon"] = {
+  id: 41,
+  code: "EARLY_2026",
+  eventId: 7,
+  discountType: "PERCENT",
+  discountValue: 20,
+  quota: 50,
+  minRunners: 2,
+  validFrom: null,
+  validUntil: "2026-10-31T16:59:00Z",
+  status: "ACTIVE",
+  usedCount: 3,
+  reservedCount: 1,
 };
 
 export function jsonResponse(status: number, body: unknown): Response {

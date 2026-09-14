@@ -51,6 +51,7 @@
     "back": "返回赛事列表",
     "tabBasic": "基本信息",
     "tabPricing": "价格档",
+    "tabCoupons": "优惠码",
     "info": {
       "title": "基本信息",
       "slug": "链接标识",
@@ -106,6 +107,43 @@
       "saleStartsAt": "开始销售",
       "saleEndsAt": "停止销售",
       "categoryIds": "关联组别"
+    }
+  },
+  "coupons": {
+    "hint": "这里新建的优惠码只能用于本赛事。",
+    "create": "新建优惠码",
+    "createTitle": "新建优惠码",
+    "editTitle": "编辑优惠码",
+    "edit": "编辑",
+    "empty": "还没有优惠码",
+    "created": "优惠码已创建",
+    "updated": "优惠码已保存",
+    "submit": "保存",
+    "cancel": "取消",
+    "col": {
+      "code": "优惠码",
+      "discount": "优惠",
+      "quota": "已占用 / 次数",
+      "minRunners": "最少人数",
+      "validity": "有效期",
+      "status": "状态",
+      "actions": "操作"
+    },
+    "discountType": { "PERCENT": "按百分比", "AMOUNT": "固定金额", "WAIVER": "免单" },
+    "status": { "ACTIVE": "启用", "DISABLED": "停用" },
+    "form": {
+      "code": "优惠码",
+      "codeHelp": "3–32 位字母、数字、下划线或连字符，自动转为大写，保存后不能修改",
+      "discountType": "优惠方式",
+      "discountValue": "优惠值",
+      "percentInvalid": "请输入 1 到 100 的整数",
+      "amountInvalid": "请输入大于 0 的金额，例如 5 或 5.50",
+      "quota": "可用次数",
+      "minRunners": "最少参赛人数",
+      "minRunnersHelp": "留空表示不限",
+      "validFrom": "生效时间",
+      "validUntil": "失效时间",
+      "status": "状态"
     }
   }
 }
