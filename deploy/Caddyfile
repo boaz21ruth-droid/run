@@ -1,0 +1,44 @@
+{
+	admin off
+}
+
+# 单页应用：先找真实文件，找不到回退 index.html
+(spa) {
+	root * {args[0]}
+	encode zstd gzip
+
+	@hashed path /assets/*
+	header @hashed Cache-Control "public, max-age=31536000, immutable"
+
+	@unhashed not path /assets/*
+	header @unhashed Cache-Control "no-cache"
+
+	try_files {path} /index.html
+	file_server
+}
+
+{$WERUN_USER_HOST} {
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+
+	handle_path /files/public/* {
+		root * /srv/files/public
+		header Cache-Control "public, max-age=86400"
+		file_server
+	}
+
+	handle {
+		import spa /srv/user
+	}
+}
+
+{$WERUN_ADMIN_HOST} {
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+
+	handle {
+		import spa /srv/admin
+	}
+}

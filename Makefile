@@ -51,3 +51,36 @@ gen-client:
 
 create-staff:
 	set -a; . ./.env; set +a; cd api && go run ./cmd/werun create-staff $(ARGS)
+
+COMPOSE_DEV := docker compose -f deploy/compose.dev.yaml
+COMPOSE     := docker compose -f deploy/compose.yaml --env-file .env
+
+.PHONY: dev dev-down dev-api dev-user dev-admin compose-up compose-down build-images
+
+## 本地开发：compose 起 postgres 与 caddy，宿主机并行跑 Go（air 热重载）和两个 Vite
+dev:
+	$(COMPOSE_DEV) up -d --wait postgres caddy
+	$(MAKE) -j3 dev-api dev-user dev-admin
+
+dev-down:
+	$(COMPOSE_DEV) down
+
+dev-api:
+	set -a; . ./.env; set +a; cd api && go tool air -c .air.toml
+
+dev-user:
+	pnpm --filter @werun/user dev --host 0.0.0.0 --port 5173 --strictPort
+
+dev-admin:
+	pnpm --filter @werun/admin dev --host 0.0.0.0 --port 5174 --strictPort
+
+## 生产形态的完整环境（本地验证、CI 端到端测试共用）
+compose-up:
+	$(COMPOSE) up -d --build --wait
+
+compose-down:
+	$(COMPOSE) down
+
+build-images:
+	docker build -f api/Dockerfile -t werun-api:local .
+	docker build -f deploy/web.Dockerfile -t werun-web:local .

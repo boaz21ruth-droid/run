@@ -1,0 +1,22 @@
+{
+	admin off
+	auto_https off
+}
+
+http://werun.localhost {
+	handle /api/* {
+		reverse_proxy host.docker.internal:8080
+	}
+	handle {
+		reverse_proxy host.docker.internal:5173
+	}
+}
+
+http://admin.werun.localhost {
+	handle /api/* {
+		reverse_proxy host.docker.internal:8080
+	}
+	handle {
+		reverse_proxy host.docker.internal:5174
+	}
+}

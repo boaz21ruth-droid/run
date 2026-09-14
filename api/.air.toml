@@ -1,0 +1,17 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/werun ./cmd/werun"
+  entrypoint = ["./tmp/werun", "serve", "--with-worker", "--auto-migrate"]
+  include_ext = ["go", "sql", "json", "yaml"]
+  exclude_dir = ["tmp", "bin"]
+  delay = 500
+  send_interrupt = true
+  kill_delay = "5s"
+
+[log]
+  time = false
+
+[misc]
+  clean_on_exit = true
