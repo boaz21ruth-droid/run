@@ -4,6 +4,8 @@ package httpx
 import (
 	"context"
 
+	"github.com/gin-gonic/gin"
+
 	"werun/api/internal/platform/i18n"
 )
 
@@ -31,4 +33,35 @@ func RequestIDOf(ctx context.Context) string {
 		}
 	}
 	return ""
+}
+
+// Meta 是写审计记录时需要的请求信息。
+type Meta struct {
+	RequestID string
+	IP        string
+	UserAgent string
+}
+
+// MetaOf 从请求上下文中取出请求 ID、客户端 IP 与 User-Agent；不是 gin 请求时只返回能取到的部分。
+func MetaOf(ctx context.Context) Meta {
+	m := Meta{RequestID: RequestIDOf(ctx)}
+	if c, ok := Gin(ctx); ok && c.Request != nil {
+		m.IP = c.ClientIP()
+		m.UserAgent = c.Request.UserAgent()
+	}
+	return m
+}
+
+// Gin 取回 *gin.Context。oapi-codegen strict handler 收到的 ctx 实参就是 *gin.Context。
+func Gin(ctx context.Context) (*gin.Context, bool) {
+	if ctx == nil {
+		return nil, false
+	}
+	if c, ok := ctx.(*gin.Context); ok {
+		return c, true
+	}
+	if c, ok := ctx.Value(gin.ContextKey).(*gin.Context); ok {
+		return c, true
+	}
+	return nil, false
 }

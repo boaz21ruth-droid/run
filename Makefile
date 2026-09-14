@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-.PHONY: help setup lint lint-api test test-api
+.PHONY: help setup lint lint-api test test-api migrate-up migrate-status
 
 help: ## 列出可用目标
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
@@ -19,3 +19,9 @@ test: test-api ## 全部测试
 
 test-api: ## Go 测试（集成测试需要本机 Docker）
 	cd api && go test ./...
+
+migrate-up: ## 执行数据库迁移（读取根目录 .env）
+	set -a; . ./.env; set +a; cd api && go run ./cmd/werun migrate up
+
+migrate-status: ## 查看迁移状态（读取根目录 .env）
+	set -a; . ./.env; set +a; cd api && go run ./cmd/werun migrate status
