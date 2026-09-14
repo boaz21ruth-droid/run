@@ -1,0 +1,9 @@
+package: apigen
+output: ../internal/httpapi/apigen/api.gen.go
+generate:
+  gin-server: true
+  strict-server: true
+  models: true
+  embedded-spec: false
+compatibility:
+  always-prefix-enum-values: true

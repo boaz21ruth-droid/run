@@ -25,3 +25,12 @@ migrate-up: ## 执行数据库迁移（读取根目录 .env）
 
 migrate-status: ## 查看迁移状态（读取根目录 .env）
 	set -a; . ./.env; set +a; cd api && go run ./cmd/werun migrate status
+
+.PHONY: gen gen-api
+
+gen: gen-api
+
+gen-api:
+	mkdir -p api/internal/httpapi/apigen
+	cd api/openapi && go tool oapi-codegen -config oapi-codegen.yaml openapi.yaml
+	cd api && go run ./internal/httpapi/cmd/permgen -spec openapi/openapi.yaml -out internal/httpapi/apigen/permissions.gen.go
