@@ -9,6 +9,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"werun/api/internal/event"
 	"werun/api/internal/iam"
 	"werun/api/internal/platform/config"
 	"werun/api/internal/platform/db"
@@ -23,6 +24,7 @@ type App struct {
 	Catalog *i18n.Catalog
 	Pool    *pgxpool.Pool
 	IAM     *iam.Service
+	Events  *event.Service
 }
 
 // Bootstrap 读取配置、创建日志器、加载文案并连接数据库。
@@ -43,6 +45,7 @@ func Bootstrap(ctx context.Context) (*App, error) {
 	}
 	app := &App{Cfg: cfg, Log: log, Catalog: cat, Pool: pool}
 	app.IAM = iam.NewService(app.Pool, []byte(app.Cfg.SessionSecret), iam.NewLoginLimiter(time.Now), time.Now)
+	app.Events = event.NewService(app.Pool)
 	return app, nil
 }
 

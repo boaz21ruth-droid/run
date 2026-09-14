@@ -9,8 +9,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // Defines values for Access.
@@ -25,6 +28,96 @@ func (e Access) Valid() bool {
 	case AccessRead:
 		return true
 	case AccessWrite:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminEventEventType.
+const (
+	AdminEventEventTypeFREEACTIVITY AdminEventEventType = "FREE_ACTIVITY"
+	AdminEventEventTypeRACE         AdminEventEventType = "RACE"
+)
+
+// Valid indicates whether the value is a known member of the AdminEventEventType enum.
+func (e AdminEventEventType) Valid() bool {
+	switch e {
+	case AdminEventEventTypeFREEACTIVITY:
+		return true
+	case AdminEventEventTypeRACE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminEventOrganizerType.
+const (
+	AdminEventOrganizerTypeOFFICIAL AdminEventOrganizerType = "OFFICIAL"
+	AdminEventOrganizerTypePARTNER  AdminEventOrganizerType = "PARTNER"
+)
+
+// Valid indicates whether the value is a known member of the AdminEventOrganizerType enum.
+func (e AdminEventOrganizerType) Valid() bool {
+	switch e {
+	case AdminEventOrganizerTypeOFFICIAL:
+		return true
+	case AdminEventOrganizerTypePARTNER:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminEventStatus.
+const (
+	AdminEventStatusDRAFT     AdminEventStatus = "DRAFT"
+	AdminEventStatusPUBLISHED AdminEventStatus = "PUBLISHED"
+)
+
+// Valid indicates whether the value is a known member of the AdminEventStatus enum.
+func (e AdminEventStatus) Valid() bool {
+	switch e {
+	case AdminEventStatusDRAFT:
+		return true
+	case AdminEventStatusPUBLISHED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CreateEventRequestEventType.
+const (
+	CreateEventRequestEventTypeFREEACTIVITY CreateEventRequestEventType = "FREE_ACTIVITY"
+	CreateEventRequestEventTypeRACE         CreateEventRequestEventType = "RACE"
+)
+
+// Valid indicates whether the value is a known member of the CreateEventRequestEventType enum.
+func (e CreateEventRequestEventType) Valid() bool {
+	switch e {
+	case CreateEventRequestEventTypeFREEACTIVITY:
+		return true
+	case CreateEventRequestEventTypeRACE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CreateEventRequestOrganizerType.
+const (
+	CreateEventRequestOrganizerTypeOFFICIAL CreateEventRequestOrganizerType = "OFFICIAL"
+	CreateEventRequestOrganizerTypePARTNER  CreateEventRequestOrganizerType = "PARTNER"
+)
+
+// Valid indicates whether the value is a known member of the CreateEventRequestOrganizerType enum.
+func (e CreateEventRequestOrganizerType) Valid() bool {
+	switch e {
+	case CreateEventRequestOrganizerTypeOFFICIAL:
+		return true
+	case CreateEventRequestOrganizerTypePARTNER:
 		return true
 	default:
 		return false
@@ -67,6 +160,73 @@ func (e Role) Valid() bool {
 // Access defines model for Access.
 type Access string
 
+// AdminCategory defines model for AdminCategory.
+type AdminCategory struct {
+	Capacity  int32         `json:"capacity"`
+	Code      string        `json:"code"`
+	CutoffAt  *time.Time    `json:"cutoffAt"`
+	DistanceM int32         `json:"distanceM"`
+	Id        int64         `json:"id"`
+	Name      LocalizedText `json:"name"`
+	StartAt   *time.Time    `json:"startAt"`
+}
+
+// AdminEvent defines model for AdminEvent.
+type AdminEvent struct {
+	Categories    []AdminCategory         `json:"categories"`
+	City          string                  `json:"city"`
+	EventType     AdminEventEventType     `json:"eventType"`
+	Id            int64                   `json:"id"`
+	Name          LocalizedText           `json:"name"`
+	OrganizerType AdminEventOrganizerType `json:"organizerType"`
+	PublicVisible bool                    `json:"publicVisible"`
+	PublishedAt   *time.Time              `json:"publishedAt"`
+	RaceDate      openapi_types.Date      `json:"raceDate"`
+	Slug          string                  `json:"slug"`
+	Status        AdminEventStatus        `json:"status"`
+}
+
+// AdminEventEventType defines model for AdminEvent.EventType.
+type AdminEventEventType string
+
+// AdminEventOrganizerType defines model for AdminEvent.OrganizerType.
+type AdminEventOrganizerType string
+
+// AdminEventStatus defines model for AdminEvent.Status.
+type AdminEventStatus string
+
+// AdminEventList defines model for AdminEventList.
+type AdminEventList struct {
+	Items []AdminEvent `json:"items"`
+}
+
+// CreateCategoryRequest defines model for CreateCategoryRequest.
+type CreateCategoryRequest struct {
+	Capacity  int32         `json:"capacity"`
+	Code      string        `json:"code"`
+	CutoffAt  *time.Time    `json:"cutoffAt,omitempty"`
+	DistanceM int32         `json:"distanceM"`
+	Name      LocalizedText `json:"name"`
+	StartAt   *time.Time    `json:"startAt,omitempty"`
+}
+
+// CreateEventRequest defines model for CreateEventRequest.
+type CreateEventRequest struct {
+	Categories    []CreateCategoryRequest         `json:"categories"`
+	City          string                          `json:"city"`
+	EventType     CreateEventRequestEventType     `json:"eventType"`
+	Name          LocalizedText                   `json:"name"`
+	OrganizerType CreateEventRequestOrganizerType `json:"organizerType"`
+	RaceDate      openapi_types.Date              `json:"raceDate"`
+	Slug          string                          `json:"slug"`
+}
+
+// CreateEventRequestEventType defines model for CreateEventRequest.EventType.
+type CreateEventRequestEventType string
+
+// CreateEventRequestOrganizerType defines model for CreateEventRequest.OrganizerType.
+type CreateEventRequestOrganizerType string
+
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse struct {
 	Error struct {
@@ -81,6 +241,13 @@ type Health struct {
 	Status string `json:"status"`
 }
 
+// LocalizedText defines model for LocalizedText.
+type LocalizedText struct {
+	En *string `json:"en,omitempty"`
+	Km *string `json:"km,omitempty"`
+	Zh *string `json:"zh,omitempty"`
+}
+
 // LoginRequest defines model for LoginRequest.
 type LoginRequest struct {
 	Password string `json:"password"`
@@ -91,6 +258,30 @@ type LoginRequest struct {
 type Me struct {
 	Permissions map[string]Access `json:"permissions"`
 	Staff       Staff             `json:"staff"`
+}
+
+// PublicCategory defines model for PublicCategory.
+type PublicCategory struct {
+	Capacity  int32     `json:"capacity"`
+	Code      string    `json:"code"`
+	CutoffAt  time.Time `json:"cutoffAt"`
+	DistanceM int32     `json:"distanceM"`
+	Name      string    `json:"name"`
+	StartAt   time.Time `json:"startAt"`
+}
+
+// PublicEvent defines model for PublicEvent.
+type PublicEvent struct {
+	Categories []PublicCategory   `json:"categories"`
+	City       string             `json:"city"`
+	Name       string             `json:"name"`
+	RaceDate   openapi_types.Date `json:"raceDate"`
+	Slug       string             `json:"slug"`
+}
+
+// PublicEventList defines model for PublicEventList.
+type PublicEventList struct {
+	Items []PublicEvent `json:"items"`
 }
 
 // Role defines model for Role.
@@ -107,6 +298,9 @@ type Staff struct {
 // AdminLoginJSONRequestBody defines body for AdminLogin for application/json ContentType.
 type AdminLoginJSONRequestBody = LoginRequest
 
+// AdminCreateEventJSONRequestBody defines body for AdminCreateEvent for application/json ContentType.
+type AdminCreateEventJSONRequestBody = CreateEventRequest
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// AdminLogin 员工登录
@@ -115,9 +309,24 @@ type ServerInterface interface {
 	// AdminLogout 退出登录
 	// (POST /admin/auth/logout)
 	AdminLogout(c *gin.Context)
+	// AdminListEvents 后台赛事列表（名称返回三语）
+	// (GET /admin/events)
+	AdminListEvents(c *gin.Context)
+	// AdminCreateEvent 新建草稿赛事及组别
+	// (POST /admin/events)
+	AdminCreateEvent(c *gin.Context)
+	// AdminPublishEvent 发布赛事（发布前校验）
+	// (POST /admin/events/{id}/publish)
+	AdminPublishEvent(c *gin.Context, id int64)
 	// AdminGetMe 当前员工与权限
 	// (GET /admin/me)
 	AdminGetMe(c *gin.Context)
+	// ListPublicEvents 已发布且公开展示的赛事列表，文案按请求语言返回
+	// (GET /events)
+	ListPublicEvents(c *gin.Context)
+	// GetPublicEvent 赛事详情（含组别）
+	// (GET /events/{slug})
+	GetPublicEvent(c *gin.Context, slug string)
 	// GetHealthz 进程存活检查
 	// (GET /healthz)
 	GetHealthz(c *gin.Context)
@@ -161,6 +370,57 @@ func (siw *ServerInterfaceWrapper) AdminLogout(c *gin.Context) {
 	siw.Handler.AdminLogout(c)
 }
 
+// AdminListEvents operation middleware
+func (siw *ServerInterfaceWrapper) AdminListEvents(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminListEvents(c)
+}
+
+// AdminCreateEvent operation middleware
+func (siw *ServerInterfaceWrapper) AdminCreateEvent(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminCreateEvent(c)
+}
+
+// AdminPublishEvent operation middleware
+func (siw *ServerInterfaceWrapper) AdminPublishEvent(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminPublishEvent(c, id)
+}
+
 // AdminGetMe operation middleware
 func (siw *ServerInterfaceWrapper) AdminGetMe(c *gin.Context) {
 
@@ -172,6 +432,44 @@ func (siw *ServerInterfaceWrapper) AdminGetMe(c *gin.Context) {
 	}
 
 	siw.Handler.AdminGetMe(c)
+}
+
+// ListPublicEvents operation middleware
+func (siw *ServerInterfaceWrapper) ListPublicEvents(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListPublicEvents(c)
+}
+
+// GetPublicEvent operation middleware
+func (siw *ServerInterfaceWrapper) GetPublicEvent(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "slug" -------------
+	var slug string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Param("slug"), &slug, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetPublicEvent(c, slug)
 }
 
 // GetHealthz operation middleware
@@ -232,6 +530,11 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/admin/auth/login", wrapper.AdminLogin)
 	router.POST(options.BaseURL+"/admin/auth/logout", wrapper.AdminLogout)
 	router.GET(options.BaseURL+"/admin/me", wrapper.AdminGetMe)
+	router.GET(options.BaseURL+"/events", wrapper.ListPublicEvents)
+	router.GET(options.BaseURL+"/events/:slug", wrapper.GetPublicEvent)
+	router.GET(options.BaseURL+"/admin/events", wrapper.AdminListEvents)
+	router.POST(options.BaseURL+"/admin/events", wrapper.AdminCreateEvent)
+	router.POST(options.BaseURL+"/admin/events/:id/publish", wrapper.AdminPublishEvent)
 }
 
 type AdminLoginRequestObject struct {
@@ -305,6 +608,122 @@ func (response AdminLogoutdefaultJSONResponse) VisitAdminLogoutResponse(w http.R
 	return err
 }
 
+type AdminListEventsRequestObject struct {
+}
+
+type AdminListEventsResponseObject interface {
+	VisitAdminListEventsResponse(w http.ResponseWriter) error
+}
+
+type AdminListEvents200JSONResponse AdminEventList
+
+func (response AdminListEvents200JSONResponse) VisitAdminListEventsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListEventsdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminListEventsdefaultJSONResponse) VisitAdminListEventsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminCreateEventRequestObject struct {
+	Body *AdminCreateEventJSONRequestBody
+}
+
+type AdminCreateEventResponseObject interface {
+	VisitAdminCreateEventResponse(w http.ResponseWriter) error
+}
+
+type AdminCreateEvent201JSONResponse AdminEvent
+
+func (response AdminCreateEvent201JSONResponse) VisitAdminCreateEventResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminCreateEventdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminCreateEventdefaultJSONResponse) VisitAdminCreateEventResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminPublishEventRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminPublishEventResponseObject interface {
+	VisitAdminPublishEventResponse(w http.ResponseWriter) error
+}
+
+type AdminPublishEvent200JSONResponse AdminEvent
+
+func (response AdminPublishEvent200JSONResponse) VisitAdminPublishEventResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminPublishEventdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminPublishEventdefaultJSONResponse) VisitAdminPublishEventResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AdminGetMeRequestObject struct {
 }
 
@@ -332,6 +751,83 @@ type AdminGetMedefaultJSONResponse struct {
 }
 
 func (response AdminGetMedefaultJSONResponse) VisitAdminGetMeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPublicEventsRequestObject struct {
+}
+
+type ListPublicEventsResponseObject interface {
+	VisitListPublicEventsResponse(w http.ResponseWriter) error
+}
+
+type ListPublicEvents200JSONResponse PublicEventList
+
+func (response ListPublicEvents200JSONResponse) VisitListPublicEventsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPublicEventsdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response ListPublicEventsdefaultJSONResponse) VisitListPublicEventsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPublicEventRequestObject struct {
+	Slug string `json:"slug"`
+}
+
+type GetPublicEventResponseObject interface {
+	VisitGetPublicEventResponse(w http.ResponseWriter) error
+}
+
+type GetPublicEvent200JSONResponse PublicEvent
+
+func (response GetPublicEvent200JSONResponse) VisitGetPublicEventResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPublicEventdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response GetPublicEventdefaultJSONResponse) VisitGetPublicEventResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -441,9 +937,24 @@ type StrictServerInterface interface {
 	// AdminLogout 退出登录
 	// (POST /admin/auth/logout)
 	AdminLogout(ctx context.Context, request AdminLogoutRequestObject) (AdminLogoutResponseObject, error)
+	// AdminListEvents 后台赛事列表（名称返回三语）
+	// (GET /admin/events)
+	AdminListEvents(ctx context.Context, request AdminListEventsRequestObject) (AdminListEventsResponseObject, error)
+	// AdminCreateEvent 新建草稿赛事及组别
+	// (POST /admin/events)
+	AdminCreateEvent(ctx context.Context, request AdminCreateEventRequestObject) (AdminCreateEventResponseObject, error)
+	// AdminPublishEvent 发布赛事（发布前校验）
+	// (POST /admin/events/{id}/publish)
+	AdminPublishEvent(ctx context.Context, request AdminPublishEventRequestObject) (AdminPublishEventResponseObject, error)
 	// AdminGetMe 当前员工与权限
 	// (GET /admin/me)
 	AdminGetMe(ctx context.Context, request AdminGetMeRequestObject) (AdminGetMeResponseObject, error)
+	// ListPublicEvents 已发布且公开展示的赛事列表，文案按请求语言返回
+	// (GET /events)
+	ListPublicEvents(ctx context.Context, request ListPublicEventsRequestObject) (ListPublicEventsResponseObject, error)
+	// GetPublicEvent 赛事详情（含组别）
+	// (GET /events/{slug})
+	GetPublicEvent(ctx context.Context, request GetPublicEventRequestObject) (GetPublicEventResponseObject, error)
 	// GetHealthz 进程存活检查
 	// (GET /healthz)
 	GetHealthz(ctx context.Context, request GetHealthzRequestObject) (GetHealthzResponseObject, error)
@@ -564,6 +1075,87 @@ func (sh *strictHandler) AdminLogout(ctx *gin.Context) {
 	}
 }
 
+// AdminListEvents operation middleware
+func (sh *strictHandler) AdminListEvents(ctx *gin.Context) {
+	var request AdminListEventsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminListEvents(ctx, request.(AdminListEventsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminListEvents")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminListEventsResponseObject); ok {
+		if err := validResponse.VisitAdminListEventsResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminCreateEvent operation middleware
+func (sh *strictHandler) AdminCreateEvent(ctx *gin.Context) {
+	var request AdminCreateEventRequestObject
+
+	var body AdminCreateEventJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminCreateEvent(ctx, request.(AdminCreateEventRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminCreateEvent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminCreateEventResponseObject); ok {
+		if err := validResponse.VisitAdminCreateEventResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminPublishEvent operation middleware
+func (sh *strictHandler) AdminPublishEvent(ctx *gin.Context, id int64) {
+	var request AdminPublishEventRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminPublishEvent(ctx, request.(AdminPublishEventRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminPublishEvent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminPublishEventResponseObject); ok {
+		if err := validResponse.VisitAdminPublishEventResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // AdminGetMe operation middleware
 func (sh *strictHandler) AdminGetMe(ctx *gin.Context) {
 	var request AdminGetMeRequestObject
@@ -581,6 +1173,56 @@ func (sh *strictHandler) AdminGetMe(ctx *gin.Context) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AdminGetMeResponseObject); ok {
 		if err := validResponse.VisitAdminGetMeResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListPublicEvents operation middleware
+func (sh *strictHandler) ListPublicEvents(ctx *gin.Context) {
+	var request ListPublicEventsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListPublicEvents(ctx, request.(ListPublicEventsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListPublicEvents")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(ListPublicEventsResponseObject); ok {
+		if err := validResponse.VisitListPublicEventsResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetPublicEvent operation middleware
+func (sh *strictHandler) GetPublicEvent(ctx *gin.Context, slug string) {
+	var request GetPublicEventRequestObject
+
+	request.Slug = slug
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetPublicEvent(ctx, request.(GetPublicEventRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetPublicEvent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(GetPublicEventResponseObject); ok {
+		if err := validResponse.VisitGetPublicEventResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

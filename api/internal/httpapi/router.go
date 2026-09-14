@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"werun/api/internal/event"
 	"werun/api/internal/httpapi/apigen"
 	"werun/api/internal/iam"
 	"werun/api/internal/platform/apperr"
@@ -20,6 +21,7 @@ type RouterDeps struct {
 	Catalog *i18n.Catalog
 	Pool    *pgxpool.Pool
 	IAM     *iam.Service
+	Events  *event.Service
 	Server  *Server // 为 nil 时由 NewServer 构造
 	Env     string  // "dev" | "prod"
 }
