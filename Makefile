@@ -34,3 +34,4 @@ gen-api:
 	mkdir -p api/internal/httpapi/apigen
 	cd api/openapi && go tool oapi-codegen -config oapi-codegen.yaml openapi.yaml
 	cd api && go run ./internal/httpapi/cmd/permgen -spec openapi/openapi.yaml -out internal/httpapi/apigen/permissions.gen.go
+	cd api && go tool sqlc generate
