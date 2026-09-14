@@ -47,7 +47,7 @@ werun/
 │  │  ├─ audit/                审计写入（在调用方事务内）
 │  │  ├─ event/                赛事模块：handler / service / store
 │  │  └─ httpapi/              oapi-codegen 生成代码、x-permission 映射表、路由装配
-│  ├─ db/migrations/           goose 迁移（由 docs/database/migrations 移入）+ River 表迁移
+│  ├─ db/migrations/           goose 迁移（由 docs/database/migrations 移入）
 │  ├─ db/queries/              sqlc 查询 SQL
 │  ├─ db/tests/                数据库约束测试（由 docs/database/tests 移入）
 │  ├─ openapi/openapi.yaml
@@ -187,7 +187,7 @@ Demo 权限矩阵的全部 32 个操作一次性写入，供后续模块直接�
 - `db.InTx(ctx, func(tx pgx.Tx) error) error`：统一事务入口；sqlc 的 `Queries.WithTx(tx)`。
 - `audit.Record(ctx, tx, entry)` 必须传事务。
 - River 任务通过 `InsertTx` 在同一事务内入队。
-- River 表通过一个 goose 迁移创建（内容来自 River 官方迁移 SQL），版本号排在业务迁移之后。
+- `werun migrate up` 先执行 goose 业务迁移，再调用 `rivermigrate` 执行 River 自带迁移（River 用自己的 `river_migration` 表记录版本，升级 River 时无需手工同步 SQL）。
 - 样例定时任务 `session_cleanup`：每天 03:00（金边时间）删除过期超过 7 天的会话。
 - `money.Cents`（int64）用于全部金额；时间以 UTC 存储，展示时转换为 `Asia/Phnom_Penh`。
 - 优雅退出：收到 SIGTERM 后停止接收请求，等待进行中的请求与任务最多 30 秒。

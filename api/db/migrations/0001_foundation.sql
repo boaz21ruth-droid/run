@@ -9,17 +9,21 @@
 --   · 多语言文案用 jsonb：{"zh":"…","en":"…","km":"…"}
 -- =====================================================================
 
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION set_updated_at() RETURNS trigger AS $$
 BEGIN
   NEW.updated_at := now();
   RETURN NEW;
 END $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 -- 只追加表：禁止 UPDATE / DELETE
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION forbid_mutation() RETURNS trigger AS $$
 BEGIN
   RAISE EXCEPTION '% is append-only', TG_TABLE_NAME;
 END $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 -- ---------------------------------------------------------------------
 -- 文件元数据（实体文件在 EC2 本地数据盘；storage_key 为相对路径）

@@ -76,6 +76,7 @@ CREATE TABLE order_participants (
 );
 CREATE INDEX order_participants_order_idx ON order_participants (order_id);
 
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION order_participants_guard() RETURNS trigger AS $$
 BEGIN
   IF (NEW.order_id, NEW.category_id, NEW.price_rule_id, NEW.audience,
@@ -87,6 +88,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 CREATE TRIGGER order_participants_immutable BEFORE UPDATE ON order_participants
   FOR EACH ROW EXECUTE FUNCTION order_participants_guard();
 CREATE TRIGGER order_participants_no_delete BEFORE DELETE ON order_participants
@@ -208,6 +210,7 @@ CREATE TABLE waitlist_entries (
 CREATE UNIQUE INDEX waitlist_one_active ON waitlist_entries (category_id, phone_e164) WHERE status = 'WAITING';
 
 -- 付费赛事只能建订单，免费活动只能走 free_signups
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION assert_event_type() RETURNS trigger AS $$
 DECLARE t text;
 BEGIN
@@ -218,6 +221,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 CREATE TRIGGER reg_orders_event_type BEFORE INSERT OR UPDATE OF event_id ON reg_orders
   FOR EACH ROW EXECUTE FUNCTION assert_event_type('RACE');
 CREATE TRIGGER free_signups_event_type BEFORE INSERT OR UPDATE OF event_id ON free_signups

@@ -51,6 +51,7 @@ CREATE UNIQUE INDEX reg_refunds_one_open ON reg_refunds (participant_id)
 CREATE INDEX reg_refunds_queue_idx ON reg_refunds (status, created_at);
 CREATE TRIGGER reg_refunds_updated BEFORE UPDATE ON reg_refunds FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION reg_refunds_cap() RETURNS trigger AS $$
 DECLARE
   cap    bigint;
@@ -74,6 +75,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 CREATE TRIGGER reg_refunds_amount_cap BEFORE INSERT OR UPDATE ON reg_refunds
   FOR EACH ROW EXECUTE FUNCTION reg_refunds_cap();
 
