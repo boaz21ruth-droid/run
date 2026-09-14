@@ -1,5 +1,5 @@
 import { screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import userEvent, { PointerEventsCheckLevel } from "@testing-library/user-event";
 import dayjs from "dayjs";
 import { beforeEach, describe, expect, it } from "vitest";
 import { adminMe, draftEvent, jsonResponse, opsMe, photographerMe, unauthenticated } from "./test/fixtures";
@@ -9,23 +9,43 @@ beforeEach(() => {
   window.localStorage.setItem("werun.lang", "en");
 });
 
-/** 按 antd 生成的 id 填写除时间外的必填字段；startAt/cutoffAt 由各测试按需单独填写 */
-async function fillMinimalEventForm(): Promise<void> {
-  const byId = (id: string) => document.querySelector<HTMLElement>(`#${id}`)!;
-  await userEvent.type(byId("event_slug"), "phnom-penh-half-2026");
-  await userEvent.type(byId("event_name_zh"), "金边半程马拉松 2026");
-  await userEvent.type(byId("event_name_en"), "Phnom Penh Half Marathon 2026");
-  await userEvent.type(byId("event_name_km"), "ម៉ារ៉ាតុងពាក់កណ្ដាលភ្នំពេញ");
-  await userEvent.type(byId("event_city"), "Phnom Penh");
-  // 用 tab 让输入的日期失焦确认，避免在表单内按 Enter 触发原生隐式提交
-  await userEvent.type(byId("event_raceDate"), "2026-11-15");
-  await userEvent.tab();
-  await userEvent.type(byId("event_categories_0_code"), "21K");
-  await userEvent.type(byId("event_categories_0_name_zh"), "半程");
-  await userEvent.type(byId("event_categories_0_name_en"), "Half marathon");
-  await userEvent.type(byId("event_categories_0_name_km"), "ពាក់កណ្ដាល");
-  await userEvent.type(byId("event_categories_0_distanceM"), "21097");
-  await userEvent.type(byId("event_categories_0_capacity"), "800");
+type FormUser = ReturnType<typeof userEvent.setup>;
+
+/**
+ * 表单测试专用的 user-event 实例：关闭 pointer-events 检查。
+ * 默认每次点击都会沿祖先链调用 getComputedStyle，而 antd 的 CSS-in-JS 往 jsdom 注入约 540KB 样式，
+ * 单次调用约 0.5 秒，填一张表就超过 15 秒超时。表单输入框不存在 pointer-events: none 的情况，关掉不丢覆盖。
+ */
+function setupFormUser(): FormUser {
+  return userEvent.setup({ pointerEventsCheck: PointerEventsCheckLevel.Never });
+}
+
+/** 按 antd 生成的 id 聚焦后一次性粘贴字段值 */
+async function fillField(user: FormUser, id: string, value: string): Promise<void> {
+  await user.click(document.querySelector<HTMLElement>(`#${id}`)!);
+  await user.paste(value);
+}
+
+/** 日期框粘贴后用 tab 失焦确认，避免在表单内按 Enter 触发原生隐式提交 */
+async function fillDateField(user: FormUser, id: string, value: string): Promise<void> {
+  await fillField(user, id, value);
+  await user.tab();
+}
+
+/** 填写除时间外的必填字段；startAt/cutoffAt 由各测试按需单独填写 */
+async function fillMinimalEventForm(user: FormUser): Promise<void> {
+  await fillField(user, "event_slug", "phnom-penh-half-2026");
+  await fillField(user, "event_name_zh", "金边半程马拉松 2026");
+  await fillField(user, "event_name_en", "Phnom Penh Half Marathon 2026");
+  await fillField(user, "event_name_km", "ម៉ារ៉ាតុងពាក់កណ្ដាលភ្នំពេញ");
+  await fillField(user, "event_city", "Phnom Penh");
+  await fillDateField(user, "event_raceDate", "2026-11-15");
+  await fillField(user, "event_categories_0_code", "21K");
+  await fillField(user, "event_categories_0_name_zh", "半程");
+  await fillField(user, "event_categories_0_name_en", "Half marathon");
+  await fillField(user, "event_categories_0_name_km", "ពាក់កណ្ដាល");
+  await fillField(user, "event_categories_0_distanceM", "21097");
+  await fillField(user, "event_categories_0_capacity", "800");
 }
 
 describe("登录", () => {
@@ -139,15 +159,13 @@ describe("新建赛事", () => {
       "POST /api/admin/events": () => jsonResponse(201, createdEvent),
     });
 
+    const user = setupFormUser();
     await screen.findByTestId("event-form-submit");
-    await fillMinimalEventForm();
-    const byId = (id: string) => document.querySelector<HTMLElement>(`#${id}`)!;
-    await userEvent.type(byId("event_categories_0_startAt"), "2026-11-15 06:00");
-    await userEvent.tab();
-    await userEvent.type(byId("event_categories_0_cutoffAt"), "2026-11-15 09:00");
-    await userEvent.tab();
+    await fillMinimalEventForm(user);
+    await fillDateField(user, "event_categories_0_startAt", "2026-11-15 06:00");
+    await fillDateField(user, "event_categories_0_cutoffAt", "2026-11-15 09:00");
 
-    await userEvent.click(screen.getByTestId("event-form-submit"));
+    await user.click(screen.getByTestId("event-form-submit"));
 
     expect(await screen.findByRole("heading", { name: "Events" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/events");
@@ -189,9 +207,10 @@ describe("新建赛事", () => {
         }),
     });
 
+    const user = setupFormUser();
     await screen.findByTestId("event-form-submit");
-    await fillMinimalEventForm();
-    await userEvent.click(screen.getByTestId("event-form-submit"));
+    await fillMinimalEventForm(user);
+    await user.click(screen.getByTestId("event-form-submit"));
 
     expect(await screen.findByText("Slug already taken")).toBeInTheDocument();
     expect(screen.getByText("Category code is invalid")).toBeInTheDocument();
