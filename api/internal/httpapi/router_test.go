@@ -96,16 +96,25 @@ func TestClientIPTrustsOnlyPrivateProxies(t *testing.T) {
 
 func TestOversizedRequestBodyIsRejected(t *testing.T) {
 	r := newRouter(t, nil)
+	// 请求体必须是合法 JSON，只让大小变化：否则去掉 1 MiB 上限后照样因 JSON 解析失败返回 400，测试守不住限制
+	login := func(usernameLen int) *httptest.ResponseRecorder {
+		payload, err := json.Marshal(map[string]string{"username": strings.Repeat("a", usernameLen), "password": "x"})
+		require.NoError(t, err)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/api/admin/auth/login", strings.NewReader(string(payload)))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set(httpx.HeaderClient, "admin")
+		rec := httptest.NewRecorder()
+		r.ServeHTTP(rec, req)
+		return rec
+	}
 
-	body := strings.NewReader(strings.Repeat("a", (1<<20)+1)) // 1 MiB + 1 字节
-	req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/api/admin/auth/login", body)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set(httpx.HeaderClient, "admin")
-	rec := httptest.NewRecorder()
-	r.ServeHTTP(rec, req)
-
+	rec := login(1 << 20) // 用户名 1 MiB，加上 JSON 外壳后超过上限
 	assert.Equal(t, http.StatusBadRequest, rec.Code, rec.Body.String())
 	var errBody httpx.ErrorBody
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &errBody))
 	assert.Equal(t, apperr.CodeBadRequest, errBody.Error.Code)
+
+	// 对照：同样结构、未超上限的请求体能通过解码。路由没有注入 IAM，进入 handler 后的结果不重要，只要不是 400
+	control := login((1 << 20) - 1024)
+	assert.NotEqual(t, http.StatusBadRequest, control.Code, control.Body.String())
 }
