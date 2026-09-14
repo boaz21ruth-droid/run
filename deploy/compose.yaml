@@ -5,7 +5,7 @@ x-api-build: &api-build
   dockerfile: api/Dockerfile
 
 x-api-env: &api-env
-  WERUN_DATABASE_URL: postgres://werun:${POSTGRES_PASSWORD:-werun}@postgres:5432/werun?sslmode=disable
+  WERUN_DATABASE_URL: postgres://werun:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/werun?sslmode=disable
   WERUN_HTTP_ADDR: ":8080"
   WERUN_FILES_DIR: /data/files
 
@@ -15,7 +15,7 @@ services:
     environment:
       POSTGRES_DB: werun
       POSTGRES_USER: werun
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-werun}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -56,6 +56,9 @@ services:
       retries: 12
       start_period: 10s
     restart: unless-stopped
+    # serve 的优雅停止最长等待 30s（见 api/cmd/werun/serve.go shutdownTimeout），
+    # 给够余量避免 Docker 在请求/任务还没处理完时就 SIGKILL。
+    stop_grace_period: 40s
 
   caddy:
     image: ${WERUN_WEB_IMAGE:-werun-web:local}
