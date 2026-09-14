@@ -44,7 +44,11 @@ jobs:
       - name: Generated code is up to date
         run: |
           make gen
-          git diff --exit-code
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Generated code is out of date or left untracked files:"
+            git status --porcelain
+            exit 1
+          fi
 
       - name: Go tests (testcontainers + database invariants)
         working-directory: api
@@ -116,7 +120,7 @@ jobs:
         run: pnpm --filter @werun/e2e exec playwright install --with-deps chromium
 
       - name: Run Playwright
-        run: pnpm --filter @werun/e2e test
+        run: pnpm --filter @werun/e2e e2e
 
       - name: Upload Playwright report
         if: failure()

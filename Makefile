@@ -91,4 +91,4 @@ e2e-seed:
 	bash e2e/scripts/seed-staff.sh
 
 e2e:
-	pnpm --filter @werun/e2e test
+	pnpm --filter @werun/e2e e2e
