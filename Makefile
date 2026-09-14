@@ -84,3 +84,11 @@ compose-down:
 build-images:
 	docker build -f api/Dockerfile -t werun-api:local .
 	docker build -f deploy/web.Dockerfile -t werun-web:local .
+
+.PHONY: e2e e2e-seed
+
+e2e-seed:
+	bash e2e/scripts/seed-staff.sh
+
+e2e:
+	pnpm --filter @werun/e2e test

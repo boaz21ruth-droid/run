@@ -12,6 +12,7 @@ COPY packages/i18n/package.json packages/i18n/
 COPY packages/api-client/package.json packages/api-client/
 COPY web/user/package.json web/user/
 COPY web/admin/package.json web/admin/
+COPY e2e/package.json e2e/
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --store-dir /pnpm/store
 
