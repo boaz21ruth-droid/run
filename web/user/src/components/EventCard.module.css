@@ -1,0 +1,62 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.card:hover {
+  color: var(--ink);
+  box-shadow: var(--shadow-lift);
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card:hover {
+    transition: none;
+    transform: none;
+  }
+}
+
+.date {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--brand);
+  letter-spacing: 0.04em;
+}
+
+.name {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.city {
+  font-size: 14px;
+  color: var(--ink-mid);
+}
+
+.distances {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.distance {
+  padding: 2px 9px;
+  border-radius: 6px;
+  background: var(--brand-tint);
+  color: var(--brand-deep);
+  font-size: 12px;
+  font-weight: 700;
+}

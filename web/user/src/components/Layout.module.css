@@ -1,0 +1,74 @@
+.app {
+  min-height: 100vh;
+  min-height: var(--tg-viewport-height, 100vh);
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(246, 248, 250, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+.headerInner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: var(--shell-max);
+  margin: 0 auto;
+  padding: 10px var(--gutter);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+}
+
+.mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--brand-fill);
+}
+
+.wordmark {
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.nav {
+  display: none;
+}
+
+.navLink {
+  color: var(--ink-mid);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
+}
+
+.active {
+  color: var(--brand);
+  border-bottom-color: var(--brand-fill);
+}
+
+.main {
+  max-width: var(--shell-max);
+  margin: 0 auto;
+  padding: 20px var(--gutter) 48px;
+}
+
+@media (min-width: 1024px) {
+  .nav {
+    display: flex;
+    gap: 28px;
+    margin-left: auto;
+  }
+}

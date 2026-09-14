@@ -1,0 +1,39 @@
+.switch {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+  padding: 2px;
+  background: var(--sunk);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+}
+
+.option {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 100px;
+  background: transparent;
+  color: var(--ink-mute);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.option[lang="km"] {
+  font-family: "Noto Sans Khmer", var(--sans);
+}
+
+.on {
+  background: var(--card);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(16, 24, 32, 0.08);
+}
+
+@media (min-width: 1024px) {
+  .switch {
+    margin-left: 0;
+  }
+}
