@@ -139,6 +139,25 @@ WHERE id = @id
 INSERT INTO coupon_redemptions (order_id, coupon_id, state, discount_cents)
 VALUES (@order_id, @coupon_id, 'RESERVED', @discount_cents);
 
+-- name: LockCategoriesForOrders :exec
+-- 批量释放前按 id 升序锁住这些订单涉及的组别行（与 UPDATE 同为 NO KEY UPDATE，不挡外键检查）。
+SELECT id FROM event_categories
+WHERE id IN (SELECT DISTINCT category_id FROM order_participants WHERE order_id = ANY(@order_ids::bigint[]))
+ORDER BY id
+FOR NO KEY UPDATE;
+
+-- name: LockPriceRulesForOrders :exec
+SELECT id FROM price_rules
+WHERE id IN (SELECT DISTINCT price_rule_id FROM order_participants WHERE order_id = ANY(@order_ids::bigint[]))
+ORDER BY id
+FOR NO KEY UPDATE;
+
+-- name: LockCouponsForOrders :exec
+SELECT id FROM coupons
+WHERE id IN (SELECT DISTINCT coupon_id FROM coupon_redemptions WHERE order_id = ANY(@order_ids::bigint[]) AND state = 'RESERVED')
+ORDER BY id
+FOR NO KEY UPDATE;
+
 -- name: ListOrderCategorySeats :many
 SELECT category_id, count(*)::int AS seats
 FROM order_participants

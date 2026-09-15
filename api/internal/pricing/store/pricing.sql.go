@@ -481,6 +481,43 @@ func (q *Queries) ListPriceRulesByEvent(ctx context.Context, eventID int64) ([]P
 	return items, nil
 }
 
+const lockCategoriesForOrders = `-- name: LockCategoriesForOrders :exec
+SELECT id FROM event_categories
+WHERE id IN (SELECT DISTINCT category_id FROM order_participants WHERE order_id = ANY($1::bigint[]))
+ORDER BY id
+FOR NO KEY UPDATE
+`
+
+// 批量释放前按 id 升序锁住这些订单涉及的组别行（与 UPDATE 同为 NO KEY UPDATE，不挡外键检查）。
+func (q *Queries) LockCategoriesForOrders(ctx context.Context, orderIds []int64) error {
+	_, err := q.db.Exec(ctx, lockCategoriesForOrders, orderIds)
+	return err
+}
+
+const lockCouponsForOrders = `-- name: LockCouponsForOrders :exec
+SELECT id FROM coupons
+WHERE id IN (SELECT DISTINCT coupon_id FROM coupon_redemptions WHERE order_id = ANY($1::bigint[]) AND state = 'RESERVED')
+ORDER BY id
+FOR NO KEY UPDATE
+`
+
+func (q *Queries) LockCouponsForOrders(ctx context.Context, orderIds []int64) error {
+	_, err := q.db.Exec(ctx, lockCouponsForOrders, orderIds)
+	return err
+}
+
+const lockPriceRulesForOrders = `-- name: LockPriceRulesForOrders :exec
+SELECT id FROM price_rules
+WHERE id IN (SELECT DISTINCT price_rule_id FROM order_participants WHERE order_id = ANY($1::bigint[]))
+ORDER BY id
+FOR NO KEY UPDATE
+`
+
+func (q *Queries) LockPriceRulesForOrders(ctx context.Context, orderIds []int64) error {
+	_, err := q.db.Exec(ctx, lockPriceRulesForOrders, orderIds)
+	return err
+}
+
 const markCouponRedemption = `-- name: MarkCouponRedemption :one
 UPDATE coupon_redemptions
 SET state = $1::text, updated_at = now()

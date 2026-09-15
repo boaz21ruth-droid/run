@@ -74,7 +74,7 @@ func (s *Service) ProcessDeadlines(ctx context.Context) (expired, reminded int, 
 }
 
 // expireDueBatch 在一个事务里锁定至多 100 张到期订单并逐张释放。
-// 只锁订单行（随后是计数行），不锁凭证行：审核流程的加锁顺序是凭证 → 订单 → 计数。
+// 只锁订单行，随后按 组别 → 价格档 → 优惠码 升序一次锁住本批计数行；不锁凭证行（审核流程的加锁顺序是凭证 → 订单 → 计数）。
 func (s *Service) expireDueBatch(ctx context.Context, asOf time.Time) (int, int, error) {
 	var selected, released int
 	err := db.InTx(ctx, s.pool, func(tx pgx.Tx) error {
@@ -87,6 +87,13 @@ func (s *Service) expireDueBatch(ctx context.Context, asOf time.Time) (int, int,
 			return fmt.Errorf("lock due orders: %w", err)
 		}
 		selected = len(ids)
+		if selected == 0 {
+			return nil
+		}
+		// 先按全局顺序锁住本批全部计数行，再逐张释放；否则多张订单依次加锁会与 CreateOrder 等形成死锁。
+		if err := s.prices.LockCountersForOrders(ctx, tx, ids); err != nil {
+			return err
+		}
 		for _, id := range ids {
 			ok, err := s.expireOrder(ctx, tx, id)
 			if err != nil {

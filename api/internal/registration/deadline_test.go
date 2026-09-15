@@ -20,6 +20,7 @@ import (
 	"werun/api/internal/platform/storage"
 	"werun/api/internal/registration"
 	"werun/api/internal/registration/regtest"
+	fx "werun/api/internal/testfixture"
 )
 
 func expiredNoticeText(orderNo string) string {
@@ -280,6 +281,81 @@ func TestProcessDeadlinesRacesSubmitProof(t *testing.T) {
 	require.Equal(t, 0, proofs)
 	require.Equal(t, regtest.Counters{}, counters)
 	require.Equal(t, 1, env.CountRows(t, `SELECT count(*) FROM notification_logs WHERE template = 'order_expired'`))
+}
+
+// 死锁回归：组别 C1 < C2 共用价格档 R；到期订单 A（C2）截止早于 B（C1），同一批释放。
+// 批次释放完 A 后在登记 A 的推送处被外部事务挡住，此时并发 CreateOrder（C1, R）。
+// 若批次按订单逐张加锁（C2 → R → C1），CreateOrder 持有 C1 等 R，批次等 C1，形成 40P01；
+// 批次开始时先按 组别 → 价格档 → 优惠码 升序锁住全部计数行后，CreateOrder 只会排队等待。本机用 -count=5 确认稳定。
+func TestProcessDeadlinesDoesNotDeadlockWithConcurrentCreateOrder(t *testing.T) {
+	env := regtest.New(t)
+	ctx := context.Background()
+	c1 := env.CategoryID
+	var c2 int64
+	require.NoError(t, env.Pool.QueryRow(ctx, `
+		INSERT INTO event_categories (event_id, code, name, distance_m, capacity, min_age, sort_order)
+		SELECT event_id, '5K', name, 5000, capacity, min_age, sort_order + 1 FROM event_categories WHERE id = $1
+		RETURNING id`, c1).Scan(&c2))
+	require.Greater(t, c2, c1)
+	env.Exec(t, `INSERT INTO category_price_rules (category_id, price_rule_id) VALUES ($1, $2)`, c2, env.PriceRuleID)
+
+	input := func(categoryID int64, idNo string) registration.CreateOrderInput {
+		profile := fx.Profile("Regtest Runner "+idNo, idNo, "US", "1990-01-01")
+		return registration.CreateOrderInput{
+			EventSlug:      regtest.EventSlug,
+			Consent:        env.Consent,
+			Participants:   []registration.OrderParticipantInput{{CategoryID: categoryID, Profile: &profile}},
+			IdempotencyKey: "deadlock-" + idNo,
+		}
+	}
+	buyer := env.NewRunner(t, 810012, "en")
+	orderA, err := env.Orders.CreateOrder(ctx, buyer, input(c2, "E8100121"), httpx.Meta{})
+	require.NoError(t, err)
+	env.Clock.Advance(time.Minute)
+	orderB, err := env.Orders.CreateOrder(ctx, buyer, input(c1, "E8100122"), httpx.Meta{})
+	require.NoError(t, err)
+	env.Clock.Advance(31 * time.Minute)
+	latecomer := env.NewRunner(t, 810013, "en")
+
+	// 外部事务先登记 A 的 order_expired dedupe_key（不提交）：批次释放 A 之后在登记推送时等待它结束。
+	blocker, err := env.Pool.Begin(ctx)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = blocker.Rollback(context.Background()) })
+	_, err = blocker.Exec(ctx, `
+		INSERT INTO notification_logs (channel, recipient, template, locale, entity_type, entity_id, dedupe_key)
+		VALUES ('TELEGRAM', '0', 'order_expired', 'en', 'reg_order', $1, $2)`,
+		orderA.ID, fmt.Sprintf("order_expired:%d:0", orderA.ID))
+	require.NoError(t, err)
+	lockWaiters := func() int {
+		return env.CountRows(t, `SELECT count(*) FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock'`)
+	}
+
+	var (
+		wg         sync.WaitGroup
+		processErr error
+		createErr  error
+		expired    int
+	)
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		expired, _, processErr = env.Orders.ProcessDeadlines(ctx)
+	}()
+	require.Eventually(t, func() bool { return lockWaiters() == 1 }, 10*time.Second, 20*time.Millisecond, "批次应停在登记 A 的推送处")
+	go func() {
+		defer wg.Done()
+		_, createErr = env.Orders.CreateOrder(ctx, latecomer, input(c1, "E8100131"), httpx.Meta{})
+	}()
+	require.Eventually(t, func() bool { return lockWaiters() == 2 }, 10*time.Second, 20*time.Millisecond, "CreateOrder 应在计数行上等待批次")
+	require.NoError(t, blocker.Rollback(ctx))
+	wg.Wait()
+
+	require.NoError(t, processErr)
+	require.NoError(t, createErr)
+	require.Equal(t, 2, expired)
+	require.Equal(t, "EXPIRED", env.QueryString(t, `SELECT status FROM reg_orders WHERE id = $1`, orderB.ID))
+	require.Equal(t, regtest.Counters{CategoryReserved: 1, RuleReserved: 1}, env.Counters(t), "只剩 latecomer 的预留")
+	require.EqualValues(t, 0, fx.CountersOf(t, env.Pool, "event_categories", c2).Reserved)
 }
 
 func TestProcessDeadlinesRemindsOncePerDeadline(t *testing.T) {

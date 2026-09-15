@@ -96,6 +96,26 @@ func (s *Service) Release(ctx context.Context, tx pgx.Tx, orderID int64) error {
 	return moveCounters(ctx, store.New(tx), orderID, false)
 }
 
+// LockCountersForOrders 在一个事务要连续处理多张订单（如超时批量释放）时先调用：
+// 按 组别 → 价格档 → 优惠码、同类 id 升序锁住这些订单涉及的全部计数行，
+// 之后逐张 Release / Consume 只会更新本事务已持有的行，不会与单订单流程形成相反的加锁顺序。
+func (s *Service) LockCountersForOrders(ctx context.Context, tx pgx.Tx, orderIDs []int64) error {
+	if len(orderIDs) == 0 {
+		return nil
+	}
+	q := store.New(tx)
+	if err := q.LockCategoriesForOrders(ctx, orderIDs); err != nil {
+		return fmt.Errorf("lock categories of %d orders: %w", len(orderIDs), err)
+	}
+	if err := q.LockPriceRulesForOrders(ctx, orderIDs); err != nil {
+		return fmt.Errorf("lock price rules of %d orders: %w", len(orderIDs), err)
+	}
+	if err := q.LockCouponsForOrders(ctx, orderIDs); err != nil {
+		return fmt.Errorf("lock coupons of %d orders: %w", len(orderIDs), err)
+	}
+	return nil
+}
+
 func moveCounters(ctx context.Context, q *store.Queries, orderID int64, consume bool) error {
 	verb := "release"
 	if consume {
