@@ -345,4 +345,97 @@ describe("RegisterPage", () => {
     await waitFor(() => expect(router.state.location.pathname).toBe("/orders/WR7K2M9QXA"));
     expect(await screen.findByTestId("order-status")).toHaveAttribute("data-status", "PAID");
   });
+
+  describe("切换语言", () => {
+    const zhName = "金边半程马拉松 2026";
+    const localizedEvent = (request: Request) =>
+      jsonResponse(200, request.headers.get("Accept-Language") === "zh" ? { ...halfMarathon, name: zhName } : halfMarathon);
+
+    it("第 2 步切换语言后保留步骤与已填资料，标题换成新语言", async () => {
+      const user = userEvent.setup();
+      renderApp(PATH, routes({ "GET /api/events/phnom-penh-half-2026": localizedEvent }), inTelegram);
+
+      await user.selectOptions(await screen.findByTestId("participant-0-category"), "11");
+      await user.click(screen.getByTestId("wizard-next"));
+      await fillNewRunner(user, 0);
+      await user.click(screen.getByTestId("participant-0-saveProfile"));
+
+      await user.click(screen.getByTestId("lang-switch-zh"));
+
+      expect(await screen.findByRole("heading", { name: `报名：${zhName}` })).toBeInTheDocument();
+      expect(screen.getByTestId("participant-0-fullName")).toHaveValue("Chan Sophea");
+      expect(screen.getByTestId("participant-0-idNo")).toHaveValue("N01234567");
+      expect(screen.getByTestId("participant-0-tshirtSize")).toHaveValue("M");
+      expect(screen.getByTestId("participant-0-saveProfile")).toBeChecked();
+      expect(screen.getByTestId("wizard-back")).toBeInTheDocument();
+    });
+
+    it("确认页切换语言后保留优惠码输入与同意勾选，重试沿用同一个 Idempotency-Key", async () => {
+      const user = userEvent.setup();
+      const keys: string[] = [];
+      const consentLangs: string[] = [];
+      const { router } = renderApp(
+        PATH,
+        routes({
+          "GET /api/events/phnom-penh-half-2026": localizedEvent,
+          // 同意书没有中文版本时服务端回退英文：版本与语言不变，下单请求体也不变
+          "GET /api/app/consents": (request) => {
+            consentLangs.push(new URL(request.url).searchParams.get("lang") ?? "");
+            return jsonResponse(200, consentEn);
+          },
+          "POST /api/app/orders": (request) => {
+            keys.push(request.headers.get("Idempotency-Key") ?? "");
+            if (keys.length === 1) {
+              throw new TypeError("Failed to fetch");
+            }
+            return jsonResponse(201, orderDetail());
+          },
+        }),
+        inTelegram,
+      );
+      await reachConfirmWithSavedProfile(user);
+      await checkAllConsents(user);
+      await user.type(screen.getByTestId("coupon-input"), "later");
+      await user.click(screen.getByTestId("order-submit"));
+      await screen.findByTestId("form-error");
+
+      await user.click(screen.getByTestId("lang-switch-zh"));
+
+      expect(await screen.findByRole("heading", { name: `报名：${zhName}` })).toBeInTheDocument();
+      await waitFor(() => expect(consentLangs).toEqual(["en", "zh"]));
+      expect(await screen.findByTestId("consent-item-terms")).toBeChecked();
+      expect(screen.getByTestId("consent-item-rules")).toBeChecked();
+      expect(screen.getByTestId("consent-item-health")).toBeChecked();
+      expect(screen.getByTestId("coupon-input")).toHaveValue("later");
+      await user.click(screen.getByTestId("order-submit"));
+
+      await waitFor(() => expect(router.state.location.pathname).toBe("/orders/WR7K2M9QXA/pay"));
+      expect(keys).toHaveLength(2);
+      expect(keys[1]).toBe(keys[0]);
+    });
+
+    it("新语言的同意书版本不同时需要重新勾选", async () => {
+      const user = userEvent.setup();
+      renderApp(
+        PATH,
+        routes({
+          "GET /api/app/consents": (request) =>
+            jsonResponse(
+              200,
+              new URL(request.url).searchParams.get("lang") === "zh" ? { ...consentEn, version: "REG-E2E-v2", lang: "zh" } : consentEn,
+            ),
+        }),
+        inTelegram,
+      );
+      await reachConfirmWithSavedProfile(user);
+      await checkAllConsents(user);
+      expect(screen.getByTestId("order-submit")).toBeEnabled();
+
+      await user.click(screen.getByTestId("lang-switch-zh"));
+
+      expect(await screen.findByText("版本 REG-E2E-v2")).toBeInTheDocument();
+      expect(screen.getByTestId("consent-item-rules")).not.toBeChecked();
+      expect(screen.getByTestId("order-submit")).toBeDisabled();
+    });
+  });
 });

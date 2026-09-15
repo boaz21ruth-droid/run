@@ -55,7 +55,9 @@ export function StepConfirm({ event, participants, profiles, submissionKey, onSe
   });
   const consent = useRegistrationConsent(lang);
   const consentItems = consent.data?.items ?? [];
-  const allChecked = consentItems.length > 0 && consentItems.every((item) => checked[item.key]);
+  // 勾选按「版本:条目」记录：换语言后同一版本同一条目的勾选保留；版本不同是另一份同意书，需要重新勾选
+  const checkKey = (itemKey: string) => `${consent.data?.version ?? ""}:${itemKey}`;
+  const allChecked = consentItems.length > 0 && consentItems.every((item) => checked[checkKey(item.key)]);
 
   async function applyCoupon() {
     const code = couponInput.trim().toUpperCase();
@@ -212,8 +214,8 @@ export function StepConfirm({ event, participants, profiles, submissionKey, onSe
                 <input
                   type="checkbox"
                   data-testid={`consent-item-${item.key}`}
-                  checked={checked[item.key] ?? false}
-                  onChange={(e) => setChecked((prev) => ({ ...prev, [item.key]: e.target.checked }))}
+                  checked={checked[checkKey(item.key)] ?? false}
+                  onChange={(e) => setChecked((prev) => ({ ...prev, [checkKey(item.key)]: e.target.checked }))}
                 />
                 <span>
                   <strong>{item.title}</strong>

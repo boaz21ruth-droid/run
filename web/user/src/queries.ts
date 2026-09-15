@@ -12,12 +12,20 @@ export function usePublicEvents() {
   });
 }
 
-export function usePublicEvent(slug: string) {
+export interface PublicEventOptions {
+  /** 切换语言时先沿用同一赛事上一种语言的数据，避免 QueryState 显示加载而卸载页面（报名向导会丢失已填内容） */
+  keepDataOnLanguageChange?: boolean;
+}
+
+export function usePublicEvent(slug: string, options: PublicEventOptions = {}) {
   const api = useApi();
   const lang = useLang();
   return useQuery({
     queryKey: ["event", slug, lang],
     queryFn: async () => unwrap(await api.GET("/events/{slug}", { params: { path: { slug } } })),
+    placeholderData: options.keepDataOnLanguageChange
+      ? (previous, previousQuery) => (previousQuery?.queryKey[1] === slug ? previous : undefined)
+      : undefined,
   });
 }
 

@@ -24,7 +24,8 @@ const PARTICIPANT_FIELD = /^participants\[(\d+)\]\.(\w+)$/;
 export function RegisterPage() {
   const { slug = "" } = useParams();
   const { t } = useTranslation("user");
-  const event = usePublicEvent(slug);
+  // 切换语言时沿用已加载的赛事，向导不卸载；新语言加载完后标题与组别名自动更新
+  const event = usePublicEvent(slug, { keepDataOnLanguageChange: true });
   const profiles = useProfiles();
 
   if (event.error instanceof ApiError && event.error.status === 404) {
@@ -35,7 +36,10 @@ export function RegisterPage() {
     <QueryState query={event}>
       {(data) =>
         registrationAvailable(data) ? (
-          <QueryState query={profiles}>{(items) => <RegisterWizard event={data} profiles={items} />}</QueryState>
+          <QueryState query={profiles}>
+            {/* 换了赛事（slug 变化）时重新开始，不带上一场的草稿与幂等键 */}
+            {(items) => <RegisterWizard key={data.slug} event={data} profiles={items} />}
+          </QueryState>
         ) : (
           <section>
             <h1 className={styles.title}>{data.name}</h1>
