@@ -131,3 +131,58 @@ FROM payment_proofs
 WHERE reg_order_id = @reg_order_id::bigint AND status = 'REJECTED'
 ORDER BY reviewed_at DESC, id DESC
 LIMIT 1;
+
+-- name: ListOrdersForBuyer :many
+SELECT o.id, o.order_no, o.event_id, o.buyer_user_id, o.status, o.reservation_state,
+       o.list_amount_cents, o.discount_cents, o.ident_offset_cents, o.amount_cents, o.currency,
+       o.payment_account_id, o.deadline_at, o.paid_at, o.created_at,
+       e.slug AS event_slug, e.name AS event_name,
+       (SELECT count(*) FROM order_participants op WHERE op.order_id = o.id) AS participant_count
+FROM reg_orders o
+JOIN events e ON e.id = o.event_id
+WHERE o.buyer_user_id = @buyer_user_id::bigint
+ORDER BY o.created_at DESC, o.id DESC
+LIMIT 100;
+
+-- name: GetOrderIDForBuyer :one
+SELECT id
+FROM reg_orders
+WHERE order_no = @order_no AND buyer_user_id = @buyer_user_id::bigint;
+
+-- name: LockOrderForBuyer :one
+SELECT id, event_id, status
+FROM reg_orders
+WHERE order_no = @order_no AND buyer_user_id = @buyer_user_id::bigint
+FOR UPDATE;
+
+-- name: ReleaseOrderExpired :execrows
+UPDATE reg_orders
+SET status = 'EXPIRED',
+    reservation_state = 'RELEASED',
+    reservation_release_kind = 'ORDER_EXPIRED',
+    expired_at = @at::timestamptz,
+    deadline_at = NULL,
+    version = version + 1
+WHERE id = @id
+  AND reservation_state = 'RESERVED'
+  AND status IN ('PENDING_PAYMENT', 'PROOF_REJECTED');
+
+-- name: ReleaseOrderCancelled :execrows
+UPDATE reg_orders
+SET status = 'CANCELLED',
+    reservation_state = 'RELEASED',
+    reservation_release_kind = 'ORDER_CANCELLED',
+    cancelled_at = @at::timestamptz,
+    deadline_at = NULL,
+    version = version + 1
+WHERE id = @id
+  AND reservation_state = 'RESERVED'
+  AND status = 'PENDING_PAYMENT';
+
+-- name: CancelOrderRegistrations :execrows
+UPDATE registrations r
+SET status = 'CANCELLED', cancel_reason = @cancel_reason::text, version = r.version + 1
+FROM order_participants op
+WHERE op.id = r.order_participant_id
+  AND op.order_id = @order_id::bigint
+  AND r.status = 'PENDING';

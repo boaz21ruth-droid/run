@@ -442,10 +442,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** 我的订单（最近 100 张，新的在前） */
+        get: operations["appListOrders"];
         put?: never;
         /** 下单并占名额；应付为 0 时直接确认 */
         post: operations["appCreateOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/app/orders/{orderNo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 订单详情（不属于当前跑者时 404） */
+        get: operations["appGetOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/app/orders/{orderNo}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 付款前取消订单并释放名额 */
+        post: operations["appCancelOrder"];
         delete?: never;
         options?: never;
         head?: never;
@@ -964,6 +999,24 @@ export interface components {
             participants: components["schemas"]["OrderParticipant"][];
             paymentAccount: components["schemas"]["OrderPaymentAccount"];
             lastRejection?: components["schemas"]["OrderRejection"];
+        };
+        OrderSummary: {
+            orderNo: string;
+            status: components["schemas"]["OrderStatus"];
+            eventSlug: string;
+            eventName: components["schemas"]["LocalizedText"];
+            /** Format: int64 */
+            amountCents: number;
+            currency: string;
+            /** Format: int32 */
+            participantCount: number;
+            /** Format: date-time */
+            deadlineAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        OrderList: {
+            items: components["schemas"]["OrderSummary"][];
         };
     };
     responses: never;
@@ -1986,6 +2039,35 @@ export interface operations {
             };
         };
     };
+    appListOrders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 订单列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderList"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     appCreateOrder: {
         parameters: {
             query?: never;
@@ -2004,6 +2086,68 @@ export interface operations {
         responses: {
             /** @description 已下单（同键同请求体重放时返回首次响应） */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appGetOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderNo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 订单详情 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appCancelOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderNo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 已取消 */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

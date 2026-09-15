@@ -299,3 +299,21 @@ func Order(t testing.TB, pool *pgxpool.Pool, o OrderOpts) int64 {
 	}
 	return id
 }
+
+// RejectedProof 为订单写一份已驳回的凭证（附带审核员工与 PRIVATE 截图文件行）。
+func RejectedProof(t testing.TB, pool *pgxpool.Pool, orderID, accountID int64, code string, reason *string, reviewedAt time.Time) int64 {
+	t.Helper()
+	staffID := scanID(t, pool, `INSERT INTO staff (username, full_name, role, password_hash)
+		VALUES ($1, 'Finance Fixture', 'FINANCE', 'fixture-not-a-hash') RETURNING id`, "finance."+randHex(4))
+	sha := make([]byte, 32)
+	_, _ = rand.Read(sha)
+	fileID := scanID(t, pool, `INSERT INTO files
+		(storage_key, visibility, purpose, mime_type, size_bytes, sha256, width, height, uploaded_by_type)
+		VALUES ($1, 'PRIVATE', 'PAYMENT_PROOF', 'image/jpeg', 2048, $2, 720, 1280, 'USER')
+		RETURNING id`, "2026/09/"+randHex(16)+".jpg", sha)
+	return scanID(t, pool, `INSERT INTO payment_proofs
+		(proof_no, reg_order_id, payment_account_id, file_id, declared_amount_cents, declared_currency,
+		 bank_txn_ref, status, reviewed_by, reviewed_at, reject_code, reject_reason)
+		VALUES ($1, $2, $3, $4, 100, 'USD', $5, 'REJECTED', $6, $7, $8, $9)
+		RETURNING id`, "PFFX"+randHex(4), orderID, accountID, fileID, "TXN"+randHex(6), staffID, reviewedAt, code, reason)
+}

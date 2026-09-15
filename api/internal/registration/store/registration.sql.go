@@ -10,6 +10,28 @@ import (
 	"time"
 )
 
+const cancelOrderRegistrations = `-- name: CancelOrderRegistrations :execrows
+UPDATE registrations r
+SET status = 'CANCELLED', cancel_reason = $1::text, version = r.version + 1
+FROM order_participants op
+WHERE op.id = r.order_participant_id
+  AND op.order_id = $2::bigint
+  AND r.status = 'PENDING'
+`
+
+type CancelOrderRegistrationsParams struct {
+	CancelReason string
+	OrderID      int64
+}
+
+func (q *Queries) CancelOrderRegistrations(ctx context.Context, arg CancelOrderRegistrationsParams) (int64, error) {
+	result, err := q.db.Exec(ctx, cancelOrderRegistrations, arg.CancelReason, arg.OrderID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const claimIdempotencyKey = `-- name: ClaimIdempotencyKey :one
 INSERT INTO idempotency_keys (key, scope, subject, request_hash, created_at, expires_at)
 VALUES ($1, $2, $3, $4, $5, $6)
@@ -195,6 +217,24 @@ func (q *Queries) GetOrderDetailByID(ctx context.Context, id int64) (GetOrderDet
 		&i.EventTimezone,
 	)
 	return i, err
+}
+
+const getOrderIDForBuyer = `-- name: GetOrderIDForBuyer :one
+SELECT id
+FROM reg_orders
+WHERE order_no = $1 AND buyer_user_id = $2::bigint
+`
+
+type GetOrderIDForBuyerParams struct {
+	OrderNo     string
+	BuyerUserID int64
+}
+
+func (q *Queries) GetOrderIDForBuyer(ctx context.Context, arg GetOrderIDForBuyerParams) (int64, error) {
+	row := q.db.QueryRow(ctx, getOrderIDForBuyer, arg.OrderNo, arg.BuyerUserID)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const getOrderPaymentAccount = `-- name: GetOrderPaymentAccount :one
@@ -421,6 +461,79 @@ func (q *Queries) ListOrderParticipantDetails(ctx context.Context, orderID int64
 	return items, nil
 }
 
+const listOrdersForBuyer = `-- name: ListOrdersForBuyer :many
+SELECT o.id, o.order_no, o.event_id, o.buyer_user_id, o.status, o.reservation_state,
+       o.list_amount_cents, o.discount_cents, o.ident_offset_cents, o.amount_cents, o.currency,
+       o.payment_account_id, o.deadline_at, o.paid_at, o.created_at,
+       e.slug AS event_slug, e.name AS event_name,
+       (SELECT count(*) FROM order_participants op WHERE op.order_id = o.id) AS participant_count
+FROM reg_orders o
+JOIN events e ON e.id = o.event_id
+WHERE o.buyer_user_id = $1::bigint
+ORDER BY o.created_at DESC, o.id DESC
+LIMIT 100
+`
+
+type ListOrdersForBuyerRow struct {
+	ID               int64
+	OrderNo          string
+	EventID          int64
+	BuyerUserID      *int64
+	Status           string
+	ReservationState string
+	ListAmountCents  int64
+	DiscountCents    int64
+	IdentOffsetCents int16
+	AmountCents      int64
+	Currency         string
+	PaymentAccountID *int64
+	DeadlineAt       *time.Time
+	PaidAt           *time.Time
+	CreatedAt        time.Time
+	EventSlug        string
+	EventName        []byte
+	ParticipantCount int64
+}
+
+func (q *Queries) ListOrdersForBuyer(ctx context.Context, buyerUserID int64) ([]ListOrdersForBuyerRow, error) {
+	rows, err := q.db.Query(ctx, listOrdersForBuyer, buyerUserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListOrdersForBuyerRow
+	for rows.Next() {
+		var i ListOrdersForBuyerRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrderNo,
+			&i.EventID,
+			&i.BuyerUserID,
+			&i.Status,
+			&i.ReservationState,
+			&i.ListAmountCents,
+			&i.DiscountCents,
+			&i.IdentOffsetCents,
+			&i.AmountCents,
+			&i.Currency,
+			&i.PaymentAccountID,
+			&i.DeadlineAt,
+			&i.PaidAt,
+			&i.CreatedAt,
+			&i.EventSlug,
+			&i.EventName,
+			&i.ParticipantCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listRegisteredIDNoHashes = `-- name: ListRegisteredIDNoHashes :many
 SELECT id_no_hash
 FROM registrations
@@ -503,6 +616,31 @@ func (q *Queries) LockIDNoHash(ctx context.Context, arg LockIDNoHashParams) erro
 	return err
 }
 
+const lockOrderForBuyer = `-- name: LockOrderForBuyer :one
+SELECT id, event_id, status
+FROM reg_orders
+WHERE order_no = $1 AND buyer_user_id = $2::bigint
+FOR UPDATE
+`
+
+type LockOrderForBuyerParams struct {
+	OrderNo     string
+	BuyerUserID int64
+}
+
+type LockOrderForBuyerRow struct {
+	ID      int64
+	EventID int64
+	Status  string
+}
+
+func (q *Queries) LockOrderForBuyer(ctx context.Context, arg LockOrderForBuyerParams) (LockOrderForBuyerRow, error) {
+	row := q.db.QueryRow(ctx, lockOrderForBuyer, arg.OrderNo, arg.BuyerUserID)
+	var i LockOrderForBuyerRow
+	err := row.Scan(&i.ID, &i.EventID, &i.Status)
+	return i, err
+}
+
 const markOrderPaid = `-- name: MarkOrderPaid :execrows
 UPDATE reg_orders
 SET status = 'PAID',
@@ -523,6 +661,58 @@ type MarkOrderPaidParams struct {
 // 订单条件更新：只有预留仍为 RESERVED 的订单能转为 PAID/CONSUMED，保证 pricing.Consume 每单只调用一次。
 func (q *Queries) MarkOrderPaid(ctx context.Context, arg MarkOrderPaidParams) (int64, error) {
 	result, err := q.db.Exec(ctx, markOrderPaid, arg.PaidAt, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const releaseOrderCancelled = `-- name: ReleaseOrderCancelled :execrows
+UPDATE reg_orders
+SET status = 'CANCELLED',
+    reservation_state = 'RELEASED',
+    reservation_release_kind = 'ORDER_CANCELLED',
+    cancelled_at = $1::timestamptz,
+    deadline_at = NULL,
+    version = version + 1
+WHERE id = $2
+  AND reservation_state = 'RESERVED'
+  AND status = 'PENDING_PAYMENT'
+`
+
+type ReleaseOrderCancelledParams struct {
+	At time.Time
+	ID int64
+}
+
+func (q *Queries) ReleaseOrderCancelled(ctx context.Context, arg ReleaseOrderCancelledParams) (int64, error) {
+	result, err := q.db.Exec(ctx, releaseOrderCancelled, arg.At, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const releaseOrderExpired = `-- name: ReleaseOrderExpired :execrows
+UPDATE reg_orders
+SET status = 'EXPIRED',
+    reservation_state = 'RELEASED',
+    reservation_release_kind = 'ORDER_EXPIRED',
+    expired_at = $1::timestamptz,
+    deadline_at = NULL,
+    version = version + 1
+WHERE id = $2
+  AND reservation_state = 'RESERVED'
+  AND status IN ('PENDING_PAYMENT', 'PROOF_REJECTED')
+`
+
+type ReleaseOrderExpiredParams struct {
+	At time.Time
+	ID int64
+}
+
+func (q *Queries) ReleaseOrderExpired(ctx context.Context, arg ReleaseOrderExpiredParams) (int64, error) {
+	result, err := q.db.Exec(ctx, releaseOrderExpired, arg.At, arg.ID)
 	if err != nil {
 		return 0, err
 	}

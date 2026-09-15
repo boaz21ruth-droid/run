@@ -853,6 +853,11 @@ type OrderDetail struct {
 	Status           OrderStatus         `json:"status"`
 }
 
+// OrderList defines model for OrderList.
+type OrderList struct {
+	Items []OrderSummary `json:"items"`
+}
+
 // OrderParticipant defines model for OrderParticipant.
 type OrderParticipant struct {
 	CategoryId         int64                              `json:"categoryId"`
@@ -922,6 +927,19 @@ type OrderRejection struct {
 
 // OrderStatus defines model for OrderStatus.
 type OrderStatus string
+
+// OrderSummary defines model for OrderSummary.
+type OrderSummary struct {
+	AmountCents      int64         `json:"amountCents"`
+	CreatedAt        time.Time     `json:"createdAt"`
+	Currency         string        `json:"currency"`
+	DeadlineAt       *time.Time    `json:"deadlineAt"`
+	EventName        LocalizedText `json:"eventName"`
+	EventSlug        string        `json:"eventSlug"`
+	OrderNo          string        `json:"orderNo"`
+	ParticipantCount int32         `json:"participantCount"`
+	Status           OrderStatus   `json:"status"`
+}
 
 // PaymentAccount defines model for PaymentAccount.
 type PaymentAccount struct {
@@ -1315,9 +1333,18 @@ type ServerInterface interface {
 	// AppGetMe 当前跑者
 	// (GET /app/me)
 	AppGetMe(c *gin.Context)
+	// AppListOrders 我的订单（最近 100 张，新的在前）
+	// (GET /app/orders)
+	AppListOrders(c *gin.Context)
 	// AppCreateOrder 下单并占名额；应付为 0 时直接确认
 	// (POST /app/orders)
 	AppCreateOrder(c *gin.Context, params AppCreateOrderParams)
+	// AppGetOrder 订单详情（不属于当前跑者时 404）
+	// (GET /app/orders/{orderNo})
+	AppGetOrder(c *gin.Context, orderNo string)
+	// AppCancelOrder 付款前取消订单并释放名额
+	// (POST /app/orders/{orderNo}/cancel)
+	AppCancelOrder(c *gin.Context, orderNo string)
 	// AppListProfiles 当前跑者的常用参赛人（证件号只返回后 4 位）
 	// (GET /app/profiles)
 	AppListProfiles(c *gin.Context)
@@ -1786,6 +1813,19 @@ func (siw *ServerInterfaceWrapper) AppGetMe(c *gin.Context) {
 	siw.Handler.AppGetMe(c)
 }
 
+// AppListOrders operation middleware
+func (siw *ServerInterfaceWrapper) AppListOrders(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppListOrders(c)
+}
+
 // AppCreateOrder operation middleware
 func (siw *ServerInterfaceWrapper) AppCreateOrder(c *gin.Context) {
 
@@ -1827,6 +1867,56 @@ func (siw *ServerInterfaceWrapper) AppCreateOrder(c *gin.Context) {
 	}
 
 	siw.Handler.AppCreateOrder(c, params)
+}
+
+// AppGetOrder operation middleware
+func (siw *ServerInterfaceWrapper) AppGetOrder(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "orderNo" -------------
+	var orderNo string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "orderNo", c.Param("orderNo"), &orderNo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter orderNo: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppGetOrder(c, orderNo)
+}
+
+// AppCancelOrder operation middleware
+func (siw *ServerInterfaceWrapper) AppCancelOrder(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "orderNo" -------------
+	var orderNo string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "orderNo", c.Param("orderNo"), &orderNo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter orderNo: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppCancelOrder(c, orderNo)
 }
 
 // AppListProfiles operation middleware
@@ -2052,7 +2142,10 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.PUT(options.BaseURL+"/app/profiles/:id", wrapper.AppUpdateProfile)
 	router.GET(options.BaseURL+"/app/consents", wrapper.AppGetConsent)
 	router.POST(options.BaseURL+"/app/events/:slug/quote", wrapper.AppQuote)
+	router.GET(options.BaseURL+"/app/orders", wrapper.AppListOrders)
 	router.POST(options.BaseURL+"/app/orders", wrapper.AppCreateOrder)
+	router.GET(options.BaseURL+"/app/orders/:orderNo", wrapper.AppGetOrder)
+	router.POST(options.BaseURL+"/app/orders/:orderNo/cancel", wrapper.AppCancelOrder)
 }
 
 type AdminLoginRequestObject struct {
@@ -2901,6 +2994,44 @@ func (response AppGetMedefaultJSONResponse) VisitAppGetMeResponse(w http.Respons
 	return err
 }
 
+type AppListOrdersRequestObject struct {
+}
+
+type AppListOrdersResponseObject interface {
+	VisitAppListOrdersResponse(w http.ResponseWriter) error
+}
+
+type AppListOrders200JSONResponse OrderList
+
+func (response AppListOrders200JSONResponse) VisitAppListOrdersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppListOrdersdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppListOrdersdefaultJSONResponse) VisitAppListOrdersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AppCreateOrderRequestObject struct {
 	Params AppCreateOrderParams
 	Body   *AppCreateOrderJSONRequestBody
@@ -2930,6 +3061,84 @@ type AppCreateOrderdefaultJSONResponse struct {
 }
 
 func (response AppCreateOrderdefaultJSONResponse) VisitAppCreateOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppGetOrderRequestObject struct {
+	OrderNo string `json:"orderNo"`
+}
+
+type AppGetOrderResponseObject interface {
+	VisitAppGetOrderResponse(w http.ResponseWriter) error
+}
+
+type AppGetOrder200JSONResponse OrderDetail
+
+func (response AppGetOrder200JSONResponse) VisitAppGetOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppGetOrderdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppGetOrderdefaultJSONResponse) VisitAppGetOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppCancelOrderRequestObject struct {
+	OrderNo string `json:"orderNo"`
+}
+
+type AppCancelOrderResponseObject interface {
+	VisitAppCancelOrderResponse(w http.ResponseWriter) error
+}
+
+type AppCancelOrder200JSONResponse OrderDetail
+
+func (response AppCancelOrder200JSONResponse) VisitAppCancelOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppCancelOrderdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppCancelOrderdefaultJSONResponse) VisitAppCancelOrderResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -3372,9 +3581,18 @@ type StrictServerInterface interface {
 	// AppGetMe 当前跑者
 	// (GET /app/me)
 	AppGetMe(ctx context.Context, request AppGetMeRequestObject) (AppGetMeResponseObject, error)
+	// AppListOrders 我的订单（最近 100 张，新的在前）
+	// (GET /app/orders)
+	AppListOrders(ctx context.Context, request AppListOrdersRequestObject) (AppListOrdersResponseObject, error)
 	// AppCreateOrder 下单并占名额；应付为 0 时直接确认
 	// (POST /app/orders)
 	AppCreateOrder(ctx context.Context, request AppCreateOrderRequestObject) (AppCreateOrderResponseObject, error)
+	// AppGetOrder 订单详情（不属于当前跑者时 404）
+	// (GET /app/orders/{orderNo})
+	AppGetOrder(ctx context.Context, request AppGetOrderRequestObject) (AppGetOrderResponseObject, error)
+	// AppCancelOrder 付款前取消订单并释放名额
+	// (POST /app/orders/{orderNo}/cancel)
+	AppCancelOrder(ctx context.Context, request AppCancelOrderRequestObject) (AppCancelOrderResponseObject, error)
 	// AppListProfiles 当前跑者的常用参赛人（证件号只返回后 4 位）
 	// (GET /app/profiles)
 	AppListProfiles(ctx context.Context, request AppListProfilesRequestObject) (AppListProfilesResponseObject, error)
@@ -4088,6 +4306,30 @@ func (sh *strictHandler) AppGetMe(ctx *gin.Context) {
 	}
 }
 
+// AppListOrders operation middleware
+func (sh *strictHandler) AppListOrders(ctx *gin.Context) {
+	var request AppListOrdersRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppListOrders(ctx, request.(AppListOrdersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppListOrders")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppListOrdersResponseObject); ok {
+		if err := validResponse.VisitAppListOrdersResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // AppCreateOrder operation middleware
 func (sh *strictHandler) AppCreateOrder(ctx *gin.Context, params AppCreateOrderParams) {
 	var request AppCreateOrderRequestObject
@@ -4114,6 +4356,58 @@ func (sh *strictHandler) AppCreateOrder(ctx *gin.Context, params AppCreateOrderP
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AppCreateOrderResponseObject); ok {
 		if err := validResponse.VisitAppCreateOrderResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppGetOrder operation middleware
+func (sh *strictHandler) AppGetOrder(ctx *gin.Context, orderNo string) {
+	var request AppGetOrderRequestObject
+
+	request.OrderNo = orderNo
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppGetOrder(ctx, request.(AppGetOrderRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppGetOrder")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppGetOrderResponseObject); ok {
+		if err := validResponse.VisitAppGetOrderResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppCancelOrder operation middleware
+func (sh *strictHandler) AppCancelOrder(ctx *gin.Context, orderNo string) {
+	var request AppCancelOrderRequestObject
+
+	request.OrderNo = orderNo
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppCancelOrder(ctx, request.(AppCancelOrderRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppCancelOrder")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppCancelOrderResponseObject); ok {
+		if err := validResponse.VisitAppCancelOrderResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

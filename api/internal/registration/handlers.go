@@ -230,6 +230,60 @@ func orderDetailFromAPI(a apigen.OrderDetail) OrderDetail {
 	return d
 }
 
+func (h *Handlers) AppListOrders(ctx context.Context, _ apigen.AppListOrdersRequestObject) (apigen.AppListOrdersResponseObject, error) {
+	u, err := currentRunner(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orders, err := h.svc.ListMyOrders(ctx, u)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]apigen.OrderSummary, 0, len(orders))
+	for _, o := range orders {
+		items = append(items, toAPIOrderSummary(o))
+	}
+	return apigen.AppListOrders200JSONResponse{Items: items}, nil
+}
+
+func (h *Handlers) AppGetOrder(ctx context.Context, req apigen.AppGetOrderRequestObject) (apigen.AppGetOrderResponseObject, error) {
+	u, err := currentRunner(ctx)
+	if err != nil {
+		return nil, err
+	}
+	d, err := h.svc.GetMyOrder(ctx, u, req.OrderNo)
+	if err != nil {
+		return nil, err
+	}
+	return apigen.AppGetOrder200JSONResponse(toAPIOrderDetail(d)), nil
+}
+
+func (h *Handlers) AppCancelOrder(ctx context.Context, req apigen.AppCancelOrderRequestObject) (apigen.AppCancelOrderResponseObject, error) {
+	u, err := currentRunner(ctx)
+	if err != nil {
+		return nil, err
+	}
+	d, err := h.svc.CancelOrder(ctx, u, req.OrderNo, httpx.MetaOf(ctx))
+	if err != nil {
+		return nil, err
+	}
+	return apigen.AppCancelOrder200JSONResponse(toAPIOrderDetail(d)), nil
+}
+
+func toAPIOrderSummary(o OrderSummary) apigen.OrderSummary {
+	return apigen.OrderSummary{
+		OrderNo:          o.OrderNo,
+		Status:           apigen.OrderStatus(o.Status),
+		EventSlug:        o.EventSlug,
+		EventName:        localizedToAPI(o.EventName),
+		AmountCents:      o.AmountCents,
+		Currency:         o.Currency,
+		ParticipantCount: int32(o.ParticipantCount),
+		DeadlineAt:       o.DeadlineAt,
+		CreatedAt:        o.CreatedAt,
+	}
+}
+
 func localizedToAPI(t i18n.Text) apigen.LocalizedText {
 	pick := func(l i18n.Lang) *string {
 		v, ok := t[l]

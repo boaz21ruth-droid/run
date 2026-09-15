@@ -805,6 +805,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /app/orders:
+    get:
+      operationId: appListOrders
+      summary: 我的订单（最近 100 张，新的在前）
+      x-auth: app
+      responses:
+        '200':
+          description: 订单列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderList'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     post:
       operationId: appCreateOrder
       summary: 下单并占名额；应付为 0 时直接确认
@@ -828,6 +845,54 @@ paths:
       responses:
         '201':
           description: 已下单（同键同请求体重放时返回首次响应）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetail'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /app/orders/{orderNo}:
+    get:
+      operationId: appGetOrder
+      summary: 订单详情（不属于当前跑者时 404）
+      x-auth: app
+      parameters:
+        - name: orderNo
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 订单详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetail'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /app/orders/{orderNo}/cancel:
+    post:
+      operationId: appCancelOrder
+      summary: 付款前取消订单并释放名额
+      x-auth: app
+      parameters:
+        - name: orderNo
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 已取消
           content:
             application/json:
               schema:
@@ -1784,3 +1849,38 @@ components:
           $ref: '#/components/schemas/OrderPaymentAccount'
         lastRejection:
           $ref: '#/components/schemas/OrderRejection'
+    OrderSummary:
+      type: object
+      required: [orderNo, status, eventSlug, eventName, amountCents, currency, participantCount, deadlineAt, createdAt]
+      properties:
+        orderNo:
+          type: string
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        eventSlug:
+          type: string
+        eventName:
+          $ref: '#/components/schemas/LocalizedText'
+        amountCents:
+          type: integer
+          format: int64
+        currency:
+          type: string
+        participantCount:
+          type: integer
+          format: int32
+        deadlineAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    OrderList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderSummary'

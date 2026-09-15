@@ -222,3 +222,45 @@ func TestAppQuoteAndCreateOrderRejectParticipantCountHTTP(t *testing.T) {
 	}
 	require.Equal(t, 0, fx.Count(t, env.pool, `SELECT count(*) FROM reg_orders`))
 }
+
+func TestAppOrdersHTTP(t *testing.T) {
+	env := newOrderHTTPEnv(t)
+	enHeader := http.Header{"Accept-Language": []string{"en"}}
+
+	rec := env.do(t, http.MethodPost, "/api/app/orders", env.orderBody("N01234567"), env.token, idemHeader("http-orders-key-01"))
+	require.Equal(t, http.StatusCreated, rec.Code, rec.Body.String())
+	orderNo := eventsDecode[apigen.OrderDetail](t, rec).OrderNo
+
+	rec = env.do(t, http.MethodGet, "/api/app/orders", nil, "", nil)
+	require.Equal(t, http.StatusUnauthorized, rec.Code, rec.Body.String())
+
+	rec = env.do(t, http.MethodGet, "/api/app/orders", nil, env.token, nil)
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	list := eventsDecode[apigen.OrderList](t, rec)
+	require.Len(t, list.Items, 1)
+	require.Equal(t, orderNo, list.Items[0].OrderNo)
+	require.Equal(t, int32(1), list.Items[0].ParticipantCount)
+	require.Equal(t, apigen.OrderStatus("PENDING_PAYMENT"), list.Items[0].Status)
+
+	rec = env.do(t, http.MethodGet, "/api/app/orders/"+orderNo, nil, env.token, nil)
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	require.Equal(t, orderNo, eventsDecode[apigen.OrderDetail](t, rec).OrderNo)
+
+	otherToken := env.login(t, 910002)
+	rec = env.do(t, http.MethodGet, "/api/app/orders/"+orderNo, nil, otherToken, enHeader)
+	require.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())
+	notFound := eventsDecode[httpx.ErrorBody](t, rec)
+	require.Equal(t, apperr.CodeOrderNotFound, notFound.Error.Code)
+	require.Equal(t, "Order not found.", notFound.Error.Message)
+	rec = env.do(t, http.MethodPost, "/api/app/orders/"+orderNo+"/cancel", nil, otherToken, nil)
+	require.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())
+
+	rec = env.do(t, http.MethodPost, "/api/app/orders/"+orderNo+"/cancel", nil, env.token, nil)
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	require.Equal(t, apigen.OrderStatus("CANCELLED"), eventsDecode[apigen.OrderDetail](t, rec).Status)
+
+	rec = env.do(t, http.MethodPost, "/api/app/orders/"+orderNo+"/cancel", nil, env.token, nil)
+	require.Equal(t, http.StatusConflict, rec.Code, rec.Body.String())
+	require.Equal(t, apperr.CodeOrderStateConflict, eventsDecode[httpx.ErrorBody](t, rec).Error.Code)
+	require.Equal(t, fx.Counts{}, fx.CountersOf(t, env.pool, "event_categories", env.event.CategoryIDs[0]))
+}
