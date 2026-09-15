@@ -228,6 +228,56 @@ func TestCreateFreeSignupDuplicateNameAndPhoneIsCaseInsensitive(t *testing.T) {
 	require.Equal(t, 1, freeCount(t, env.pool, `SELECT count(*) FROM registration_consents WHERE free_signup_id IS NOT NULL`))
 }
 
+// 服务端按跑者资料的同一套规则规范化后再入库：小写性别转大写（否则触发 DB CHECK 返回 500），手机号去空白与连字符。
+func TestCreateFreeSignupStoresNormalizedContactFields(t *testing.T) {
+	env := newFreeEnv(t)
+	ctx := context.Background()
+	u := env.login(t, 7010)
+	_, categoryID := env.createEvent(t, freeOpen("riverside-normalize", 10))
+	in := freeInput(categoryID, "Dara Sok", "+855 12-345-678")
+	in.EmergencyPhone = " +855 98-765-432 "
+	gender := "m"
+	in.Gender = &gender
+
+	fs, err := env.svc.CreateFreeSignup(ctx, u, "riverside-normalize", in, freeMeta)
+
+	require.NoError(t, err)
+	var phone, emergencyPhone, storedGender string
+	require.NoError(t, env.pool.QueryRow(ctx,
+		`SELECT phone_e164, emergency_phone, gender FROM free_signups WHERE id = $1`, fs.ID).
+		Scan(&phone, &emergencyPhone, &storedGender))
+	require.Equal(t, "+85512345678", phone)
+	require.Equal(t, "+85598765432", emergencyPhone)
+	require.Equal(t, "M", storedGender)
+}
+
+// 手机号写法不同（空格、连字符）不能绕过「同组别同手机号同姓名只能一条有效报名」。
+func TestCreateFreeSignupDuplicateIgnoresPhoneFormatting(t *testing.T) {
+	env := newFreeEnv(t)
+	ctx := context.Background()
+	u := env.login(t, 7011)
+	_, categoryID := env.createEvent(t, freeOpen("riverside-dup-phone", 10))
+
+	_, err := env.svc.CreateFreeSignup(ctx, u, "riverside-dup-phone", freeInput(categoryID, "Dara Sok", "+85512345678"), freeMeta)
+	require.NoError(t, err)
+	_, err = env.svc.CreateFreeSignup(ctx, u, "riverside-dup-phone", freeInput(categoryID, "Dara Sok", "+855 12-345-678"), freeMeta)
+
+	requireFreeErr(t, err, apperr.CodeAlreadyRegistered, http.StatusConflict)
+	require.Equal(t, 1, freeCount(t, env.pool, `SELECT count(*) FROM free_signups WHERE category_id = $1`, categoryID))
+	require.Equal(t, 1, freeCount(t, env.pool, `SELECT used_count FROM event_categories WHERE id = $1`, categoryID))
+}
+
+func TestCreateFreeSignupTrimsSlug(t *testing.T) {
+	env := newFreeEnv(t)
+	u := env.login(t, 7012)
+	_, categoryID := env.createEvent(t, freeOpen("riverside-slug", 10))
+
+	fs, err := env.svc.CreateFreeSignup(context.Background(), u, " riverside-slug ", freeInput(categoryID, "Dara Sok", "+85512345678"), freeMeta)
+
+	require.NoError(t, err)
+	require.Equal(t, "riverside-slug", fs.EventSlug)
+}
+
 func TestCreateFreeSignupFamilyMembersShareOnePhone(t *testing.T) {
 	env := newFreeEnv(t)
 	ctx := context.Background()

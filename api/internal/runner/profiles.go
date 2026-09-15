@@ -45,7 +45,7 @@ var (
 // NormalizeProfile 去掉首尾空白，统一大小写，证件号去空白与连字符，手机号去空白与连字符，出生日期取日期部分。
 func NormalizeProfile(p ProfileData) ProfileData {
 	p.FullName = strings.TrimSpace(p.FullName)
-	p.Gender = strings.ToUpper(strings.TrimSpace(p.Gender))
+	p.Gender = normalizeGender(p.Gender)
 	if !p.BirthDate.IsZero() {
 		p.BirthDate = dateOnly(p.BirthDate)
 	}
@@ -132,6 +132,10 @@ func validEmail(s string) bool {
 	}
 	addr, err := mail.ParseAddress(s)
 	return err == nil && addr.Address == s
+}
+
+func normalizeGender(s string) string {
+	return strings.ToUpper(strings.TrimSpace(s))
 }
 
 func normalizePhone(s string) string {

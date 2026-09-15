@@ -55,6 +55,7 @@ type FreeSignup struct {
 // CreateFreeSignup 按 spec 6.7 为免费活动报名：同一跑者可为家人报多人，
 // 同一组别内同手机号 + 同姓名（不区分大小写）只能有一条有效报名。
 func (s *Service) CreateFreeSignup(ctx context.Context, u runner.User, slug string, in FreeSignupInput, meta httpx.Meta) (FreeSignup, error) {
+	slug = strings.TrimSpace(slug)
 	in = freeSignupNormalize(in)
 	if err := freeSignupValidate(in); err != nil {
 		return FreeSignup{}, err
@@ -158,19 +159,22 @@ func (s *Service) CreateFreeSignup(ctx context.Context, u runner.User, slug stri
 	return out, nil
 }
 
+// freeSignupNormalize 用跑者资料的同一套规则规范化联系人字段；入库的就是规范化后的值，
+// 这样 free_signups_one_active 按 E.164 手机号去重，性别满足 DB CHECK。
 func freeSignupNormalize(in FreeSignupInput) FreeSignupInput {
-	in.FullName = strings.TrimSpace(in.FullName)
-	in.Phone = strings.TrimSpace(in.Phone)
-	in.EmergencyName = strings.TrimSpace(in.EmergencyName)
-	in.EmergencyPhone = strings.TrimSpace(in.EmergencyPhone)
-	if in.Gender != nil {
-		g := strings.TrimSpace(*in.Gender)
-		if g == "" {
-			in.Gender = nil
-		} else {
-			in.Gender = &g
-		}
-	}
+	c := runner.NormalizeContactFields(runner.ContactFields{
+		FullName:       in.FullName,
+		Phone:          in.Phone,
+		EmergencyName:  in.EmergencyName,
+		EmergencyPhone: in.EmergencyPhone,
+		Gender:         in.Gender,
+		BirthDate:      in.BirthDate,
+	})
+	in.FullName = c.FullName
+	in.Phone = c.Phone
+	in.EmergencyName = c.EmergencyName
+	in.EmergencyPhone = c.EmergencyPhone
+	in.Gender = c.Gender
 	return in
 }
 
