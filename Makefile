@@ -89,6 +89,7 @@ build-images:
 
 e2e-seed:
 	bash e2e/scripts/seed-staff.sh
+	bash e2e/scripts/seed-consent.sh
 
 e2e:
 	pnpm --filter @werun/e2e e2e

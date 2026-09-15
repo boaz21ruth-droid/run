@@ -85,6 +85,8 @@ jobs:
       WERUN_ADMIN_HOST: http://admin.werun.localhost
       E2E_USER_URL: http://werun.localhost
       E2E_ADMIN_URL: http://admin.werun.localhost
+      E2E_FINANCE_PASSWORD: e2e-Finance-Password-1
+      E2E_TELEGRAM_BOT_TOKEN: "123456:e2e-test-token"
     steps:
       - uses: actions/checkout@v7
 
@@ -110,7 +112,7 @@ jobs:
             echo "WERUN_USER_HOST=${WERUN_USER_HOST}"
             echo "WERUN_ADMIN_HOST=${WERUN_ADMIN_HOST}"
             echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)"
-            echo "WERUN_TELEGRAM_BOT_TOKEN=123456:e2e-test-token"
+            echo "WERUN_TELEGRAM_BOT_TOKEN=${E2E_TELEGRAM_BOT_TOKEN}"
             echo "WERUN_TELEGRAM_BOT_USERNAME=werun_e2e_bot"
             echo "WERUN_TELEGRAM_SEND=off"
             echo "WERUN_APP_BASE_URL=http://werun.localhost"
@@ -121,6 +123,9 @@ jobs:
 
       - name: Seed test staff
         run: bash e2e/scripts/seed-staff.sh
+
+      - name: Seed registration consent
+        run: bash e2e/scripts/seed-consent.sh
 
       - name: Install Playwright browser
         run: pnpm --filter @werun/e2e exec playwright install --with-deps chromium

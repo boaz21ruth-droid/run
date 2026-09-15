@@ -5,7 +5,7 @@
   "scripts": {
     "e2e": "playwright test",
     "typecheck": "tsc --noEmit",
-    "seed": "bash scripts/seed-staff.sh"
+    "seed": "bash scripts/seed-staff.sh && bash scripts/seed-consent.sh"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",

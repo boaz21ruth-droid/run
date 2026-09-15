@@ -7,6 +7,7 @@ cd "$(dirname "$0")/../.."
 COMPOSE=(docker compose -f deploy/compose.yaml --env-file .env)
 OPS_PASSWORD="${E2E_OPS_PASSWORD:-e2e-Ops-Password-1}"
 ADMIN_PASSWORD="${E2E_ADMIN_PASSWORD:-e2e-Admin-Password-1}"
+FINANCE_PASSWORD="${E2E_FINANCE_PASSWORD:-e2e-Finance-Password-1}"
 
 staff_exists() {
   local username="$1"
@@ -27,3 +28,4 @@ create_staff() {
 
 create_staff ops.e2e "OPS E2E" OPS "$OPS_PASSWORD"
 create_staff admin.e2e "ADMIN E2E" ADMIN "$ADMIN_PASSWORD"
+create_staff finance.e2e "FINANCE E2E" FINANCE "$FINANCE_PASSWORD"
