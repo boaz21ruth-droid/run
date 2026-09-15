@@ -264,3 +264,46 @@ SET status = 'PROOF_REJECTED',
 WHERE id = @id
   AND reservation_state = 'RESERVED'
   AND status = 'PROOF_SUBMITTED';
+
+-- name: ListDueOrderIDsForExpiry :many
+-- 只锁订单行（SKIP LOCKED 跳过上传凭证 / 审核事务正持有的订单），按截止时间先后取一批。
+SELECT id
+FROM reg_orders
+WHERE status IN ('PENDING_PAYMENT', 'PROOF_REJECTED')
+  AND deadline_at <= @as_of::timestamptz
+ORDER BY deadline_at, id
+LIMIT @batch_limit::int
+FOR UPDATE SKIP LOCKED;
+
+-- name: GetOrderForExpiryNotice :one
+SELECT order_no, buyer_user_id, event_id, status, deadline_at
+FROM reg_orders
+WHERE id = @id;
+
+-- name: ListOrdersDueForReminder :many
+SELECT o.id, o.order_no, o.buyer_user_id, o.deadline_at, e.timezone AS event_timezone
+FROM reg_orders o
+JOIN events e ON e.id = o.event_id
+JOIN users u ON u.id = o.buyer_user_id
+WHERE o.status IN ('PENDING_PAYMENT', 'PROOF_REJECTED')
+  AND o.deadline_at > @as_of::timestamptz
+  AND o.deadline_at <= @until::timestamptz
+  AND u.telegram_user_id IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM notification_logs n
+    WHERE n.dedupe_key = 'reminder:' || o.id || ':' || floor(extract(epoch FROM o.deadline_at))::bigint
+  )
+ORDER BY o.deadline_at, o.id;
+
+-- name: PurgeExpiredIdempotencyKeys :execrows
+-- 每次至多删除 batch_limit 条已过期的幂等键。外层再判一次 expires_at：
+-- READ COMMITTED 下若同名键刚被 ClaimIdempotencyKey 续期，重新检查最新行版本后不会误删。
+DELETE FROM idempotency_keys k
+USING (
+  SELECT scope, subject, key
+  FROM idempotency_keys
+  WHERE expires_at < @now::timestamptz
+  LIMIT @batch_limit::int
+) d
+WHERE k.scope = d.scope AND k.subject = d.subject AND k.key = d.key
+  AND k.expires_at < @now::timestamptz;

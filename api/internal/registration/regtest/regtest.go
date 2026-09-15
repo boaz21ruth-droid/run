@@ -98,14 +98,15 @@ func New(t testing.TB) *Env {
 	// 跑者登录校验 initData 的 auth_date，用真实时间，拨动 Clock 不影响登录。
 	runners := fx.RunnerService(t, pool, time.Now)
 	prices := pricing.NewService(pool, clock.Now)
+	notifier := notifytest.New(t, pool)
 
 	env := &Env{
 		Pool:     pool,
 		Clock:    clock,
 		Runners:  runners,
 		Pricing:  prices,
-		Notifier: notifytest.New(t, pool),
-		Orders:   registration.NewService(pool, runners, prices, clock.Now),
+		Notifier: notifier,
+		Orders:   registration.NewService(pool, runners, prices, notifier, clock.Now),
 	}
 	env.seed(t)
 	return env

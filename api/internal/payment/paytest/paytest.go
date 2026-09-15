@@ -124,7 +124,8 @@ func NewEnv(t testing.TB) *Env {
 	files := &RecordingStore{Store: disk}
 	runners := runner.NewService(pool, sessionSecret, BotToken, pii, clock.Now)
 	prices := pricing.NewService(pool, clock.Now)
-	orders := registration.NewService(pool, runners, prices, clock.Now)
+	notifier := notifytest.New(t, pool)
+	orders := registration.NewService(pool, runners, prices, notifier, clock.Now)
 	return &Env{
 		Pool:     pool,
 		Store:    files,
@@ -133,7 +134,7 @@ func NewEnv(t testing.TB) *Env {
 		Runners:  runners,
 		Prices:   prices,
 		Orders:   orders,
-		Payments: payment.NewService(pool, files, orders, notifytest.New(t, pool), clock.Now),
+		Payments: payment.NewService(pool, files, orders, notifier, clock.Now),
 	}
 }
 

@@ -85,7 +85,7 @@ func Bootstrap(ctx context.Context) (*App, error) {
 	app.IAM = iam.NewService(app.Pool, []byte(app.Cfg.SessionSecret), iam.NewLoginLimiter(time.Now), time.Now)
 	app.Events = event.NewService(app.Pool)
 	app.Pricing = pricing.NewService(app.Pool, time.Now)
-	app.Registration = registration.NewService(app.Pool, app.Runner, app.Pricing, time.Now)
+	app.Registration = registration.NewService(app.Pool, app.Runner, app.Pricing, app.Notify, time.Now)
 	app.Payment = payment.NewService(app.Pool, app.Store, app.Registration, app.Notify, time.Now)
 	return app, nil
 }
@@ -110,5 +110,6 @@ func (a *App) JobDeps() jobs.Deps {
 		Log:      a.Log,
 		Sessions: a.IAM,
 		Notify:   &notify.SendWorker{Pool: a.Pool, Sender: newNotifySender(a.Cfg, a.Log), Log: a.Log},
+		Deadline: &registration.DeadlineWorker{Svc: a.Registration, Log: a.Log},
 	}
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"werun/api/internal/audit"
+	"werun/api/internal/notify"
 	"werun/api/internal/platform/apperr"
 	"werun/api/internal/platform/httpx"
 	"werun/api/internal/platform/i18n"
@@ -21,15 +22,16 @@ import (
 
 // Service 是报名订单模块的业务入口。
 type Service struct {
-	pool    *pgxpool.Pool
-	runners *runner.Service
-	prices  *pricing.Service
-	now     func() time.Time
+	pool     *pgxpool.Pool
+	runners  *runner.Service
+	prices   *pricing.Service
+	notifier *notify.Service
+	now      func() time.Time
 }
 
 // NewService 创建报名订单服务。
-func NewService(pool *pgxpool.Pool, runners *runner.Service, prices *pricing.Service, now func() time.Time) *Service {
-	return &Service{pool: pool, runners: runners, prices: prices, now: now}
+func NewService(pool *pgxpool.Pool, runners *runner.Service, prices *pricing.Service, notifier *notify.Service, now func() time.Time) *Service {
+	return &Service{pool: pool, runners: runners, prices: prices, notifier: notifier, now: now}
 }
 
 // fieldErrors 收集字段错误，一次返回。

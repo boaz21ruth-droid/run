@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
 
+	"werun/api/internal/notify/notifytest"
 	"werun/api/internal/platform/apperr"
 	"werun/api/internal/platform/db"
 	"werun/api/internal/platform/dbtest"
@@ -66,7 +67,7 @@ func newOrderEnv(t *testing.T, capacity int32) orderEnv {
 		pool:    pool,
 		clock:   clock,
 		runners: runners,
-		svc:     registration.NewService(pool, runners, prices, clock.Now),
+		svc:     registration.NewService(pool, runners, prices, notifytest.New(t, pool), clock.Now),
 		event:   ev,
 		rule:    fx.PriceRule(t, pool, ev.ID, fx.PriceRuleOpts{PriceCents: 2500, CategoryIDs: ev.CategoryIDs}),
 		account: fx.PaymentAccount(t, pool, &ev.ID),

@@ -13,6 +13,7 @@ import (
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 
 	"werun/api/internal/notify"
+	"werun/api/internal/registration"
 )
 
 // SessionRetention：过期或吊销超过这么久的会话才会被物理删除。
@@ -51,7 +52,8 @@ type Deps struct {
 	Pool     *pgxpool.Pool
 	Log      *slog.Logger
 	Sessions SessionCleaner
-	Notify   *notify.SendWorker // Task 20：为 nil 时不注册 notify_send（仅测试这样用）
+	Notify   *notify.SendWorker           // Task 20：为 nil 时不注册 notify_send（仅测试这样用）
+	Deadline *registration.DeadlineWorker // Task 21：为 nil 时不注册 order_deadline（仅测试这样用）
 }
 
 // NewClient 创建能执行任务的 River 客户端：注册全部 worker 与周期任务，默认队列 10 个并发。
@@ -67,19 +69,29 @@ func NewClient(d Deps) (*river.Client[pgx.Tx], error) {
 		river.AddWorker(workers, d.Notify)
 	}
 
+	periodicJobs := []*river.PeriodicJob{
+		river.NewPeriodicJob(
+			DailyAt{Hour: 3, Minute: 0, Loc: phnomPenh},
+			func() (river.JobArgs, *river.InsertOpts) { return SessionCleanupArgs{}, nil },
+			&river.PeriodicJobOpts{ID: "session_cleanup"},
+		),
+	}
+	if d.Deadline != nil {
+		river.AddWorker(workers, d.Deadline)
+		periodicJobs = append(periodicJobs, river.NewPeriodicJob(
+			river.PeriodicInterval(time.Minute),
+			func() (river.JobArgs, *river.InsertOpts) { return registration.DeadlineArgs{}, nil },
+			&river.PeriodicJobOpts{ID: "order_deadline"},
+		))
+	}
+
 	client, err := river.NewClient(riverpgxv5.New(d.Pool), &river.Config{
 		Logger: d.Log,
 		Queues: map[string]river.QueueConfig{
 			river.QueueDefault: {MaxWorkers: 10},
 		},
-		Workers: workers,
-		PeriodicJobs: []*river.PeriodicJob{
-			river.NewPeriodicJob(
-				DailyAt{Hour: 3, Minute: 0, Loc: phnomPenh},
-				func() (river.JobArgs, *river.InsertOpts) { return SessionCleanupArgs{}, nil },
-				&river.PeriodicJobOpts{ID: "session_cleanup"},
-			),
-		},
+		Workers:      workers,
+		PeriodicJobs: periodicJobs,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create river client: %w", err)

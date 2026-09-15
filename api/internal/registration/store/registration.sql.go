@@ -466,6 +466,33 @@ func (q *Queries) GetOrderDetailByID(ctx context.Context, id int64) (GetOrderDet
 	return i, err
 }
 
+const getOrderForExpiryNotice = `-- name: GetOrderForExpiryNotice :one
+SELECT order_no, buyer_user_id, event_id, status, deadline_at
+FROM reg_orders
+WHERE id = $1
+`
+
+type GetOrderForExpiryNoticeRow struct {
+	OrderNo     string
+	BuyerUserID *int64
+	EventID     int64
+	Status      string
+	DeadlineAt  *time.Time
+}
+
+func (q *Queries) GetOrderForExpiryNotice(ctx context.Context, id int64) (GetOrderForExpiryNoticeRow, error) {
+	row := q.db.QueryRow(ctx, getOrderForExpiryNotice, id)
+	var i GetOrderForExpiryNoticeRow
+	err := row.Scan(
+		&i.OrderNo,
+		&i.BuyerUserID,
+		&i.EventID,
+		&i.Status,
+		&i.DeadlineAt,
+	)
+	return i, err
+}
+
 const getOrderIDForBuyer = `-- name: GetOrderIDForBuyer :one
 SELECT id
 FROM reg_orders
@@ -654,6 +681,42 @@ func (q *Queries) InsertRegistration(ctx context.Context, arg InsertRegistration
 	return id, err
 }
 
+const listDueOrderIDsForExpiry = `-- name: ListDueOrderIDsForExpiry :many
+SELECT id
+FROM reg_orders
+WHERE status IN ('PENDING_PAYMENT', 'PROOF_REJECTED')
+  AND deadline_at <= $1::timestamptz
+ORDER BY deadline_at, id
+LIMIT $2::int
+FOR UPDATE SKIP LOCKED
+`
+
+type ListDueOrderIDsForExpiryParams struct {
+	AsOf       time.Time
+	BatchLimit int32
+}
+
+// 只锁订单行（SKIP LOCKED 跳过上传凭证 / 审核事务正持有的订单），按截止时间先后取一批。
+func (q *Queries) ListDueOrderIDsForExpiry(ctx context.Context, arg ListDueOrderIDsForExpiryParams) ([]int64, error) {
+	rows, err := q.db.Query(ctx, listDueOrderIDsForExpiry, arg.AsOf, arg.BatchLimit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listOrderParticipantDetails = `-- name: ListOrderParticipantDetails :many
 SELECT r.id AS registration_id, r.reg_no, op.category_id, ec.name AS category_name, r.full_name,
        op.price_rule_id, op.list_price_cents, op.paid_cents, r.status AS registration_status, r.ticket_code
@@ -697,6 +760,61 @@ func (q *Queries) ListOrderParticipantDetails(ctx context.Context, orderID int64
 			&i.PaidCents,
 			&i.RegistrationStatus,
 			&i.TicketCode,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listOrdersDueForReminder = `-- name: ListOrdersDueForReminder :many
+SELECT o.id, o.order_no, o.buyer_user_id, o.deadline_at, e.timezone AS event_timezone
+FROM reg_orders o
+JOIN events e ON e.id = o.event_id
+JOIN users u ON u.id = o.buyer_user_id
+WHERE o.status IN ('PENDING_PAYMENT', 'PROOF_REJECTED')
+  AND o.deadline_at > $1::timestamptz
+  AND o.deadline_at <= $2::timestamptz
+  AND u.telegram_user_id IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM notification_logs n
+    WHERE n.dedupe_key = 'reminder:' || o.id || ':' || floor(extract(epoch FROM o.deadline_at))::bigint
+  )
+ORDER BY o.deadline_at, o.id
+`
+
+type ListOrdersDueForReminderParams struct {
+	AsOf  time.Time
+	Until time.Time
+}
+
+type ListOrdersDueForReminderRow struct {
+	ID            int64
+	OrderNo       string
+	BuyerUserID   *int64
+	DeadlineAt    *time.Time
+	EventTimezone string
+}
+
+func (q *Queries) ListOrdersDueForReminder(ctx context.Context, arg ListOrdersDueForReminderParams) ([]ListOrdersDueForReminderRow, error) {
+	rows, err := q.db.Query(ctx, listOrdersDueForReminder, arg.AsOf, arg.Until)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListOrdersDueForReminderRow
+	for rows.Next() {
+		var i ListOrdersDueForReminderRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrderNo,
+			&i.BuyerUserID,
+			&i.DeadlineAt,
+			&i.EventTimezone,
 		); err != nil {
 			return nil, err
 		}
@@ -990,6 +1108,33 @@ type MarkOrderPaidParams struct {
 // 订单条件更新：只有预留仍为 RESERVED 的订单能转为 PAID/CONSUMED，保证 pricing.Consume 每单只调用一次。
 func (q *Queries) MarkOrderPaid(ctx context.Context, arg MarkOrderPaidParams) (int64, error) {
 	result, err := q.db.Exec(ctx, markOrderPaid, arg.PaidAt, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const purgeExpiredIdempotencyKeys = `-- name: PurgeExpiredIdempotencyKeys :execrows
+DELETE FROM idempotency_keys k
+USING (
+  SELECT scope, subject, key
+  FROM idempotency_keys
+  WHERE expires_at < $1::timestamptz
+  LIMIT $2::int
+) d
+WHERE k.scope = d.scope AND k.subject = d.subject AND k.key = d.key
+  AND k.expires_at < $1::timestamptz
+`
+
+type PurgeExpiredIdempotencyKeysParams struct {
+	Now        time.Time
+	BatchLimit int32
+}
+
+// 每次至多删除 batch_limit 条已过期的幂等键。外层再判一次 expires_at：
+// READ COMMITTED 下若同名键刚被 ClaimIdempotencyKey 续期，重新检查最新行版本后不会误删。
+func (q *Queries) PurgeExpiredIdempotencyKeys(ctx context.Context, arg PurgeExpiredIdempotencyKeysParams) (int64, error) {
+	result, err := q.db.Exec(ctx, purgeExpiredIdempotencyKeys, arg.Now, arg.BatchLimit)
 	if err != nil {
 		return 0, err
 	}

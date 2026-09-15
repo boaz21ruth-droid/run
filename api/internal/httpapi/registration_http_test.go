@@ -20,6 +20,7 @@ import (
 	"werun/api/internal/httpapi"
 	"werun/api/internal/httpapi/apigen"
 	"werun/api/internal/iam"
+	"werun/api/internal/notify/notifytest"
 	"werun/api/internal/platform/apperr"
 	"werun/api/internal/platform/dbtest"
 	"werun/api/internal/platform/httpx"
@@ -55,7 +56,7 @@ func newOrderHTTPEnv(t *testing.T) orderHTTPEnv {
 		Events:       event.NewService(pool),
 		Runner:       runners,
 		Pricing:      prices,
-		Registration: registration.NewService(pool, runners, prices, time.Now),
+		Registration: registration.NewService(pool, runners, prices, notifytest.New(t, pool), time.Now),
 		Env:          "dev",
 	})
 	ev := fx.RaceEvent(t, pool, fx.EventOpts{Slug: "http-order-run", RegistrationOpen: true,

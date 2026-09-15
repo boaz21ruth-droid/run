@@ -14,9 +14,11 @@ import (
 
 	"werun/api/internal/jobs"
 	"werun/api/internal/notify"
+	"werun/api/internal/notify/notifytest"
 	"werun/api/internal/platform/db"
 	"werun/api/internal/platform/dbtest"
 	"werun/api/internal/platform/logx"
+	"werun/api/internal/registration"
 )
 
 type fakeCleaner struct {
@@ -184,4 +186,22 @@ func TestClientRunsNotifySendJob(t *testing.T) {
 		var status string
 		return pool.QueryRow(ctx, `SELECT status FROM notification_logs WHERE id = $1`, logID).Scan(&status) == nil && status == "SENT"
 	}, 10*time.Second, 100*time.Millisecond)
+}
+
+func TestNewClientRegistersDeadlineWorker(t *testing.T) {
+	pool := dbtest.NewPool(t)
+	log := logx.New("error", io.Discard)
+	svc := registration.NewService(pool, nil, nil, notifytest.New(t, pool), time.Now)
+
+	client, err := jobs.NewClient(jobs.Deps{
+		Pool:     pool,
+		Log:      log,
+		Sessions: newFakeCleaner(),
+		Deadline: &registration.DeadlineWorker{Svc: svc, Log: log},
+	})
+	require.NoError(t, err)
+
+	// 客户端配置了 Workers：未注册的 kind 会返回 UnknownJobKindError。
+	_, err = client.Insert(context.Background(), registration.DeadlineArgs{}, nil)
+	require.NoError(t, err)
 }

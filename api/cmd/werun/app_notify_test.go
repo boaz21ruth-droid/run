@@ -3,12 +3,14 @@ package main
 import (
 	"io"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
 	"werun/api/internal/notify"
 	"werun/api/internal/platform/config"
 	"werun/api/internal/platform/logx"
+	"werun/api/internal/registration"
 )
 
 func TestNewNotifySenderFollowsTelegramSendSetting(t *testing.T) {
@@ -35,8 +37,12 @@ func TestNewNotifySenderFollowsTelegramSendSetting(t *testing.T) {
 	}
 }
 
-func TestJobDepsIncludesNotifyWorker(t *testing.T) {
-	app := &App{Cfg: config.Config{Env: "dev"}, Log: logx.New("error", io.Discard)}
+func TestJobDepsIncludesNotifyAndDeadlineWorkers(t *testing.T) {
+	app := &App{
+		Cfg:          config.Config{Env: "dev"},
+		Log:          logx.New("error", io.Discard),
+		Registration: registration.NewService(nil, nil, nil, nil, time.Now),
+	}
 
 	deps := app.JobDeps()
 
@@ -44,4 +50,7 @@ func TestJobDepsIncludesNotifyWorker(t *testing.T) {
 	require.IsType(t, notify.LogSender{}, deps.Notify.Sender)
 	require.Same(t, app.Log, deps.Notify.Log)
 	require.Same(t, app.Log, deps.Log)
+	require.NotNil(t, deps.Deadline)
+	require.Same(t, app.Registration, deps.Deadline.Svc)
+	require.Same(t, app.Log, deps.Deadline.Log)
 }
