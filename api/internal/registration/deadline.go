@@ -2,6 +2,7 @@ package registration
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -35,15 +36,21 @@ type DeadlineWorker struct {
 	Log *slog.Logger
 }
 
-// Work 调用 ProcessDeadlines 与 PurgeExpiredIdempotencyKeys 并记录处理数量；出错时返回错误由 River 重试（两者都可重复执行）。
+// Work 调用 ProcessDeadlines 与 PurgeExpiredIdempotencyKeys 并记录处理数量。两者互不阻塞：
+// 超时释放失败时照样清理幂等键；任一出错都合并返回，由 River 记为失败并重试（两者都可重复执行）。
 func (w *DeadlineWorker) Work(ctx context.Context, job *river.Job[DeadlineArgs]) error {
-	expired, reminded, err := w.Svc.ProcessDeadlines(ctx)
-	if err != nil {
-		return fmt.Errorf("process order deadlines: %w", err)
+	expired, reminded, processErr := w.Svc.ProcessDeadlines(ctx)
+	if processErr != nil {
+		processErr = fmt.Errorf("process order deadlines: %w", processErr)
 	}
-	purged, err := w.Svc.PurgeExpiredIdempotencyKeys(ctx)
-	if err != nil {
-		return fmt.Errorf("purge expired idempotency keys: %w", err)
+	purged, purgeErr := w.Svc.PurgeExpiredIdempotencyKeys(ctx)
+	if purgeErr != nil {
+		purgeErr = fmt.Errorf("purge expired idempotency keys: %w", purgeErr)
+	}
+	if err := errors.Join(processErr, purgeErr); err != nil {
+		w.Log.WarnContext(ctx, "order deadline job failed",
+			"job_id", job.ID, "expired", expired, "reminded", reminded, "idempotency_keys_purged", purged, "error", err)
+		return err
 	}
 	w.Log.InfoContext(ctx, "order deadline job finished",
 		"job_id", job.ID, "expired", expired, "reminded", reminded, "idempotency_keys_purged", purged)
@@ -52,12 +59,15 @@ func (w *DeadlineWorker) Work(ctx context.Context, job *river.Job[DeadlineArgs])
 
 // ProcessDeadlines 释放已过截止时间的待付款 / 被驳回订单（每批 100 条、一批一个事务，直到不足一批），
 // 然后为截止前 10 分钟内的订单登记付款提醒。返回本次释放的订单数与新入队的提醒数。
+// 某一批释放失败（整批回滚）时停止释放，但提醒照常登记；两边的错误合并返回。
 func (s *Service) ProcessDeadlines(ctx context.Context) (expired, reminded int, err error) {
 	asOf := s.now()
+	var expireErr error
 	for {
 		selected, released, batchErr := s.expireDueBatch(ctx, asOf)
 		if batchErr != nil {
-			return expired, 0, fmt.Errorf("expire due orders: %w", batchErr)
+			expireErr = fmt.Errorf("expire due orders: %w", batchErr)
+			break
 		}
 		expired += released
 		// 不足一批说明已处理完；整批都没有释放成功时也停下，避免同一批订单反复被选中而空转。
@@ -66,11 +76,11 @@ func (s *Service) ProcessDeadlines(ctx context.Context) (expired, reminded int, 
 		}
 	}
 
-	reminded, err = s.enqueueDeadlineReminders(ctx, asOf)
-	if err != nil {
-		return expired, 0, fmt.Errorf("enqueue deadline reminders: %w", err)
+	reminded, remindErr := s.enqueueDeadlineReminders(ctx, asOf)
+	if remindErr != nil {
+		remindErr = fmt.Errorf("enqueue deadline reminders: %w", remindErr)
 	}
-	return expired, reminded, nil
+	return expired, reminded, errors.Join(expireErr, remindErr)
 }
 
 // expireDueBatch 在一个事务里锁定至多 100 张到期订单并逐张释放。

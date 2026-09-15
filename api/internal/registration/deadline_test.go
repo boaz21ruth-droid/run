@@ -402,6 +402,42 @@ func TestProcessDeadlinesRemindsOncePerDeadline(t *testing.T) {
 	require.Equal(t, 2, env.CountRows(t, `SELECT count(*) FROM river_job WHERE kind = 'notify_send'`))
 }
 
+// 一张到期订单释放失败（这里人为造成计数不一致）时整批回滚并报错；但付款提醒与过期幂等键清理仍要执行，
+// 任务整体仍返回错误以便告警与重试。
+func TestDeadlinesStillRemindAndPurgeWhenExpiryBatchFails(t *testing.T) {
+	env := regtest.New(t)
+	ctx := context.Background()
+	user := env.NewRunner(t, 810014, "en")
+	overdue := env.CreateOrder(t, user, "E8100141", "")
+	env.Clock.Advance(10 * time.Minute)
+	nearDeadline := env.CreateOrder(t, user, "E8100142", "")
+	// overdue 已过截止 1 分钟；nearDeadline 距截止 9 分钟，落在提醒窗口内。
+	env.Clock.Advance(21 * time.Minute)
+	env.Exec(t, `UPDATE event_categories SET reserved_count = 0 WHERE id = $1`, env.CategoryID)
+	env.Exec(t, `
+		INSERT INTO idempotency_keys (key, scope, subject, request_hash, created_at, expires_at)
+		VALUES ('expired-before-failure', 'reg_order.create', 'user:purge-test', '\x00'::bytea, $1, $2)`,
+		env.Clock.Now().Add(-48*time.Hour), env.Clock.Now().Add(-24*time.Hour))
+
+	expired, reminded, err := env.Orders.ProcessDeadlines(ctx)
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "expire due orders")
+	require.Equal(t, 0, expired)
+	require.Equal(t, 1, reminded, "释放失败也要登记提醒")
+	require.Equal(t, "PENDING_PAYMENT", env.QueryString(t, `SELECT status FROM reg_orders WHERE id = $1`, overdue.ID), "失败的批次整体回滚")
+	require.Equal(t, 1, env.CountRows(t,
+		`SELECT count(*) FROM notification_logs WHERE template = 'payment_deadline_reminder' AND entity_id = $1`, nearDeadline.ID))
+
+	worker := &registration.DeadlineWorker{Svc: env.Orders, Log: logx.New("error", io.Discard)}
+	err = worker.Work(ctx, &river.Job[registration.DeadlineArgs]{JobRow: &rivertype.JobRow{ID: 11}})
+
+	require.Error(t, err, "任务仍报告失败")
+	require.Contains(t, err.Error(), "expire due orders")
+	require.Equal(t, 0, env.CountRows(t, `SELECT count(*) FROM idempotency_keys WHERE key = 'expired-before-failure'`), "释放失败也要清理过期幂等键")
+	require.Equal(t, 1, env.CountRows(t, `SELECT count(*) FROM idempotency_keys WHERE key = 'regtest-E8100142'`), "未过期的键保留")
+}
+
 func TestDeadlineWorkerProcessesDueOrders(t *testing.T) {
 	env := regtest.New(t)
 	order := env.CreateOrder(t, env.NewRunner(t, 810009, "en"), "E8100091", "")
