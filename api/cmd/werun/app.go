@@ -22,23 +22,25 @@ import (
 	"werun/api/internal/platform/piicrypt"
 	"werun/api/internal/platform/storage"
 	"werun/api/internal/pricing"
+	"werun/api/internal/registration"
 	"werun/api/internal/runner"
 )
 
 // App 持有进程级依赖。各业务服务在引入它的任务里追加字段。
 type App struct {
-	Cfg      config.Config
-	Log      *slog.Logger
-	Catalog  *i18n.Catalog
-	Pool     *pgxpool.Pool
-	Store    storage.Store
-	PII      *piicrypt.Cipher
-	Inserter *river.Client[pgx.Tx] // 只入队，不执行任务
-	IAM      *iam.Service
-	Events   *event.Service
-	Pricing  *pricing.Service
-	Payment  *payment.Service
-	Runner   *runner.Service
+	Cfg          config.Config
+	Log          *slog.Logger
+	Catalog      *i18n.Catalog
+	Pool         *pgxpool.Pool
+	Store        storage.Store
+	PII          *piicrypt.Cipher
+	Inserter     *river.Client[pgx.Tx] // 只入队，不执行任务
+	IAM          *iam.Service
+	Events       *event.Service
+	Pricing      *pricing.Service
+	Registration *registration.Service
+	Payment      *payment.Service
+	Runner       *runner.Service
 }
 
 // Bootstrap 读取配置、创建日志器、加载文案、连接数据库并构造各服务。
@@ -79,6 +81,7 @@ func Bootstrap(ctx context.Context) (*App, error) {
 	app.IAM = iam.NewService(app.Pool, []byte(app.Cfg.SessionSecret), iam.NewLoginLimiter(time.Now), time.Now)
 	app.Events = event.NewService(app.Pool)
 	app.Pricing = pricing.NewService(app.Pool, time.Now)
+	app.Registration = registration.NewService(app.Pool, app.Runner, app.Pricing, time.Now)
 	app.Payment = payment.NewService(app.Pool, app.Store, time.Now)
 	return app, nil
 }

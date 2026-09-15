@@ -43,5 +43,12 @@
   "field.percent_range": "百分比必须在 1 到 100 之间。",
   "field.too_young": "比赛当天须年满 {minAge} 岁。",
   "field.category_unavailable": "该组别当前不可报名。",
-  "field.coupon_invalid": "优惠码不可用。"
+  "field.coupon_invalid": "优惠码不可用。",
+  "REGISTRATION_CLOSED": "报名未开放或已截止。",
+  "ALREADY_REGISTERED": "有参赛人已报名本赛事。",
+  "PAYMENT_ACCOUNT_UNAVAILABLE": "暂时无法收款，请稍后再试。",
+  "IDEMPOTENCY_KEY_REUSED": "这次提交与之前的请求内容不一致，请刷新页面后重试。",
+  "ORDER_STATE_CONFLICT": "订单当前状态不允许这个操作。",
+  "field.duplicate_id_no": "同一订单里证件号不能重复。",
+  "field.already_registered": "该证件号已报名本赛事。"
 }

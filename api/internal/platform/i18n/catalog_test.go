@@ -63,6 +63,8 @@ func TestEmbeddedCatalogCoversAllCodesAndFieldKeys(t *testing.T) {
 		"field.too_young",
 		"field.category_unavailable",
 		"field.coupon_invalid",
+		"field.duplicate_id_no",
+		"field.already_registered",
 		"field.event_not_published",
 		"field.missing_price_rule",
 		"field.missing_payment_account",

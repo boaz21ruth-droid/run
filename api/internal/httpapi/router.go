@@ -17,6 +17,7 @@ import (
 	"werun/api/internal/platform/httpx"
 	"werun/api/internal/platform/i18n"
 	"werun/api/internal/pricing"
+	"werun/api/internal/registration"
 	"werun/api/internal/runner"
 )
 
@@ -51,16 +52,17 @@ func maxBodySize() gin.HandlerFunc {
 
 // RouterDeps 是构造 HTTP 路由所需的依赖。
 type RouterDeps struct {
-	Log     *slog.Logger
-	Catalog *i18n.Catalog
-	Pool    *pgxpool.Pool
-	IAM     *iam.Service
-	Runner  *runner.Service // 跑者登录与会话、常用参赛人、同意书
-	Events  *event.Service
-	Pricing *pricing.Service
-	Payment *payment.Service
-	Server  *Server // 为 nil 时由 NewServer 构造
-	Env     string  // "dev" | "prod"
+	Log          *slog.Logger
+	Catalog      *i18n.Catalog
+	Pool         *pgxpool.Pool
+	IAM          *iam.Service
+	Runner       *runner.Service // 跑者登录与会话、常用参赛人、同意书
+	Events       *event.Service
+	Pricing      *pricing.Service
+	Registration *registration.Service // 跑者算价与下单
+	Payment      *payment.Service
+	Server       *Server // 为 nil 时由 NewServer 构造
+	Env          string  // "dev" | "prod"
 }
 
 // trustedProxies：只信任本机与私有网段（compose 网络里的 Caddy）转发的 X-Forwarded-For，

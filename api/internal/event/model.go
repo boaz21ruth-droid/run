@@ -20,13 +20,16 @@ const (
 
 // Category 是赛事下的组别（21K / 10K / 5K）。
 type Category struct {
-	ID        int64
-	Code      string
-	Name      i18n.Text
-	DistanceM int32
-	Capacity  int32
-	StartAt   *time.Time
-	CutoffAt  *time.Time
+	ID            int64
+	Code          string
+	Name          i18n.Text
+	DistanceM     int32
+	Capacity      int32
+	StartAt       *time.Time
+	CutoffAt      *time.Time
+	MinAge        int16
+	UsedCount     int32
+	ReservedCount int32
 }
 
 // Event 是赛事及其组别。

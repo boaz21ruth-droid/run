@@ -43,5 +43,12 @@
   "field.percent_range": "The percentage must be between 1 and 100.",
   "field.too_young": "Must be at least {minAge} on race day.",
   "field.category_unavailable": "This category isn't available right now.",
-  "field.coupon_invalid": "This coupon code can't be used."
+  "field.coupon_invalid": "This coupon code can't be used.",
+  "REGISTRATION_CLOSED": "Registration is not open.",
+  "ALREADY_REGISTERED": "A participant is already registered for this event.",
+  "PAYMENT_ACCOUNT_UNAVAILABLE": "Payments are temporarily unavailable. Please try again later.",
+  "IDEMPOTENCY_KEY_REUSED": "This submission doesn't match the earlier request. Please refresh the page and try again.",
+  "ORDER_STATE_CONFLICT": "This action isn't allowed for the order's current status.",
+  "field.duplicate_id_no": "The same ID number appears twice in this order.",
+  "field.already_registered": "This ID number is already registered for this event."
 }

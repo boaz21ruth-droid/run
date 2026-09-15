@@ -164,7 +164,16 @@ func TestOpsCreatesAndPublishesEventThenPublicSeesIt(t *testing.T) {
 
 	rec = env.do(t, http.MethodGet, "/api/events/pphm-2026?lang=en", nil, nil, nil)
 	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
-	require.Equal(t, "Phnom Penh Half Marathon 2026", eventsDecode[apigen.PublicEvent](t, rec).Name)
+	detail := eventsDecode[apigen.PublicEvent](t, rec)
+	require.Equal(t, "Phnom Penh Half Marathon 2026", detail.Name)
+	require.Equal(t, published.Id, detail.Id)
+	require.Equal(t, apigen.PublicEventEventType("RACE"), detail.EventType)
+	require.False(t, detail.RegistrationOpen)
+	require.Nil(t, detail.RegistrationOpensAt)
+	require.Nil(t, detail.RegistrationClosesAt)
+	require.Equal(t, published.Categories[0].Id, detail.Categories[0].Id)
+	require.Equal(t, int32(0), detail.Categories[0].MinAge)
+	require.False(t, detail.Categories[0].SoldOut)
 
 	rec = env.do(t, http.MethodGet, "/api/events/does-not-exist", nil, nil, nil)
 	require.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())

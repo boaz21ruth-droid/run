@@ -115,20 +115,28 @@ func toPublicEvent(e Event, lang i18n.Lang) apigen.PublicEvent {
 	cats := make([]apigen.PublicCategory, 0, len(e.Categories))
 	for _, c := range e.Categories {
 		cats = append(cats, apigen.PublicCategory{
+			Id:        c.ID,
 			Code:      c.Code,
 			Name:      c.Name.In(lang),
 			DistanceM: c.DistanceM,
 			Capacity:  c.Capacity,
 			StartAt:   derefTime(c.StartAt),
 			CutoffAt:  derefTime(c.CutoffAt),
+			MinAge:    int32(c.MinAge),
+			SoldOut:   int64(c.UsedCount)+int64(c.ReservedCount) >= int64(c.Capacity),
 		})
 	}
 	return apigen.PublicEvent{
-		Slug:       e.Slug,
-		Name:       e.Name.In(lang),
-		City:       e.City,
-		RaceDate:   openapi_types.Date{Time: e.RaceDate},
-		Categories: cats,
+		Id:                   e.ID,
+		Slug:                 e.Slug,
+		EventType:            apigen.PublicEventEventType(e.EventType),
+		Name:                 e.Name.In(lang),
+		City:                 e.City,
+		RaceDate:             openapi_types.Date{Time: e.RaceDate},
+		RegistrationOpen:     e.RegistrationOpen,
+		RegistrationOpensAt:  e.RegistrationOpensAt,
+		RegistrationClosesAt: e.RegistrationClosesAt,
+		Categories:           cats,
 	}
 }
 

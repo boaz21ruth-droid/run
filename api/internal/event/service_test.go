@@ -325,3 +325,30 @@ func TestServiceUpdateRegistrationValidationAndNotFound(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, apperr.CodeEventNotFound, ae.Code)
 }
+
+func TestServicePublicEventExposesRegistrationFields(t *testing.T) {
+	pool := dbtest.NewPool(t)
+	svc := event.NewService(pool)
+	actor := newActor(t, pool, iam.RoleOps, "ops.public.fields")
+	ctx := context.Background()
+	created, err := svc.Create(ctx, actor, validInput())
+	require.NoError(t, err)
+	_, err = svc.Publish(ctx, actor, created.ID)
+	require.NoError(t, err)
+	opens := time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)
+	_, err = pool.Exec(ctx, `UPDATE events SET registration_open = true, registration_opens_at = $2 WHERE id = $1`, created.ID, opens)
+	require.NoError(t, err)
+	_, err = pool.Exec(ctx, `UPDATE event_categories SET min_age = 16, used_count = 500, reserved_count = 300 WHERE event_id = $1`, created.ID)
+	require.NoError(t, err)
+
+	got, err := svc.GetPublic(ctx, "pphm-2026")
+
+	require.NoError(t, err)
+	require.True(t, got.RegistrationOpen)
+	require.NotNil(t, got.RegistrationOpensAt)
+	require.True(t, got.RegistrationOpensAt.Equal(opens))
+	require.Nil(t, got.RegistrationClosesAt)
+	require.Equal(t, int16(16), got.Categories[0].MinAge)
+	require.Equal(t, int32(500), got.Categories[0].UsedCount)
+	require.Equal(t, int32(300), got.Categories[0].ReservedCount)
+}

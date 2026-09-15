@@ -418,6 +418,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/app/events/{slug}/quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 报名算价预览（不占名额、不选识别分） */
+        post: operations["appQuote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/app/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 下单并占名额；应付为 0 时直接确认 */
+        post: operations["appCreateOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -461,6 +495,8 @@ export interface components {
             km?: string;
         };
         PublicCategory: {
+            /** Format: int64 */
+            id: number;
             code: string;
             name: string;
             /** Format: int32 */
@@ -471,13 +507,26 @@ export interface components {
             startAt: string;
             /** Format: date-time */
             cutoffAt: string;
+            /** Format: int32 */
+            minAge: number;
+            /** @description used_count + reserved_count >= capacity */
+            soldOut: boolean;
         };
         PublicEvent: {
+            /** Format: int64 */
+            id: number;
             slug: string;
+            /** @enum {string} */
+            eventType: "RACE" | "FREE_ACTIVITY";
             name: string;
             city: string;
             /** Format: date */
             raceDate: string;
+            registrationOpen: boolean;
+            /** Format: date-time */
+            registrationOpensAt: string | null;
+            /** Format: date-time */
+            registrationClosesAt: string | null;
             categories: components["schemas"]["PublicCategory"][];
         };
         PublicEventList: {
@@ -776,6 +825,145 @@ export interface components {
             effectiveDate: string;
             fullText: string;
             items: components["schemas"]["ConsentItem"][];
+        };
+        QuoteParticipantInput: {
+            /** Format: int64 */
+            categoryId: number;
+            nationality: string;
+            /** Format: date */
+            birthDate: string;
+        };
+        QuoteRequest: {
+            couponCode?: string;
+            participants: components["schemas"]["QuoteParticipantInput"][];
+        };
+        QuoteParticipant: {
+            /** Format: int64 */
+            categoryId: number;
+            /** Format: int64 */
+            priceRuleId: number;
+            /** @enum {string} */
+            audience: "ALL" | "LOCAL";
+            /** Format: int64 */
+            listPriceCents: number;
+            /** Format: int64 */
+            paidCents: number;
+        };
+        Quote: {
+            participants: components["schemas"]["QuoteParticipant"][];
+            /** Format: int64 */
+            listAmountCents: number;
+            couponApplied: boolean;
+            /** Format: int64 */
+            couponDiscountCents: number;
+            /** Format: int64 */
+            identOffsetCents: number;
+            /** Format: int64 */
+            discountCents: number;
+            /** Format: int64 */
+            amountCents: number;
+            currency: string;
+        };
+        OrderProfileInput: {
+            fullName: string;
+            /** @enum {string} */
+            gender: "M" | "F" | "X";
+            /** Format: date */
+            birthDate: string;
+            nationality: string;
+            /** @enum {string} */
+            idType: "NATIONAL_ID" | "PASSPORT" | "OTHER";
+            idNo: string;
+            phone: string;
+            email?: string;
+            emergencyName: string;
+            emergencyPhone: string;
+            /** @enum {string} */
+            tshirtSize: "XS" | "S" | "M" | "L" | "XL" | "XXL";
+        };
+        /** @description profileId 与 profile 二选一 */
+        OrderParticipantInput: {
+            /** Format: int64 */
+            categoryId: number;
+            /** Format: int64 */
+            profileId?: number;
+            profile?: components["schemas"]["OrderProfileInput"];
+            saveAsProfile?: boolean;
+        };
+        OrderConsentInput: {
+            version: string;
+            /** @enum {string} */
+            lang: "zh" | "en" | "km";
+            checkedItems: string[];
+        };
+        CreateOrderRequest: {
+            eventSlug: string;
+            couponCode?: string;
+            consent: components["schemas"]["OrderConsentInput"];
+            participants: components["schemas"]["OrderParticipantInput"][];
+        };
+        /** @enum {string} */
+        OrderStatus: "PENDING_PAYMENT" | "PROOF_SUBMITTED" | "PROOF_REJECTED" | "PAID" | "PARTIALLY_REFUNDED" | "REFUNDED" | "EXPIRED" | "CANCELLED";
+        OrderParticipant: {
+            regNo: string;
+            /** Format: int64 */
+            categoryId: number;
+            categoryName: components["schemas"]["LocalizedText"];
+            fullName: string;
+            /** Format: int64 */
+            priceRuleId: number;
+            /** Format: int64 */
+            listPriceCents: number;
+            /** Format: int64 */
+            paidCents: number;
+            /** @enum {string} */
+            registrationStatus: "PENDING" | "CONFIRMED" | "CANCELLED";
+            /** @description 仅 CONFIRMED 时返回 */
+            ticketCode?: string;
+        };
+        OrderPaymentAccount: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            provider: string;
+            accountName: string;
+            accountNoMasked: string;
+            /** Format: int64 */
+            qrFileId: number;
+        };
+        OrderRejection: {
+            code: string;
+            reason?: string;
+            /** Format: date-time */
+            reviewedAt: string;
+        };
+        OrderDetail: {
+            orderNo: string;
+            status: components["schemas"]["OrderStatus"];
+            eventSlug: string;
+            eventName: components["schemas"]["LocalizedText"];
+            eventTimezone: string;
+            /** Format: int64 */
+            listAmountCents: number;
+            /**
+             * Format: int64
+             * @description 优惠码减免 + 识别分
+             */
+            discountCents: number;
+            /** Format: int64 */
+            identOffsetCents: number;
+            /** Format: int64 */
+            amountCents: number;
+            currency: string;
+            /** Format: date-time */
+            deadlineAt: string | null;
+            /** Format: date-time */
+            paidAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            participants: components["schemas"]["OrderParticipant"][];
+            paymentAccount: components["schemas"]["OrderPaymentAccount"];
+            lastRejection?: components["schemas"]["OrderRejection"];
         };
     };
     responses: never;
@@ -1750,6 +1938,77 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConsentVersion"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appQuote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuoteRequest"];
+            };
+        };
+        responses: {
+            /** @description 算价结果 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quote"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appCreateOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 8–64 位 [A-Za-z0-9_-]；同一次提交重试时保持不变 */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description 已下单（同键同请求体重放时返回首次响应） */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetail"];
                 };
             };
             /** @description 错误 */

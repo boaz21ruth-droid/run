@@ -370,13 +370,16 @@ func categoryFromRow(r store.EventCategory) (Category, error) {
 		return Category{}, fmt.Errorf("decode name of category %d: %w", r.ID, err)
 	}
 	return Category{
-		ID:        r.ID,
-		Code:      r.Code,
-		Name:      name,
-		DistanceM: r.DistanceM,
-		Capacity:  r.Capacity,
-		StartAt:   r.StartAt,
-		CutoffAt:  r.CutoffAt,
+		ID:            r.ID,
+		Code:          r.Code,
+		Name:          name,
+		DistanceM:     r.DistanceM,
+		Capacity:      r.Capacity,
+		StartAt:       r.StartAt,
+		CutoffAt:      r.CutoffAt,
+		MinAge:        r.MinAge,
+		UsedCount:     r.UsedCount,
+		ReservedCount: r.ReservedCount,
 	}, nil
 }
 

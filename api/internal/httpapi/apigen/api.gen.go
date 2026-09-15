@@ -228,6 +228,156 @@ func (e IdType) Valid() bool {
 	}
 }
 
+// Defines values for OrderConsentInputLang.
+const (
+	OrderConsentInputLangEn OrderConsentInputLang = "en"
+	OrderConsentInputLangKm OrderConsentInputLang = "km"
+	OrderConsentInputLangZh OrderConsentInputLang = "zh"
+)
+
+// Valid indicates whether the value is a known member of the OrderConsentInputLang enum.
+func (e OrderConsentInputLang) Valid() bool {
+	switch e {
+	case OrderConsentInputLangEn:
+		return true
+	case OrderConsentInputLangKm:
+		return true
+	case OrderConsentInputLangZh:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for OrderParticipantRegistrationStatus.
+const (
+	OrderParticipantRegistrationStatusCANCELLED OrderParticipantRegistrationStatus = "CANCELLED"
+	OrderParticipantRegistrationStatusCONFIRMED OrderParticipantRegistrationStatus = "CONFIRMED"
+	OrderParticipantRegistrationStatusPENDING   OrderParticipantRegistrationStatus = "PENDING"
+)
+
+// Valid indicates whether the value is a known member of the OrderParticipantRegistrationStatus enum.
+func (e OrderParticipantRegistrationStatus) Valid() bool {
+	switch e {
+	case OrderParticipantRegistrationStatusCANCELLED:
+		return true
+	case OrderParticipantRegistrationStatusCONFIRMED:
+		return true
+	case OrderParticipantRegistrationStatusPENDING:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for OrderProfileInputGender.
+const (
+	OrderProfileInputGenderF OrderProfileInputGender = "F"
+	OrderProfileInputGenderM OrderProfileInputGender = "M"
+	OrderProfileInputGenderX OrderProfileInputGender = "X"
+)
+
+// Valid indicates whether the value is a known member of the OrderProfileInputGender enum.
+func (e OrderProfileInputGender) Valid() bool {
+	switch e {
+	case OrderProfileInputGenderF:
+		return true
+	case OrderProfileInputGenderM:
+		return true
+	case OrderProfileInputGenderX:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for OrderProfileInputIdType.
+const (
+	OrderProfileInputIdTypeNATIONALID OrderProfileInputIdType = "NATIONAL_ID"
+	OrderProfileInputIdTypeOTHER      OrderProfileInputIdType = "OTHER"
+	OrderProfileInputIdTypePASSPORT   OrderProfileInputIdType = "PASSPORT"
+)
+
+// Valid indicates whether the value is a known member of the OrderProfileInputIdType enum.
+func (e OrderProfileInputIdType) Valid() bool {
+	switch e {
+	case OrderProfileInputIdTypeNATIONALID:
+		return true
+	case OrderProfileInputIdTypeOTHER:
+		return true
+	case OrderProfileInputIdTypePASSPORT:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for OrderProfileInputTshirtSize.
+const (
+	OrderProfileInputTshirtSizeL   OrderProfileInputTshirtSize = "L"
+	OrderProfileInputTshirtSizeM   OrderProfileInputTshirtSize = "M"
+	OrderProfileInputTshirtSizeS   OrderProfileInputTshirtSize = "S"
+	OrderProfileInputTshirtSizeXL  OrderProfileInputTshirtSize = "XL"
+	OrderProfileInputTshirtSizeXS  OrderProfileInputTshirtSize = "XS"
+	OrderProfileInputTshirtSizeXXL OrderProfileInputTshirtSize = "XXL"
+)
+
+// Valid indicates whether the value is a known member of the OrderProfileInputTshirtSize enum.
+func (e OrderProfileInputTshirtSize) Valid() bool {
+	switch e {
+	case OrderProfileInputTshirtSizeL:
+		return true
+	case OrderProfileInputTshirtSizeM:
+		return true
+	case OrderProfileInputTshirtSizeS:
+		return true
+	case OrderProfileInputTshirtSizeXL:
+		return true
+	case OrderProfileInputTshirtSizeXS:
+		return true
+	case OrderProfileInputTshirtSizeXXL:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for OrderStatus.
+const (
+	OrderStatusCANCELLED         OrderStatus = "CANCELLED"
+	OrderStatusEXPIRED           OrderStatus = "EXPIRED"
+	OrderStatusPAID              OrderStatus = "PAID"
+	OrderStatusPARTIALLYREFUNDED OrderStatus = "PARTIALLY_REFUNDED"
+	OrderStatusPENDINGPAYMENT    OrderStatus = "PENDING_PAYMENT"
+	OrderStatusPROOFREJECTED     OrderStatus = "PROOF_REJECTED"
+	OrderStatusPROOFSUBMITTED    OrderStatus = "PROOF_SUBMITTED"
+	OrderStatusREFUNDED          OrderStatus = "REFUNDED"
+)
+
+// Valid indicates whether the value is a known member of the OrderStatus enum.
+func (e OrderStatus) Valid() bool {
+	switch e {
+	case OrderStatusCANCELLED:
+		return true
+	case OrderStatusEXPIRED:
+		return true
+	case OrderStatusPAID:
+		return true
+	case OrderStatusPARTIALLYREFUNDED:
+		return true
+	case OrderStatusPENDINGPAYMENT:
+		return true
+	case OrderStatusPROOFREJECTED:
+		return true
+	case OrderStatusPROOFSUBMITTED:
+		return true
+	case OrderStatusREFUNDED:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PaymentAccountScope.
 const (
 	PaymentAccountScopeALL          PaymentAccountScope = "ALL"
@@ -288,6 +438,42 @@ func (e PriceAudience) Valid() bool {
 	case PriceAudienceALL:
 		return true
 	case PriceAudienceLOCAL:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PublicEventEventType.
+const (
+	PublicEventEventTypeFREEACTIVITY PublicEventEventType = "FREE_ACTIVITY"
+	PublicEventEventTypeRACE         PublicEventEventType = "RACE"
+)
+
+// Valid indicates whether the value is a known member of the PublicEventEventType enum.
+func (e PublicEventEventType) Valid() bool {
+	switch e {
+	case PublicEventEventTypeFREEACTIVITY:
+		return true
+	case PublicEventEventTypeRACE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for QuoteParticipantAudience.
+const (
+	QuoteParticipantAudienceALL   QuoteParticipantAudience = "ALL"
+	QuoteParticipantAudienceLOCAL QuoteParticipantAudience = "LOCAL"
+)
+
+// Valid indicates whether the value is a known member of the QuoteParticipantAudience enum.
+func (e QuoteParticipantAudience) Valid() bool {
+	switch e {
+	case QuoteParticipantAudienceALL:
+		return true
+	case QuoteParticipantAudienceLOCAL:
 		return true
 	default:
 		return false
@@ -585,6 +771,14 @@ type CreateEventRequestEventType string
 // CreateEventRequestOrganizerType defines model for CreateEventRequest.OrganizerType.
 type CreateEventRequestOrganizerType string
 
+// CreateOrderRequest defines model for CreateOrderRequest.
+type CreateOrderRequest struct {
+	Consent      OrderConsentInput       `json:"consent"`
+	CouponCode   *string                 `json:"couponCode,omitempty"`
+	EventSlug    string                  `json:"eventSlug"`
+	Participants []OrderParticipantInput `json:"participants"`
+}
+
 // DiscountType defines model for DiscountType.
 type DiscountType string
 
@@ -626,6 +820,108 @@ type Me struct {
 	Permissions map[string]Access `json:"permissions"`
 	Staff       Staff             `json:"staff"`
 }
+
+// OrderConsentInput defines model for OrderConsentInput.
+type OrderConsentInput struct {
+	CheckedItems []string              `json:"checkedItems"`
+	Lang         OrderConsentInputLang `json:"lang"`
+	Version      string                `json:"version"`
+}
+
+// OrderConsentInputLang defines model for OrderConsentInput.Lang.
+type OrderConsentInputLang string
+
+// OrderDetail defines model for OrderDetail.
+type OrderDetail struct {
+	AmountCents int64      `json:"amountCents"`
+	CreatedAt   time.Time  `json:"createdAt"`
+	Currency    string     `json:"currency"`
+	DeadlineAt  *time.Time `json:"deadlineAt"`
+
+	// DiscountCents 优惠码减免 + 识别分
+	DiscountCents    int64               `json:"discountCents"`
+	EventName        LocalizedText       `json:"eventName"`
+	EventSlug        string              `json:"eventSlug"`
+	EventTimezone    string              `json:"eventTimezone"`
+	IdentOffsetCents int64               `json:"identOffsetCents"`
+	LastRejection    *OrderRejection     `json:"lastRejection,omitempty"`
+	ListAmountCents  int64               `json:"listAmountCents"`
+	OrderNo          string              `json:"orderNo"`
+	PaidAt           *time.Time          `json:"paidAt"`
+	Participants     []OrderParticipant  `json:"participants"`
+	PaymentAccount   OrderPaymentAccount `json:"paymentAccount"`
+	Status           OrderStatus         `json:"status"`
+}
+
+// OrderParticipant defines model for OrderParticipant.
+type OrderParticipant struct {
+	CategoryId         int64                              `json:"categoryId"`
+	CategoryName       LocalizedText                      `json:"categoryName"`
+	FullName           string                             `json:"fullName"`
+	ListPriceCents     int64                              `json:"listPriceCents"`
+	PaidCents          int64                              `json:"paidCents"`
+	PriceRuleId        int64                              `json:"priceRuleId"`
+	RegNo              string                             `json:"regNo"`
+	RegistrationStatus OrderParticipantRegistrationStatus `json:"registrationStatus"`
+
+	// TicketCode 仅 CONFIRMED 时返回
+	TicketCode *string `json:"ticketCode,omitempty"`
+}
+
+// OrderParticipantRegistrationStatus defines model for OrderParticipant.RegistrationStatus.
+type OrderParticipantRegistrationStatus string
+
+// OrderParticipantInput profileId 与 profile 二选一
+type OrderParticipantInput struct {
+	CategoryId    int64              `json:"categoryId"`
+	Profile       *OrderProfileInput `json:"profile,omitempty"`
+	ProfileId     *int64             `json:"profileId,omitempty"`
+	SaveAsProfile *bool              `json:"saveAsProfile,omitempty"`
+}
+
+// OrderPaymentAccount defines model for OrderPaymentAccount.
+type OrderPaymentAccount struct {
+	AccountName     string `json:"accountName"`
+	AccountNoMasked string `json:"accountNoMasked"`
+	Id              int64  `json:"id"`
+	Name            string `json:"name"`
+	Provider        string `json:"provider"`
+	QrFileId        int64  `json:"qrFileId"`
+}
+
+// OrderProfileInput defines model for OrderProfileInput.
+type OrderProfileInput struct {
+	BirthDate      openapi_types.Date          `json:"birthDate"`
+	Email          *string                     `json:"email,omitempty"`
+	EmergencyName  string                      `json:"emergencyName"`
+	EmergencyPhone string                      `json:"emergencyPhone"`
+	FullName       string                      `json:"fullName"`
+	Gender         OrderProfileInputGender     `json:"gender"`
+	IdNo           string                      `json:"idNo"`
+	IdType         OrderProfileInputIdType     `json:"idType"`
+	Nationality    string                      `json:"nationality"`
+	Phone          string                      `json:"phone"`
+	TshirtSize     OrderProfileInputTshirtSize `json:"tshirtSize"`
+}
+
+// OrderProfileInputGender defines model for OrderProfileInput.Gender.
+type OrderProfileInputGender string
+
+// OrderProfileInputIdType defines model for OrderProfileInput.IdType.
+type OrderProfileInputIdType string
+
+// OrderProfileInputTshirtSize defines model for OrderProfileInput.TshirtSize.
+type OrderProfileInputTshirtSize string
+
+// OrderRejection defines model for OrderRejection.
+type OrderRejection struct {
+	Code       string    `json:"code"`
+	Reason     *string   `json:"reason,omitempty"`
+	ReviewedAt time.Time `json:"reviewedAt"`
+}
+
+// OrderStatus defines model for OrderStatus.
+type OrderStatus string
 
 // PaymentAccount defines model for PaymentAccount.
 type PaymentAccount struct {
@@ -720,22 +1016,72 @@ type PublicCategory struct {
 	Code      string    `json:"code"`
 	CutoffAt  time.Time `json:"cutoffAt"`
 	DistanceM int32     `json:"distanceM"`
+	Id        int64     `json:"id"`
+	MinAge    int32     `json:"minAge"`
 	Name      string    `json:"name"`
-	StartAt   time.Time `json:"startAt"`
+
+	// SoldOut used_count + reserved_count >= capacity
+	SoldOut bool      `json:"soldOut"`
+	StartAt time.Time `json:"startAt"`
 }
 
 // PublicEvent defines model for PublicEvent.
 type PublicEvent struct {
-	Categories []PublicCategory   `json:"categories"`
-	City       string             `json:"city"`
-	Name       string             `json:"name"`
-	RaceDate   openapi_types.Date `json:"raceDate"`
-	Slug       string             `json:"slug"`
+	Categories           []PublicCategory     `json:"categories"`
+	City                 string               `json:"city"`
+	EventType            PublicEventEventType `json:"eventType"`
+	Id                   int64                `json:"id"`
+	Name                 string               `json:"name"`
+	RaceDate             openapi_types.Date   `json:"raceDate"`
+	RegistrationClosesAt *time.Time           `json:"registrationClosesAt"`
+	RegistrationOpen     bool                 `json:"registrationOpen"`
+	RegistrationOpensAt  *time.Time           `json:"registrationOpensAt"`
+	Slug                 string               `json:"slug"`
 }
+
+// PublicEventEventType defines model for PublicEvent.EventType.
+type PublicEventEventType string
 
 // PublicEventList defines model for PublicEventList.
 type PublicEventList struct {
 	Items []PublicEvent `json:"items"`
+}
+
+// Quote defines model for Quote.
+type Quote struct {
+	AmountCents         int64              `json:"amountCents"`
+	CouponApplied       bool               `json:"couponApplied"`
+	CouponDiscountCents int64              `json:"couponDiscountCents"`
+	Currency            string             `json:"currency"`
+	DiscountCents       int64              `json:"discountCents"`
+	IdentOffsetCents    int64              `json:"identOffsetCents"`
+	ListAmountCents     int64              `json:"listAmountCents"`
+	Participants        []QuoteParticipant `json:"participants"`
+}
+
+// QuoteParticipant defines model for QuoteParticipant.
+type QuoteParticipant struct {
+	Audience       QuoteParticipantAudience `json:"audience"`
+	CategoryId     int64                    `json:"categoryId"`
+	ListPriceCents int64                    `json:"listPriceCents"`
+	PaidCents      int64                    `json:"paidCents"`
+	PriceRuleId    int64                    `json:"priceRuleId"`
+}
+
+// QuoteParticipantAudience defines model for QuoteParticipant.Audience.
+type QuoteParticipantAudience string
+
+// QuoteParticipantInput defines model for QuoteParticipantInput.
+type QuoteParticipantInput struct {
+	BirthDate   openapi_types.Date `json:"birthDate"`
+	CategoryId  int64              `json:"categoryId"`
+	Nationality string             `json:"nationality"`
+}
+
+// QuoteRequest defines model for QuoteRequest.
+type QuoteRequest struct {
+	CouponCode   *string                 `json:"couponCode,omitempty"`
+	Participants []QuoteParticipantInput `json:"participants"`
 }
 
 // Role defines model for Role.
@@ -853,6 +1199,12 @@ type AppGetConsentParamsPurpose string
 // AppGetConsentParamsLang defines parameters for AppGetConsent.
 type AppGetConsentParamsLang string
 
+// AppCreateOrderParams defines parameters for AppCreateOrder.
+type AppCreateOrderParams struct {
+	// IdempotencyKey 8–64 位 [A-Za-z0-9_-]；同一次提交重试时保持不变
+	IdempotencyKey string `json:"Idempotency-Key"`
+}
+
 // AdminLoginJSONRequestBody defines body for AdminLogin for application/json ContentType.
 type AdminLoginJSONRequestBody = LoginRequest
 
@@ -882,6 +1234,12 @@ type AdminUpdatePriceRuleJSONRequestBody = PriceRuleInput
 
 // AppLoginTelegramJSONRequestBody defines body for AppLoginTelegram for application/json ContentType.
 type AppLoginTelegramJSONRequestBody = AppLoginRequest
+
+// AppQuoteJSONRequestBody defines body for AppQuote for application/json ContentType.
+type AppQuoteJSONRequestBody = QuoteRequest
+
+// AppCreateOrderJSONRequestBody defines body for AppCreateOrder for application/json ContentType.
+type AppCreateOrderJSONRequestBody = CreateOrderRequest
 
 // AppCreateProfileJSONRequestBody defines body for AppCreateProfile for application/json ContentType.
 type AppCreateProfileJSONRequestBody = ProfileInput
@@ -951,9 +1309,15 @@ type ServerInterface interface {
 	// AppGetConsent 当前生效的同意书版本；所请求语言没有时依次回退到英文、中文
 	// (GET /app/consents)
 	AppGetConsent(c *gin.Context, params AppGetConsentParams)
+	// AppQuote 报名算价预览（不占名额、不选识别分）
+	// (POST /app/events/{slug}/quote)
+	AppQuote(c *gin.Context, slug string)
 	// AppGetMe 当前跑者
 	// (GET /app/me)
 	AppGetMe(c *gin.Context)
+	// AppCreateOrder 下单并占名额；应付为 0 时直接确认
+	// (POST /app/orders)
+	AppCreateOrder(c *gin.Context, params AppCreateOrderParams)
 	// AppListProfiles 当前跑者的常用参赛人（证件号只返回后 4 位）
 	// (GET /app/profiles)
 	AppListProfiles(c *gin.Context)
@@ -1384,6 +1748,31 @@ func (siw *ServerInterfaceWrapper) AppGetConsent(c *gin.Context) {
 	siw.Handler.AppGetConsent(c, params)
 }
 
+// AppQuote operation middleware
+func (siw *ServerInterfaceWrapper) AppQuote(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "slug" -------------
+	var slug string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Param("slug"), &slug, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppQuote(c, slug)
+}
+
 // AppGetMe operation middleware
 func (siw *ServerInterfaceWrapper) AppGetMe(c *gin.Context) {
 
@@ -1395,6 +1784,49 @@ func (siw *ServerInterfaceWrapper) AppGetMe(c *gin.Context) {
 	}
 
 	siw.Handler.AppGetMe(c)
+}
+
+// AppCreateOrder operation middleware
+func (siw *ServerInterfaceWrapper) AppCreateOrder(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params AppCreateOrderParams
+
+	headers := c.Request.Header
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Header parameter Idempotency-Key is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppCreateOrder(c, params)
 }
 
 // AppListProfiles operation middleware
@@ -1619,6 +2051,8 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.DELETE(options.BaseURL+"/app/profiles/:id", wrapper.AppDeleteProfile)
 	router.PUT(options.BaseURL+"/app/profiles/:id", wrapper.AppUpdateProfile)
 	router.GET(options.BaseURL+"/app/consents", wrapper.AppGetConsent)
+	router.POST(options.BaseURL+"/app/events/:slug/quote", wrapper.AppQuote)
+	router.POST(options.BaseURL+"/app/orders", wrapper.AppCreateOrder)
 }
 
 type AdminLoginRequestObject struct {
@@ -2389,6 +2823,46 @@ func (response AppGetConsentdefaultJSONResponse) VisitAppGetConsentResponse(w ht
 	return err
 }
 
+type AppQuoteRequestObject struct {
+	Slug string `json:"slug"`
+	Body *AppQuoteJSONRequestBody
+}
+
+type AppQuoteResponseObject interface {
+	VisitAppQuoteResponse(w http.ResponseWriter) error
+}
+
+type AppQuote200JSONResponse Quote
+
+func (response AppQuote200JSONResponse) VisitAppQuoteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppQuotedefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppQuotedefaultJSONResponse) VisitAppQuoteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AppGetMeRequestObject struct {
 }
 
@@ -2416,6 +2890,46 @@ type AppGetMedefaultJSONResponse struct {
 }
 
 func (response AppGetMedefaultJSONResponse) VisitAppGetMeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppCreateOrderRequestObject struct {
+	Params AppCreateOrderParams
+	Body   *AppCreateOrderJSONRequestBody
+}
+
+type AppCreateOrderResponseObject interface {
+	VisitAppCreateOrderResponse(w http.ResponseWriter) error
+}
+
+type AppCreateOrder201JSONResponse OrderDetail
+
+func (response AppCreateOrder201JSONResponse) VisitAppCreateOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppCreateOrderdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppCreateOrderdefaultJSONResponse) VisitAppCreateOrderResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -2852,9 +3366,15 @@ type StrictServerInterface interface {
 	// AppGetConsent 当前生效的同意书版本；所请求语言没有时依次回退到英文、中文
 	// (GET /app/consents)
 	AppGetConsent(ctx context.Context, request AppGetConsentRequestObject) (AppGetConsentResponseObject, error)
+	// AppQuote 报名算价预览（不占名额、不选识别分）
+	// (POST /app/events/{slug}/quote)
+	AppQuote(ctx context.Context, request AppQuoteRequestObject) (AppQuoteResponseObject, error)
 	// AppGetMe 当前跑者
 	// (GET /app/me)
 	AppGetMe(ctx context.Context, request AppGetMeRequestObject) (AppGetMeResponseObject, error)
+	// AppCreateOrder 下单并占名额；应付为 0 时直接确认
+	// (POST /app/orders)
+	AppCreateOrder(ctx context.Context, request AppCreateOrderRequestObject) (AppCreateOrderResponseObject, error)
 	// AppListProfiles 当前跑者的常用参赛人（证件号只返回后 4 位）
 	// (GET /app/profiles)
 	AppListProfiles(ctx context.Context, request AppListProfilesRequestObject) (AppListProfilesResponseObject, error)
@@ -3511,6 +4031,39 @@ func (sh *strictHandler) AppGetConsent(ctx *gin.Context, params AppGetConsentPar
 	}
 }
 
+// AppQuote operation middleware
+func (sh *strictHandler) AppQuote(ctx *gin.Context, slug string) {
+	var request AppQuoteRequestObject
+
+	request.Slug = slug
+
+	var body AppQuoteJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppQuote(ctx, request.(AppQuoteRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppQuote")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppQuoteResponseObject); ok {
+		if err := validResponse.VisitAppQuoteResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // AppGetMe operation middleware
 func (sh *strictHandler) AppGetMe(ctx *gin.Context) {
 	var request AppGetMeRequestObject
@@ -3528,6 +4081,39 @@ func (sh *strictHandler) AppGetMe(ctx *gin.Context) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AppGetMeResponseObject); ok {
 		if err := validResponse.VisitAppGetMeResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppCreateOrder operation middleware
+func (sh *strictHandler) AppCreateOrder(ctx *gin.Context, params AppCreateOrderParams) {
+	var request AppCreateOrderRequestObject
+
+	request.Params = params
+
+	var body AppCreateOrderJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppCreateOrder(ctx, request.(AppCreateOrderRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppCreateOrder")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppCreateOrderResponseObject); ok {
+		if err := validResponse.VisitAppCreateOrderResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

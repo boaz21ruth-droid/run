@@ -9,33 +9,38 @@ import (
 
 // 错误码。每个错误码在 i18n/messages.{zh,en,km}.json 中都有同名文案。
 const (
-	CodeInternal                = "INTERNAL"
-	CodeBadRequest              = "BAD_REQUEST"
-	CodeValidation              = "VALIDATION_FAILED"
-	CodeUnauthenticated         = "UNAUTHENTICATED"
-	CodeForbidden               = "FORBIDDEN"
-	CodeCSRF                    = "CSRF_HEADER_MISSING"
-	CodeNotFound                = "NOT_FOUND"
-	CodeRateLimited             = "RATE_LIMITED"
-	CodeInvalidCredentials      = "INVALID_CREDENTIALS"
-	CodeAccountLocked           = "ACCOUNT_LOCKED"
-	CodeEventNotFound           = "EVENT_NOT_FOUND"
-	CodeEventSlugTaken          = "EVENT_SLUG_TAKEN"
-	CodeEventCategoryCodeTaken  = "EVENT_CATEGORY_CODE_TAKEN"
-	CodeEventAlreadyPublished   = "EVENT_ALREADY_PUBLISHED"
-	CodeEventNoCategory         = "EVENT_NO_CATEGORY"
-	CodeEventCategoryIncomplete = "EVENT_CATEGORY_INCOMPLETE"
-	CodeFileTooLarge            = "FILE_TOO_LARGE"
-	CodeFileTypeNotAllowed      = "FILE_TYPE_NOT_ALLOWED"
-	CodeRegistrationNotReady    = "REGISTRATION_NOT_READY"
-	CodePriceRuleLocked         = "PRICE_RULE_LOCKED"
-	CodeCouponCodeTaken         = "COUPON_CODE_TAKEN"
-	CodeTelegramAuthInvalid     = "TELEGRAM_AUTH_INVALID"
-	CodeConsentInvalid          = "CONSENT_INVALID"
-	CodeCouponInvalid           = "COUPON_INVALID"
-	CodeCouponExhausted         = "COUPON_EXHAUSTED"
-	CodeCategorySoldOut         = "CATEGORY_SOLD_OUT"
-	CodePriceTierSoldOut        = "PRICE_TIER_SOLD_OUT"
+	CodeInternal                  = "INTERNAL"
+	CodeBadRequest                = "BAD_REQUEST"
+	CodeValidation                = "VALIDATION_FAILED"
+	CodeUnauthenticated           = "UNAUTHENTICATED"
+	CodeForbidden                 = "FORBIDDEN"
+	CodeCSRF                      = "CSRF_HEADER_MISSING"
+	CodeNotFound                  = "NOT_FOUND"
+	CodeRateLimited               = "RATE_LIMITED"
+	CodeInvalidCredentials        = "INVALID_CREDENTIALS"
+	CodeAccountLocked             = "ACCOUNT_LOCKED"
+	CodeEventNotFound             = "EVENT_NOT_FOUND"
+	CodeEventSlugTaken            = "EVENT_SLUG_TAKEN"
+	CodeEventCategoryCodeTaken    = "EVENT_CATEGORY_CODE_TAKEN"
+	CodeEventAlreadyPublished     = "EVENT_ALREADY_PUBLISHED"
+	CodeEventNoCategory           = "EVENT_NO_CATEGORY"
+	CodeEventCategoryIncomplete   = "EVENT_CATEGORY_INCOMPLETE"
+	CodeFileTooLarge              = "FILE_TOO_LARGE"
+	CodeFileTypeNotAllowed        = "FILE_TYPE_NOT_ALLOWED"
+	CodeRegistrationNotReady      = "REGISTRATION_NOT_READY"
+	CodePriceRuleLocked           = "PRICE_RULE_LOCKED"
+	CodeCouponCodeTaken           = "COUPON_CODE_TAKEN"
+	CodeTelegramAuthInvalid       = "TELEGRAM_AUTH_INVALID"
+	CodeConsentInvalid            = "CONSENT_INVALID"
+	CodeCouponInvalid             = "COUPON_INVALID"
+	CodeCouponExhausted           = "COUPON_EXHAUSTED"
+	CodeCategorySoldOut           = "CATEGORY_SOLD_OUT"
+	CodePriceTierSoldOut          = "PRICE_TIER_SOLD_OUT"
+	CodeRegistrationClosed        = "REGISTRATION_CLOSED"
+	CodeAlreadyRegistered         = "ALREADY_REGISTERED"
+	CodePaymentAccountUnavailable = "PAYMENT_ACCOUNT_UNAVAILABLE"
+	CodeIdempotencyKeyReused      = "IDEMPOTENCY_KEY_REUSED"
+	CodeOrderStateConflict        = "ORDER_STATE_CONFLICT"
 )
 
 // AllCodes 列出全部错误码，供文案完整性测试使用。新增错误码时必须同时加到这里。
@@ -67,6 +72,11 @@ var AllCodes = []string{
 	CodeCouponExhausted,
 	CodeCategorySoldOut,
 	CodePriceTierSoldOut,
+	CodeRegistrationClosed,
+	CodeAlreadyRegistered,
+	CodePaymentAccountUnavailable,
+	CodeIdempotencyKeyReused,
+	CodeOrderStateConflict,
 }
 
 // FieldError 描述某个字段的错误：文案 key 与参数。
