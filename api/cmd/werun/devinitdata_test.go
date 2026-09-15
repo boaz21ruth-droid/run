@@ -51,12 +51,14 @@ func TestDevInitDataDefaultsLangToEnglish(t *testing.T) {
 func TestDevInitDataRefusesInProd(t *testing.T) {
 	setDevConfigEnv(t)
 	t.Setenv("WERUN_ENV", "prod")
+	// prod 下 config.Load 只接受 https 基址；用合法配置，确保拒绝来自 dev-initdata 自身而不是配置校验
+	t.Setenv("WERUN_APP_BASE_URL", "https://app.werun.asia")
 
 	code, stdout, stderr := runCmd("dev-initdata", "--telegram-id", "10001", "--name", "Dara")
 
 	assert.Equal(t, 1, code)
 	assert.Empty(t, stdout)
-	assert.Contains(t, stderr, "WERUN_ENV=prod")
+	assert.Contains(t, stderr, "WERUN_ENV=prod 时禁止生成开发登录参数")
 }
 
 func TestDevInitDataRefusesBlankBotToken(t *testing.T) {

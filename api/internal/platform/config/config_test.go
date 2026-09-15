@@ -56,6 +56,7 @@ func TestLoadAppliesDefaults(t *testing.T) {
 func TestLoadProd(t *testing.T) {
 	setRequired(t)
 	t.Setenv("WERUN_ENV", "prod")
+	t.Setenv("WERUN_APP_BASE_URL", "https://app.werun.asia")
 
 	cfg, err := config.Load()
 
@@ -147,6 +148,7 @@ func TestTelegramSendEnabled(t *testing.T) {
 		t.Run(tc.env+"/"+tc.send, func(t *testing.T) {
 			setRequired(t)
 			t.Setenv("WERUN_ENV", tc.env)
+			t.Setenv("WERUN_APP_BASE_URL", "https://app.werun.asia") // prod 只接受 https
 			if tc.send != "" {
 				t.Setenv("WERUN_TELEGRAM_SEND", tc.send)
 			}
@@ -155,6 +157,37 @@ func TestTelegramSendEnabled(t *testing.T) {
 
 			require.NoError(t, err)
 			assert.Equal(t, tc.want, cfg.TelegramSendEnabled())
+		})
+	}
+}
+
+// Telegram 的 web_app 按钮只接受 https 地址：prod 下 http 基址会让每条推送都被 Telegram 400 拒绝。
+func TestLoadAppBaseURLSchemeByEnv(t *testing.T) {
+	cases := []struct {
+		env, url string
+		wantErr  bool
+	}{
+		{"prod", "http://app.werun.asia", true},
+		{"prod", "https://app.werun.asia", false},
+		{"dev", "http://werun.localhost", false},
+		{"dev", "https://werun.localhost", false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.env+"/"+tc.url, func(t *testing.T) {
+			setRequired(t)
+			t.Setenv("WERUN_ENV", tc.env)
+			t.Setenv("WERUN_APP_BASE_URL", tc.url)
+
+			cfg, err := config.Load()
+
+			if tc.wantErr {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "WERUN_APP_BASE_URL")
+				assert.Contains(t, err.Error(), "https")
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.url, cfg.AppBaseURL)
 		})
 	}
 }

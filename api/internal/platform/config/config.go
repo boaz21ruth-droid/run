@@ -63,7 +63,7 @@ func Load() (Config, error) {
 	}
 	// 变量未设置时 env.ParseAs 已经报过 WERUN_APP_BASE_URL，不重复报
 	if err == nil || !strings.Contains(err.Error(), "WERUN_APP_BASE_URL") {
-		if baseErr := validateBaseURL(cfg.AppBaseURL); baseErr != nil {
+		if baseErr := validateBaseURL(cfg.AppBaseURL, cfg.IsProd()); baseErr != nil {
 			errs = append(errs, baseErr)
 		}
 	}
@@ -103,10 +103,15 @@ func (c Config) TelegramSendEnabled() bool {
 	}
 }
 
-func validateBaseURL(raw string) error {
+// validateBaseURL 要求绝对 http(s) 地址；prod 下只接受 https，因为 Telegram 的 web_app 按钮拒绝 http 地址，
+// 否则每条带按钮的推送都会被 Telegram 返回 400。dev（含本地与 e2e）允许 http。
+func validateBaseURL(raw string, prod bool) error {
 	u, err := url.Parse(raw)
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
 		return fmt.Errorf("WERUN_APP_BASE_URL must be an absolute http(s) URL, got %q", raw)
+	}
+	if prod && u.Scheme != "https" {
+		return fmt.Errorf("WERUN_APP_BASE_URL must use https when WERUN_ENV=prod (Telegram web_app buttons require it), got %q", raw)
 	}
 	return nil
 }
