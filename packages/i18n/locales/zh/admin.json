@@ -191,5 +191,128 @@
       "qrRequired": "请上传收款二维码",
       "chooseQr": "选择图片"
     }
+  },
+  "proofs": {
+    "title": "凭证审核",
+    "required": "必填",
+    "status": { "SUBMITTED": "待审核", "APPROVED": "已通过", "REJECTED": "已驳回", "WITHDRAWN": "已撤回" },
+    "col": {
+      "proofNo": "凭证号",
+      "orderNo": "订单号",
+      "event": "赛事",
+      "amount": "应付",
+      "declared": "申报金额",
+      "txnRef": "交易号",
+      "waiting": "等待时长",
+      "status": "状态"
+    },
+    "dupTag": "重复截图",
+    "overSla": "已超时",
+    "waitingMinutes": "{{minutes}} 分钟",
+    "waitingHours": "{{hours}} 小时 {{minutes}} 分钟",
+    "empty": "没有凭证",
+    "detail": {
+      "screenshot": "付款截图",
+      "declared": "申报信息",
+      "declaredAmount": "申报金额",
+      "declaredPaidAt": "申报付款时间",
+      "payerName": "付款人",
+      "submittedAt": "提交时间",
+      "reviewedAt": "审核时间",
+      "rejectReason": "驳回说明",
+      "notFound": "找不到这份凭证",
+      "back": "返回队列",
+      "current": "当前"
+    },
+    "approve": {
+      "open": "通过",
+      "title": "确认到账",
+      "receivedUsd": "到账金额（美元）",
+      "receivedAt": "到账时间",
+      "note": "备注",
+      "submit": "确认通过",
+      "tooLow": "到账金额少于应付 {{amount}}，不能通过；请以「金额不符」驳回。",
+      "overpaid": "多付 {{amount}}，通过后会登记一条多付异常。",
+      "invalidAmount": "请输入正确的美元金额，最多两位小数",
+      "success": "已通过，订单已确认"
+    },
+    "reject": {
+      "open": "驳回",
+      "title": "驳回凭证",
+      "code": "驳回原因",
+      "reason": "给跑者的说明",
+      "reasonRequired": "选择「其他原因」时必须填写说明",
+      "reasonTooLong": "说明不能超过 500 个字符",
+      "submit": "确认驳回",
+      "success": "已驳回，跑者可以重新上传"
+    },
+    "rejectCode": {
+      "NOT_RECEIVED": "未收到款项",
+      "AMOUNT_MISMATCH": "金额不符",
+      "DUPLICATE_TXN": "交易号重复",
+      "UNREADABLE": "截图看不清",
+      "WRONG_ACCOUNT": "转错账户",
+      "FRAUD": "疑似伪造",
+      "OTHER": "其他原因"
+    }
+  },
+  "orders": {
+    "title": "订单",
+    "filter": { "event": "赛事", "status": "状态", "q": "订单号、手机号或姓名", "submit": "查询", "reset": "重置" },
+    "status": {
+      "PENDING_PAYMENT": "待付款",
+      "PROOF_SUBMITTED": "凭证审核中",
+      "PROOF_REJECTED": "凭证被驳回",
+      "PAID": "已付款",
+      "PARTIALLY_REFUNDED": "部分退款",
+      "REFUNDED": "已退款",
+      "EXPIRED": "已过期",
+      "CANCELLED": "已取消"
+    },
+    "col": {
+      "orderNo": "订单号",
+      "event": "赛事",
+      "buyer": "买家",
+      "participants": "人数",
+      "amount": "应付",
+      "status": "状态",
+      "createdAt": "下单时间"
+    },
+    "empty": "没有符合条件的订单",
+    "total": "共 {{total}} 单",
+    "detail": {
+      "title": "订单信息",
+      "orderNo": "订单号",
+      "event": "赛事",
+      "buyer": "买家",
+      "phone": "手机号",
+      "createdAt": "下单时间",
+      "deadlineAt": "当前截止时间",
+      "paidAt": "付款时间",
+      "paymentAccount": "收款账户",
+      "amounts": "金额构成",
+      "listAmount": "原价合计",
+      "couponDiscount": "优惠码 {{code}}",
+      "identOffset": "识别分",
+      "discount": "优惠合计",
+      "amount": "应付",
+      "participants": "参赛人",
+      "proofs": "凭证记录",
+      "receipts": "到账记录",
+      "notFound": "找不到这个订单",
+      "back": "返回列表"
+    },
+    "participant": {
+      "name": "姓名",
+      "category": "组别",
+      "regNo": "报名号",
+      "listPrice": "原价",
+      "paid": "分摊实付",
+      "status": "报名状态"
+    },
+    "registrationStatus": { "PENDING": "待确认", "CONFIRMED": "已确认", "CANCELLED": "已取消" },
+    "receipt": { "txnRef": "交易号", "amount": "到账金额", "receivedAt": "到账时间", "match": "匹配结果" },
+    "matchStatus": { "APPLIED": "已入账", "EXCEPTION": "异常", "UNMATCHED": "未匹配" },
+    "couponState": { "RESERVED": "已占用", "CONSUMED": "已核销", "RELEASED": "已释放" }
   }
 }

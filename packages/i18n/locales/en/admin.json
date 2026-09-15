@@ -191,5 +191,128 @@
       "qrRequired": "Upload the payment QR code",
       "chooseQr": "Choose image"
     }
+  },
+  "proofs": {
+    "title": "Payment review",
+    "required": "Required",
+    "status": { "SUBMITTED": "Pending review", "APPROVED": "Approved", "REJECTED": "Rejected", "WITHDRAWN": "Withdrawn" },
+    "col": {
+      "proofNo": "Proof no.",
+      "orderNo": "Order no.",
+      "event": "Event",
+      "amount": "Amount due",
+      "declared": "Declared",
+      "txnRef": "Transaction ref",
+      "waiting": "Waiting",
+      "status": "Status"
+    },
+    "dupTag": "Duplicate screenshot",
+    "overSla": "Overdue",
+    "waitingMinutes": "{{minutes}} min",
+    "waitingHours": "{{hours}} h {{minutes}} min",
+    "empty": "No proofs",
+    "detail": {
+      "screenshot": "Payment screenshot",
+      "declared": "Declared by runner",
+      "declaredAmount": "Declared amount",
+      "declaredPaidAt": "Declared payment time",
+      "payerName": "Payer",
+      "submittedAt": "Submitted",
+      "reviewedAt": "Reviewed",
+      "rejectReason": "Rejection note",
+      "notFound": "Proof not found",
+      "back": "Back to queue",
+      "current": "Current"
+    },
+    "approve": {
+      "open": "Approve",
+      "title": "Confirm payment received",
+      "receivedUsd": "Received amount (USD)",
+      "receivedAt": "Received at",
+      "note": "Note",
+      "submit": "Approve payment",
+      "tooLow": "The received amount is below the amount due ({{amount}}). Reject it as an amount mismatch instead.",
+      "overpaid": "Overpaid by {{amount}}. Approving records an overpayment exception.",
+      "invalidAmount": "Enter a valid USD amount with at most two decimals",
+      "success": "Approved — the order is confirmed"
+    },
+    "reject": {
+      "open": "Reject",
+      "title": "Reject proof",
+      "code": "Reason",
+      "reason": "Note to runner",
+      "reasonRequired": "Explain the reason when choosing Other",
+      "reasonTooLong": "Keep the note within 500 characters",
+      "submit": "Reject proof",
+      "success": "Rejected — the runner can upload again"
+    },
+    "rejectCode": {
+      "NOT_RECEIVED": "Payment not received",
+      "AMOUNT_MISMATCH": "Amount mismatch",
+      "DUPLICATE_TXN": "Duplicate transaction",
+      "UNREADABLE": "Unreadable screenshot",
+      "WRONG_ACCOUNT": "Wrong account",
+      "FRAUD": "Suspected fraud",
+      "OTHER": "Other"
+    }
+  },
+  "orders": {
+    "title": "Orders",
+    "filter": { "event": "Event", "status": "Status", "q": "Order no., phone or name", "submit": "Search", "reset": "Reset" },
+    "status": {
+      "PENDING_PAYMENT": "Awaiting payment",
+      "PROOF_SUBMITTED": "Proof under review",
+      "PROOF_REJECTED": "Proof rejected",
+      "PAID": "Paid",
+      "PARTIALLY_REFUNDED": "Partially refunded",
+      "REFUNDED": "Refunded",
+      "EXPIRED": "Expired",
+      "CANCELLED": "Cancelled"
+    },
+    "col": {
+      "orderNo": "Order no.",
+      "event": "Event",
+      "buyer": "Buyer",
+      "participants": "Runners",
+      "amount": "Amount due",
+      "status": "Status",
+      "createdAt": "Created"
+    },
+    "empty": "No matching orders",
+    "total": "{{total}} orders",
+    "detail": {
+      "title": "Order",
+      "orderNo": "Order no.",
+      "event": "Event",
+      "buyer": "Buyer",
+      "phone": "Phone",
+      "createdAt": "Created",
+      "deadlineAt": "Current deadline",
+      "paidAt": "Paid at",
+      "paymentAccount": "Payment account",
+      "amounts": "Amount breakdown",
+      "listAmount": "List total",
+      "couponDiscount": "Coupon {{code}}",
+      "identOffset": "Identification cents",
+      "discount": "Total discount",
+      "amount": "Amount due",
+      "participants": "Participants",
+      "proofs": "Proof history",
+      "receipts": "Receipts",
+      "notFound": "Order not found",
+      "back": "Back to orders"
+    },
+    "participant": {
+      "name": "Name",
+      "category": "Category",
+      "regNo": "Registration no.",
+      "listPrice": "List price",
+      "paid": "Paid share",
+      "status": "Status"
+    },
+    "registrationStatus": { "PENDING": "Pending", "CONFIRMED": "Confirmed", "CANCELLED": "Cancelled" },
+    "receipt": { "txnRef": "Transaction ref", "amount": "Amount", "receivedAt": "Received at", "match": "Match" },
+    "matchStatus": { "APPLIED": "Applied", "EXCEPTION": "Exception", "UNMATCHED": "Unmatched" },
+    "couponState": { "RESERVED": "Reserved", "CONSUMED": "Used", "RELEASED": "Released" }
   }
 }
