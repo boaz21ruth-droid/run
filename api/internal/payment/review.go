@@ -236,6 +236,9 @@ func (s *Service) ApproveProof(ctx context.Context, actor iam.Staff, id int64, i
 			after, meta)); err != nil {
 			return err
 		}
+		if err := s.enqueueProofApproved(ctx, tx, order.ID, proof.ID); err != nil {
+			return err
+		}
 		return nil
 	})
 	if err != nil {
@@ -290,6 +293,9 @@ func (s *Service) RejectProof(ctx context.Context, actor iam.Staff, id int64, in
 		if err := audit.Record(ctx, tx, reviewAudit(actor, "payment_proof.reject", proof, order,
 			fmt.Sprintf("驳回凭证 %s（%s），订单 %s 可重传至 %s", proof.ProofNo, in.Code, order.OrderNo, deadline.Format(time.RFC3339)),
 			after, meta)); err != nil {
+			return err
+		}
+		if err := s.enqueueProofRejected(ctx, tx, order.ID, proof.ID, in); err != nil {
 			return err
 		}
 		return nil

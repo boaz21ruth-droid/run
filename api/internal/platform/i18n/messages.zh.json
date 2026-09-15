@@ -54,5 +54,17 @@
   "ORDER_STATE_CONFLICT": "订单当前状态不允许这个操作。",
   "field.duplicate_id_no": "同一订单里证件号不能重复。",
   "field.already_registered": "该证件号已报名本赛事。",
-  "ORDER_NOT_FOUND": "找不到这张订单。"
+  "ORDER_NOT_FOUND": "找不到这张订单。",
+  "notify.proof_approved": "付款已确认\n赛事：{eventName}\n订单号：{orderNo}\n报名已生效，打开订单即可查看参赛凭证。",
+  "notify.proof_rejected": "付款凭证未通过审核\n赛事：{eventName}\n订单号：{orderNo}\n原因：{reason}\n请在 {deadline} 前重新上传凭证，逾期订单将自动取消。",
+  "notify.payment_deadline_reminder": "订单 {orderNo} 的付款截止时间为 {deadline}，请尽快完成转账并上传付款凭证，逾期名额将自动释放。",
+  "notify.order_expired": "订单 {orderNo} 未在期限内完成付款，已自动取消，名额已释放。如仍想参加，请重新报名。",
+  "notify.open_order": "查看订单",
+  "notify.reject_code.NOT_RECEIVED": "未查到到账记录",
+  "notify.reject_code.AMOUNT_MISMATCH": "转账金额与应付金额不符",
+  "notify.reject_code.DUPLICATE_TXN": "交易号已被使用",
+  "notify.reject_code.UNREADABLE": "截图无法辨认",
+  "notify.reject_code.WRONG_ACCOUNT": "转入的收款账户不正确",
+  "notify.reject_code.FRAUD": "凭证信息无法核实",
+  "notify.reject_code.OTHER": "其他原因"
 }

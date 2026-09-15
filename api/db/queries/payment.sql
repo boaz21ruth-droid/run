@@ -99,3 +99,9 @@ SELECT EXISTS (
   JOIN payment_proofs p ON p.file_id = f.id
   WHERE f.id = @file_id AND f.purpose = 'PAYMENT_PROOF' AND f.visibility = 'PRIVATE'
 );
+
+-- name: GetOrderForProofNotice :one
+SELECT o.order_no, o.buyer_user_id, o.deadline_at, e.name AS event_name, e.timezone AS event_timezone
+FROM reg_orders o
+JOIN events e ON e.id = o.event_id
+WHERE o.id = @order_id;

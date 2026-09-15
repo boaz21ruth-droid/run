@@ -21,6 +21,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"werun/api/internal/iam"
+	"werun/api/internal/notify/notifytest"
 	"werun/api/internal/payment"
 	"werun/api/internal/platform/dbtest"
 	"werun/api/internal/platform/idgen"
@@ -132,7 +133,7 @@ func NewEnv(t testing.TB) *Env {
 		Runners:  runners,
 		Prices:   prices,
 		Orders:   orders,
-		Payments: payment.NewService(pool, files, orders, clock.Now),
+		Payments: payment.NewService(pool, files, orders, notifytest.New(t, pool), clock.Now),
 	}
 }
 

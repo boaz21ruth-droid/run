@@ -10,6 +10,7 @@ import (
 
 	"werun/api/internal/audit"
 	"werun/api/internal/iam"
+	"werun/api/internal/notify"
 	"werun/api/internal/platform/apperr"
 	"werun/api/internal/platform/httpx"
 	"werun/api/internal/platform/storage"
@@ -18,16 +19,17 @@ import (
 
 // Service 是收款模块的业务入口：收款账户、凭证上传与审核。
 type Service struct {
-	pool   *pgxpool.Pool
-	files  storage.Store
-	orders *registration.Service
-	now    func() time.Time
+	pool     *pgxpool.Pool
+	files    storage.Store
+	orders   *registration.Service
+	notifier *notify.Service
+	now      func() time.Time
 }
 
-// NewService 创建收款服务。orders 用于在收款事务内锁单与改订单状态；只维护收款账户的调用方可以传 nil。
-// Task 20 追加 notifier 参数。
-func NewService(pool *pgxpool.Pool, files storage.Store, orders *registration.Service, now func() time.Time) *Service {
-	return &Service{pool: pool, files: files, orders: orders, now: now}
+// NewService 创建收款服务。orders 用于在收款事务内锁单与改订单状态，notifier 用于审核结果推送；
+// 只维护收款账户的调用方两者都可以传 nil。
+func NewService(pool *pgxpool.Pool, files storage.Store, orders *registration.Service, notifier *notify.Service, now func() time.Time) *Service {
+	return &Service{pool: pool, files: files, orders: orders, notifier: notifier, now: now}
 }
 
 func validationError() *apperr.Error {

@@ -21,6 +21,34 @@ func (q *Queries) EventExists(ctx context.Context, id int64) (bool, error) {
 	return exists, err
 }
 
+const getOrderForProofNotice = `-- name: GetOrderForProofNotice :one
+SELECT o.order_no, o.buyer_user_id, o.deadline_at, e.name AS event_name, e.timezone AS event_timezone
+FROM reg_orders o
+JOIN events e ON e.id = o.event_id
+WHERE o.id = $1
+`
+
+type GetOrderForProofNoticeRow struct {
+	OrderNo       string
+	BuyerUserID   *int64
+	DeadlineAt    *time.Time
+	EventName     []byte
+	EventTimezone string
+}
+
+func (q *Queries) GetOrderForProofNotice(ctx context.Context, orderID int64) (GetOrderForProofNoticeRow, error) {
+	row := q.db.QueryRow(ctx, getOrderForProofNotice, orderID)
+	var i GetOrderForProofNoticeRow
+	err := row.Scan(
+		&i.OrderNo,
+		&i.BuyerUserID,
+		&i.DeadlineAt,
+		&i.EventName,
+		&i.EventTimezone,
+	)
+	return i, err
+}
+
 const getPaymentAccountForUpdate = `-- name: GetPaymentAccountForUpdate :one
 SELECT id, name, provider, account_name, account_no_masked, currency, qr_file_id, scope, event_id, active, created_by, created_at FROM payment_accounts
 WHERE id = $1

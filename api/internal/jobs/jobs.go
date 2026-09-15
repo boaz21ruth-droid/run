@@ -11,6 +11,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
+
+	"werun/api/internal/notify"
 )
 
 // SessionRetention：过期或吊销超过这么久的会话才会被物理删除。
@@ -49,6 +51,7 @@ type Deps struct {
 	Pool     *pgxpool.Pool
 	Log      *slog.Logger
 	Sessions SessionCleaner
+	Notify   *notify.SendWorker // Task 20：为 nil 时不注册 notify_send（仅测试这样用）
 }
 
 // NewClient 创建能执行任务的 River 客户端：注册全部 worker 与周期任务，默认队列 10 个并发。
@@ -60,6 +63,9 @@ func NewClient(d Deps) (*river.Client[pgx.Tx], error) {
 
 	workers := river.NewWorkers()
 	river.AddWorker(workers, &SessionCleanupWorker{Sessions: d.Sessions, Log: d.Log})
+	if d.Notify != nil {
+		river.AddWorker(workers, d.Notify)
+	}
 
 	client, err := river.NewClient(riverpgxv5.New(d.Pool), &river.Config{
 		Logger: d.Log,

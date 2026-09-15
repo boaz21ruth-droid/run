@@ -54,5 +54,17 @@
   "ORDER_STATE_CONFLICT": "This action isn't allowed for the order's current status.",
   "field.duplicate_id_no": "The same ID number appears twice in this order.",
   "field.already_registered": "This ID number is already registered for this event.",
-  "ORDER_NOT_FOUND": "Order not found."
+  "ORDER_NOT_FOUND": "Order not found.",
+  "notify.proof_approved": "Payment confirmed\nEvent: {eventName}\nOrder: {orderNo}\nYour registration is confirmed. Open the order to see your race ticket.",
+  "notify.proof_rejected": "Payment proof not accepted\nEvent: {eventName}\nOrder: {orderNo}\nReason: {reason}\nPlease upload a new proof before {deadline}, otherwise the order will be cancelled automatically.",
+  "notify.payment_deadline_reminder": "Order {orderNo}: payment is due by {deadline}. Please complete the transfer and upload your payment proof, otherwise your spot will be released.",
+  "notify.order_expired": "Order {orderNo} was not paid in time and has been cancelled. Your spot has been released. Please register again if you still want to take part.",
+  "notify.open_order": "View order",
+  "notify.reject_code.NOT_RECEIVED": "Payment not received",
+  "notify.reject_code.AMOUNT_MISMATCH": "Amount does not match the amount due",
+  "notify.reject_code.DUPLICATE_TXN": "Transaction reference already used",
+  "notify.reject_code.UNREADABLE": "Screenshot is unreadable",
+  "notify.reject_code.WRONG_ACCOUNT": "Paid to the wrong account",
+  "notify.reject_code.FRAUD": "Proof could not be verified",
+  "notify.reject_code.OTHER": "Other reason"
 }

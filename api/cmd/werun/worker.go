@@ -30,7 +30,7 @@ func runWorker(ctx context.Context, args []string, stderr io.Writer) int {
 	}
 	defer app.Close()
 
-	client, err := jobs.NewClient(jobs.Deps{Pool: app.Pool, Log: app.Log, Sessions: app.IAM})
+	client, err := jobs.NewClient(app.JobDeps())
 	if err != nil {
 		app.Log.Error("create river client failed", "error", err)
 		return 1

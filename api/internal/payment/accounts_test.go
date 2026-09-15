@@ -70,7 +70,7 @@ func newAccountsFixture(t *testing.T) accountsFixture {
 	})
 	require.NoError(t, err)
 	now := func() time.Time { return time.Date(2026, 9, 14, 3, 0, 0, 0, time.UTC) }
-	return accountsFixture{svc: payment.NewService(pool, disk, nil, now), pool: pool, disk: disk, root: root, actor: actor, event: ev}
+	return accountsFixture{svc: payment.NewService(pool, disk, nil, nil, now), pool: pool, disk: disk, root: root, actor: actor, event: ev}
 }
 
 func (f accountsFixture) count(t *testing.T, sql string, args ...any) int {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"werun/api/internal/event"
 	"werun/api/internal/iam"
 	"werun/api/internal/jobs"
+	"werun/api/internal/notify"
 	"werun/api/internal/payment"
 	"werun/api/internal/platform/config"
 	"werun/api/internal/platform/db"
@@ -41,6 +43,7 @@ type App struct {
 	Registration *registration.Service
 	Payment      *payment.Service
 	Runner       *runner.Service
+	Notify       *notify.Service // Task 20
 }
 
 // Bootstrap 读取配置、创建日志器、加载文案、连接数据库并构造各服务。
@@ -77,16 +80,35 @@ func Bootstrap(ctx context.Context) (*App, error) {
 		return nil, fmt.Errorf("create job inserter: %w", err)
 	}
 	app := &App{Cfg: cfg, Log: log, Catalog: cat, Pool: pool, Store: files, PII: pii, Inserter: inserter}
+	app.Notify = notify.NewService(app.Inserter, app.Catalog, app.Cfg.AppBaseURL)
 	app.Runner = runner.NewService(app.Pool, []byte(app.Cfg.SessionSecret), app.Cfg.TelegramBotToken, app.PII, time.Now)
 	app.IAM = iam.NewService(app.Pool, []byte(app.Cfg.SessionSecret), iam.NewLoginLimiter(time.Now), time.Now)
 	app.Events = event.NewService(app.Pool)
 	app.Pricing = pricing.NewService(app.Pool, time.Now)
 	app.Registration = registration.NewService(app.Pool, app.Runner, app.Pricing, time.Now)
-	app.Payment = payment.NewService(app.Pool, app.Store, app.Registration, time.Now)
+	app.Payment = payment.NewService(app.Pool, app.Store, app.Registration, app.Notify, time.Now)
 	return app, nil
 }
 
 // Close 释放进程级资源。
 func (a *App) Close() {
 	a.Pool.Close()
+}
+
+// newNotifySender 按 WERUN_TELEGRAM_SEND 选择发送实现：开启时调用 Telegram Bot API，关闭时只写日志。
+func newNotifySender(cfg config.Config, log *slog.Logger) notify.Sender {
+	if cfg.TelegramSendEnabled() {
+		return notify.NewTelegramSender(cfg.TelegramBotToken, notify.DefaultTelegramBaseURL, &http.Client{Timeout: 10 * time.Second})
+	}
+	return notify.LogSender{Log: log}
+}
+
+// JobDeps 汇总 River worker 的依赖；serve --with-worker 与 worker 命令共用。
+func (a *App) JobDeps() jobs.Deps {
+	return jobs.Deps{
+		Pool:     a.Pool,
+		Log:      a.Log,
+		Sessions: a.IAM,
+		Notify:   &notify.SendWorker{Pool: a.Pool, Sender: newNotifySender(a.Cfg, a.Log), Log: a.Log},
+	}
 }

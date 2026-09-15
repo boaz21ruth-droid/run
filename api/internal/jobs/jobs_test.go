@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"werun/api/internal/jobs"
+	"werun/api/internal/notify"
 	"werun/api/internal/platform/db"
 	"werun/api/internal/platform/dbtest"
 	"werun/api/internal/platform/logx"
@@ -133,4 +134,54 @@ func TestInserterInsertsAnyJobKindInsideTransaction(t *testing.T) {
 	require.Equal(t, 5, maxAttempts)
 	require.Equal(t, "available", state, "没有 worker 在跑，任务保持可执行状态")
 	require.JSONEq(t, `{"note":"committed"}`, args)
+}
+
+type chanSender struct {
+	sent chan string
+}
+
+func (s *chanSender) Send(_ context.Context, _ int64, text string, _ *notify.Button) error {
+	s.sent <- text
+	return nil
+}
+
+// 集成测试：注册了 Deps.Notify 的客户端必须执行 notify_send 并回写 SENT。
+func TestClientRunsNotifySendJob(t *testing.T) {
+	pool := dbtest.NewPool(t)
+	ctx := context.Background()
+	log := logx.New("error", io.Discard)
+	var logID int64
+	require.NoError(t, pool.QueryRow(ctx, `
+		INSERT INTO notification_logs (channel, recipient, template, locale, entity_type, entity_id, dedupe_key)
+		VALUES ('TELEGRAM', '42', 'order_expired', 'en', 'reg_order', 1, 'jobs-test:1')
+		RETURNING id`).Scan(&logID))
+	sender := &chanSender{sent: make(chan string, 1)}
+
+	client, err := jobs.NewClient(jobs.Deps{
+		Pool:     pool,
+		Log:      log,
+		Sessions: newFakeCleaner(),
+		Notify:   &notify.SendWorker{Pool: pool, Sender: sender, Log: log},
+	})
+	require.NoError(t, err)
+	require.NoError(t, client.Start(ctx))
+	t.Cleanup(func() {
+		stopCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		_ = client.Stop(stopCtx)
+	})
+
+	_, err = client.Insert(ctx, notify.SendArgs{LogID: logID, ChatID: 42, Text: "hello"}, &river.InsertOpts{MaxAttempts: notify.SendMaxAttempts})
+	require.NoError(t, err)
+
+	select {
+	case text := <-sender.sent:
+		require.Equal(t, "hello", text)
+	case <-time.After(15 * time.Second):
+		t.Fatal("15 秒内 notify_send 任务没有被执行")
+	}
+	require.Eventually(t, func() bool {
+		var status string
+		return pool.QueryRow(ctx, `SELECT status FROM notification_logs WHERE id = $1`, logID).Scan(&status) == nil && status == "SENT"
+	}, 10*time.Second, 100*time.Millisecond)
 }
