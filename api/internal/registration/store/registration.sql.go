@@ -10,6 +10,253 @@ import (
 	"time"
 )
 
+const adminCountRegOrders = `-- name: AdminCountRegOrders :one
+SELECT count(*)
+FROM reg_orders o
+WHERE ($1::bigint IS NULL OR o.event_id = $1::bigint)
+  AND ($2::text = '' OR o.status = $2::text)
+  AND ($3::text = ''
+       OR o.order_no = upper($3::text)
+       OR o.buyer_phone_e164 LIKE ('%' || $4::text || '%') ESCAPE '\'
+       OR o.buyer_name ILIKE ('%' || $4::text || '%') ESCAPE '\')
+`
+
+type AdminCountRegOrdersParams struct {
+	EventID *int64
+	Status  string
+	Q       string
+	QLike   string
+}
+
+func (q *Queries) AdminCountRegOrders(ctx context.Context, arg AdminCountRegOrdersParams) (int64, error) {
+	row := q.db.QueryRow(ctx, adminCountRegOrders,
+		arg.EventID,
+		arg.Status,
+		arg.Q,
+		arg.QLike,
+	)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const adminGetOrderCoupon = `-- name: AdminGetOrderCoupon :one
+SELECT c.code, cr.discount_cents, cr.state
+FROM coupon_redemptions cr
+JOIN coupons c ON c.id = cr.coupon_id
+WHERE cr.order_id = $1
+`
+
+type AdminGetOrderCouponRow struct {
+	Code          string
+	DiscountCents int64
+	State         string
+}
+
+func (q *Queries) AdminGetOrderCoupon(ctx context.Context, orderID int64) (AdminGetOrderCouponRow, error) {
+	row := q.db.QueryRow(ctx, adminGetOrderCoupon, orderID)
+	var i AdminGetOrderCouponRow
+	err := row.Scan(&i.Code, &i.DiscountCents, &i.State)
+	return i, err
+}
+
+const adminGetRegOrderBuyer = `-- name: AdminGetRegOrderBuyer :one
+SELECT buyer_name, buyer_phone_e164
+FROM reg_orders
+WHERE id = $1
+`
+
+type AdminGetRegOrderBuyerRow struct {
+	BuyerName      string
+	BuyerPhoneE164 string
+}
+
+func (q *Queries) AdminGetRegOrderBuyer(ctx context.Context, id int64) (AdminGetRegOrderBuyerRow, error) {
+	row := q.db.QueryRow(ctx, adminGetRegOrderBuyer, id)
+	var i AdminGetRegOrderBuyerRow
+	err := row.Scan(&i.BuyerName, &i.BuyerPhoneE164)
+	return i, err
+}
+
+const adminListOrderProofs = `-- name: AdminListOrderProofs :many
+SELECT id, proof_no, status, bank_txn_ref, declared_amount_cents, reject_code, created_at, reviewed_at
+FROM payment_proofs
+WHERE reg_order_id = $1::bigint
+ORDER BY created_at DESC, id DESC
+`
+
+type AdminListOrderProofsRow struct {
+	ID                  int64
+	ProofNo             string
+	Status              string
+	BankTxnRef          string
+	DeclaredAmountCents int64
+	RejectCode          *string
+	CreatedAt           time.Time
+	ReviewedAt          *time.Time
+}
+
+func (q *Queries) AdminListOrderProofs(ctx context.Context, orderID int64) ([]AdminListOrderProofsRow, error) {
+	rows, err := q.db.Query(ctx, adminListOrderProofs, orderID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []AdminListOrderProofsRow
+	for rows.Next() {
+		var i AdminListOrderProofsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProofNo,
+			&i.Status,
+			&i.BankTxnRef,
+			&i.DeclaredAmountCents,
+			&i.RejectCode,
+			&i.CreatedAt,
+			&i.ReviewedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const adminListOrderReceipts = `-- name: AdminListOrderReceipts :many
+SELECT id, txn_ref, amount_cents, received_at, match_status
+FROM payment_receipts
+WHERE reg_order_id = $1::bigint
+ORDER BY received_at, id
+`
+
+type AdminListOrderReceiptsRow struct {
+	ID          int64
+	TxnRef      string
+	AmountCents int64
+	ReceivedAt  time.Time
+	MatchStatus string
+}
+
+func (q *Queries) AdminListOrderReceipts(ctx context.Context, orderID int64) ([]AdminListOrderReceiptsRow, error) {
+	rows, err := q.db.Query(ctx, adminListOrderReceipts, orderID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []AdminListOrderReceiptsRow
+	for rows.Next() {
+		var i AdminListOrderReceiptsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TxnRef,
+			&i.AmountCents,
+			&i.ReceivedAt,
+			&i.MatchStatus,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const adminListRegOrders = `-- name: AdminListRegOrders :many
+SELECT o.id, o.order_no, o.event_id, o.buyer_user_id, o.buyer_name, o.buyer_phone_e164, o.buyer_email, o.status, o.reservation_state, o.reservation_release_kind, o.list_amount_cents, o.discount_cents, o.ident_offset_cents, o.amount_cents, o.currency, o.coupon_id, o.payment_account_id, o.deadline_at, o.paid_at, o.expired_at, o.cancelled_at, o.cancel_reason, o.source, o.archived, o.version, o.created_at, o.updated_at,
+       e.slug AS event_slug,
+       e.name AS event_name,
+       (SELECT count(*) FROM order_participants op WHERE op.order_id = o.id)::int AS participant_count
+FROM reg_orders o
+JOIN events e ON e.id = o.event_id
+WHERE ($1::bigint IS NULL OR o.event_id = $1::bigint)
+  AND ($2::text = '' OR o.status = $2::text)
+  AND ($3::text = ''
+       OR o.order_no = upper($3::text)
+       OR o.buyer_phone_e164 LIKE ('%' || $4::text || '%') ESCAPE '\'
+       OR o.buyer_name ILIKE ('%' || $4::text || '%') ESCAPE '\')
+ORDER BY o.created_at DESC, o.id DESC
+LIMIT $6::int OFFSET $5::int
+`
+
+type AdminListRegOrdersParams struct {
+	EventID   *int64
+	Status    string
+	Q         string
+	QLike     string
+	RowOffset int32
+	RowLimit  int32
+}
+
+type AdminListRegOrdersRow struct {
+	RegOrder         RegOrder
+	EventSlug        string
+	EventName        []byte
+	ParticipantCount int32
+}
+
+func (q *Queries) AdminListRegOrders(ctx context.Context, arg AdminListRegOrdersParams) ([]AdminListRegOrdersRow, error) {
+	rows, err := q.db.Query(ctx, adminListRegOrders,
+		arg.EventID,
+		arg.Status,
+		arg.Q,
+		arg.QLike,
+		arg.RowOffset,
+		arg.RowLimit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []AdminListRegOrdersRow
+	for rows.Next() {
+		var i AdminListRegOrdersRow
+		if err := rows.Scan(
+			&i.RegOrder.ID,
+			&i.RegOrder.OrderNo,
+			&i.RegOrder.EventID,
+			&i.RegOrder.BuyerUserID,
+			&i.RegOrder.BuyerName,
+			&i.RegOrder.BuyerPhoneE164,
+			&i.RegOrder.BuyerEmail,
+			&i.RegOrder.Status,
+			&i.RegOrder.ReservationState,
+			&i.RegOrder.ReservationReleaseKind,
+			&i.RegOrder.ListAmountCents,
+			&i.RegOrder.DiscountCents,
+			&i.RegOrder.IdentOffsetCents,
+			&i.RegOrder.AmountCents,
+			&i.RegOrder.Currency,
+			&i.RegOrder.CouponID,
+			&i.RegOrder.PaymentAccountID,
+			&i.RegOrder.DeadlineAt,
+			&i.RegOrder.PaidAt,
+			&i.RegOrder.ExpiredAt,
+			&i.RegOrder.CancelledAt,
+			&i.RegOrder.CancelReason,
+			&i.RegOrder.Source,
+			&i.RegOrder.Archived,
+			&i.RegOrder.Version,
+			&i.RegOrder.CreatedAt,
+			&i.RegOrder.UpdatedAt,
+			&i.EventSlug,
+			&i.EventName,
+			&i.ParticipantCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const cancelOrderRegistrations = `-- name: CancelOrderRegistrations :execrows
 UPDATE registrations r
 SET status = 'CANCELLED', cancel_reason = $1::text, version = r.version + 1

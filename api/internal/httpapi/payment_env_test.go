@@ -18,6 +18,7 @@ import (
 
 	"werun/api/internal/event"
 	"werun/api/internal/httpapi"
+	"werun/api/internal/iam"
 	"werun/api/internal/payment/paytest"
 	"werun/api/internal/platform/httpx"
 	"werun/api/internal/platform/i18n"
@@ -51,6 +52,41 @@ func newPaymentHTTPEnv(t *testing.T) paymentHTTPEnv {
 		Env:          "dev",
 	})
 	return paymentHTTPEnv{Env: env, router: router, catalog: catalog}
+}
+
+func (e paymentHTTPEnv) staffCookie(t *testing.T, role iam.Role, username string) *http.Cookie {
+	t.Helper()
+	const password = "Correct-Horse-Battery-9"
+	ctx := context.Background()
+	_, err := e.IAM.CreateStaff(ctx, username, "HTTP "+string(role), role, password)
+	require.NoError(t, err)
+	token, _, err := e.IAM.Login(ctx, username, password, httpx.Meta{IP: "127.0.0.1", UserAgent: "payment-http-test"})
+	require.NoError(t, err)
+	return &http.Cookie{Name: iam.CookieName, Value: token}
+}
+
+// adminRequest 发 JSON 请求；非 GET 自动带 X-WeRun-Client: admin。
+func (e paymentHTTPEnv) adminRequest(t *testing.T, method, path string, body any, cookie *http.Cookie) *httptest.ResponseRecorder {
+	t.Helper()
+	var reader io.Reader
+	if body != nil {
+		raw, err := json.Marshal(body)
+		require.NoError(t, err)
+		reader = bytes.NewReader(raw)
+	}
+	req := httptest.NewRequestWithContext(context.Background(), method, path, reader)
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	if method != http.MethodGet {
+		req.Header.Set(httpx.HeaderClient, "admin")
+	}
+	if cookie != nil {
+		req.AddCookie(cookie)
+	}
+	rec := httptest.NewRecorder()
+	e.router.ServeHTTP(rec, req)
+	return rec
 }
 
 func (e paymentHTTPEnv) runnerToken(t *testing.T, telegramID int64, name string) (string, runner.User) {

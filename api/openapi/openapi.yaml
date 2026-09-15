@@ -933,6 +933,85 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /admin/orders:
+    get:
+      operationId: adminListOrders
+      summary: 后台订单列表（按赛事、状态、订单号 / 手机号 / 买家姓名筛选，创建时间倒序）
+      x-permission: order_view
+      x-access: read
+      parameters:
+        - name: eventId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [PENDING_PAYMENT, PROOF_SUBMITTED, PROOF_REJECTED, PAID, PARTIALLY_REFUNDED, REFUNDED, EXPIRED, CANCELLED]
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 64
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+      responses:
+        '200':
+          description: 订单列表与总数
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminOrderList'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/orders/{id}:
+    get:
+      operationId: adminGetOrder
+      summary: 后台订单详情（金额构成、参赛人、凭证历史、到账记录）
+      x-permission: order_view
+      x-access: read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 订单详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminOrderDetail'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     ErrorResponse:
@@ -1956,3 +2035,147 @@ components:
         reviewedBy: { type: integer, format: int64, nullable: true }
         reviewedAt: { type: string, format: date-time, nullable: true }
         createdAt: { type: string, format: date-time }
+    AdminOrderSummary:
+      type: object
+      required: [id, orderNo, eventId, eventSlug, eventName, status, listAmountCents, discountCents, identOffsetCents, amountCents, currency, participantCount, deadlineAt, paidAt, createdAt]
+      properties:
+        id: { type: integer, format: int64 }
+        orderNo: { type: string }
+        eventId: { type: integer, format: int64 }
+        eventSlug: { type: string }
+        eventName:
+          $ref: '#/components/schemas/LocalizedText'
+        status:
+          type: string
+          enum: [PENDING_PAYMENT, PROOF_SUBMITTED, PROOF_REJECTED, PAID, PARTIALLY_REFUNDED, REFUNDED, EXPIRED, CANCELLED]
+        listAmountCents: { type: integer, format: int64 }
+        discountCents: { type: integer, format: int64 }
+        identOffsetCents: { type: integer, format: int64 }
+        amountCents: { type: integer, format: int64 }
+        currency: { type: string }
+        participantCount: { type: integer, format: int32 }
+        deadlineAt: { type: string, format: date-time, nullable: true }
+        paidAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+    AdminOrderList:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminOrderSummary'
+        total: { type: integer, format: int64 }
+    AdminOrderParticipant:
+      type: object
+      required: [registrationId, regNo, categoryId, categoryName, fullName, priceRuleId, listPriceCents, paidCents, registrationStatus, ticketCode]
+      properties:
+        registrationId: { type: integer, format: int64 }
+        regNo: { type: string }
+        categoryId: { type: integer, format: int64 }
+        categoryName:
+          $ref: '#/components/schemas/LocalizedText'
+        fullName: { type: string }
+        priceRuleId: { type: integer, format: int64 }
+        listPriceCents: { type: integer, format: int64 }
+        paidCents: { type: integer, format: int64 }
+        registrationStatus:
+          type: string
+          enum: [PENDING, CONFIRMED, CANCELLED]
+        ticketCode: { type: string, nullable: true }
+    AdminOrderPaymentAccount:
+      type: object
+      required: [id, name, provider, accountName, accountNoMasked, qrFileId]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        provider: { type: string }
+        accountName: { type: string }
+        accountNoMasked: { type: string }
+        qrFileId: { type: integer, format: int64 }
+    AdminLastRejection:
+      type: object
+      required: [code, reason, reviewedAt]
+      properties:
+        code: { type: string }
+        reason: { type: string, nullable: true }
+        reviewedAt: { type: string, format: date-time }
+    AdminProofHistoryItem:
+      type: object
+      required: [id, proofNo, status, bankTxnRef, declaredAmountCents, rejectCode, createdAt, reviewedAt]
+      properties:
+        id: { type: integer, format: int64 }
+        proofNo: { type: string }
+        status:
+          type: string
+          enum: [SUBMITTED, APPROVED, REJECTED, WITHDRAWN]
+        bankTxnRef: { type: string }
+        declaredAmountCents: { type: integer, format: int64 }
+        rejectCode: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        reviewedAt: { type: string, format: date-time, nullable: true }
+    AdminReceiptItem:
+      type: object
+      required: [id, txnRef, amountCents, receivedAt, matchStatus]
+      properties:
+        id: { type: integer, format: int64 }
+        txnRef: { type: string }
+        amountCents: { type: integer, format: int64 }
+        receivedAt: { type: string, format: date-time }
+        matchStatus:
+          type: string
+          enum: [APPLIED, EXCEPTION, UNMATCHED]
+    AdminAppliedCoupon:
+      type: object
+      required: [code, discountCents, state]
+      properties:
+        code: { type: string }
+        discountCents: { type: integer, format: int64 }
+        state:
+          type: string
+          enum: [RESERVED, CONSUMED, RELEASED]
+    AdminOrderDetail:
+      type: object
+      required: [id, orderNo, eventId, eventSlug, eventName, eventTimezone, status, reservationState, buyerName, buyerPhone, listAmountCents, discountCents, identOffsetCents, amountCents, currency, deadlineAt, paidAt, createdAt, paymentAccount, participants, proofs, receipts]
+      properties:
+        id: { type: integer, format: int64 }
+        orderNo: { type: string }
+        eventId: { type: integer, format: int64 }
+        eventSlug: { type: string }
+        eventName:
+          $ref: '#/components/schemas/LocalizedText'
+        eventTimezone: { type: string }
+        status:
+          type: string
+          enum: [PENDING_PAYMENT, PROOF_SUBMITTED, PROOF_REJECTED, PAID, PARTIALLY_REFUNDED, REFUNDED, EXPIRED, CANCELLED]
+        reservationState:
+          type: string
+          enum: [RESERVED, CONSUMED, RELEASED]
+        buyerName: { type: string }
+        buyerPhone: { type: string }
+        listAmountCents: { type: integer, format: int64 }
+        discountCents: { type: integer, format: int64 }
+        identOffsetCents: { type: integer, format: int64 }
+        amountCents: { type: integer, format: int64 }
+        currency: { type: string }
+        deadlineAt: { type: string, format: date-time, nullable: true }
+        paidAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+        paymentAccount:
+          $ref: '#/components/schemas/AdminOrderPaymentAccount'
+        lastRejection:
+          $ref: '#/components/schemas/AdminLastRejection'
+        coupon:
+          $ref: '#/components/schemas/AdminAppliedCoupon'
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminOrderParticipant'
+        proofs:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminProofHistoryItem'
+        receipts:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminReceiptItem'

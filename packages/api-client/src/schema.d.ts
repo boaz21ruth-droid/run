@@ -504,6 +504,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 后台订单列表（按赛事、状态、订单号 / 手机号 / 买家姓名筛选，创建时间倒序） */
+        get: operations["adminListOrders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 后台订单详情（金额构成、参赛人、凭证历史、到账记录） */
+        get: operations["adminGetOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1077,6 +1111,143 @@ export interface components {
             reviewedAt: string | null;
             /** Format: date-time */
             createdAt: string;
+        };
+        AdminOrderSummary: {
+            /** Format: int64 */
+            id: number;
+            orderNo: string;
+            /** Format: int64 */
+            eventId: number;
+            eventSlug: string;
+            eventName: components["schemas"]["LocalizedText"];
+            /** @enum {string} */
+            status: "PENDING_PAYMENT" | "PROOF_SUBMITTED" | "PROOF_REJECTED" | "PAID" | "PARTIALLY_REFUNDED" | "REFUNDED" | "EXPIRED" | "CANCELLED";
+            /** Format: int64 */
+            listAmountCents: number;
+            /** Format: int64 */
+            discountCents: number;
+            /** Format: int64 */
+            identOffsetCents: number;
+            /** Format: int64 */
+            amountCents: number;
+            currency: string;
+            /** Format: int32 */
+            participantCount: number;
+            /** Format: date-time */
+            deadlineAt: string | null;
+            /** Format: date-time */
+            paidAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AdminOrderList: {
+            items: components["schemas"]["AdminOrderSummary"][];
+            /** Format: int64 */
+            total: number;
+        };
+        AdminOrderParticipant: {
+            /** Format: int64 */
+            registrationId: number;
+            regNo: string;
+            /** Format: int64 */
+            categoryId: number;
+            categoryName: components["schemas"]["LocalizedText"];
+            fullName: string;
+            /** Format: int64 */
+            priceRuleId: number;
+            /** Format: int64 */
+            listPriceCents: number;
+            /** Format: int64 */
+            paidCents: number;
+            /** @enum {string} */
+            registrationStatus: "PENDING" | "CONFIRMED" | "CANCELLED";
+            ticketCode: string | null;
+        };
+        AdminOrderPaymentAccount: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            provider: string;
+            accountName: string;
+            accountNoMasked: string;
+            /** Format: int64 */
+            qrFileId: number;
+        };
+        AdminLastRejection: {
+            code: string;
+            reason: string | null;
+            /** Format: date-time */
+            reviewedAt: string;
+        };
+        AdminProofHistoryItem: {
+            /** Format: int64 */
+            id: number;
+            proofNo: string;
+            /** @enum {string} */
+            status: "SUBMITTED" | "APPROVED" | "REJECTED" | "WITHDRAWN";
+            bankTxnRef: string;
+            /** Format: int64 */
+            declaredAmountCents: number;
+            rejectCode: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            reviewedAt: string | null;
+        };
+        AdminReceiptItem: {
+            /** Format: int64 */
+            id: number;
+            txnRef: string;
+            /** Format: int64 */
+            amountCents: number;
+            /** Format: date-time */
+            receivedAt: string;
+            /** @enum {string} */
+            matchStatus: "APPLIED" | "EXCEPTION" | "UNMATCHED";
+        };
+        AdminAppliedCoupon: {
+            code: string;
+            /** Format: int64 */
+            discountCents: number;
+            /** @enum {string} */
+            state: "RESERVED" | "CONSUMED" | "RELEASED";
+        };
+        AdminOrderDetail: {
+            /** Format: int64 */
+            id: number;
+            orderNo: string;
+            /** Format: int64 */
+            eventId: number;
+            eventSlug: string;
+            eventName: components["schemas"]["LocalizedText"];
+            eventTimezone: string;
+            /** @enum {string} */
+            status: "PENDING_PAYMENT" | "PROOF_SUBMITTED" | "PROOF_REJECTED" | "PAID" | "PARTIALLY_REFUNDED" | "REFUNDED" | "EXPIRED" | "CANCELLED";
+            /** @enum {string} */
+            reservationState: "RESERVED" | "CONSUMED" | "RELEASED";
+            buyerName: string;
+            buyerPhone: string;
+            /** Format: int64 */
+            listAmountCents: number;
+            /** Format: int64 */
+            discountCents: number;
+            /** Format: int64 */
+            identOffsetCents: number;
+            /** Format: int64 */
+            amountCents: number;
+            currency: string;
+            /** Format: date-time */
+            deadlineAt: string | null;
+            /** Format: date-time */
+            paidAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            paymentAccount: components["schemas"]["AdminOrderPaymentAccount"];
+            lastRejection?: components["schemas"]["AdminLastRejection"];
+            coupon?: components["schemas"]["AdminAppliedCoupon"];
+            participants: components["schemas"]["AdminOrderParticipant"][];
+            proofs: components["schemas"]["AdminProofHistoryItem"][];
+            receipts: components["schemas"]["AdminReceiptItem"][];
         };
     };
     responses: never;
@@ -2248,6 +2419,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Proof"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminListOrders: {
+        parameters: {
+            query?: {
+                eventId?: number;
+                status?: "PENDING_PAYMENT" | "PROOF_SUBMITTED" | "PROOF_REJECTED" | "PAID" | "PARTIALLY_REFUNDED" | "REFUNDED" | "EXPIRED" | "CANCELLED";
+                q?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 订单列表与总数 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderList"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminGetOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 订单详情 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderDetail"];
                 };
             };
             /** @description 错误 */

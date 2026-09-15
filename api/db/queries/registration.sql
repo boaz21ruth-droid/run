@@ -200,3 +200,52 @@ SET status = 'PROOF_SUBMITTED',
 WHERE id = @id
   AND reservation_state = 'RESERVED'
   AND status IN ('PENDING_PAYMENT', 'PROOF_REJECTED');
+
+-- name: AdminListRegOrders :many
+SELECT sqlc.embed(o),
+       e.slug AS event_slug,
+       e.name AS event_name,
+       (SELECT count(*) FROM order_participants op WHERE op.order_id = o.id)::int AS participant_count
+FROM reg_orders o
+JOIN events e ON e.id = o.event_id
+WHERE (sqlc.narg(event_id)::bigint IS NULL OR o.event_id = sqlc.narg(event_id)::bigint)
+  AND (sqlc.arg(status)::text = '' OR o.status = sqlc.arg(status)::text)
+  AND (sqlc.arg(q)::text = ''
+       OR o.order_no = upper(sqlc.arg(q)::text)
+       OR o.buyer_phone_e164 LIKE ('%' || sqlc.arg(q_like)::text || '%') ESCAPE '\'
+       OR o.buyer_name ILIKE ('%' || sqlc.arg(q_like)::text || '%') ESCAPE '\')
+ORDER BY o.created_at DESC, o.id DESC
+LIMIT sqlc.arg(row_limit)::int OFFSET sqlc.arg(row_offset)::int;
+
+-- name: AdminCountRegOrders :one
+SELECT count(*)
+FROM reg_orders o
+WHERE (sqlc.narg(event_id)::bigint IS NULL OR o.event_id = sqlc.narg(event_id)::bigint)
+  AND (sqlc.arg(status)::text = '' OR o.status = sqlc.arg(status)::text)
+  AND (sqlc.arg(q)::text = ''
+       OR o.order_no = upper(sqlc.arg(q)::text)
+       OR o.buyer_phone_e164 LIKE ('%' || sqlc.arg(q_like)::text || '%') ESCAPE '\'
+       OR o.buyer_name ILIKE ('%' || sqlc.arg(q_like)::text || '%') ESCAPE '\');
+
+-- name: AdminGetRegOrderBuyer :one
+SELECT buyer_name, buyer_phone_e164
+FROM reg_orders
+WHERE id = @id;
+
+-- name: AdminListOrderProofs :many
+SELECT id, proof_no, status, bank_txn_ref, declared_amount_cents, reject_code, created_at, reviewed_at
+FROM payment_proofs
+WHERE reg_order_id = sqlc.arg(order_id)::bigint
+ORDER BY created_at DESC, id DESC;
+
+-- name: AdminListOrderReceipts :many
+SELECT id, txn_ref, amount_cents, received_at, match_status
+FROM payment_receipts
+WHERE reg_order_id = sqlc.arg(order_id)::bigint
+ORDER BY received_at, id;
+
+-- name: AdminGetOrderCoupon :one
+SELECT c.code, cr.discount_cents, cr.state
+FROM coupon_redemptions cr
+JOIN coupons c ON c.id = cr.coupon_id
+WHERE cr.order_id = @order_id;

@@ -36,6 +36,27 @@ func (e Access) Valid() bool {
 	}
 }
 
+// Defines values for AdminAppliedCouponState.
+const (
+	AdminAppliedCouponStateCONSUMED AdminAppliedCouponState = "CONSUMED"
+	AdminAppliedCouponStateRELEASED AdminAppliedCouponState = "RELEASED"
+	AdminAppliedCouponStateRESERVED AdminAppliedCouponState = "RESERVED"
+)
+
+// Valid indicates whether the value is a known member of the AdminAppliedCouponState enum.
+func (e AdminAppliedCouponState) Valid() bool {
+	switch e {
+	case AdminAppliedCouponStateCONSUMED:
+		return true
+	case AdminAppliedCouponStateRELEASED:
+		return true
+	case AdminAppliedCouponStateRESERVED:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for AdminEventEventType.
 const (
 	AdminEventEventTypeFREEACTIVITY AdminEventEventType = "FREE_ACTIVITY"
@@ -84,6 +105,165 @@ func (e AdminEventStatus) Valid() bool {
 	case AdminEventStatusDRAFT:
 		return true
 	case AdminEventStatusPUBLISHED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminOrderDetailReservationState.
+const (
+	AdminOrderDetailReservationStateCONSUMED AdminOrderDetailReservationState = "CONSUMED"
+	AdminOrderDetailReservationStateRELEASED AdminOrderDetailReservationState = "RELEASED"
+	AdminOrderDetailReservationStateRESERVED AdminOrderDetailReservationState = "RESERVED"
+)
+
+// Valid indicates whether the value is a known member of the AdminOrderDetailReservationState enum.
+func (e AdminOrderDetailReservationState) Valid() bool {
+	switch e {
+	case AdminOrderDetailReservationStateCONSUMED:
+		return true
+	case AdminOrderDetailReservationStateRELEASED:
+		return true
+	case AdminOrderDetailReservationStateRESERVED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminOrderDetailStatus.
+const (
+	AdminOrderDetailStatusCANCELLED         AdminOrderDetailStatus = "CANCELLED"
+	AdminOrderDetailStatusEXPIRED           AdminOrderDetailStatus = "EXPIRED"
+	AdminOrderDetailStatusPAID              AdminOrderDetailStatus = "PAID"
+	AdminOrderDetailStatusPARTIALLYREFUNDED AdminOrderDetailStatus = "PARTIALLY_REFUNDED"
+	AdminOrderDetailStatusPENDINGPAYMENT    AdminOrderDetailStatus = "PENDING_PAYMENT"
+	AdminOrderDetailStatusPROOFREJECTED     AdminOrderDetailStatus = "PROOF_REJECTED"
+	AdminOrderDetailStatusPROOFSUBMITTED    AdminOrderDetailStatus = "PROOF_SUBMITTED"
+	AdminOrderDetailStatusREFUNDED          AdminOrderDetailStatus = "REFUNDED"
+)
+
+// Valid indicates whether the value is a known member of the AdminOrderDetailStatus enum.
+func (e AdminOrderDetailStatus) Valid() bool {
+	switch e {
+	case AdminOrderDetailStatusCANCELLED:
+		return true
+	case AdminOrderDetailStatusEXPIRED:
+		return true
+	case AdminOrderDetailStatusPAID:
+		return true
+	case AdminOrderDetailStatusPARTIALLYREFUNDED:
+		return true
+	case AdminOrderDetailStatusPENDINGPAYMENT:
+		return true
+	case AdminOrderDetailStatusPROOFREJECTED:
+		return true
+	case AdminOrderDetailStatusPROOFSUBMITTED:
+		return true
+	case AdminOrderDetailStatusREFUNDED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminOrderParticipantRegistrationStatus.
+const (
+	AdminOrderParticipantRegistrationStatusCANCELLED AdminOrderParticipantRegistrationStatus = "CANCELLED"
+	AdminOrderParticipantRegistrationStatusCONFIRMED AdminOrderParticipantRegistrationStatus = "CONFIRMED"
+	AdminOrderParticipantRegistrationStatusPENDING   AdminOrderParticipantRegistrationStatus = "PENDING"
+)
+
+// Valid indicates whether the value is a known member of the AdminOrderParticipantRegistrationStatus enum.
+func (e AdminOrderParticipantRegistrationStatus) Valid() bool {
+	switch e {
+	case AdminOrderParticipantRegistrationStatusCANCELLED:
+		return true
+	case AdminOrderParticipantRegistrationStatusCONFIRMED:
+		return true
+	case AdminOrderParticipantRegistrationStatusPENDING:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminOrderSummaryStatus.
+const (
+	AdminOrderSummaryStatusCANCELLED         AdminOrderSummaryStatus = "CANCELLED"
+	AdminOrderSummaryStatusEXPIRED           AdminOrderSummaryStatus = "EXPIRED"
+	AdminOrderSummaryStatusPAID              AdminOrderSummaryStatus = "PAID"
+	AdminOrderSummaryStatusPARTIALLYREFUNDED AdminOrderSummaryStatus = "PARTIALLY_REFUNDED"
+	AdminOrderSummaryStatusPENDINGPAYMENT    AdminOrderSummaryStatus = "PENDING_PAYMENT"
+	AdminOrderSummaryStatusPROOFREJECTED     AdminOrderSummaryStatus = "PROOF_REJECTED"
+	AdminOrderSummaryStatusPROOFSUBMITTED    AdminOrderSummaryStatus = "PROOF_SUBMITTED"
+	AdminOrderSummaryStatusREFUNDED          AdminOrderSummaryStatus = "REFUNDED"
+)
+
+// Valid indicates whether the value is a known member of the AdminOrderSummaryStatus enum.
+func (e AdminOrderSummaryStatus) Valid() bool {
+	switch e {
+	case AdminOrderSummaryStatusCANCELLED:
+		return true
+	case AdminOrderSummaryStatusEXPIRED:
+		return true
+	case AdminOrderSummaryStatusPAID:
+		return true
+	case AdminOrderSummaryStatusPARTIALLYREFUNDED:
+		return true
+	case AdminOrderSummaryStatusPENDINGPAYMENT:
+		return true
+	case AdminOrderSummaryStatusPROOFREJECTED:
+		return true
+	case AdminOrderSummaryStatusPROOFSUBMITTED:
+		return true
+	case AdminOrderSummaryStatusREFUNDED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminProofHistoryItemStatus.
+const (
+	AdminProofHistoryItemStatusAPPROVED  AdminProofHistoryItemStatus = "APPROVED"
+	AdminProofHistoryItemStatusREJECTED  AdminProofHistoryItemStatus = "REJECTED"
+	AdminProofHistoryItemStatusSUBMITTED AdminProofHistoryItemStatus = "SUBMITTED"
+	AdminProofHistoryItemStatusWITHDRAWN AdminProofHistoryItemStatus = "WITHDRAWN"
+)
+
+// Valid indicates whether the value is a known member of the AdminProofHistoryItemStatus enum.
+func (e AdminProofHistoryItemStatus) Valid() bool {
+	switch e {
+	case AdminProofHistoryItemStatusAPPROVED:
+		return true
+	case AdminProofHistoryItemStatusREJECTED:
+		return true
+	case AdminProofHistoryItemStatusSUBMITTED:
+		return true
+	case AdminProofHistoryItemStatusWITHDRAWN:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminReceiptItemMatchStatus.
+const (
+	AdminReceiptItemMatchStatusAPPLIED   AdminReceiptItemMatchStatus = "APPLIED"
+	AdminReceiptItemMatchStatusEXCEPTION AdminReceiptItemMatchStatus = "EXCEPTION"
+	AdminReceiptItemMatchStatusUNMATCHED AdminReceiptItemMatchStatus = "UNMATCHED"
+)
+
+// Valid indicates whether the value is a known member of the AdminReceiptItemMatchStatus enum.
+func (e AdminReceiptItemMatchStatus) Valid() bool {
+	switch e {
+	case AdminReceiptItemMatchStatusAPPLIED:
+		return true
+	case AdminReceiptItemMatchStatusEXCEPTION:
+		return true
+	case AdminReceiptItemMatchStatusUNMATCHED:
 		return true
 	default:
 		return false
@@ -567,6 +747,42 @@ func (e TShirtSize) Valid() bool {
 	}
 }
 
+// Defines values for AdminListOrdersParamsStatus.
+const (
+	AdminListOrdersParamsStatusCANCELLED         AdminListOrdersParamsStatus = "CANCELLED"
+	AdminListOrdersParamsStatusEXPIRED           AdminListOrdersParamsStatus = "EXPIRED"
+	AdminListOrdersParamsStatusPAID              AdminListOrdersParamsStatus = "PAID"
+	AdminListOrdersParamsStatusPARTIALLYREFUNDED AdminListOrdersParamsStatus = "PARTIALLY_REFUNDED"
+	AdminListOrdersParamsStatusPENDINGPAYMENT    AdminListOrdersParamsStatus = "PENDING_PAYMENT"
+	AdminListOrdersParamsStatusPROOFREJECTED     AdminListOrdersParamsStatus = "PROOF_REJECTED"
+	AdminListOrdersParamsStatusPROOFSUBMITTED    AdminListOrdersParamsStatus = "PROOF_SUBMITTED"
+	AdminListOrdersParamsStatusREFUNDED          AdminListOrdersParamsStatus = "REFUNDED"
+)
+
+// Valid indicates whether the value is a known member of the AdminListOrdersParamsStatus enum.
+func (e AdminListOrdersParamsStatus) Valid() bool {
+	switch e {
+	case AdminListOrdersParamsStatusCANCELLED:
+		return true
+	case AdminListOrdersParamsStatusEXPIRED:
+		return true
+	case AdminListOrdersParamsStatusPAID:
+		return true
+	case AdminListOrdersParamsStatusPARTIALLYREFUNDED:
+		return true
+	case AdminListOrdersParamsStatusPENDINGPAYMENT:
+		return true
+	case AdminListOrdersParamsStatusPROOFREJECTED:
+		return true
+	case AdminListOrdersParamsStatusPROOFSUBMITTED:
+		return true
+	case AdminListOrdersParamsStatusREFUNDED:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for AdminCreatePaymentAccountMultipartBodyActive.
 const (
 	AdminCreatePaymentAccountMultipartBodyActiveFalse AdminCreatePaymentAccountMultipartBodyActive = "false"
@@ -642,6 +858,16 @@ func (e AppGetConsentParamsLang) Valid() bool {
 // Access defines model for Access.
 type Access string
 
+// AdminAppliedCoupon defines model for AdminAppliedCoupon.
+type AdminAppliedCoupon struct {
+	Code          string                  `json:"code"`
+	DiscountCents int64                   `json:"discountCents"`
+	State         AdminAppliedCouponState `json:"state"`
+}
+
+// AdminAppliedCouponState defines model for AdminAppliedCoupon.State.
+type AdminAppliedCouponState string
+
 // AdminCategory defines model for AdminCategory.
 type AdminCategory struct {
 	Capacity  int32         `json:"capacity"`
@@ -685,6 +911,129 @@ type AdminEventStatus string
 type AdminEventList struct {
 	Items []AdminEvent `json:"items"`
 }
+
+// AdminLastRejection defines model for AdminLastRejection.
+type AdminLastRejection struct {
+	Code       string    `json:"code"`
+	Reason     *string   `json:"reason"`
+	ReviewedAt time.Time `json:"reviewedAt"`
+}
+
+// AdminOrderDetail defines model for AdminOrderDetail.
+type AdminOrderDetail struct {
+	AmountCents      int64                            `json:"amountCents"`
+	BuyerName        string                           `json:"buyerName"`
+	BuyerPhone       string                           `json:"buyerPhone"`
+	Coupon           *AdminAppliedCoupon              `json:"coupon,omitempty"`
+	CreatedAt        time.Time                        `json:"createdAt"`
+	Currency         string                           `json:"currency"`
+	DeadlineAt       *time.Time                       `json:"deadlineAt"`
+	DiscountCents    int64                            `json:"discountCents"`
+	EventId          int64                            `json:"eventId"`
+	EventName        LocalizedText                    `json:"eventName"`
+	EventSlug        string                           `json:"eventSlug"`
+	EventTimezone    string                           `json:"eventTimezone"`
+	Id               int64                            `json:"id"`
+	IdentOffsetCents int64                            `json:"identOffsetCents"`
+	LastRejection    *AdminLastRejection              `json:"lastRejection,omitempty"`
+	ListAmountCents  int64                            `json:"listAmountCents"`
+	OrderNo          string                           `json:"orderNo"`
+	PaidAt           *time.Time                       `json:"paidAt"`
+	Participants     []AdminOrderParticipant          `json:"participants"`
+	PaymentAccount   AdminOrderPaymentAccount         `json:"paymentAccount"`
+	Proofs           []AdminProofHistoryItem          `json:"proofs"`
+	Receipts         []AdminReceiptItem               `json:"receipts"`
+	ReservationState AdminOrderDetailReservationState `json:"reservationState"`
+	Status           AdminOrderDetailStatus           `json:"status"`
+}
+
+// AdminOrderDetailReservationState defines model for AdminOrderDetail.ReservationState.
+type AdminOrderDetailReservationState string
+
+// AdminOrderDetailStatus defines model for AdminOrderDetail.Status.
+type AdminOrderDetailStatus string
+
+// AdminOrderList defines model for AdminOrderList.
+type AdminOrderList struct {
+	Items []AdminOrderSummary `json:"items"`
+	Total int64               `json:"total"`
+}
+
+// AdminOrderParticipant defines model for AdminOrderParticipant.
+type AdminOrderParticipant struct {
+	CategoryId         int64                                   `json:"categoryId"`
+	CategoryName       LocalizedText                           `json:"categoryName"`
+	FullName           string                                  `json:"fullName"`
+	ListPriceCents     int64                                   `json:"listPriceCents"`
+	PaidCents          int64                                   `json:"paidCents"`
+	PriceRuleId        int64                                   `json:"priceRuleId"`
+	RegNo              string                                  `json:"regNo"`
+	RegistrationId     int64                                   `json:"registrationId"`
+	RegistrationStatus AdminOrderParticipantRegistrationStatus `json:"registrationStatus"`
+	TicketCode         *string                                 `json:"ticketCode"`
+}
+
+// AdminOrderParticipantRegistrationStatus defines model for AdminOrderParticipant.RegistrationStatus.
+type AdminOrderParticipantRegistrationStatus string
+
+// AdminOrderPaymentAccount defines model for AdminOrderPaymentAccount.
+type AdminOrderPaymentAccount struct {
+	AccountName     string `json:"accountName"`
+	AccountNoMasked string `json:"accountNoMasked"`
+	Id              int64  `json:"id"`
+	Name            string `json:"name"`
+	Provider        string `json:"provider"`
+	QrFileId        int64  `json:"qrFileId"`
+}
+
+// AdminOrderSummary defines model for AdminOrderSummary.
+type AdminOrderSummary struct {
+	AmountCents      int64                   `json:"amountCents"`
+	CreatedAt        time.Time               `json:"createdAt"`
+	Currency         string                  `json:"currency"`
+	DeadlineAt       *time.Time              `json:"deadlineAt"`
+	DiscountCents    int64                   `json:"discountCents"`
+	EventId          int64                   `json:"eventId"`
+	EventName        LocalizedText           `json:"eventName"`
+	EventSlug        string                  `json:"eventSlug"`
+	Id               int64                   `json:"id"`
+	IdentOffsetCents int64                   `json:"identOffsetCents"`
+	ListAmountCents  int64                   `json:"listAmountCents"`
+	OrderNo          string                  `json:"orderNo"`
+	PaidAt           *time.Time              `json:"paidAt"`
+	ParticipantCount int32                   `json:"participantCount"`
+	Status           AdminOrderSummaryStatus `json:"status"`
+}
+
+// AdminOrderSummaryStatus defines model for AdminOrderSummary.Status.
+type AdminOrderSummaryStatus string
+
+// AdminProofHistoryItem defines model for AdminProofHistoryItem.
+type AdminProofHistoryItem struct {
+	BankTxnRef          string                      `json:"bankTxnRef"`
+	CreatedAt           time.Time                   `json:"createdAt"`
+	DeclaredAmountCents int64                       `json:"declaredAmountCents"`
+	Id                  int64                       `json:"id"`
+	ProofNo             string                      `json:"proofNo"`
+	RejectCode          *string                     `json:"rejectCode"`
+	ReviewedAt          *time.Time                  `json:"reviewedAt"`
+	Status              AdminProofHistoryItemStatus `json:"status"`
+}
+
+// AdminProofHistoryItemStatus defines model for AdminProofHistoryItem.Status.
+type AdminProofHistoryItemStatus string
+
+// AdminReceiptItem defines model for AdminReceiptItem.
+type AdminReceiptItem struct {
+	AmountCents int64                       `json:"amountCents"`
+	Id          int64                       `json:"id"`
+	MatchStatus AdminReceiptItemMatchStatus `json:"matchStatus"`
+	ReceivedAt  time.Time                   `json:"receivedAt"`
+	TxnRef      string                      `json:"txnRef"`
+}
+
+// AdminReceiptItemMatchStatus defines model for AdminReceiptItem.MatchStatus.
+type AdminReceiptItemMatchStatus string
 
 // AppLoginRequest defines model for AppLoginRequest.
 type AppLoginRequest struct {
@@ -1229,6 +1578,18 @@ type AdminListCouponsParams struct {
 	EventId *int64 `form:"eventId,omitempty" json:"eventId,omitempty"`
 }
 
+// AdminListOrdersParams defines parameters for AdminListOrders.
+type AdminListOrdersParams struct {
+	EventId *int64                       `form:"eventId,omitempty" json:"eventId,omitempty"`
+	Status  *AdminListOrdersParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+	Q       *string                      `form:"q,omitempty" json:"q,omitempty"`
+	Limit   *int32                       `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset  *int32                       `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
+// AdminListOrdersParamsStatus defines parameters for AdminListOrders.
+type AdminListOrdersParamsStatus string
+
 // AdminCreatePaymentAccountMultipartBody defines parameters for AdminCreatePaymentAccount.
 type AdminCreatePaymentAccountMultipartBody struct {
 	AccountName     string                                       `json:"accountName"`
@@ -1369,6 +1730,12 @@ type ServerInterface interface {
 	// AdminGetMe 当前员工与权限
 	// (GET /admin/me)
 	AdminGetMe(c *gin.Context)
+	// AdminListOrders 后台订单列表（按赛事、状态、订单号 / 手机号 / 买家姓名筛选，创建时间倒序）
+	// (GET /admin/orders)
+	AdminListOrders(c *gin.Context, params AdminListOrdersParams)
+	// AdminGetOrder 后台订单详情（金额构成、参赛人、凭证历史、到账记录）
+	// (GET /admin/orders/{id})
+	AdminGetOrder(c *gin.Context, id int64)
 	// AdminListPaymentAccounts 收款账户列表
 	// (GET /admin/payment-accounts)
 	AdminListPaymentAccounts(c *gin.Context)
@@ -1702,6 +2069,90 @@ func (siw *ServerInterfaceWrapper) AdminGetMe(c *gin.Context) {
 	}
 
 	siw.Handler.AdminGetMe(c)
+}
+
+// AdminListOrders operation middleware
+func (siw *ServerInterfaceWrapper) AdminListOrders(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params AdminListOrdersParams
+
+	// ------------- Optional query parameter "eventId" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "eventId", c.Request.URL.Query(), &params.EventId, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter eventId: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "status", c.Request.URL.Query(), &params.Status, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter status: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "q", c.Request.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", c.Request.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: "int32"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "offset" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "offset", c.Request.URL.Query(), &params.Offset, runtime.BindQueryParameterOptions{Type: "integer", Format: "int32"})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter offset: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminListOrders(c, params)
+}
+
+// AdminGetOrder operation middleware
+func (siw *ServerInterfaceWrapper) AdminGetOrder(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminGetOrder(c, id)
 }
 
 // AdminListPaymentAccounts operation middleware
@@ -2238,6 +2689,8 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/app/orders/:orderNo", wrapper.AppGetOrder)
 	router.POST(options.BaseURL+"/app/orders/:orderNo/cancel", wrapper.AppCancelOrder)
 	router.POST(options.BaseURL+"/app/orders/:orderNo/proofs", wrapper.AppSubmitProof)
+	router.GET(options.BaseURL+"/admin/orders", wrapper.AdminListOrders)
+	router.GET(options.BaseURL+"/admin/orders/:id", wrapper.AdminGetOrder)
 }
 
 type AdminLoginRequestObject struct {
@@ -2730,6 +3183,84 @@ type AdminGetMedefaultJSONResponse struct {
 }
 
 func (response AdminGetMedefaultJSONResponse) VisitAdminGetMeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListOrdersRequestObject struct {
+	Params AdminListOrdersParams
+}
+
+type AdminListOrdersResponseObject interface {
+	VisitAdminListOrdersResponse(w http.ResponseWriter) error
+}
+
+type AdminListOrders200JSONResponse AdminOrderList
+
+func (response AdminListOrders200JSONResponse) VisitAdminListOrdersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListOrdersdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminListOrdersdefaultJSONResponse) VisitAdminListOrdersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminGetOrderRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminGetOrderResponseObject interface {
+	VisitAdminGetOrderResponse(w http.ResponseWriter) error
+}
+
+type AdminGetOrder200JSONResponse AdminOrderDetail
+
+func (response AdminGetOrder200JSONResponse) VisitAdminGetOrderResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminGetOrderdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminGetOrderdefaultJSONResponse) VisitAdminGetOrderResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -3686,6 +4217,12 @@ type StrictServerInterface interface {
 	// AdminGetMe 当前员工与权限
 	// (GET /admin/me)
 	AdminGetMe(ctx context.Context, request AdminGetMeRequestObject) (AdminGetMeResponseObject, error)
+	// AdminListOrders 后台订单列表（按赛事、状态、订单号 / 手机号 / 买家姓名筛选，创建时间倒序）
+	// (GET /admin/orders)
+	AdminListOrders(ctx context.Context, request AdminListOrdersRequestObject) (AdminListOrdersResponseObject, error)
+	// AdminGetOrder 后台订单详情（金额构成、参赛人、凭证历史、到账记录）
+	// (GET /admin/orders/{id})
+	AdminGetOrder(ctx context.Context, request AdminGetOrderRequestObject) (AdminGetOrderResponseObject, error)
 	// AdminListPaymentAccounts 收款账户列表
 	// (GET /admin/payment-accounts)
 	AdminListPaymentAccounts(ctx context.Context, request AdminListPaymentAccountsRequestObject) (AdminListPaymentAccountsResponseObject, error)
@@ -4175,6 +4712,58 @@ func (sh *strictHandler) AdminGetMe(ctx *gin.Context) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AdminGetMeResponseObject); ok {
 		if err := validResponse.VisitAdminGetMeResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminListOrders operation middleware
+func (sh *strictHandler) AdminListOrders(ctx *gin.Context, params AdminListOrdersParams) {
+	var request AdminListOrdersRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminListOrders(ctx, request.(AdminListOrdersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminListOrders")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminListOrdersResponseObject); ok {
+		if err := validResponse.VisitAdminListOrdersResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminGetOrder operation middleware
+func (sh *strictHandler) AdminGetOrder(ctx *gin.Context, id int64) {
+	var request AdminGetOrderRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminGetOrder(ctx, request.(AdminGetOrderRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminGetOrder")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminGetOrderResponseObject); ok {
+		if err := validResponse.VisitAdminGetOrderResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {
