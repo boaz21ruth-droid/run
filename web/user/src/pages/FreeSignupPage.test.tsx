@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { jsonResponse } from "../test/fixtures";
 import { freeActivity, presetRunnerSession, registrationConsent, runnerSession } from "../test/freeFixtures";
 import { renderApp } from "../test/renderApp";
+import { pasteInto } from "../test/userInput";
 
 const PATH = `/events/${freeActivity.slug}/free-signup`;
 
@@ -41,10 +42,10 @@ const created = {
 
 async function fillRequired(user: ReturnType<typeof userEvent.setup>, categoryId: string) {
   await user.selectOptions(await screen.findByTestId("free-category"), categoryId);
-  await user.type(screen.getByTestId("free-fullName"), "Dara Sok");
-  await user.type(screen.getByTestId("free-phone"), "+855 12 345 678");
-  await user.type(screen.getByTestId("free-emergencyName"), "Sok Chan");
-  await user.type(screen.getByTestId("free-emergencyPhone"), "+85598765432");
+  await pasteInto(user, screen.getByTestId("free-fullName"), "Dara Sok");
+  await pasteInto(user, screen.getByTestId("free-phone"), "+855 12 345 678");
+  await pasteInto(user, screen.getByTestId("free-emergencyName"), "Sok Chan");
+  await pasteInto(user, screen.getByTestId("free-emergencyPhone"), "+85598765432");
 }
 
 async function checkAllConsents(user: ReturnType<typeof userEvent.setup>) {

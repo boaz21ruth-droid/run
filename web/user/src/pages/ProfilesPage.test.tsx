@@ -4,6 +4,7 @@ import type { Schemas } from "@werun/api-client";
 import { beforeEach, describe, expect, it } from "vitest";
 import { apiRoutes, daraProfile, jsonResponse, runnerSession } from "../test/fixtures";
 import { renderApp } from "../test/renderApp";
+import { pasteInto } from "../test/userInput";
 
 type User = ReturnType<typeof userEvent.setup>;
 
@@ -11,15 +12,15 @@ const pathOf = (request: Request) => new URL(request.url).pathname;
 const unauthorized = () => jsonResponse(401, { error: { code: "UNAUTHENTICATED", message: "Please sign in." } });
 
 async function fillValidProfile(user: User) {
-  await user.type(screen.getByTestId("profile-fullName"), "Chan Sreymom");
+  await pasteInto(user, screen.getByTestId("profile-fullName"), "Chan Sreymom");
   await user.selectOptions(screen.getByTestId("profile-gender"), "F");
   fireEvent.change(screen.getByTestId("profile-birthDate"), { target: { value: "1995-02-28" } });
-  await user.type(screen.getByTestId("profile-nationality"), "kh");
+  await pasteInto(user, screen.getByTestId("profile-nationality"), "kh");
   await user.selectOptions(screen.getByTestId("profile-idType"), "PASSPORT");
-  await user.type(screen.getByTestId("profile-idNo"), "n0 1234-9999");
-  await user.type(screen.getByTestId("profile-phone"), "+855 11 222 333");
-  await user.type(screen.getByTestId("profile-emergencyName"), "Chan Dara");
-  await user.type(screen.getByTestId("profile-emergencyPhone"), "+85599888777");
+  await pasteInto(user, screen.getByTestId("profile-idNo"), "n0 1234-9999");
+  await pasteInto(user, screen.getByTestId("profile-phone"), "+855 11 222 333");
+  await pasteInto(user, screen.getByTestId("profile-emergencyName"), "Chan Dara");
+  await pasteInto(user, screen.getByTestId("profile-emergencyPhone"), "+85599888777");
   await user.selectOptions(screen.getByTestId("profile-tshirtSize"), "S");
 }
 

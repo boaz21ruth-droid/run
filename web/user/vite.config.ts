@@ -13,5 +13,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
+    // 兜底：`pnpm test` 多个工作区并行时 CPU 争用会拖慢多步表单用例，vitest 默认 5 秒超时过紧
+    testTimeout: 15_000,
   },
 });

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { daraProfile, halfMarathon, jsonResponse } from "../test/fixtures";
 import { consentEn, inTelegram, orderDetail, quoteFor, runnerRoutes } from "../test/orderFixtures";
 import { renderApp } from "../test/renderApp";
+import { pasteInto } from "../test/userInput";
 
 const PATH = "/events/phnom-penh-half-2026/register";
 
@@ -35,15 +36,15 @@ async function checkAllConsents(user: UserEvent) {
 }
 
 async function fillNewRunner(user: UserEvent, i: number) {
-  await user.type(screen.getByTestId(`participant-${i}-fullName`), "Chan Sophea");
+  await pasteInto(user, screen.getByTestId(`participant-${i}-fullName`), "Chan Sophea");
   await user.selectOptions(screen.getByTestId(`participant-${i}-gender`), "F");
   fireEvent.change(screen.getByTestId(`participant-${i}-birthDate`), { target: { value: "1990-05-01" } });
-  await user.type(screen.getByTestId(`participant-${i}-nationality`), "kh");
+  await pasteInto(user, screen.getByTestId(`participant-${i}-nationality`), "kh");
   await user.selectOptions(screen.getByTestId(`participant-${i}-idType`), "PASSPORT");
-  await user.type(screen.getByTestId(`participant-${i}-idNo`), "N01234567");
-  await user.type(screen.getByTestId(`participant-${i}-phone`), "+85512345678");
-  await user.type(screen.getByTestId(`participant-${i}-emergencyName`), "Sok Dara");
-  await user.type(screen.getByTestId(`participant-${i}-emergencyPhone`), "+85598765432");
+  await pasteInto(user, screen.getByTestId(`participant-${i}-idNo`), "N01234567");
+  await pasteInto(user, screen.getByTestId(`participant-${i}-phone`), "+85512345678");
+  await pasteInto(user, screen.getByTestId(`participant-${i}-emergencyName`), "Sok Dara");
+  await pasteInto(user, screen.getByTestId(`participant-${i}-emergencyPhone`), "+85598765432");
   await user.selectOptions(screen.getByTestId(`participant-${i}-tshirtSize`), "M");
 }
 
@@ -105,7 +106,7 @@ describe("RegisterPage", () => {
     expect(await screen.findByTestId("participant-0-birthDate")).toHaveAttribute("type", "date");
     expect(screen.getByTestId("participant-0-idNo")).toHaveAttribute("maxLength", "32");
     fireEvent.change(screen.getByTestId("participant-0-birthDate"), { target: { value: "2015-01-01" } });
-    await user.type(screen.getByTestId("participant-0-phone"), "012345");
+    await pasteInto(user, screen.getByTestId("participant-0-phone"), "012345");
     await user.click(screen.getByTestId("wizard-next"));
 
     expect(screen.getByTestId("form-error")).toHaveTextContent("Please check the highlighted fields.");
@@ -167,7 +168,7 @@ describe("RegisterPage", () => {
     expect(screen.getByText("Estimated total")).toBeInTheDocument();
     expect(screen.getByText(/1–50 cents are taken off/)).toBeInTheDocument();
 
-    await user.type(screen.getByTestId("coupon-input"), "nope");
+    await pasteInto(user, screen.getByTestId("coupon-input"), "nope");
     await user.click(screen.getByTestId("coupon-apply"));
     const invalid = await screen.findByTestId("coupon-result");
     expect(invalid).toHaveAttribute("data-kind", "error");
@@ -175,7 +176,7 @@ describe("RegisterPage", () => {
     expect(screen.getByTestId("quote-amount")).toHaveTextContent("$25.00");
 
     await user.clear(screen.getByTestId("coupon-input"));
-    await user.type(screen.getByTestId("coupon-input"), "run20");
+    await pasteInto(user, screen.getByTestId("coupon-input"), "run20");
     await user.click(screen.getByTestId("coupon-apply"));
     await waitFor(() => expect(screen.getByTestId("coupon-result")).toHaveAttribute("data-kind", "ok"));
     expect(screen.getByTestId("coupon-result")).toHaveTextContent("Coupon applied: $5.00 off");
@@ -317,7 +318,7 @@ describe("RegisterPage", () => {
 
     await user.click(screen.getByTestId("order-submit"));
     await screen.findByTestId("form-error");
-    await user.type(screen.getByTestId("coupon-input"), "RUN20");
+    await pasteInto(user, screen.getByTestId("coupon-input"), "RUN20");
     await user.click(screen.getByTestId("coupon-apply"));
     await waitFor(() => expect(screen.getByTestId("coupon-result")).toHaveAttribute("data-kind", "ok"));
     await user.click(screen.getByTestId("order-submit"));
@@ -395,7 +396,7 @@ describe("RegisterPage", () => {
       );
       await reachConfirmWithSavedProfile(user);
       await checkAllConsents(user);
-      await user.type(screen.getByTestId("coupon-input"), "later");
+      await pasteInto(user, screen.getByTestId("coupon-input"), "later");
       await user.click(screen.getByTestId("order-submit"));
       await screen.findByTestId("form-error");
 
