@@ -13,6 +13,7 @@ func newRouter(app *App) *gin.Engine {
 		Catalog: app.Catalog,
 		Pool:    app.Pool,
 		IAM:     app.IAM,
+		Runner:  app.Runner,
 		Events:  app.Events,
 		Pricing: app.Pricing,
 		Payment: app.Payment,

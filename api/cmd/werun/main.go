@@ -16,6 +16,7 @@ Commands:
   migrate      数据库迁移：werun migrate up | down | status
   healthcheck  请求就绪接口，返回 200 时退出码为 0（--url 指定地址）
   create-staff 创建后台员工：--username --full-name --role [--password-stdin]
+  dev-initdata 生成开发与测试用的 Telegram 登录参数：--telegram-id --name [--lang zh|en|km]（WERUN_ENV=prod 时拒绝）
 `
 
 func main() {
@@ -39,6 +40,12 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	case "create-staff":
 		if err := runCreateStaff(ctx, args[1:]); err != nil {
 			fmt.Fprintf(stderr, "create-staff: %v\n", err)
+			return 1
+		}
+		return 0
+	case "dev-initdata":
+		if err := runDevInitData(args[1:], stdout, stderr); err != nil {
+			fmt.Fprintf(stderr, "dev-initdata: %v\n", err)
 			return 1
 		}
 		return 0

@@ -45,6 +45,19 @@ func Load() (Config, error) {
 			errs = append(errs, keyErr)
 		}
 	}
+	// required 只要求变量存在；设置为空串或空白时也必须拒绝：空 bot token 会让 initData 的
+	// secret 变成公开常量 HMAC("WebAppData", "")，任何人都能伪造跑者登录。
+	cfg.TelegramBotToken = strings.TrimSpace(cfg.TelegramBotToken)
+	cfg.TelegramBotUsername = strings.TrimSpace(cfg.TelegramBotUsername)
+	for name, value := range map[string]string{
+		"WERUN_TELEGRAM_BOT_TOKEN":    cfg.TelegramBotToken,
+		"WERUN_TELEGRAM_BOT_USERNAME": cfg.TelegramBotUsername,
+	} {
+		// 变量未设置时 env.ParseAs 已经报过，不重复报
+		if value == "" && (err == nil || !strings.Contains(err.Error(), name)) {
+			errs = append(errs, fmt.Errorf("%s must not be empty", name))
+		}
+	}
 	if cfg.TelegramSend != "" && cfg.TelegramSend != "on" && cfg.TelegramSend != "off" {
 		errs = append(errs, fmt.Errorf("WERUN_TELEGRAM_SEND must be on, off or empty, got %q", cfg.TelegramSend))
 	}

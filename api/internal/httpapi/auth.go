@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"werun/api/internal/platform/apperr"
 	"werun/api/internal/platform/httpx"
 	"werun/api/internal/platform/i18n"
+	"werun/api/internal/runner"
 )
 
 const adminPathPrefix = "/api/admin/"
@@ -32,14 +34,36 @@ func CSRFGuard(cat *i18n.Catalog, log *slog.Logger) gin.HandlerFunc {
 	}
 }
 
-// AuthMiddleware 按 apigen.OperationAuths 做会话认证与权限校验。
+// RunnerAuthenticator 校验跑者令牌，由 runner.Service 实现。
+type RunnerAuthenticator interface {
+	Authenticate(ctx context.Context, token string) (runner.User, error)
+}
+
+// AuthMiddleware 按 apigen.OperationAuths 做认证与权限校验：
+//   - AuthApp 只认 Authorization: Bearer 跑者令牌，员工 Cookie 无效；
+//   - AuthSession / AuthPermission 只认员工 Cookie，跑者令牌无效。
+//
 // 映射表里查不到的接口一律拒绝（说明忘了执行 make gen-api），并打一条 Warn 日志方便定位
 // 是哪个接口、该跑哪条命令，而不是只在响应里看到一个不说明原因的 403。
-func AuthMiddleware(svc *iam.Service, auths map[string]apigen.OperationAuth, log *slog.Logger) apigen.StrictMiddlewareFunc {
+func AuthMiddleware(staff *iam.Service, runners RunnerAuthenticator, auths map[string]apigen.OperationAuth, log *slog.Logger) apigen.StrictMiddlewareFunc {
 	return func(next apigen.StrictHandlerFunc, operationID string) apigen.StrictHandlerFunc {
 		rule, known := auths[operationID]
 		if known && rule.Kind == apigen.AuthNone {
 			return next
+		}
+		if known && rule.Kind == apigen.AuthApp {
+			return func(c *gin.Context, request any) (any, error) {
+				token := runner.BearerToken(c.Request)
+				if token == "" {
+					return nil, apperr.New(http.StatusUnauthorized, apperr.CodeUnauthenticated)
+				}
+				user, err := runners.Authenticate(c, token)
+				if err != nil {
+					return nil, err
+				}
+				runner.WithUser(c, user)
+				return next(c, request)
+			}
 		}
 		return func(c *gin.Context, request any) (any, error) {
 			if !known {
@@ -52,13 +76,13 @@ func AuthMiddleware(svc *iam.Service, auths map[string]apigen.OperationAuth, log
 			if err != nil || token == "" {
 				return nil, apperr.New(http.StatusUnauthorized, apperr.CodeUnauthenticated)
 			}
-			staff, err := svc.Authenticate(c, token)
+			member, err := staff.Authenticate(c, token)
 			if err != nil {
 				return nil, err
 			}
-			iam.WithStaff(c, staff)
+			iam.WithStaff(c, member)
 			if rule.Kind == apigen.AuthPermission &&
-				!iam.Allowed(staff.Role, iam.Permission(rule.Permission), iam.Access(rule.Access)) {
+				!iam.Allowed(member.Role, iam.Permission(rule.Permission), iam.Access(rule.Access)) {
 				return nil, apperr.New(http.StatusForbidden, apperr.CodeForbidden)
 			}
 			// TODO(spec §5.1 step 7，赛事范围校验): 目前到这里为止只做了会话认证

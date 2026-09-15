@@ -9,6 +9,7 @@ const (
 	AuthNone       AuthKind = "none"
 	AuthSession    AuthKind = "session"
 	AuthPermission AuthKind = "permission"
+	AuthApp        AuthKind = "app"
 )
 
 // OperationAuth 是单个接口的鉴权规则。
@@ -37,6 +38,9 @@ var OperationAuths = map[string]OperationAuth{
 	"AdminUpdateEventRegistration": {Kind: AuthPermission, Permission: "event_config", Access: "write"},
 	"AdminUpdatePaymentAccount":    {Kind: AuthPermission, Permission: "payment_account_manage", Access: "write"},
 	"AdminUpdatePriceRule":         {Kind: AuthPermission, Permission: "price_config", Access: "write"},
+	"AppGetMe":                     {Kind: AuthApp},
+	"AppLoginTelegram":             {Kind: AuthNone},
+	"AppLogout":                    {Kind: AuthApp},
 	"GetHealthz":                   {Kind: AuthNone},
 	"GetPublicEvent":               {Kind: AuthNone},
 	"GetPublicFile":                {Kind: AuthNone},

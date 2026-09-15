@@ -1,7 +1,8 @@
 // Command permgen 读取 openapi.yaml，生成「接口 → 鉴权规则」映射表 apigen/permissions.gen.go。
 //
 // 规则：
-//   - 路径以 /admin/ 开头的操作必须声明 x-auth（none | session），或同时声明 x-permission 与 x-access（read | write）；
+//   - 路径以 /admin/ 开头的操作必须声明 x-auth（none | session），或同时声明 x-permission 与 x-access（read | write）；x-auth: app 在这里非法；
+//   - 路径以 /app/ 开头的操作必须声明 x-auth（none | app），映射为 AuthNone / AuthApp，不得声明 x-permission / x-access；
 //   - 其它（公开）操作不得声明这三个扩展字段，映射为 AuthNone；
 //   - 映射表的键是 strict 中间件收到的 operationID：oapi-codegen 把 operationId 转成首字母大写的驼峰（adminLogin → AdminLogin）。
 package main
@@ -21,10 +22,13 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
-const adminPrefix = "/admin/"
+const (
+	adminPrefix = "/admin/"
+	appPrefix   = "/app/"
+)
 
 type rule struct {
-	Kind       string // Go 常量名：AuthNone / AuthSession / AuthPermission
+	Kind       string // Go 常量名：AuthNone / AuthSession / AuthPermission / AuthApp
 	Permission string
 	Access     string
 }
@@ -97,6 +101,23 @@ func ruleFor(path string, ext map[string]any) (rule, error) {
 		return rule{}, err
 	}
 
+	if strings.HasPrefix(path, appPrefix) {
+		if hasPerm || hasAccess {
+			return rule{}, errors.New("跑者接口不能声明 x-permission / x-access")
+		}
+		if !hasAuth {
+			return rule{}, errors.New("跑者接口必须声明 x-auth（none 或 app）")
+		}
+		switch auth {
+		case "none":
+			return rule{Kind: "AuthNone"}, nil
+		case "app":
+			return rule{Kind: "AuthApp"}, nil
+		default:
+			return rule{}, fmt.Errorf("跑者接口的 x-auth 只能是 none 或 app，实际为 %q", auth)
+		}
+	}
+
 	if !strings.HasPrefix(path, adminPrefix) {
 		if hasAuth || hasPerm || hasAccess {
 			return rule{}, errors.New("公开接口不能声明 x-auth / x-permission / x-access")
@@ -113,6 +134,8 @@ func ruleFor(path string, ext map[string]any) (rule, error) {
 			return rule{Kind: "AuthNone"}, nil
 		case "session":
 			return rule{Kind: "AuthSession"}, nil
+		case "app":
+			return rule{}, errors.New("x-auth: app 只能用于 /app/ 下的接口")
 		default:
 			return rule{}, fmt.Errorf("x-auth 只能是 none 或 session，实际为 %q", auth)
 		}
@@ -174,6 +197,7 @@ const (
 	AuthNone       AuthKind = "none"
 	AuthSession    AuthKind = "session"
 	AuthPermission AuthKind = "permission"
+	AuthApp        AuthKind = "app"
 )
 
 // OperationAuth 是单个接口的鉴权规则。

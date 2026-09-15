@@ -2,6 +2,7 @@ package config_test
 
 import (
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -79,6 +80,36 @@ func TestLoadReportsEveryInvalidVariable(t *testing.T) {
 	} {
 		assert.Contains(t, err.Error(), name)
 	}
+}
+
+// 变量已设置但为空（或只有空白）时也必须拒绝：空 bot token 会让 initData 的 secret 变成
+// 公开常量 HMAC("WebAppData", "")，任何人都能伪造跑者登录。
+func TestLoadRejectsBlankTelegramBotSettings(t *testing.T) {
+	for _, name := range []string{"WERUN_TELEGRAM_BOT_TOKEN", "WERUN_TELEGRAM_BOT_USERNAME"} {
+		for _, blank := range []string{"", "   ", "\t\n"} {
+			t.Run(name+"/"+strconv.Quote(blank), func(t *testing.T) {
+				setRequired(t)
+				t.Setenv(name, blank)
+
+				_, err := config.Load()
+
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), name)
+			})
+		}
+	}
+}
+
+func TestLoadTrimsTelegramBotSettings(t *testing.T) {
+	setRequired(t)
+	t.Setenv("WERUN_TELEGRAM_BOT_TOKEN", " 123456:e2e-test-token\n")
+	t.Setenv("WERUN_TELEGRAM_BOT_USERNAME", " werun_e2e_bot ")
+
+	cfg, err := config.Load()
+
+	require.NoError(t, err)
+	assert.Equal(t, "123456:e2e-test-token", cfg.TelegramBotToken)
+	assert.Equal(t, "werun_e2e_bot", cfg.TelegramBotUsername)
 }
 
 func TestLoadRejectsPIIKeyOfWrongLength(t *testing.T) {

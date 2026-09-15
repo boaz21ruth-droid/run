@@ -20,6 +20,7 @@
   "REGISTRATION_NOT_READY": "报名还不能开放，请先补齐下面列出的项目。",
   "PRICE_RULE_LOCKED": "这个价格档已有报名占用，不能再修改价格、适用人群或关联组别。",
   "COUPON_CODE_TAKEN": "这个优惠码已经存在。",
+  "TELEGRAM_AUTH_INVALID": "无法确认你的 Telegram 登录，请关闭后在 Telegram 中重新打开小程序。",
   "field.required": "必填。",
   "field.invalid": "格式不正确。",
   "field.too_long": "不能超过 {max} 个字符。",

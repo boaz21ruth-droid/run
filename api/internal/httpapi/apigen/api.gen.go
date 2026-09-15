@@ -90,6 +90,27 @@ func (e AdminEventStatus) Valid() bool {
 	}
 }
 
+// Defines values for AppUserLocale.
+const (
+	AppUserLocaleEn AppUserLocale = "en"
+	AppUserLocaleKm AppUserLocale = "km"
+	AppUserLocaleZh AppUserLocale = "zh"
+)
+
+// Valid indicates whether the value is a known member of the AppUserLocale enum.
+func (e AppUserLocale) Valid() bool {
+	switch e {
+	case AppUserLocaleEn:
+		return true
+	case AppUserLocaleKm:
+		return true
+	case AppUserLocaleZh:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CouponStatus.
 const (
 	CouponStatusACTIVE   CouponStatus = "ACTIVE"
@@ -346,6 +367,30 @@ type AdminEventStatus string
 type AdminEventList struct {
 	Items []AdminEvent `json:"items"`
 }
+
+// AppLoginRequest defines model for AppLoginRequest.
+type AppLoginRequest struct {
+	InitData string `json:"initData"`
+}
+
+// AppSession defines model for AppSession.
+type AppSession struct {
+	ExpiresAt time.Time `json:"expiresAt"`
+	Token     string    `json:"token"`
+	User      AppUser   `json:"user"`
+}
+
+// AppUser defines model for AppUser.
+type AppUser struct {
+	DisplayName      string        `json:"displayName"`
+	Id               int64         `json:"id"`
+	Locale           AppUserLocale `json:"locale"`
+	TelegramUserId   int64         `json:"telegramUserId"`
+	TelegramUsername string        `json:"telegramUsername"`
+}
+
+// AppUserLocale defines model for AppUser.Locale.
+type AppUserLocale string
 
 // Coupon defines model for Coupon.
 type Coupon struct {
@@ -639,6 +684,9 @@ type AdminUpdatePaymentAccountMultipartRequestBody AdminUpdatePaymentAccountMult
 // AdminUpdatePriceRuleJSONRequestBody defines body for AdminUpdatePriceRule for application/json ContentType.
 type AdminUpdatePriceRuleJSONRequestBody = PriceRuleInput
 
+// AppLoginTelegramJSONRequestBody defines body for AppLoginTelegram for application/json ContentType.
+type AppLoginTelegramJSONRequestBody = AppLoginRequest
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// AdminLogin 员工登录
@@ -692,6 +740,15 @@ type ServerInterface interface {
 	// AdminUpdatePriceRule 修改价格档（已有占用时不可改价格、人群、关联组别）
 	// (PUT /admin/price-rules/{id})
 	AdminUpdatePriceRule(c *gin.Context, id int64)
+	// AppLogout 吊销当前跑者令牌
+	// (POST /app/auth/logout)
+	AppLogout(c *gin.Context)
+	// AppLoginTelegram 用 Telegram 小程序 initData 登录，返回跑者令牌
+	// (POST /app/auth/telegram)
+	AppLoginTelegram(c *gin.Context)
+	// AppGetMe 当前跑者
+	// (GET /app/me)
+	AppGetMe(c *gin.Context)
 	// ListPublicEvents 已发布且公开展示的赛事列表，文案按请求语言返回
 	// (GET /events)
 	ListPublicEvents(c *gin.Context)
@@ -1049,6 +1106,45 @@ func (siw *ServerInterfaceWrapper) AdminUpdatePriceRule(c *gin.Context) {
 	siw.Handler.AdminUpdatePriceRule(c, id)
 }
 
+// AppLogout operation middleware
+func (siw *ServerInterfaceWrapper) AppLogout(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppLogout(c)
+}
+
+// AppLoginTelegram operation middleware
+func (siw *ServerInterfaceWrapper) AppLoginTelegram(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppLoginTelegram(c)
+}
+
+// AppGetMe operation middleware
+func (siw *ServerInterfaceWrapper) AppGetMe(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppGetMe(c)
+}
+
 // ListPublicEvents operation middleware
 func (siw *ServerInterfaceWrapper) ListPublicEvents(c *gin.Context) {
 
@@ -1187,6 +1283,9 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/admin/payment-accounts", wrapper.AdminListPaymentAccounts)
 	router.POST(options.BaseURL+"/admin/payment-accounts", wrapper.AdminCreatePaymentAccount)
 	router.PUT(options.BaseURL+"/admin/payment-accounts/:id", wrapper.AdminUpdatePaymentAccount)
+	router.POST(options.BaseURL+"/app/auth/telegram", wrapper.AppLoginTelegram)
+	router.POST(options.BaseURL+"/app/auth/logout", wrapper.AppLogout)
+	router.GET(options.BaseURL+"/app/me", wrapper.AppGetMe)
 }
 
 type AdminLoginRequestObject struct {
@@ -1847,6 +1946,115 @@ func (response AdminUpdatePriceRuledefaultJSONResponse) VisitAdminUpdatePriceRul
 	return err
 }
 
+type AppLogoutRequestObject struct {
+}
+
+type AppLogoutResponseObject interface {
+	VisitAppLogoutResponse(w http.ResponseWriter) error
+}
+
+type AppLogout204Response struct {
+}
+
+func (response AppLogout204Response) VisitAppLogoutResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type AppLogoutdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppLogoutdefaultJSONResponse) VisitAppLogoutResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppLoginTelegramRequestObject struct {
+	Body *AppLoginTelegramJSONRequestBody
+}
+
+type AppLoginTelegramResponseObject interface {
+	VisitAppLoginTelegramResponse(w http.ResponseWriter) error
+}
+
+type AppLoginTelegram200JSONResponse AppSession
+
+func (response AppLoginTelegram200JSONResponse) VisitAppLoginTelegramResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppLoginTelegramdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppLoginTelegramdefaultJSONResponse) VisitAppLoginTelegramResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppGetMeRequestObject struct {
+}
+
+type AppGetMeResponseObject interface {
+	VisitAppGetMeResponse(w http.ResponseWriter) error
+}
+
+type AppGetMe200JSONResponse AppUser
+
+func (response AppGetMe200JSONResponse) VisitAppGetMeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppGetMedefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppGetMedefaultJSONResponse) VisitAppGetMeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListPublicEventsRequestObject struct {
 }
 
@@ -2113,6 +2321,15 @@ type StrictServerInterface interface {
 	// AdminUpdatePriceRule 修改价格档（已有占用时不可改价格、人群、关联组别）
 	// (PUT /admin/price-rules/{id})
 	AdminUpdatePriceRule(ctx context.Context, request AdminUpdatePriceRuleRequestObject) (AdminUpdatePriceRuleResponseObject, error)
+	// AppLogout 吊销当前跑者令牌
+	// (POST /app/auth/logout)
+	AppLogout(ctx context.Context, request AppLogoutRequestObject) (AppLogoutResponseObject, error)
+	// AppLoginTelegram 用 Telegram 小程序 initData 登录，返回跑者令牌
+	// (POST /app/auth/telegram)
+	AppLoginTelegram(ctx context.Context, request AppLoginTelegramRequestObject) (AppLoginTelegramResponseObject, error)
+	// AppGetMe 当前跑者
+	// (GET /app/me)
+	AppGetMe(ctx context.Context, request AppGetMeRequestObject) (AppGetMeResponseObject, error)
 	// ListPublicEvents 已发布且公开展示的赛事列表，文案按请求语言返回
 	// (GET /events)
 	ListPublicEvents(ctx context.Context, request ListPublicEventsRequestObject) (ListPublicEventsResponseObject, error)
@@ -2669,6 +2886,85 @@ func (sh *strictHandler) AdminUpdatePriceRule(ctx *gin.Context, id int64) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AdminUpdatePriceRuleResponseObject); ok {
 		if err := validResponse.VisitAdminUpdatePriceRuleResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppLogout operation middleware
+func (sh *strictHandler) AppLogout(ctx *gin.Context) {
+	var request AppLogoutRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppLogout(ctx, request.(AppLogoutRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppLogout")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppLogoutResponseObject); ok {
+		if err := validResponse.VisitAppLogoutResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppLoginTelegram operation middleware
+func (sh *strictHandler) AppLoginTelegram(ctx *gin.Context) {
+	var request AppLoginTelegramRequestObject
+
+	var body AppLoginTelegramJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppLoginTelegram(ctx, request.(AppLoginTelegramRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppLoginTelegram")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppLoginTelegramResponseObject); ok {
+		if err := validResponse.VisitAppLoginTelegramResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppGetMe operation middleware
+func (sh *strictHandler) AppGetMe(ctx *gin.Context) {
+	var request AppGetMeRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppGetMe(ctx, request.(AppGetMeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppGetMe")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppGetMeResponseObject); ok {
+		if err := validResponse.VisitAppGetMeResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

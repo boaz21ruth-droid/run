@@ -587,6 +587,65 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /app/auth/telegram:
+    post:
+      operationId: appLoginTelegram
+      tags: [app-auth]
+      summary: 用 Telegram 小程序 initData 登录，返回跑者令牌
+      x-auth: none
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppLoginRequest'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppSession'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /app/auth/logout:
+    post:
+      operationId: appLogout
+      tags: [app-auth]
+      summary: 吊销当前跑者令牌
+      x-auth: app
+      responses:
+        '204':
+          description: 已退出
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /app/me:
+    get:
+      operationId: appGetMe
+      tags: [app-auth]
+      summary: 当前跑者
+      x-auth: app
+      responses:
+        '200':
+          description: 当前跑者
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppUser'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     ErrorResponse:
@@ -1103,3 +1162,39 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PaymentAccount'
+    AppLoginRequest:
+      type: object
+      required: [initData]
+      properties:
+        initData:
+          type: string
+          minLength: 1
+          maxLength: 4096
+    AppUser:
+      type: object
+      required: [id, telegramUserId, telegramUsername, displayName, locale]
+      properties:
+        id:
+          type: integer
+          format: int64
+        telegramUserId:
+          type: integer
+          format: int64
+        telegramUsername:
+          type: string
+        displayName:
+          type: string
+        locale:
+          type: string
+          enum: [zh, en, km]
+    AppSession:
+      type: object
+      required: [token, expiresAt, user]
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/AppUser'

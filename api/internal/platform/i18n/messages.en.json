@@ -20,6 +20,7 @@
   "REGISTRATION_NOT_READY": "Registration can't be opened yet. Fix the items listed below.",
   "PRICE_RULE_LOCKED": "This price tier already has registrations, so its price, audience and categories can't be changed.",
   "COUPON_CODE_TAKEN": "This coupon code already exists.",
+  "TELEGRAM_AUTH_INVALID": "We couldn't verify your Telegram sign-in. Close the mini app and open it again in Telegram.",
   "field.required": "Required.",
   "field.invalid": "Invalid value.",
   "field.too_long": "Must be at most {max} characters.",

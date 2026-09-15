@@ -6,6 +6,7 @@ import (
 	"werun/api/internal/iam"
 	"werun/api/internal/payment"
 	"werun/api/internal/pricing"
+	"werun/api/internal/runner"
 )
 
 // 各模块的 handler 类型都叫 Handlers，直接嵌入会出现同名字段；
@@ -15,6 +16,7 @@ type (
 	EventHandlers   = event.Handlers
 	PricingHandlers = pricing.Handlers
 	PaymentHandlers = payment.Handlers
+	RunnerHandlers  = runner.Handlers
 )
 
 // Server 组合各模块的 handler，实现 apigen.StrictServerInterface。
@@ -25,6 +27,7 @@ type Server struct {
 	*EventHandlers
 	*PricingHandlers
 	*PaymentHandlers
+	*RunnerHandlers
 }
 
 var _ apigen.StrictServerInterface = (*Server)(nil)
@@ -37,5 +40,6 @@ func NewServer(d RouterDeps) *Server {
 		EventHandlers:   event.NewHandlers(d.Events),
 		PricingHandlers: pricing.NewHandlers(d.Pricing),
 		PaymentHandlers: payment.NewHandlers(d.Payment),
+		RunnerHandlers:  runner.NewHandlers(d.Runner),
 	}
 }

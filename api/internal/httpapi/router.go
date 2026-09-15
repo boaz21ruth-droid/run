@@ -17,6 +17,7 @@ import (
 	"werun/api/internal/platform/httpx"
 	"werun/api/internal/platform/i18n"
 	"werun/api/internal/pricing"
+	"werun/api/internal/runner"
 )
 
 // 请求体上限：没有上限的话，一个超大请求体在被参数校验拒绝之前就要被完整读入内存
@@ -54,6 +55,7 @@ type RouterDeps struct {
 	Catalog *i18n.Catalog
 	Pool    *pgxpool.Pool
 	IAM     *iam.Service
+	Runner  *runner.Service // 跑者登录与会话、常用参赛人、同意书
 	Events  *event.Service
 	Pricing *pricing.Service
 	Payment *payment.Service
@@ -89,7 +91,7 @@ func NewRouter(d RouterDeps) *gin.Engine {
 		httpx.WriteError(c, d.Catalog, d.Log, err)
 	}
 	middlewares := []apigen.StrictMiddlewareFunc{
-		AuthMiddleware(d.IAM, apigen.OperationAuths, d.Log),
+		AuthMiddleware(d.IAM, d.Runner, apigen.OperationAuths, d.Log),
 	}
 	strict := apigen.NewStrictHandlerWithOptions(server, middlewares, apigen.StrictGinServerOptions{
 		RequestErrorHandlerFunc: func(c *gin.Context, err error) {

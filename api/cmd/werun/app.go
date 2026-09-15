@@ -22,6 +22,7 @@ import (
 	"werun/api/internal/platform/piicrypt"
 	"werun/api/internal/platform/storage"
 	"werun/api/internal/pricing"
+	"werun/api/internal/runner"
 )
 
 // App 持有进程级依赖。各业务服务在引入它的任务里追加字段。
@@ -37,6 +38,7 @@ type App struct {
 	Events   *event.Service
 	Pricing  *pricing.Service
 	Payment  *payment.Service
+	Runner   *runner.Service
 }
 
 // Bootstrap 读取配置、创建日志器、加载文案、连接数据库并构造各服务。
@@ -73,6 +75,7 @@ func Bootstrap(ctx context.Context) (*App, error) {
 		return nil, fmt.Errorf("create job inserter: %w", err)
 	}
 	app := &App{Cfg: cfg, Log: log, Catalog: cat, Pool: pool, Store: files, PII: pii, Inserter: inserter}
+	app.Runner = runner.NewService(app.Pool, []byte(app.Cfg.SessionSecret), app.Cfg.TelegramBotToken, app.PII, time.Now)
 	app.IAM = iam.NewService(app.Pool, []byte(app.Cfg.SessionSecret), iam.NewLoginLimiter(time.Now), time.Now)
 	app.Events = event.NewService(app.Pool)
 	app.Pricing = pricing.NewService(app.Pool, time.Now)
