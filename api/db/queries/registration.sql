@@ -186,3 +186,17 @@ FROM order_participants op
 WHERE op.id = r.order_participant_id
   AND op.order_id = @order_id::bigint
   AND r.status = 'PENDING';
+
+-- name: LockRegOrderByNo :one
+SELECT * FROM reg_orders
+WHERE order_no = @order_no
+FOR UPDATE;
+
+-- name: SetOrderProofSubmitted :execrows
+UPDATE reg_orders
+SET status = 'PROOF_SUBMITTED',
+    deadline_at = NULL,
+    version = version + 1
+WHERE id = @id
+  AND reservation_state = 'RESERVED'
+  AND status IN ('PENDING_PAYMENT', 'PROOF_REJECTED');

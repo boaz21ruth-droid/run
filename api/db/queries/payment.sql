@@ -30,3 +30,13 @@ RETURNING *;
 -- name: ListPaymentAccounts :many
 SELECT * FROM payment_accounts
 ORDER BY active DESC, id;
+
+-- name: InsertPaymentProof :one
+INSERT INTO payment_proofs (
+  proof_no, reg_order_id, payment_account_id, file_id, submitted_by_user_id,
+  declared_amount_cents, declared_currency, bank_txn_ref, declared_paid_at, payer_name, dup_file_hit
+) VALUES (
+  @proof_no, sqlc.arg(reg_order_id)::bigint, @payment_account_id, @file_id, sqlc.arg(submitted_by_user_id)::bigint,
+  @declared_amount_cents, 'USD', @bank_txn_ref, @declared_paid_at, @payer_name, @dup_file_hit
+)
+RETURNING *;

@@ -7,6 +7,7 @@ package store
 
 import (
 	"context"
+	"time"
 )
 
 const eventExists = `-- name: EventExists :one
@@ -91,6 +92,71 @@ func (q *Queries) InsertPaymentAccount(ctx context.Context, arg InsertPaymentAcc
 		&i.EventID,
 		&i.Active,
 		&i.CreatedBy,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const insertPaymentProof = `-- name: InsertPaymentProof :one
+INSERT INTO payment_proofs (
+  proof_no, reg_order_id, payment_account_id, file_id, submitted_by_user_id,
+  declared_amount_cents, declared_currency, bank_txn_ref, declared_paid_at, payer_name, dup_file_hit
+) VALUES (
+  $1, $2::bigint, $3, $4, $5::bigint,
+  $6, 'USD', $7, $8, $9, $10
+)
+RETURNING id, proof_no, reg_order_id, merch_order_id, payment_account_id, file_id, submitted_by_user_id, declared_amount_cents, declared_currency, bank_txn_ref, declared_paid_at, payer_name, payer_account_masked, remark, is_late, dup_file_hit, status, reviewed_by, reviewed_at, reject_code, reject_reason, created_at
+`
+
+type InsertPaymentProofParams struct {
+	ProofNo             string
+	RegOrderID          int64
+	PaymentAccountID    int64
+	FileID              int64
+	SubmittedByUserID   int64
+	DeclaredAmountCents int64
+	BankTxnRef          string
+	DeclaredPaidAt      *time.Time
+	PayerName           *string
+	DupFileHit          bool
+}
+
+func (q *Queries) InsertPaymentProof(ctx context.Context, arg InsertPaymentProofParams) (PaymentProof, error) {
+	row := q.db.QueryRow(ctx, insertPaymentProof,
+		arg.ProofNo,
+		arg.RegOrderID,
+		arg.PaymentAccountID,
+		arg.FileID,
+		arg.SubmittedByUserID,
+		arg.DeclaredAmountCents,
+		arg.BankTxnRef,
+		arg.DeclaredPaidAt,
+		arg.PayerName,
+		arg.DupFileHit,
+	)
+	var i PaymentProof
+	err := row.Scan(
+		&i.ID,
+		&i.ProofNo,
+		&i.RegOrderID,
+		&i.MerchOrderID,
+		&i.PaymentAccountID,
+		&i.FileID,
+		&i.SubmittedByUserID,
+		&i.DeclaredAmountCents,
+		&i.DeclaredCurrency,
+		&i.BankTxnRef,
+		&i.DeclaredPaidAt,
+		&i.PayerName,
+		&i.PayerAccountMasked,
+		&i.Remark,
+		&i.IsLate,
+		&i.DupFileHit,
+		&i.Status,
+		&i.ReviewedBy,
+		&i.ReviewedAt,
+		&i.RejectCode,
+		&i.RejectReason,
 		&i.CreatedAt,
 	)
 	return i, err

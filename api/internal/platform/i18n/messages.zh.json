@@ -26,6 +26,8 @@
   "COUPON_EXHAUSTED": "优惠码已被用完。",
   "CATEGORY_SOLD_OUT": "该组别名额已满。",
   "PRICE_TIER_SOLD_OUT": "当前价格档刚刚售罄，请重新确认费用。",
+  "ORDER_EXPIRED": "订单已过截止时间，请重新报名。",
+  "PROOF_TXN_REF_USED": "这个交易号已被其他凭证或到账记录使用，请核对后重新填写。",
   "field.required": "必填。",
   "field.invalid": "格式不正确。",
   "field.too_long": "不能超过 {max} 个字符。",

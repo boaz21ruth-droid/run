@@ -54,7 +54,7 @@ func newEventsEnv(t *testing.T) eventsEnv {
 		IAM:     iamSvc,
 		Events:  event.NewService(pool),
 		Pricing: pricing.NewService(pool, time.Now),
-		Payment: payment.NewService(pool, files, time.Now),
+		Payment: payment.NewService(pool, files, nil, time.Now),
 		Env:     "dev",
 	})
 	return eventsEnv{router: router, iam: iamSvc, catalog: catalog, pool: pool}

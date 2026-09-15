@@ -444,6 +444,30 @@ func (e PriceAudience) Valid() bool {
 	}
 }
 
+// Defines values for ProofStatus.
+const (
+	ProofStatusAPPROVED  ProofStatus = "APPROVED"
+	ProofStatusREJECTED  ProofStatus = "REJECTED"
+	ProofStatusSUBMITTED ProofStatus = "SUBMITTED"
+	ProofStatusWITHDRAWN ProofStatus = "WITHDRAWN"
+)
+
+// Valid indicates whether the value is a known member of the ProofStatus enum.
+func (e ProofStatus) Valid() bool {
+	switch e {
+	case ProofStatusAPPROVED:
+		return true
+	case ProofStatusREJECTED:
+		return true
+	case ProofStatusSUBMITTED:
+		return true
+	case ProofStatusWITHDRAWN:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PublicEventEventType.
 const (
 	PublicEventEventTypeFREEACTIVITY PublicEventEventType = "FREE_ACTIVITY"
@@ -1028,6 +1052,30 @@ type ProfileInput struct {
 	TshirtSize TShirtSize `json:"tshirtSize"`
 }
 
+// Proof defines model for Proof.
+type Proof struct {
+	BankTxnRef          string      `json:"bankTxnRef"`
+	CreatedAt           time.Time   `json:"createdAt"`
+	DeclaredAmountCents int64       `json:"declaredAmountCents"`
+	DeclaredPaidAt      *time.Time  `json:"declaredPaidAt"`
+	DupFileHit          bool        `json:"dupFileHit"`
+	FileId              int64       `json:"fileId"`
+	Id                  int64       `json:"id"`
+	OrderId             int64       `json:"orderId"`
+	OrderNo             string      `json:"orderNo"`
+	PayerName           *string     `json:"payerName"`
+	PaymentAccountId    int64       `json:"paymentAccountId"`
+	ProofNo             string      `json:"proofNo"`
+	RejectCode          *string     `json:"rejectCode"`
+	RejectReason        *string     `json:"rejectReason"`
+	ReviewedAt          *time.Time  `json:"reviewedAt"`
+	ReviewedBy          *int64      `json:"reviewedBy"`
+	Status              ProofStatus `json:"status"`
+}
+
+// ProofStatus defines model for Proof.Status.
+type ProofStatus string
+
 // PublicCategory defines model for PublicCategory.
 type PublicCategory struct {
 	Capacity  int32     `json:"capacity"`
@@ -1137,6 +1185,18 @@ type Staff struct {
 	Id       int64  `json:"id"`
 	Role     Role   `json:"role"`
 	Username string `json:"username"`
+}
+
+// SubmitProofForm defines model for SubmitProofForm.
+type SubmitProofForm struct {
+	// BankTxnRef 回执交易号；服务端去掉空白并转大写，长度 4–64
+	BankTxnRef          string     `json:"bankTxnRef"`
+	DeclaredAmountCents int64      `json:"declaredAmountCents"`
+	DeclaredPaidAt      *time.Time `json:"declaredPaidAt,omitempty"`
+
+	// File JPEG / PNG / WebP 截图，不超过 5 MB
+	File      openapi_types.File `json:"file"`
+	PayerName *string            `json:"payerName,omitempty"`
 }
 
 // TShirtSize defines model for TShirtSize.
@@ -1259,6 +1319,9 @@ type AppQuoteJSONRequestBody = QuoteRequest
 // AppCreateOrderJSONRequestBody defines body for AppCreateOrder for application/json ContentType.
 type AppCreateOrderJSONRequestBody = CreateOrderRequest
 
+// AppSubmitProofMultipartRequestBody defines body for AppSubmitProof for multipart/form-data ContentType.
+type AppSubmitProofMultipartRequestBody = SubmitProofForm
+
 // AppCreateProfileJSONRequestBody defines body for AppCreateProfile for application/json ContentType.
 type AppCreateProfileJSONRequestBody = ProfileInput
 
@@ -1345,6 +1408,9 @@ type ServerInterface interface {
 	// AppCancelOrder 付款前取消订单并释放名额
 	// (POST /app/orders/{orderNo}/cancel)
 	AppCancelOrder(c *gin.Context, orderNo string)
+	// AppSubmitProof 上传付款凭证（截图 + 交易号），订单进入审核
+	// (POST /app/orders/{orderNo}/proofs)
+	AppSubmitProof(c *gin.Context, orderNo string)
 	// AppListProfiles 当前跑者的常用参赛人（证件号只返回后 4 位）
 	// (GET /app/profiles)
 	AppListProfiles(c *gin.Context)
@@ -1919,6 +1985,31 @@ func (siw *ServerInterfaceWrapper) AppCancelOrder(c *gin.Context) {
 	siw.Handler.AppCancelOrder(c, orderNo)
 }
 
+// AppSubmitProof operation middleware
+func (siw *ServerInterfaceWrapper) AppSubmitProof(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "orderNo" -------------
+	var orderNo string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "orderNo", c.Param("orderNo"), &orderNo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter orderNo: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppSubmitProof(c, orderNo)
+}
+
 // AppListProfiles operation middleware
 func (siw *ServerInterfaceWrapper) AppListProfiles(c *gin.Context) {
 
@@ -2146,6 +2237,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/app/orders", wrapper.AppCreateOrder)
 	router.GET(options.BaseURL+"/app/orders/:orderNo", wrapper.AppGetOrder)
 	router.POST(options.BaseURL+"/app/orders/:orderNo/cancel", wrapper.AppCancelOrder)
+	router.POST(options.BaseURL+"/app/orders/:orderNo/proofs", wrapper.AppSubmitProof)
 }
 
 type AdminLoginRequestObject struct {
@@ -3150,6 +3242,46 @@ func (response AppCancelOrderdefaultJSONResponse) VisitAppCancelOrderResponse(w 
 	return err
 }
 
+type AppSubmitProofRequestObject struct {
+	OrderNo string `json:"orderNo"`
+	Body    *multipart.Reader
+}
+
+type AppSubmitProofResponseObject interface {
+	VisitAppSubmitProofResponse(w http.ResponseWriter) error
+}
+
+type AppSubmitProof201JSONResponse Proof
+
+func (response AppSubmitProof201JSONResponse) VisitAppSubmitProofResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppSubmitProofdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppSubmitProofdefaultJSONResponse) VisitAppSubmitProofResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AppListProfilesRequestObject struct {
 }
 
@@ -3593,6 +3725,9 @@ type StrictServerInterface interface {
 	// AppCancelOrder 付款前取消订单并释放名额
 	// (POST /app/orders/{orderNo}/cancel)
 	AppCancelOrder(ctx context.Context, request AppCancelOrderRequestObject) (AppCancelOrderResponseObject, error)
+	// AppSubmitProof 上传付款凭证（截图 + 交易号），订单进入审核
+	// (POST /app/orders/{orderNo}/proofs)
+	AppSubmitProof(ctx context.Context, request AppSubmitProofRequestObject) (AppSubmitProofResponseObject, error)
 	// AppListProfiles 当前跑者的常用参赛人（证件号只返回后 4 位）
 	// (GET /app/profiles)
 	AppListProfiles(ctx context.Context, request AppListProfilesRequestObject) (AppListProfilesResponseObject, error)
@@ -4408,6 +4543,39 @@ func (sh *strictHandler) AppCancelOrder(ctx *gin.Context, orderNo string) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AppCancelOrderResponseObject); ok {
 		if err := validResponse.VisitAppCancelOrderResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppSubmitProof operation middleware
+func (sh *strictHandler) AppSubmitProof(ctx *gin.Context, orderNo string) {
+	var request AppSubmitProofRequestObject
+
+	request.OrderNo = orderNo
+
+	if reader, err := ctx.Request.MultipartReader(); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	} else {
+		request.Body = reader
+	}
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppSubmitProof(ctx, request.(AppSubmitProofRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppSubmitProof")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppSubmitProofResponseObject); ok {
+		if err := validResponse.VisitAppSubmitProofResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

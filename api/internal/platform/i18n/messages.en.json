@@ -26,6 +26,8 @@
   "COUPON_EXHAUSTED": "This coupon code has been fully used.",
   "CATEGORY_SOLD_OUT": "This category is sold out.",
   "PRICE_TIER_SOLD_OUT": "The current price tier just sold out. Please check the price again.",
+  "ORDER_EXPIRED": "This order has passed its deadline. Please register again.",
+  "PROOF_TXN_REF_USED": "This transaction reference is already used by another payment proof or receipt. Check it and try again.",
   "field.required": "Required.",
   "field.invalid": "Invalid value.",
   "field.too_long": "Must be at most {max} characters.",

@@ -903,6 +903,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /app/orders/{orderNo}/proofs:
+    post:
+      operationId: appSubmitProof
+      summary: 上传付款凭证（截图 + 交易号），订单进入审核
+      x-auth: app
+      parameters:
+        - name: orderNo
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubmitProofForm'
+      responses:
+        '201':
+          description: 凭证已提交
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proof'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     ErrorResponse:
@@ -1884,3 +1914,45 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OrderSummary'
+    SubmitProofForm:
+      type: object
+      required: [file, bankTxnRef, declaredAmountCents]
+      properties:
+        file:
+          type: string
+          format: binary
+          description: JPEG / PNG / WebP 截图，不超过 5 MB
+        bankTxnRef:
+          type: string
+          description: 回执交易号；服务端去掉空白并转大写，长度 4–64
+        declaredAmountCents:
+          type: integer
+          format: int64
+        declaredPaidAt:
+          type: string
+          format: date-time
+        payerName:
+          type: string
+    Proof:
+      type: object
+      required: [id, proofNo, orderId, orderNo, paymentAccountId, fileId, status, bankTxnRef, declaredAmountCents, declaredPaidAt, payerName, dupFileHit, rejectCode, rejectReason, reviewedBy, reviewedAt, createdAt]
+      properties:
+        id: { type: integer, format: int64 }
+        proofNo: { type: string }
+        orderId: { type: integer, format: int64 }
+        orderNo: { type: string }
+        paymentAccountId: { type: integer, format: int64 }
+        fileId: { type: integer, format: int64 }
+        status:
+          type: string
+          enum: [SUBMITTED, APPROVED, REJECTED, WITHDRAWN]
+        bankTxnRef: { type: string }
+        declaredAmountCents: { type: integer, format: int64 }
+        declaredPaidAt: { type: string, format: date-time, nullable: true }
+        payerName: { type: string, nullable: true }
+        dupFileHit: { type: boolean }
+        rejectCode: { type: string, nullable: true }
+        rejectReason: { type: string, nullable: true }
+        reviewedBy: { type: integer, format: int64, nullable: true }
+        reviewedAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }

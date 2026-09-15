@@ -50,6 +50,7 @@ var OperationAuths = map[string]OperationAuth{
 	"AppLoginTelegram":             {Kind: AuthNone},
 	"AppLogout":                    {Kind: AuthApp},
 	"AppQuote":                     {Kind: AuthApp},
+	"AppSubmitProof":               {Kind: AuthApp},
 	"AppUpdateProfile":             {Kind: AuthApp},
 	"GetHealthz":                   {Kind: AuthNone},
 	"GetPublicEvent":               {Kind: AuthNone},

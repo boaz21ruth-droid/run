@@ -82,7 +82,7 @@ func Bootstrap(ctx context.Context) (*App, error) {
 	app.Events = event.NewService(app.Pool)
 	app.Pricing = pricing.NewService(app.Pool, time.Now)
 	app.Registration = registration.NewService(app.Pool, app.Runner, app.Pricing, time.Now)
-	app.Payment = payment.NewService(app.Pool, app.Store, time.Now)
+	app.Payment = payment.NewService(app.Pool, app.Store, app.Registration, time.Now)
 	return app, nil
 }
 

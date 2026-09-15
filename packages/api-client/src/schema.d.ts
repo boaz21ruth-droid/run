@@ -487,6 +487,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/app/orders/{orderNo}/proofs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 上传付款凭证（截图 + 交易号），订单进入审核 */
+        post: operations["appSubmitProof"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1017,6 +1034,49 @@ export interface components {
         };
         OrderList: {
             items: components["schemas"]["OrderSummary"][];
+        };
+        SubmitProofForm: {
+            /**
+             * Format: binary
+             * @description JPEG / PNG / WebP 截图，不超过 5 MB
+             */
+            file: string;
+            /** @description 回执交易号；服务端去掉空白并转大写，长度 4–64 */
+            bankTxnRef: string;
+            /** Format: int64 */
+            declaredAmountCents: number;
+            /** Format: date-time */
+            declaredPaidAt?: string;
+            payerName?: string;
+        };
+        Proof: {
+            /** Format: int64 */
+            id: number;
+            proofNo: string;
+            /** Format: int64 */
+            orderId: number;
+            orderNo: string;
+            /** Format: int64 */
+            paymentAccountId: number;
+            /** Format: int64 */
+            fileId: number;
+            /** @enum {string} */
+            status: "SUBMITTED" | "APPROVED" | "REJECTED" | "WITHDRAWN";
+            bankTxnRef: string;
+            /** Format: int64 */
+            declaredAmountCents: number;
+            /** Format: date-time */
+            declaredPaidAt: string | null;
+            payerName: string | null;
+            dupFileHit: boolean;
+            rejectCode: string | null;
+            rejectReason: string | null;
+            /** Format: int64 */
+            reviewedBy: number | null;
+            /** Format: date-time */
+            reviewedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
         };
     };
     responses: never;
@@ -2153,6 +2213,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appSubmitProof: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderNo: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["SubmitProofForm"];
+            };
+        };
+        responses: {
+            /** @description 凭证已提交 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proof"];
                 };
             };
             /** @description 错误 */
