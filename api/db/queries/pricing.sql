@@ -78,3 +78,116 @@ RETURNING *;
 SELECT * FROM coupons
 WHERE (sqlc.narg(event_id)::bigint IS NULL OR event_id = sqlc.narg(event_id)::bigint)
 ORDER BY created_at DESC, id DESC;
+
+-- name: QuoteListCategories :many
+SELECT id, min_age
+FROM event_categories
+WHERE event_id = @event_id AND id = ANY(@category_ids::bigint[]);
+
+-- name: QuoteListTierCandidates :many
+SELECT cpr.category_id,
+       pr.id AS price_rule_id,
+       pr.audience,
+       pr.price_cents,
+       pr.quota,
+       pr.used_count,
+       pr.reserved_count,
+       pr.sale_starts_at,
+       pr.sale_ends_at,
+       pr.sort_order
+FROM category_price_rules cpr
+JOIN price_rules pr ON pr.id = cpr.price_rule_id
+WHERE pr.event_id = @event_id
+  AND cpr.category_id = ANY(@category_ids::bigint[])
+ORDER BY cpr.category_id, pr.id;
+
+-- name: QuoteGetCouponByCode :one
+SELECT id, event_id, discount_type, discount_value, quota, used_count, reserved_count,
+       min_runners, valid_from, valid_until, status
+FROM coupons
+WHERE code = @code;
+
+-- name: QuoteLockPaymentAccount :exec
+SELECT pg_advisory_xact_lock(7301, @payment_account_id::int);
+
+-- name: QuoteListOpenOrderAmounts :many
+SELECT amount_cents
+FROM reg_orders
+WHERE payment_account_id = @payment_account_id::bigint
+  AND status IN ('PENDING_PAYMENT', 'PROOF_SUBMITTED', 'PROOF_REJECTED');
+
+-- name: ReserveCategorySeats :execrows
+UPDATE event_categories
+SET reserved_count = reserved_count + @seats::int
+WHERE id = @id
+  AND used_count + reserved_count + @seats::int <= capacity;
+
+-- name: ReservePriceRuleSeats :execrows
+UPDATE price_rules
+SET reserved_count = reserved_count + @seats::int
+WHERE id = @id
+  AND (quota IS NULL OR used_count + reserved_count + @seats::int <= quota);
+
+-- name: ReserveCouponUse :execrows
+UPDATE coupons
+SET reserved_count = reserved_count + 1
+WHERE id = @id
+  AND status = 'ACTIVE'
+  AND used_count + reserved_count + 1 <= quota;
+
+-- name: InsertCouponRedemption :exec
+INSERT INTO coupon_redemptions (order_id, coupon_id, state, discount_cents)
+VALUES (@order_id, @coupon_id, 'RESERVED', @discount_cents);
+
+-- name: ListOrderCategorySeats :many
+SELECT category_id, count(*)::int AS seats
+FROM order_participants
+WHERE order_id = @order_id
+GROUP BY category_id
+ORDER BY category_id;
+
+-- name: ListOrderPriceRuleSeats :many
+SELECT price_rule_id, count(*)::int AS seats
+FROM order_participants
+WHERE order_id = @order_id
+GROUP BY price_rule_id
+ORDER BY price_rule_id;
+
+-- name: ConsumeCategorySeats :execrows
+UPDATE event_categories
+SET reserved_count = reserved_count - @seats::int,
+    used_count = used_count + @seats::int
+WHERE id = @id AND reserved_count >= @seats::int;
+
+-- name: ConsumePriceRuleSeats :execrows
+UPDATE price_rules
+SET reserved_count = reserved_count - @seats::int,
+    used_count = used_count + @seats::int
+WHERE id = @id AND reserved_count >= @seats::int;
+
+-- name: ReleaseCategorySeats :execrows
+UPDATE event_categories
+SET reserved_count = reserved_count - @seats::int
+WHERE id = @id AND reserved_count >= @seats::int;
+
+-- name: ReleasePriceRuleSeats :execrows
+UPDATE price_rules
+SET reserved_count = reserved_count - @seats::int
+WHERE id = @id AND reserved_count >= @seats::int;
+
+-- name: MarkCouponRedemption :one
+UPDATE coupon_redemptions
+SET state = @to_state::text, updated_at = now()
+WHERE order_id = @order_id AND state = 'RESERVED'
+RETURNING coupon_id;
+
+-- name: ConsumeCouponUse :execrows
+UPDATE coupons
+SET reserved_count = reserved_count - 1,
+    used_count = used_count + 1
+WHERE id = @id AND reserved_count >= 1;
+
+-- name: ReleaseCouponUse :execrows
+UPDATE coupons
+SET reserved_count = reserved_count - 1
+WHERE id = @id AND reserved_count >= 1;

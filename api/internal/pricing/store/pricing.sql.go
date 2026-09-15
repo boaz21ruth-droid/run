@@ -10,6 +10,61 @@ import (
 	"time"
 )
 
+const consumeCategorySeats = `-- name: ConsumeCategorySeats :execrows
+UPDATE event_categories
+SET reserved_count = reserved_count - $1::int,
+    used_count = used_count + $1::int
+WHERE id = $2 AND reserved_count >= $1::int
+`
+
+type ConsumeCategorySeatsParams struct {
+	Seats int32
+	ID    int64
+}
+
+func (q *Queries) ConsumeCategorySeats(ctx context.Context, arg ConsumeCategorySeatsParams) (int64, error) {
+	result, err := q.db.Exec(ctx, consumeCategorySeats, arg.Seats, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const consumeCouponUse = `-- name: ConsumeCouponUse :execrows
+UPDATE coupons
+SET reserved_count = reserved_count - 1,
+    used_count = used_count + 1
+WHERE id = $1 AND reserved_count >= 1
+`
+
+func (q *Queries) ConsumeCouponUse(ctx context.Context, id int64) (int64, error) {
+	result, err := q.db.Exec(ctx, consumeCouponUse, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const consumePriceRuleSeats = `-- name: ConsumePriceRuleSeats :execrows
+UPDATE price_rules
+SET reserved_count = reserved_count - $1::int,
+    used_count = used_count + $1::int
+WHERE id = $2 AND reserved_count >= $1::int
+`
+
+type ConsumePriceRuleSeatsParams struct {
+	Seats int32
+	ID    int64
+}
+
+func (q *Queries) ConsumePriceRuleSeats(ctx context.Context, arg ConsumePriceRuleSeatsParams) (int64, error) {
+	result, err := q.db.Exec(ctx, consumePriceRuleSeats, arg.Seats, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const deleteCategoryLinksByRule = `-- name: DeleteCategoryLinksByRule :exec
 DELETE FROM category_price_rules
 WHERE price_rule_id = $1
@@ -160,6 +215,22 @@ func (q *Queries) InsertCoupon(ctx context.Context, arg InsertCouponParams) (Cou
 	return i, err
 }
 
+const insertCouponRedemption = `-- name: InsertCouponRedemption :exec
+INSERT INTO coupon_redemptions (order_id, coupon_id, state, discount_cents)
+VALUES ($1, $2, 'RESERVED', $3)
+`
+
+type InsertCouponRedemptionParams struct {
+	OrderID       int64
+	CouponID      int64
+	DiscountCents int64
+}
+
+func (q *Queries) InsertCouponRedemption(ctx context.Context, arg InsertCouponRedemptionParams) error {
+	_, err := q.db.Exec(ctx, insertCouponRedemption, arg.OrderID, arg.CouponID, arg.DiscountCents)
+	return err
+}
+
 const insertPriceRule = `-- name: InsertPriceRule :one
 INSERT INTO price_rules (event_id, name, audience, price_cents, currency, quota, sale_starts_at, sale_ends_at, sort_order)
 VALUES ($1, $2, $3, $4, 'USD', $5, $6,
@@ -303,6 +374,72 @@ func (q *Queries) ListCoupons(ctx context.Context, eventID *int64) ([]Coupon, er
 	return items, nil
 }
 
+const listOrderCategorySeats = `-- name: ListOrderCategorySeats :many
+SELECT category_id, count(*)::int AS seats
+FROM order_participants
+WHERE order_id = $1
+GROUP BY category_id
+ORDER BY category_id
+`
+
+type ListOrderCategorySeatsRow struct {
+	CategoryID int64
+	Seats      int32
+}
+
+func (q *Queries) ListOrderCategorySeats(ctx context.Context, orderID int64) ([]ListOrderCategorySeatsRow, error) {
+	rows, err := q.db.Query(ctx, listOrderCategorySeats, orderID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListOrderCategorySeatsRow
+	for rows.Next() {
+		var i ListOrderCategorySeatsRow
+		if err := rows.Scan(&i.CategoryID, &i.Seats); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listOrderPriceRuleSeats = `-- name: ListOrderPriceRuleSeats :many
+SELECT price_rule_id, count(*)::int AS seats
+FROM order_participants
+WHERE order_id = $1
+GROUP BY price_rule_id
+ORDER BY price_rule_id
+`
+
+type ListOrderPriceRuleSeatsRow struct {
+	PriceRuleID int64
+	Seats       int32
+}
+
+func (q *Queries) ListOrderPriceRuleSeats(ctx context.Context, orderID int64) ([]ListOrderPriceRuleSeatsRow, error) {
+	rows, err := q.db.Query(ctx, listOrderPriceRuleSeats, orderID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListOrderPriceRuleSeatsRow
+	for rows.Next() {
+		var i ListOrderPriceRuleSeatsRow
+		if err := rows.Scan(&i.PriceRuleID, &i.Seats); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listPriceRulesByEvent = `-- name: ListPriceRulesByEvent :many
 SELECT id, event_id, name, audience, price_cents, currency, quota, used_count, reserved_count, sale_starts_at, sale_ends_at, sort_order, created_at, updated_at FROM price_rules
 WHERE event_id = $1
@@ -342,6 +479,312 @@ func (q *Queries) ListPriceRulesByEvent(ctx context.Context, eventID int64) ([]P
 		return nil, err
 	}
 	return items, nil
+}
+
+const markCouponRedemption = `-- name: MarkCouponRedemption :one
+UPDATE coupon_redemptions
+SET state = $1::text, updated_at = now()
+WHERE order_id = $2 AND state = 'RESERVED'
+RETURNING coupon_id
+`
+
+type MarkCouponRedemptionParams struct {
+	ToState string
+	OrderID int64
+}
+
+func (q *Queries) MarkCouponRedemption(ctx context.Context, arg MarkCouponRedemptionParams) (int64, error) {
+	row := q.db.QueryRow(ctx, markCouponRedemption, arg.ToState, arg.OrderID)
+	var coupon_id int64
+	err := row.Scan(&coupon_id)
+	return coupon_id, err
+}
+
+const quoteGetCouponByCode = `-- name: QuoteGetCouponByCode :one
+SELECT id, event_id, discount_type, discount_value, quota, used_count, reserved_count,
+       min_runners, valid_from, valid_until, status
+FROM coupons
+WHERE code = $1
+`
+
+type QuoteGetCouponByCodeRow struct {
+	ID            int64
+	EventID       *int64
+	DiscountType  string
+	DiscountValue int64
+	Quota         int32
+	UsedCount     int32
+	ReservedCount int32
+	MinRunners    *int16
+	ValidFrom     *time.Time
+	ValidUntil    *time.Time
+	Status        string
+}
+
+func (q *Queries) QuoteGetCouponByCode(ctx context.Context, code string) (QuoteGetCouponByCodeRow, error) {
+	row := q.db.QueryRow(ctx, quoteGetCouponByCode, code)
+	var i QuoteGetCouponByCodeRow
+	err := row.Scan(
+		&i.ID,
+		&i.EventID,
+		&i.DiscountType,
+		&i.DiscountValue,
+		&i.Quota,
+		&i.UsedCount,
+		&i.ReservedCount,
+		&i.MinRunners,
+		&i.ValidFrom,
+		&i.ValidUntil,
+		&i.Status,
+	)
+	return i, err
+}
+
+const quoteListCategories = `-- name: QuoteListCategories :many
+SELECT id, min_age
+FROM event_categories
+WHERE event_id = $1 AND id = ANY($2::bigint[])
+`
+
+type QuoteListCategoriesParams struct {
+	EventID     int64
+	CategoryIds []int64
+}
+
+type QuoteListCategoriesRow struct {
+	ID     int64
+	MinAge int16
+}
+
+func (q *Queries) QuoteListCategories(ctx context.Context, arg QuoteListCategoriesParams) ([]QuoteListCategoriesRow, error) {
+	rows, err := q.db.Query(ctx, quoteListCategories, arg.EventID, arg.CategoryIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []QuoteListCategoriesRow
+	for rows.Next() {
+		var i QuoteListCategoriesRow
+		if err := rows.Scan(&i.ID, &i.MinAge); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const quoteListOpenOrderAmounts = `-- name: QuoteListOpenOrderAmounts :many
+SELECT amount_cents
+FROM reg_orders
+WHERE payment_account_id = $1::bigint
+  AND status IN ('PENDING_PAYMENT', 'PROOF_SUBMITTED', 'PROOF_REJECTED')
+`
+
+func (q *Queries) QuoteListOpenOrderAmounts(ctx context.Context, paymentAccountID int64) ([]int64, error) {
+	rows, err := q.db.Query(ctx, quoteListOpenOrderAmounts, paymentAccountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var amount_cents int64
+		if err := rows.Scan(&amount_cents); err != nil {
+			return nil, err
+		}
+		items = append(items, amount_cents)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const quoteListTierCandidates = `-- name: QuoteListTierCandidates :many
+SELECT cpr.category_id,
+       pr.id AS price_rule_id,
+       pr.audience,
+       pr.price_cents,
+       pr.quota,
+       pr.used_count,
+       pr.reserved_count,
+       pr.sale_starts_at,
+       pr.sale_ends_at,
+       pr.sort_order
+FROM category_price_rules cpr
+JOIN price_rules pr ON pr.id = cpr.price_rule_id
+WHERE pr.event_id = $1
+  AND cpr.category_id = ANY($2::bigint[])
+ORDER BY cpr.category_id, pr.id
+`
+
+type QuoteListTierCandidatesParams struct {
+	EventID     int64
+	CategoryIds []int64
+}
+
+type QuoteListTierCandidatesRow struct {
+	CategoryID    int64
+	PriceRuleID   int64
+	Audience      string
+	PriceCents    int64
+	Quota         *int32
+	UsedCount     int32
+	ReservedCount int32
+	SaleStartsAt  *time.Time
+	SaleEndsAt    *time.Time
+	SortOrder     int16
+}
+
+func (q *Queries) QuoteListTierCandidates(ctx context.Context, arg QuoteListTierCandidatesParams) ([]QuoteListTierCandidatesRow, error) {
+	rows, err := q.db.Query(ctx, quoteListTierCandidates, arg.EventID, arg.CategoryIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []QuoteListTierCandidatesRow
+	for rows.Next() {
+		var i QuoteListTierCandidatesRow
+		if err := rows.Scan(
+			&i.CategoryID,
+			&i.PriceRuleID,
+			&i.Audience,
+			&i.PriceCents,
+			&i.Quota,
+			&i.UsedCount,
+			&i.ReservedCount,
+			&i.SaleStartsAt,
+			&i.SaleEndsAt,
+			&i.SortOrder,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const quoteLockPaymentAccount = `-- name: QuoteLockPaymentAccount :exec
+SELECT pg_advisory_xact_lock(7301, $1::int)
+`
+
+func (q *Queries) QuoteLockPaymentAccount(ctx context.Context, paymentAccountID int32) error {
+	_, err := q.db.Exec(ctx, quoteLockPaymentAccount, paymentAccountID)
+	return err
+}
+
+const releaseCategorySeats = `-- name: ReleaseCategorySeats :execrows
+UPDATE event_categories
+SET reserved_count = reserved_count - $1::int
+WHERE id = $2 AND reserved_count >= $1::int
+`
+
+type ReleaseCategorySeatsParams struct {
+	Seats int32
+	ID    int64
+}
+
+func (q *Queries) ReleaseCategorySeats(ctx context.Context, arg ReleaseCategorySeatsParams) (int64, error) {
+	result, err := q.db.Exec(ctx, releaseCategorySeats, arg.Seats, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const releaseCouponUse = `-- name: ReleaseCouponUse :execrows
+UPDATE coupons
+SET reserved_count = reserved_count - 1
+WHERE id = $1 AND reserved_count >= 1
+`
+
+func (q *Queries) ReleaseCouponUse(ctx context.Context, id int64) (int64, error) {
+	result, err := q.db.Exec(ctx, releaseCouponUse, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const releasePriceRuleSeats = `-- name: ReleasePriceRuleSeats :execrows
+UPDATE price_rules
+SET reserved_count = reserved_count - $1::int
+WHERE id = $2 AND reserved_count >= $1::int
+`
+
+type ReleasePriceRuleSeatsParams struct {
+	Seats int32
+	ID    int64
+}
+
+func (q *Queries) ReleasePriceRuleSeats(ctx context.Context, arg ReleasePriceRuleSeatsParams) (int64, error) {
+	result, err := q.db.Exec(ctx, releasePriceRuleSeats, arg.Seats, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const reserveCategorySeats = `-- name: ReserveCategorySeats :execrows
+UPDATE event_categories
+SET reserved_count = reserved_count + $1::int
+WHERE id = $2
+  AND used_count + reserved_count + $1::int <= capacity
+`
+
+type ReserveCategorySeatsParams struct {
+	Seats int32
+	ID    int64
+}
+
+func (q *Queries) ReserveCategorySeats(ctx context.Context, arg ReserveCategorySeatsParams) (int64, error) {
+	result, err := q.db.Exec(ctx, reserveCategorySeats, arg.Seats, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const reserveCouponUse = `-- name: ReserveCouponUse :execrows
+UPDATE coupons
+SET reserved_count = reserved_count + 1
+WHERE id = $1
+  AND status = 'ACTIVE'
+  AND used_count + reserved_count + 1 <= quota
+`
+
+func (q *Queries) ReserveCouponUse(ctx context.Context, id int64) (int64, error) {
+	result, err := q.db.Exec(ctx, reserveCouponUse, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const reservePriceRuleSeats = `-- name: ReservePriceRuleSeats :execrows
+UPDATE price_rules
+SET reserved_count = reserved_count + $1::int
+WHERE id = $2
+  AND (quota IS NULL OR used_count + reserved_count + $1::int <= quota)
+`
+
+type ReservePriceRuleSeatsParams struct {
+	Seats int32
+	ID    int64
+}
+
+func (q *Queries) ReservePriceRuleSeats(ctx context.Context, arg ReservePriceRuleSeatsParams) (int64, error) {
+	result, err := q.db.Exec(ctx, reservePriceRuleSeats, arg.Seats, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const updateCoupon = `-- name: UpdateCoupon :one

@@ -22,6 +22,10 @@
   "COUPON_CODE_TAKEN": "这个优惠码已经存在。",
   "TELEGRAM_AUTH_INVALID": "无法确认你的 Telegram 登录，请关闭后在 Telegram 中重新打开小程序。",
   "CONSENT_INVALID": "同意书已更新或还有条款没有勾选，请刷新后重新确认。",
+  "COUPON_INVALID": "优惠码不可用。",
+  "COUPON_EXHAUSTED": "优惠码已被用完。",
+  "CATEGORY_SOLD_OUT": "该组别名额已满。",
+  "PRICE_TIER_SOLD_OUT": "当前价格档刚刚售罄，请重新确认费用。",
   "field.required": "必填。",
   "field.invalid": "格式不正确。",
   "field.too_long": "不能超过 {max} 个字符。",
@@ -36,5 +40,8 @@
   "field.ends_before_starts": "结束时间必须晚于开始时间。",
   "field.quota_below_taken": "不能少于已占用的 {min} 个名额。",
   "field.coupon_code_format": "3–32 位大写字母、数字、下划线或连字符，例如 EARLY_2026。",
-  "field.percent_range": "百分比必须在 1 到 100 之间。"
+  "field.percent_range": "百分比必须在 1 到 100 之间。",
+  "field.too_young": "比赛当天须年满 {minAge} 岁。",
+  "field.category_unavailable": "该组别当前不可报名。",
+  "field.coupon_invalid": "优惠码不可用。"
 }

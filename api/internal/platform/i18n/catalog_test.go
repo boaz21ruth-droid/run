@@ -60,6 +60,9 @@ func TestEmbeddedCatalogCoversAllCodesAndFieldKeys(t *testing.T) {
 		"field.must_be_positive",
 		"field.cutoff_before_start",
 		"field.category_incomplete",
+		"field.too_young",
+		"field.category_unavailable",
+		"field.coupon_invalid",
 		"field.event_not_published",
 		"field.missing_price_rule",
 		"field.missing_payment_account",
@@ -74,4 +77,5 @@ func TestEmbeddedCatalogCoversAllCodesAndFieldKeys(t *testing.T) {
 		}
 	}
 	assert.Equal(t, "Must be at most 60 characters.", cat.T(EN, "field.too_long", map[string]any{"max": 60}))
+	assert.Equal(t, "Must be at least 16 on race day.", cat.T(EN, "field.too_young", map[string]any{"minAge": 16}))
 }
