@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -171,4 +172,127 @@ func TestAppLogoutRevokesToken(t *testing.T) {
 
 	rec = e.do(t, http.MethodGet, "/api/app/me", nil, bearer(sess.Token))
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
+}
+
+func profileBody() map[string]any {
+	return map[string]any{
+		"fullName":       "Sok Dara",
+		"gender":         "M",
+		"birthDate":      "1990-05-01",
+		"nationality":    "KH",
+		"idType":         "NATIONAL_ID",
+		"idNo":           "N0 1234-5678",
+		"phone":          "+85512345678",
+		"email":          "dara@example.com",
+		"emergencyName":  "Sok Chenda",
+		"emergencyPhone": "+85598765432",
+		"tshirtSize":     "M",
+		"isSelf":         true,
+	}
+}
+
+func assertNoFullIDNo(t *testing.T, rec *httptest.ResponseRecorder) {
+	t.Helper()
+	body := rec.Body.String()
+	assert.NotContains(t, body, "N012345678")
+	assert.NotContains(t, body, "N0 1234-5678")
+	assert.NotContains(t, body, "1234-5678")
+}
+
+func TestAppProfilesCRUDNeverReturnsFullIDNo(t *testing.T) {
+	e := newRunnerEnv(t)
+	auth := bearer(e.loginRunner(t, 10001, "Dara Sok").Token)
+
+	rec := e.do(t, http.MethodPost, "/api/app/profiles", profileBody(), auth)
+	require.Equal(t, http.StatusCreated, rec.Code, rec.Body.String())
+	assertNoFullIDNo(t, rec)
+	var created apigen.RunnerProfile
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &created))
+	assert.Equal(t, "******5678", created.IdNoMasked)
+	assert.True(t, created.IsSelf)
+	assert.Equal(t, "1990-05-01", created.BirthDate.Format(time.DateOnly))
+	assert.Equal(t, apigen.TShirtSize("M"), created.TshirtSize)
+
+	rec = e.do(t, http.MethodGet, "/api/app/profiles", nil, auth)
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	assertNoFullIDNo(t, rec)
+	var list apigen.RunnerProfileList
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &list))
+	require.Len(t, list.Items, 1)
+	assert.Equal(t, created.Id, list.Items[0].Id)
+
+	update := profileBody()
+	delete(update, "idNo")
+	update["fullName"] = "Sok Dara Jr"
+	rec = e.do(t, http.MethodPut, fmt.Sprintf("/api/app/profiles/%d", created.Id), update, auth)
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	assertNoFullIDNo(t, rec)
+	var updated apigen.RunnerProfile
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &updated))
+	assert.Equal(t, "Sok Dara Jr", updated.FullName)
+	assert.Equal(t, "******5678", updated.IdNoMasked)
+
+	rec = e.do(t, http.MethodDelete, fmt.Sprintf("/api/app/profiles/%d", created.Id), nil, auth)
+	require.Equal(t, http.StatusNoContent, rec.Code, rec.Body.String())
+
+	rec = e.do(t, http.MethodGet, "/api/app/profiles", nil, auth)
+	require.Equal(t, http.StatusOK, rec.Code)
+	assert.JSONEq(t, `{"items":[]}`, rec.Body.String())
+}
+
+func TestAppProfilesOfAnotherRunnerReturn404(t *testing.T) {
+	e := newRunnerEnv(t)
+	owner := bearer(e.loginRunner(t, 10001, "Dara Sok").Token)
+	other := bearer(e.loginRunner(t, 10002, "Sokha Chan").Token)
+	rec := e.do(t, http.MethodPost, "/api/app/profiles", profileBody(), owner)
+	require.Equal(t, http.StatusCreated, rec.Code, rec.Body.String())
+	var created apigen.RunnerProfile
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &created))
+	path := fmt.Sprintf("/api/app/profiles/%d", created.Id)
+
+	rec = e.do(t, http.MethodPut, path, profileBody(), other)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+	assert.Equal(t, apperr.CodeNotFound, decodeRunnerError(t, rec).Error.Code)
+
+	rec = e.do(t, http.MethodDelete, path, nil, other)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+	assert.Equal(t, apperr.CodeNotFound, decodeRunnerError(t, rec).Error.Code)
+
+	rec = e.do(t, http.MethodGet, "/api/app/profiles", nil, other)
+	require.Equal(t, http.StatusOK, rec.Code)
+	assert.JSONEq(t, `{"items":[]}`, rec.Body.String())
+
+	rec = e.do(t, http.MethodGet, "/api/app/profiles", nil, owner)
+	require.Equal(t, http.StatusOK, rec.Code)
+	assert.Contains(t, rec.Body.String(), `"fullName":"Sok Dara"`)
+}
+
+func TestAppCreateProfileReturnsLocalizedFieldErrors(t *testing.T) {
+	e := newRunnerEnv(t)
+	auth := bearer(e.loginRunner(t, 10001, "Dara Sok").Token)
+	body := profileBody()
+	body["phone"] = "012345678"
+	body["fullName"] = "   "
+	delete(body, "idNo")
+
+	rec := e.do(t, http.MethodPost, "/api/app/profiles?lang=en", body, auth)
+
+	require.Equal(t, http.StatusUnprocessableEntity, rec.Code, rec.Body.String())
+	resp := decodeRunnerError(t, rec)
+	assert.Equal(t, apperr.CodeValidation, resp.Error.Code)
+	require.NotNil(t, resp.Error.Fields)
+	assert.Equal(t, map[string]string{
+		"phone":    e.catalog.T(i18n.EN, "field.invalid", nil),
+		"fullName": e.catalog.T(i18n.EN, "field.required", nil),
+		"idNo":     e.catalog.T(i18n.EN, "field.required", nil),
+	}, *resp.Error.Fields)
+}
+
+func TestAppProfilesRequireRunnerToken(t *testing.T) {
+	e := newRunnerEnv(t)
+
+	rec := e.do(t, http.MethodGet, "/api/app/profiles", nil, nil)
+
+	assert.Equal(t, http.StatusUnauthorized, rec.Code)
+	assert.Equal(t, apperr.CodeUnauthenticated, decodeRunnerError(t, rec).Error.Code)
 }

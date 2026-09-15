@@ -186,6 +186,48 @@ func (e DiscountType) Valid() bool {
 	}
 }
 
+// Defines values for Gender.
+const (
+	GenderF Gender = "F"
+	GenderM Gender = "M"
+	GenderX Gender = "X"
+)
+
+// Valid indicates whether the value is a known member of the Gender enum.
+func (e Gender) Valid() bool {
+	switch e {
+	case GenderF:
+		return true
+	case GenderM:
+		return true
+	case GenderX:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for IdType.
+const (
+	IdTypeNATIONALID IdType = "NATIONAL_ID"
+	IdTypeOTHER      IdType = "OTHER"
+	IdTypePASSPORT   IdType = "PASSPORT"
+)
+
+// Valid indicates whether the value is a known member of the IdType enum.
+func (e IdType) Valid() bool {
+	switch e {
+	case IdTypeNATIONALID:
+		return true
+	case IdTypeOTHER:
+		return true
+	case IdTypePASSPORT:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PaymentAccountScope.
 const (
 	PaymentAccountScopeALL          PaymentAccountScope = "ALL"
@@ -279,6 +321,36 @@ func (e Role) Valid() bool {
 	case RoleRACESUPERVISOR:
 		return true
 	case RoleSUPPORT:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TShirtSize.
+const (
+	TShirtSizeL   TShirtSize = "L"
+	TShirtSizeM   TShirtSize = "M"
+	TShirtSizeS   TShirtSize = "S"
+	TShirtSizeXL  TShirtSize = "XL"
+	TShirtSizeXS  TShirtSize = "XS"
+	TShirtSizeXXL TShirtSize = "XXL"
+)
+
+// Valid indicates whether the value is a known member of the TShirtSize enum.
+func (e TShirtSize) Valid() bool {
+	switch e {
+	case TShirtSizeL:
+		return true
+	case TShirtSizeM:
+		return true
+	case TShirtSizeS:
+		return true
+	case TShirtSizeXL:
+		return true
+	case TShirtSizeXS:
+		return true
+	case TShirtSizeXXL:
 		return true
 	default:
 		return false
@@ -470,10 +542,16 @@ type ErrorResponse struct {
 	} `json:"error"`
 }
 
+// Gender defines model for Gender.
+type Gender string
+
 // Health defines model for Health.
 type Health struct {
 	Status string `json:"status"`
 }
+
+// IdType defines model for IdType.
+type IdType string
 
 // LocalizedText defines model for LocalizedText.
 type LocalizedText struct {
@@ -559,6 +637,28 @@ type PriceRuleList struct {
 	Items []PriceRule `json:"items"`
 }
 
+// ProfileInput defines model for ProfileInput.
+type ProfileInput struct {
+	BirthDate      openapi_types.Date `json:"birthDate"`
+	Email          *string            `json:"email,omitempty"`
+	EmergencyName  string             `json:"emergencyName"`
+	EmergencyPhone string             `json:"emergencyPhone"`
+	FullName       string             `json:"fullName"`
+	Gender         Gender             `json:"gender"`
+
+	// IdNo 新建时必填；修改时省略或为空串表示保留原证件号
+	IdNo   *string `json:"idNo,omitempty"`
+	IdType IdType  `json:"idType"`
+	IsSelf *bool   `json:"isSelf,omitempty"`
+
+	// Nationality ISO 3166-1 alpha-2，如 KH
+	Nationality string `json:"nationality"`
+
+	// Phone E.164，如 +85512345678
+	Phone      string     `json:"phone"`
+	TshirtSize TShirtSize `json:"tshirtSize"`
+}
+
 // PublicCategory defines model for PublicCategory.
 type PublicCategory struct {
 	Capacity  int32     `json:"capacity"`
@@ -586,6 +686,32 @@ type PublicEventList struct {
 // Role defines model for Role.
 type Role string
 
+// RunnerProfile defines model for RunnerProfile.
+type RunnerProfile struct {
+	BirthDate openapi_types.Date `json:"birthDate"`
+
+	// Email 未填写时为空串
+	Email          string `json:"email"`
+	EmergencyName  string `json:"emergencyName"`
+	EmergencyPhone string `json:"emergencyPhone"`
+	FullName       string `json:"fullName"`
+	Gender         Gender `json:"gender"`
+	Id             int64  `json:"id"`
+
+	// IdNoMasked 只保留后 4 位，其余为 *
+	IdNoMasked  string     `json:"idNoMasked"`
+	IdType      IdType     `json:"idType"`
+	IsSelf      bool       `json:"isSelf"`
+	Nationality string     `json:"nationality"`
+	Phone       string     `json:"phone"`
+	TshirtSize  TShirtSize `json:"tshirtSize"`
+}
+
+// RunnerProfileList defines model for RunnerProfileList.
+type RunnerProfileList struct {
+	Items []RunnerProfile `json:"items"`
+}
+
 // Staff defines model for Staff.
 type Staff struct {
 	FullName string `json:"fullName"`
@@ -593,6 +719,9 @@ type Staff struct {
 	Role     Role   `json:"role"`
 	Username string `json:"username"`
 }
+
+// TShirtSize defines model for TShirtSize.
+type TShirtSize string
 
 // UpdateCouponRequest defines model for UpdateCouponRequest.
 type UpdateCouponRequest struct {
@@ -687,6 +816,12 @@ type AdminUpdatePriceRuleJSONRequestBody = PriceRuleInput
 // AppLoginTelegramJSONRequestBody defines body for AppLoginTelegram for application/json ContentType.
 type AppLoginTelegramJSONRequestBody = AppLoginRequest
 
+// AppCreateProfileJSONRequestBody defines body for AppCreateProfile for application/json ContentType.
+type AppCreateProfileJSONRequestBody = ProfileInput
+
+// AppUpdateProfileJSONRequestBody defines body for AppUpdateProfile for application/json ContentType.
+type AppUpdateProfileJSONRequestBody = ProfileInput
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// AdminLogin 员工登录
@@ -749,6 +884,18 @@ type ServerInterface interface {
 	// AppGetMe 当前跑者
 	// (GET /app/me)
 	AppGetMe(c *gin.Context)
+	// AppListProfiles 当前跑者的常用参赛人（证件号只返回后 4 位）
+	// (GET /app/profiles)
+	AppListProfiles(c *gin.Context)
+	// AppCreateProfile 新增常用参赛人
+	// (POST /app/profiles)
+	AppCreateProfile(c *gin.Context)
+	// AppDeleteProfile 删除常用参赛人
+	// (DELETE /app/profiles/{id})
+	AppDeleteProfile(c *gin.Context, id int64)
+	// AppUpdateProfile 修改常用参赛人；idNo 省略或为空串时保留原证件号
+	// (PUT /app/profiles/{id})
+	AppUpdateProfile(c *gin.Context, id int64)
 	// ListPublicEvents 已发布且公开展示的赛事列表，文案按请求语言返回
 	// (GET /events)
 	ListPublicEvents(c *gin.Context)
@@ -1145,6 +1292,82 @@ func (siw *ServerInterfaceWrapper) AppGetMe(c *gin.Context) {
 	siw.Handler.AppGetMe(c)
 }
 
+// AppListProfiles operation middleware
+func (siw *ServerInterfaceWrapper) AppListProfiles(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppListProfiles(c)
+}
+
+// AppCreateProfile operation middleware
+func (siw *ServerInterfaceWrapper) AppCreateProfile(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppCreateProfile(c)
+}
+
+// AppDeleteProfile operation middleware
+func (siw *ServerInterfaceWrapper) AppDeleteProfile(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppDeleteProfile(c, id)
+}
+
+// AppUpdateProfile operation middleware
+func (siw *ServerInterfaceWrapper) AppUpdateProfile(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppUpdateProfile(c, id)
+}
+
 // ListPublicEvents operation middleware
 func (siw *ServerInterfaceWrapper) ListPublicEvents(c *gin.Context) {
 
@@ -1286,6 +1509,10 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/app/auth/telegram", wrapper.AppLoginTelegram)
 	router.POST(options.BaseURL+"/app/auth/logout", wrapper.AppLogout)
 	router.GET(options.BaseURL+"/app/me", wrapper.AppGetMe)
+	router.GET(options.BaseURL+"/app/profiles", wrapper.AppListProfiles)
+	router.POST(options.BaseURL+"/app/profiles", wrapper.AppCreateProfile)
+	router.DELETE(options.BaseURL+"/app/profiles/:id", wrapper.AppDeleteProfile)
+	router.PUT(options.BaseURL+"/app/profiles/:id", wrapper.AppUpdateProfile)
 }
 
 type AdminLoginRequestObject struct {
@@ -2055,6 +2282,156 @@ func (response AppGetMedefaultJSONResponse) VisitAppGetMeResponse(w http.Respons
 	return err
 }
 
+type AppListProfilesRequestObject struct {
+}
+
+type AppListProfilesResponseObject interface {
+	VisitAppListProfilesResponse(w http.ResponseWriter) error
+}
+
+type AppListProfiles200JSONResponse RunnerProfileList
+
+func (response AppListProfiles200JSONResponse) VisitAppListProfilesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppListProfilesdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppListProfilesdefaultJSONResponse) VisitAppListProfilesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppCreateProfileRequestObject struct {
+	Body *AppCreateProfileJSONRequestBody
+}
+
+type AppCreateProfileResponseObject interface {
+	VisitAppCreateProfileResponse(w http.ResponseWriter) error
+}
+
+type AppCreateProfile201JSONResponse RunnerProfile
+
+func (response AppCreateProfile201JSONResponse) VisitAppCreateProfileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppCreateProfiledefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppCreateProfiledefaultJSONResponse) VisitAppCreateProfileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppDeleteProfileRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AppDeleteProfileResponseObject interface {
+	VisitAppDeleteProfileResponse(w http.ResponseWriter) error
+}
+
+type AppDeleteProfile204Response struct {
+}
+
+func (response AppDeleteProfile204Response) VisitAppDeleteProfileResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type AppDeleteProfiledefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppDeleteProfiledefaultJSONResponse) VisitAppDeleteProfileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppUpdateProfileRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AppUpdateProfileJSONRequestBody
+}
+
+type AppUpdateProfileResponseObject interface {
+	VisitAppUpdateProfileResponse(w http.ResponseWriter) error
+}
+
+type AppUpdateProfile200JSONResponse RunnerProfile
+
+func (response AppUpdateProfile200JSONResponse) VisitAppUpdateProfileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppUpdateProfiledefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppUpdateProfiledefaultJSONResponse) VisitAppUpdateProfileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListPublicEventsRequestObject struct {
 }
 
@@ -2330,6 +2707,18 @@ type StrictServerInterface interface {
 	// AppGetMe 当前跑者
 	// (GET /app/me)
 	AppGetMe(ctx context.Context, request AppGetMeRequestObject) (AppGetMeResponseObject, error)
+	// AppListProfiles 当前跑者的常用参赛人（证件号只返回后 4 位）
+	// (GET /app/profiles)
+	AppListProfiles(ctx context.Context, request AppListProfilesRequestObject) (AppListProfilesResponseObject, error)
+	// AppCreateProfile 新增常用参赛人
+	// (POST /app/profiles)
+	AppCreateProfile(ctx context.Context, request AppCreateProfileRequestObject) (AppCreateProfileResponseObject, error)
+	// AppDeleteProfile 删除常用参赛人
+	// (DELETE /app/profiles/{id})
+	AppDeleteProfile(ctx context.Context, request AppDeleteProfileRequestObject) (AppDeleteProfileResponseObject, error)
+	// AppUpdateProfile 修改常用参赛人；idNo 省略或为空串时保留原证件号
+	// (PUT /app/profiles/{id})
+	AppUpdateProfile(ctx context.Context, request AppUpdateProfileRequestObject) (AppUpdateProfileResponseObject, error)
 	// ListPublicEvents 已发布且公开展示的赛事列表，文案按请求语言返回
 	// (GET /events)
 	ListPublicEvents(ctx context.Context, request ListPublicEventsRequestObject) (ListPublicEventsResponseObject, error)
@@ -2965,6 +3354,120 @@ func (sh *strictHandler) AppGetMe(ctx *gin.Context) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AppGetMeResponseObject); ok {
 		if err := validResponse.VisitAppGetMeResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppListProfiles operation middleware
+func (sh *strictHandler) AppListProfiles(ctx *gin.Context) {
+	var request AppListProfilesRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppListProfiles(ctx, request.(AppListProfilesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppListProfiles")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppListProfilesResponseObject); ok {
+		if err := validResponse.VisitAppListProfilesResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppCreateProfile operation middleware
+func (sh *strictHandler) AppCreateProfile(ctx *gin.Context) {
+	var request AppCreateProfileRequestObject
+
+	var body AppCreateProfileJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppCreateProfile(ctx, request.(AppCreateProfileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppCreateProfile")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppCreateProfileResponseObject); ok {
+		if err := validResponse.VisitAppCreateProfileResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppDeleteProfile operation middleware
+func (sh *strictHandler) AppDeleteProfile(ctx *gin.Context, id int64) {
+	var request AppDeleteProfileRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppDeleteProfile(ctx, request.(AppDeleteProfileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppDeleteProfile")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppDeleteProfileResponseObject); ok {
+		if err := validResponse.VisitAppDeleteProfileResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppUpdateProfile operation middleware
+func (sh *strictHandler) AppUpdateProfile(ctx *gin.Context, id int64) {
+	var request AppUpdateProfileRequestObject
+
+	request.Id = id
+
+	var body AppUpdateProfileJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppUpdateProfile(ctx, request.(AppUpdateProfileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppUpdateProfile")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppUpdateProfileResponseObject); ok {
+		if err := validResponse.VisitAppUpdateProfileResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	openapi_types "github.com/oapi-codegen/runtime/types"
+
 	"werun/api/internal/httpapi/apigen"
 	"werun/api/internal/platform/apperr"
 	"werun/api/internal/platform/httpx"
@@ -69,5 +71,100 @@ func toAppUser(u User) apigen.AppUser {
 		TelegramUsername: u.TelegramUsername,
 		DisplayName:      u.DisplayName,
 		Locale:           apigen.AppUserLocale(u.Locale),
+	}
+}
+
+func (h *Handlers) AppListProfiles(ctx context.Context, _ apigen.AppListProfilesRequestObject) (apigen.AppListProfilesResponseObject, error) {
+	u, err := currentUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	profiles, err := h.svc.ListProfiles(ctx, u)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]apigen.RunnerProfile, 0, len(profiles))
+	for _, p := range profiles {
+		items = append(items, toRunnerProfile(p))
+	}
+	return apigen.AppListProfiles200JSONResponse{Items: items}, nil
+}
+
+func (h *Handlers) AppCreateProfile(ctx context.Context, req apigen.AppCreateProfileRequestObject) (apigen.AppCreateProfileResponseObject, error) {
+	u, err := currentUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if req.Body == nil {
+		return nil, apperr.New(http.StatusBadRequest, apperr.CodeBadRequest)
+	}
+	data, isSelf := profileInputFromAPI(*req.Body)
+	p, err := h.svc.CreateProfile(ctx, u, data, isSelf)
+	if err != nil {
+		return nil, err
+	}
+	return apigen.AppCreateProfile201JSONResponse(toRunnerProfile(p)), nil
+}
+
+func (h *Handlers) AppUpdateProfile(ctx context.Context, req apigen.AppUpdateProfileRequestObject) (apigen.AppUpdateProfileResponseObject, error) {
+	u, err := currentUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if req.Body == nil {
+		return nil, apperr.New(http.StatusBadRequest, apperr.CodeBadRequest)
+	}
+	data, isSelf := profileInputFromAPI(*req.Body)
+	p, err := h.svc.UpdateProfile(ctx, u, req.Id, data, isSelf)
+	if err != nil {
+		return nil, err
+	}
+	return apigen.AppUpdateProfile200JSONResponse(toRunnerProfile(p)), nil
+}
+
+func (h *Handlers) AppDeleteProfile(ctx context.Context, req apigen.AppDeleteProfileRequestObject) (apigen.AppDeleteProfileResponseObject, error) {
+	u, err := currentUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := h.svc.DeleteProfile(ctx, u, req.Id); err != nil {
+		return nil, err
+	}
+	return apigen.AppDeleteProfile204Response{}, nil
+}
+
+func profileInputFromAPI(b apigen.ProfileInput) (ProfileData, bool) {
+	data := ProfileData{
+		FullName:       b.FullName,
+		Gender:         string(b.Gender),
+		BirthDate:      b.BirthDate.Time,
+		Nationality:    b.Nationality,
+		IDType:         string(b.IdType),
+		IDNo:           derefString(b.IdNo),
+		Phone:          b.Phone,
+		Email:          derefString(b.Email),
+		EmergencyName:  b.EmergencyName,
+		EmergencyPhone: b.EmergencyPhone,
+		TShirtSize:     string(b.TshirtSize),
+	}
+	return data, b.IsSelf != nil && *b.IsSelf
+}
+
+// toRunnerProfile 只输出掩码后的证件号。
+func toRunnerProfile(p Profile) apigen.RunnerProfile {
+	return apigen.RunnerProfile{
+		Id:             p.ID,
+		FullName:       p.Data.FullName,
+		Gender:         apigen.Gender(p.Data.Gender),
+		BirthDate:      openapi_types.Date{Time: p.Data.BirthDate},
+		Nationality:    p.Data.Nationality,
+		IdType:         apigen.IdType(p.Data.IDType),
+		IdNoMasked:     p.IDNoMasked,
+		Phone:          p.Data.Phone,
+		Email:          p.Data.Email,
+		EmergencyName:  p.Data.EmergencyName,
+		EmergencyPhone: p.Data.EmergencyPhone,
+		TshirtSize:     apigen.TShirtSize(p.Data.TShirtSize),
+		IsSelf:         p.IsSelf,
 	}
 }

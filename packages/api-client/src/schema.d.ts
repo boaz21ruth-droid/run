@@ -365,6 +365,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/app/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 当前跑者的常用参赛人（证件号只返回后 4 位） */
+        get: operations["appListProfiles"];
+        put?: never;
+        /** 新增常用参赛人 */
+        post: operations["appCreateProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/app/profiles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 修改常用参赛人；idNo 省略或为空串时保留原证件号 */
+        put: operations["appUpdateProfile"];
+        post?: never;
+        /** 删除常用参赛人 */
+        delete: operations["appDeleteProfile"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -661,6 +697,53 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
             user: components["schemas"]["AppUser"];
+        };
+        /** @enum {string} */
+        Gender: "M" | "F" | "X";
+        /** @enum {string} */
+        IdType: "NATIONAL_ID" | "PASSPORT" | "OTHER";
+        /** @enum {string} */
+        TShirtSize: "XS" | "S" | "M" | "L" | "XL" | "XXL";
+        ProfileInput: {
+            fullName: string;
+            gender: components["schemas"]["Gender"];
+            /** Format: date */
+            birthDate: string;
+            /** @description ISO 3166-1 alpha-2，如 KH */
+            nationality: string;
+            idType: components["schemas"]["IdType"];
+            /** @description 新建时必填；修改时省略或为空串表示保留原证件号 */
+            idNo?: string;
+            /** @description E.164，如 +85512345678 */
+            phone: string;
+            email?: string;
+            emergencyName: string;
+            emergencyPhone: string;
+            tshirtSize: components["schemas"]["TShirtSize"];
+            /** @default false */
+            isSelf: boolean;
+        };
+        RunnerProfile: {
+            /** Format: int64 */
+            id: number;
+            fullName: string;
+            gender: components["schemas"]["Gender"];
+            /** Format: date */
+            birthDate: string;
+            nationality: string;
+            idType: components["schemas"]["IdType"];
+            /** @description 只保留后 4 位，其余为 * */
+            idNoMasked: string;
+            phone: string;
+            /** @description 未填写时为空串 */
+            email: string;
+            emergencyName: string;
+            emergencyPhone: string;
+            tshirtSize: components["schemas"]["TShirtSize"];
+            isSelf: boolean;
+        };
+        RunnerProfileList: {
+            items: components["schemas"]["RunnerProfile"][];
         };
     };
     responses: never;
@@ -1478,6 +1561,132 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AppUser"];
                 };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appListProfiles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 常用参赛人列表，本人排在最前 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunnerProfileList"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appCreateProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileInput"];
+            };
+        };
+        responses: {
+            /** @description 已创建 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunnerProfile"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appUpdateProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileInput"];
+            };
+        };
+        responses: {
+            /** @description 已修改 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunnerProfile"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appDeleteProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 已删除 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description 错误 */
             default: {

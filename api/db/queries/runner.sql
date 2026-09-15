@@ -29,3 +29,55 @@ WHERE s.subject_type = 'USER'
 -- name: RevokeUserSession :exec
 UPDATE sessions SET revoked_at = @revoked_at::timestamptz
 WHERE subject_type = 'USER' AND token_hash = @token_hash AND revoked_at IS NULL;
+
+-- name: LockUser :one
+SELECT id FROM users WHERE id = @id FOR UPDATE;
+
+-- name: ListProfiles :many
+SELECT * FROM runner_profiles
+WHERE user_id = @user_id
+ORDER BY is_self DESC, id;
+
+-- name: GetProfile :one
+SELECT * FROM runner_profiles
+WHERE id = @id AND user_id = @user_id;
+
+-- name: GetProfileForUpdate :one
+SELECT * FROM runner_profiles
+WHERE id = @id AND user_id = @user_id
+FOR UPDATE;
+
+-- name: InsertProfile :one
+INSERT INTO runner_profiles (
+  user_id, full_name, gender, birth_date, nationality, id_type, id_no_enc, id_no_hash,
+  phone_e164, email, emergency_name, emergency_phone, tshirt_size, is_self
+) VALUES (
+  @user_id, @full_name, @gender, @birth_date, @nationality, @id_type::text, @id_no_enc::bytea, @id_no_hash::bytea,
+  @phone_e164::text, sqlc.narg(email), @emergency_name::text, @emergency_phone::text, @tshirt_size::text, @is_self
+)
+RETURNING *;
+
+-- name: UpdateProfile :one
+UPDATE runner_profiles
+SET full_name       = @full_name,
+    gender          = @gender,
+    birth_date      = @birth_date,
+    nationality     = @nationality,
+    id_type         = @id_type::text,
+    id_no_enc       = @id_no_enc::bytea,
+    id_no_hash      = @id_no_hash::bytea,
+    phone_e164      = @phone_e164::text,
+    email           = sqlc.narg(email),
+    emergency_name  = @emergency_name::text,
+    emergency_phone = @emergency_phone::text,
+    tshirt_size     = @tshirt_size::text,
+    is_self         = @is_self
+WHERE id = @id AND user_id = @user_id
+RETURNING *;
+
+-- name: ClearSelfProfiles :exec
+UPDATE runner_profiles SET is_self = false
+WHERE user_id = @user_id AND is_self AND id <> @except_id;
+
+-- name: DeleteProfile :execrows
+DELETE FROM runner_profiles WHERE id = @id AND user_id = @user_id;

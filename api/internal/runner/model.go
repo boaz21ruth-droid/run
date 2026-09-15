@@ -24,3 +24,22 @@ type TelegramUser struct {
 	ID                                          int64
 	FirstName, LastName, Username, LanguageCode string
 }
+
+// ProfileData 是一位参赛人的资料。
+type ProfileData struct {
+	FullName, Gender              string    // Gender: M | F | X
+	BirthDate                     time.Time // 日期，UTC 零点
+	Nationality                   string    // ISO 3166-1 alpha-2 大写
+	IDType, IDNo                  string    // NATIONAL_ID | PASSPORT | OTHER；IDNo 为原始输入
+	Phone, Email                  string    // Phone 为 E.164；Email 可空
+	EmergencyName, EmergencyPhone string
+	TShirtSize                    string // XS | S | M | L | XL | XXL
+}
+
+// Profile 是常用参赛人。Data.IDNo 恒为空串，只通过 IDNoMasked 展示后 4 位。
+type Profile struct {
+	ID         int64
+	Data       ProfileData
+	IDNoMasked string
+	IsSelf     bool
+}

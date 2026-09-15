@@ -11,6 +11,109 @@ import (
 	"time"
 )
 
+const clearSelfProfiles = `-- name: ClearSelfProfiles :exec
+UPDATE runner_profiles SET is_self = false
+WHERE user_id = $1 AND is_self AND id <> $2
+`
+
+type ClearSelfProfilesParams struct {
+	UserID   int64
+	ExceptID int64
+}
+
+func (q *Queries) ClearSelfProfiles(ctx context.Context, arg ClearSelfProfilesParams) error {
+	_, err := q.db.Exec(ctx, clearSelfProfiles, arg.UserID, arg.ExceptID)
+	return err
+}
+
+const deleteProfile = `-- name: DeleteProfile :execrows
+DELETE FROM runner_profiles WHERE id = $1 AND user_id = $2
+`
+
+type DeleteProfileParams struct {
+	ID     int64
+	UserID int64
+}
+
+func (q *Queries) DeleteProfile(ctx context.Context, arg DeleteProfileParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteProfile, arg.ID, arg.UserID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const getProfile = `-- name: GetProfile :one
+SELECT id, user_id, full_name, gender, birth_date, nationality, id_type, id_no_enc, id_no_hash, phone_e164, email, emergency_name, emergency_phone, tshirt_size, is_self, created_at, updated_at FROM runner_profiles
+WHERE id = $1 AND user_id = $2
+`
+
+type GetProfileParams struct {
+	ID     int64
+	UserID int64
+}
+
+func (q *Queries) GetProfile(ctx context.Context, arg GetProfileParams) (RunnerProfile, error) {
+	row := q.db.QueryRow(ctx, getProfile, arg.ID, arg.UserID)
+	var i RunnerProfile
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.FullName,
+		&i.Gender,
+		&i.BirthDate,
+		&i.Nationality,
+		&i.IDType,
+		&i.IDNoEnc,
+		&i.IDNoHash,
+		&i.PhoneE164,
+		&i.Email,
+		&i.EmergencyName,
+		&i.EmergencyPhone,
+		&i.TshirtSize,
+		&i.IsSelf,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getProfileForUpdate = `-- name: GetProfileForUpdate :one
+SELECT id, user_id, full_name, gender, birth_date, nationality, id_type, id_no_enc, id_no_hash, phone_e164, email, emergency_name, emergency_phone, tshirt_size, is_self, created_at, updated_at FROM runner_profiles
+WHERE id = $1 AND user_id = $2
+FOR UPDATE
+`
+
+type GetProfileForUpdateParams struct {
+	ID     int64
+	UserID int64
+}
+
+func (q *Queries) GetProfileForUpdate(ctx context.Context, arg GetProfileForUpdateParams) (RunnerProfile, error) {
+	row := q.db.QueryRow(ctx, getProfileForUpdate, arg.ID, arg.UserID)
+	var i RunnerProfile
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.FullName,
+		&i.Gender,
+		&i.BirthDate,
+		&i.Nationality,
+		&i.IDType,
+		&i.IDNoEnc,
+		&i.IDNoHash,
+		&i.PhoneE164,
+		&i.Email,
+		&i.EmergencyName,
+		&i.EmergencyPhone,
+		&i.TshirtSize,
+		&i.IsSelf,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getUserSession = `-- name: GetUserSession :one
 SELECT s.expires_at,
        s.revoked_at,
@@ -53,6 +156,74 @@ func (q *Queries) GetUserSession(ctx context.Context, tokenHash []byte) (GetUser
 	return i, err
 }
 
+const insertProfile = `-- name: InsertProfile :one
+INSERT INTO runner_profiles (
+  user_id, full_name, gender, birth_date, nationality, id_type, id_no_enc, id_no_hash,
+  phone_e164, email, emergency_name, emergency_phone, tshirt_size, is_self
+) VALUES (
+  $1, $2, $3, $4, $5, $6::text, $7::bytea, $8::bytea,
+  $9::text, $10, $11::text, $12::text, $13::text, $14
+)
+RETURNING id, user_id, full_name, gender, birth_date, nationality, id_type, id_no_enc, id_no_hash, phone_e164, email, emergency_name, emergency_phone, tshirt_size, is_self, created_at, updated_at
+`
+
+type InsertProfileParams struct {
+	UserID         int64
+	FullName       string
+	Gender         string
+	BirthDate      time.Time
+	Nationality    string
+	IDType         string
+	IDNoEnc        []byte
+	IDNoHash       []byte
+	PhoneE164      string
+	Email          *string
+	EmergencyName  string
+	EmergencyPhone string
+	TshirtSize     string
+	IsSelf         bool
+}
+
+func (q *Queries) InsertProfile(ctx context.Context, arg InsertProfileParams) (RunnerProfile, error) {
+	row := q.db.QueryRow(ctx, insertProfile,
+		arg.UserID,
+		arg.FullName,
+		arg.Gender,
+		arg.BirthDate,
+		arg.Nationality,
+		arg.IDType,
+		arg.IDNoEnc,
+		arg.IDNoHash,
+		arg.PhoneE164,
+		arg.Email,
+		arg.EmergencyName,
+		arg.EmergencyPhone,
+		arg.TshirtSize,
+		arg.IsSelf,
+	)
+	var i RunnerProfile
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.FullName,
+		&i.Gender,
+		&i.BirthDate,
+		&i.Nationality,
+		&i.IDType,
+		&i.IDNoEnc,
+		&i.IDNoHash,
+		&i.PhoneE164,
+		&i.Email,
+		&i.EmergencyName,
+		&i.EmergencyPhone,
+		&i.TshirtSize,
+		&i.IsSelf,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const insertUserSession = `-- name: InsertUserSession :exec
 INSERT INTO sessions (subject_type, subject_id, token_hash, expires_at, ip, user_agent, created_at)
 VALUES ('USER', $1, $2, $3, $4, $5, $6)
@@ -79,6 +250,61 @@ func (q *Queries) InsertUserSession(ctx context.Context, arg InsertUserSessionPa
 	return err
 }
 
+const listProfiles = `-- name: ListProfiles :many
+SELECT id, user_id, full_name, gender, birth_date, nationality, id_type, id_no_enc, id_no_hash, phone_e164, email, emergency_name, emergency_phone, tshirt_size, is_self, created_at, updated_at FROM runner_profiles
+WHERE user_id = $1
+ORDER BY is_self DESC, id
+`
+
+func (q *Queries) ListProfiles(ctx context.Context, userID int64) ([]RunnerProfile, error) {
+	rows, err := q.db.Query(ctx, listProfiles, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RunnerProfile
+	for rows.Next() {
+		var i RunnerProfile
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.FullName,
+			&i.Gender,
+			&i.BirthDate,
+			&i.Nationality,
+			&i.IDType,
+			&i.IDNoEnc,
+			&i.IDNoHash,
+			&i.PhoneE164,
+			&i.Email,
+			&i.EmergencyName,
+			&i.EmergencyPhone,
+			&i.TshirtSize,
+			&i.IsSelf,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const lockUser = `-- name: LockUser :one
+SELECT id FROM users WHERE id = $1 FOR UPDATE
+`
+
+func (q *Queries) LockUser(ctx context.Context, id int64) (int64, error) {
+	row := q.db.QueryRow(ctx, lockUser, id)
+	var id_2 int64
+	err := row.Scan(&id_2)
+	return id_2, err
+}
+
 const revokeUserSession = `-- name: RevokeUserSession :exec
 UPDATE sessions SET revoked_at = $1::timestamptz
 WHERE subject_type = 'USER' AND token_hash = $2 AND revoked_at IS NULL
@@ -92,6 +318,84 @@ type RevokeUserSessionParams struct {
 func (q *Queries) RevokeUserSession(ctx context.Context, arg RevokeUserSessionParams) error {
 	_, err := q.db.Exec(ctx, revokeUserSession, arg.RevokedAt, arg.TokenHash)
 	return err
+}
+
+const updateProfile = `-- name: UpdateProfile :one
+UPDATE runner_profiles
+SET full_name       = $1,
+    gender          = $2,
+    birth_date      = $3,
+    nationality     = $4,
+    id_type         = $5::text,
+    id_no_enc       = $6::bytea,
+    id_no_hash      = $7::bytea,
+    phone_e164      = $8::text,
+    email           = $9,
+    emergency_name  = $10::text,
+    emergency_phone = $11::text,
+    tshirt_size     = $12::text,
+    is_self         = $13
+WHERE id = $14 AND user_id = $15
+RETURNING id, user_id, full_name, gender, birth_date, nationality, id_type, id_no_enc, id_no_hash, phone_e164, email, emergency_name, emergency_phone, tshirt_size, is_self, created_at, updated_at
+`
+
+type UpdateProfileParams struct {
+	FullName       string
+	Gender         string
+	BirthDate      time.Time
+	Nationality    string
+	IDType         string
+	IDNoEnc        []byte
+	IDNoHash       []byte
+	PhoneE164      string
+	Email          *string
+	EmergencyName  string
+	EmergencyPhone string
+	TshirtSize     string
+	IsSelf         bool
+	ID             int64
+	UserID         int64
+}
+
+func (q *Queries) UpdateProfile(ctx context.Context, arg UpdateProfileParams) (RunnerProfile, error) {
+	row := q.db.QueryRow(ctx, updateProfile,
+		arg.FullName,
+		arg.Gender,
+		arg.BirthDate,
+		arg.Nationality,
+		arg.IDType,
+		arg.IDNoEnc,
+		arg.IDNoHash,
+		arg.PhoneE164,
+		arg.Email,
+		arg.EmergencyName,
+		arg.EmergencyPhone,
+		arg.TshirtSize,
+		arg.IsSelf,
+		arg.ID,
+		arg.UserID,
+	)
+	var i RunnerProfile
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.FullName,
+		&i.Gender,
+		&i.BirthDate,
+		&i.Nationality,
+		&i.IDType,
+		&i.IDNoEnc,
+		&i.IDNoHash,
+		&i.PhoneE164,
+		&i.Email,
+		&i.EmergencyName,
+		&i.EmergencyPhone,
+		&i.TshirtSize,
+		&i.IsSelf,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const upsertTelegramUser = `-- name: UpsertTelegramUser :one
