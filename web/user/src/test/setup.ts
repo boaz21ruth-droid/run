@@ -1,6 +1,9 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
+
+// CI 机器核数少，页面首屏渲染可能超过 findBy* 默认的 1 秒
+configure({ asyncUtilTimeout: 5_000 });
 
 afterEach(() => {
   cleanup();
