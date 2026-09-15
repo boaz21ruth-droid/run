@@ -13,7 +13,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
-    // antd 组件在 jsdom 中渲染较慢
-    testTimeout: 15_000,
+    // antd 组件在 jsdom 中渲染较慢；CI 4 核上 13 个页面测试文件并行，填 14 个字段的新建赛事用例约 16 秒
+    testTimeout: 30_000,
   },
 });
