@@ -17,8 +17,9 @@ test-results/
 /api/tmp/
 /api/bin/
 
-# local runtime data
+# local runtime data (make dev-api writes WERUN_FILES_DIR=./data/files under api/)
 /deploy/data/
+/api/data/
 
 # os / editor
 .DS_Store
