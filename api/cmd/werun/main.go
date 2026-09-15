@@ -17,6 +17,7 @@ Commands:
   healthcheck  请求就绪接口，返回 200 时退出码为 0（--url 指定地址）
   create-staff 创建后台员工：--username --full-name --role [--password-stdin]
   dev-initdata 生成开发与测试用的 Telegram 登录参数：--telegram-id --name [--lang zh|en|km]（WERUN_ENV=prod 时拒绝）
+  publish-consent 发布同意书版本：--purpose --version --lang --effective-date --file <路径|-> --items '<JSON>'
 `
 
 func main() {
@@ -46,6 +47,12 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	case "dev-initdata":
 		if err := runDevInitData(args[1:], stdout, stderr); err != nil {
 			fmt.Fprintf(stderr, "dev-initdata: %v\n", err)
+			return 1
+		}
+		return 0
+	case "publish-consent":
+		if err := runPublishConsent(ctx, args[1:], os.Stdin, stdout, stderr); err != nil {
+			fmt.Fprintf(stderr, "publish-consent: %v\n", err)
 			return 1
 		}
 		return 0

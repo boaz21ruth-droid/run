@@ -43,6 +43,75 @@ func (q *Queries) DeleteProfile(ctx context.Context, arg DeleteProfileParams) (i
 	return result.RowsAffected(), nil
 }
 
+const getConsentVersion = `-- name: GetConsentVersion :one
+SELECT version, lang, purpose, items, text_sha256
+FROM disclaimer_versions
+WHERE version = $1 AND lang = $2
+`
+
+type GetConsentVersionParams struct {
+	Version string
+	Lang    string
+}
+
+type GetConsentVersionRow struct {
+	Version    string
+	Lang       string
+	Purpose    string
+	Items      []byte
+	TextSha256 []byte
+}
+
+func (q *Queries) GetConsentVersion(ctx context.Context, arg GetConsentVersionParams) (GetConsentVersionRow, error) {
+	row := q.db.QueryRow(ctx, getConsentVersion, arg.Version, arg.Lang)
+	var i GetConsentVersionRow
+	err := row.Scan(
+		&i.Version,
+		&i.Lang,
+		&i.Purpose,
+		&i.Items,
+		&i.TextSha256,
+	)
+	return i, err
+}
+
+const getCurrentConsent = `-- name: GetCurrentConsent :one
+SELECT version, lang, effective_date, full_text, items
+FROM disclaimer_versions
+WHERE purpose = $1
+  AND lang = $2
+  AND effective_date <= $3::date
+ORDER BY effective_date DESC, created_at DESC, version DESC
+LIMIT 1
+`
+
+type GetCurrentConsentParams struct {
+	Purpose string
+	Lang    string
+	Today   time.Time
+}
+
+type GetCurrentConsentRow struct {
+	Version       string
+	Lang          string
+	EffectiveDate time.Time
+	FullText      string
+	Items         []byte
+}
+
+func (q *Queries) GetCurrentConsent(ctx context.Context, arg GetCurrentConsentParams) (GetCurrentConsentRow, error) {
+	row := q.db.QueryRow(ctx, getCurrentConsent, arg.Purpose, arg.Lang, arg.Today)
+	var i GetCurrentConsentRow
+	err := row.Scan(
+		&i.Version,
+		&i.Lang,
+		&i.EffectiveDate,
+		&i.FullText,
+		&i.Items,
+	)
+	return i, err
+}
+
 const getProfile = `-- name: GetProfile :one
 SELECT id, user_id, full_name, gender, birth_date, nationality, id_type, id_no_enc, id_no_hash, phone_e164, email, emergency_name, emergency_phone, tshirt_size, is_self, created_at, updated_at FROM runner_profiles
 WHERE id = $1 AND user_id = $2
@@ -156,6 +225,67 @@ func (q *Queries) GetUserSession(ctx context.Context, tokenHash []byte) (GetUser
 	return i, err
 }
 
+const insertConsentSignature = `-- name: InsertConsentSignature :one
+INSERT INTO disclaimer_signatures (version, lang, text_sha256, user_id, checked_items, signed_at, ip, user_agent)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING id
+`
+
+type InsertConsentSignatureParams struct {
+	Version      string
+	Lang         string
+	TextSha256   []byte
+	UserID       int64
+	CheckedItems []byte
+	SignedAt     time.Time
+	Ip           *netip.Addr
+	UserAgent    *string
+}
+
+func (q *Queries) InsertConsentSignature(ctx context.Context, arg InsertConsentSignatureParams) (int64, error) {
+	row := q.db.QueryRow(ctx, insertConsentSignature,
+		arg.Version,
+		arg.Lang,
+		arg.TextSha256,
+		arg.UserID,
+		arg.CheckedItems,
+		arg.SignedAt,
+		arg.Ip,
+		arg.UserAgent,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const insertConsentVersion = `-- name: InsertConsentVersion :exec
+INSERT INTO disclaimer_versions (version, lang, effective_date, full_text, items, text_sha256, purpose)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+`
+
+type InsertConsentVersionParams struct {
+	Version       string
+	Lang          string
+	EffectiveDate time.Time
+	FullText      string
+	Items         []byte
+	TextSha256    []byte
+	Purpose       string
+}
+
+func (q *Queries) InsertConsentVersion(ctx context.Context, arg InsertConsentVersionParams) error {
+	_, err := q.db.Exec(ctx, insertConsentVersion,
+		arg.Version,
+		arg.Lang,
+		arg.EffectiveDate,
+		arg.FullText,
+		arg.Items,
+		arg.TextSha256,
+		arg.Purpose,
+	)
+	return err
+}
+
 const insertProfile = `-- name: InsertProfile :one
 INSERT INTO runner_profiles (
   user_id, full_name, gender, birth_date, nationality, id_type, id_no_enc, id_no_hash,
@@ -222,6 +352,22 @@ func (q *Queries) InsertProfile(ctx context.Context, arg InsertProfileParams) (R
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const insertRegistrationConsent = `-- name: InsertRegistrationConsent :exec
+INSERT INTO registration_consents (signature_id, reg_order_id, free_signup_id)
+VALUES ($1, $2, $3)
+`
+
+type InsertRegistrationConsentParams struct {
+	SignatureID  int64
+	RegOrderID   *int64
+	FreeSignupID *int64
+}
+
+func (q *Queries) InsertRegistrationConsent(ctx context.Context, arg InsertRegistrationConsentParams) error {
+	_, err := q.db.Exec(ctx, insertRegistrationConsent, arg.SignatureID, arg.RegOrderID, arg.FreeSignupID)
+	return err
 }
 
 const insertUserSession = `-- name: InsertUserSession :exec

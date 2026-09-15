@@ -31,6 +31,7 @@ const (
 	CodePriceRuleLocked         = "PRICE_RULE_LOCKED"
 	CodeCouponCodeTaken         = "COUPON_CODE_TAKEN"
 	CodeTelegramAuthInvalid     = "TELEGRAM_AUTH_INVALID"
+	CodeConsentInvalid          = "CONSENT_INVALID"
 )
 
 // AllCodes 列出全部错误码，供文案完整性测试使用。新增错误码时必须同时加到这里。
@@ -57,6 +58,7 @@ var AllCodes = []string{
 	CodePriceRuleLocked,
 	CodeCouponCodeTaken,
 	CodeTelegramAuthInvalid,
+	CodeConsentInvalid,
 }
 
 // FieldError 描述某个字段的错误：文案 key 与参数。

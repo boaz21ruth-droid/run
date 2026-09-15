@@ -43,3 +43,35 @@ type Profile struct {
 	IDNoMasked string
 	IsSelf     bool
 }
+
+// ConsentItem 是同意书里需要逐项勾选的一条。
+type ConsentItem struct {
+	Key, Title, Description string
+}
+
+// ConsentVersion 是一版已发布的同意书。
+type ConsentVersion struct {
+	Version, Lang string
+	EffectiveDate time.Time
+	FullText      string
+	Items         []ConsentItem
+}
+
+// ConsentAcceptance 是跑者提交的签署内容。
+type ConsentAcceptance struct {
+	Version, Lang string
+	CheckedItems  []string
+}
+
+// ConsentLink 指明签署记录关联的订单或免费报名，恰好一个非空。
+type ConsentLink struct {
+	RegOrderID, FreeSignupID *int64
+}
+
+// PublishConsentInput 是 werun publish-consent 的输入。
+type PublishConsentInput struct {
+	Purpose, Version, Lang string
+	EffectiveDate          time.Time
+	FullText               string
+	Items                  []ConsentItem
+}

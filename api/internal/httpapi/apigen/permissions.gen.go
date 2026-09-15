@@ -40,6 +40,7 @@ var OperationAuths = map[string]OperationAuth{
 	"AdminUpdatePriceRule":         {Kind: AuthPermission, Permission: "price_config", Access: "write"},
 	"AppCreateProfile":             {Kind: AuthApp},
 	"AppDeleteProfile":             {Kind: AuthApp},
+	"AppGetConsent":                {Kind: AuthApp},
 	"AppGetMe":                     {Kind: AuthApp},
 	"AppListProfiles":              {Kind: AuthApp},
 	"AppLoginTelegram":             {Kind: AuthNone},

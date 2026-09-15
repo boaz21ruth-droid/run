@@ -393,6 +393,42 @@ func (e AdminUpdatePaymentAccountMultipartBodyActive) Valid() bool {
 	}
 }
 
+// Defines values for AppGetConsentParamsPurpose.
+const (
+	AppGetConsentParamsPurposeREGISTRATION AppGetConsentParamsPurpose = "REGISTRATION"
+)
+
+// Valid indicates whether the value is a known member of the AppGetConsentParamsPurpose enum.
+func (e AppGetConsentParamsPurpose) Valid() bool {
+	switch e {
+	case AppGetConsentParamsPurposeREGISTRATION:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AppGetConsentParamsLang.
+const (
+	AppGetConsentParamsLangEn AppGetConsentParamsLang = "en"
+	AppGetConsentParamsLangKm AppGetConsentParamsLang = "km"
+	AppGetConsentParamsLangZh AppGetConsentParamsLang = "zh"
+)
+
+// Valid indicates whether the value is a known member of the AppGetConsentParamsLang enum.
+func (e AppGetConsentParamsLang) Valid() bool {
+	switch e {
+	case AppGetConsentParamsLangEn:
+		return true
+	case AppGetConsentParamsLangKm:
+		return true
+	case AppGetConsentParamsLangZh:
+		return true
+	default:
+		return false
+	}
+}
+
 // Access defines model for Access.
 type Access string
 
@@ -463,6 +499,25 @@ type AppUser struct {
 
 // AppUserLocale defines model for AppUser.Locale.
 type AppUserLocale string
+
+// ConsentItem defines model for ConsentItem.
+type ConsentItem struct {
+	// Description 没有说明时为空串
+	Description string `json:"description"`
+	Key         string `json:"key"`
+	Title       string `json:"title"`
+}
+
+// ConsentVersion defines model for ConsentVersion.
+type ConsentVersion struct {
+	EffectiveDate openapi_types.Date `json:"effectiveDate"`
+	FullText      string             `json:"fullText"`
+	Items         []ConsentItem      `json:"items"`
+
+	// Lang 实际返回的语言，可能是回退后的 en 或 zh；签署时原样提交
+	Lang    string `json:"lang"`
+	Version string `json:"version"`
+}
 
 // Coupon defines model for Coupon.
 type Coupon struct {
@@ -786,6 +841,18 @@ type AdminUpdatePaymentAccountMultipartBody struct {
 // AdminUpdatePaymentAccountMultipartBodyActive defines parameters for AdminUpdatePaymentAccount.
 type AdminUpdatePaymentAccountMultipartBodyActive string
 
+// AppGetConsentParams defines parameters for AppGetConsent.
+type AppGetConsentParams struct {
+	Purpose AppGetConsentParamsPurpose `form:"purpose" json:"purpose"`
+	Lang    *AppGetConsentParamsLang   `form:"lang,omitempty" json:"lang,omitempty"`
+}
+
+// AppGetConsentParamsPurpose defines parameters for AppGetConsent.
+type AppGetConsentParamsPurpose string
+
+// AppGetConsentParamsLang defines parameters for AppGetConsent.
+type AppGetConsentParamsLang string
+
 // AdminLoginJSONRequestBody defines body for AdminLogin for application/json ContentType.
 type AdminLoginJSONRequestBody = LoginRequest
 
@@ -881,6 +948,9 @@ type ServerInterface interface {
 	// AppLoginTelegram 用 Telegram 小程序 initData 登录，返回跑者令牌
 	// (POST /app/auth/telegram)
 	AppLoginTelegram(c *gin.Context)
+	// AppGetConsent 当前生效的同意书版本；所请求语言没有时依次回退到英文、中文
+	// (GET /app/consents)
+	AppGetConsent(c *gin.Context, params AppGetConsentParams)
 	// AppGetMe 当前跑者
 	// (GET /app/me)
 	AppGetMe(c *gin.Context)
@@ -1279,6 +1349,41 @@ func (siw *ServerInterfaceWrapper) AppLoginTelegram(c *gin.Context) {
 	siw.Handler.AppLoginTelegram(c)
 }
 
+// AppGetConsent operation middleware
+func (siw *ServerInterfaceWrapper) AppGetConsent(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params AppGetConsentParams
+
+	// ------------- Required query parameter "purpose" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "purpose", c.Request.URL.Query(), &params.Purpose, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter purpose: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "lang" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "lang", c.Request.URL.Query(), &params.Lang, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter lang: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppGetConsent(c, params)
+}
+
 // AppGetMe operation middleware
 func (siw *ServerInterfaceWrapper) AppGetMe(c *gin.Context) {
 
@@ -1513,6 +1618,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/app/profiles", wrapper.AppCreateProfile)
 	router.DELETE(options.BaseURL+"/app/profiles/:id", wrapper.AppDeleteProfile)
 	router.PUT(options.BaseURL+"/app/profiles/:id", wrapper.AppUpdateProfile)
+	router.GET(options.BaseURL+"/app/consents", wrapper.AppGetConsent)
 }
 
 type AdminLoginRequestObject struct {
@@ -2244,6 +2350,45 @@ func (response AppLoginTelegramdefaultJSONResponse) VisitAppLoginTelegramRespons
 	return err
 }
 
+type AppGetConsentRequestObject struct {
+	Params AppGetConsentParams
+}
+
+type AppGetConsentResponseObject interface {
+	VisitAppGetConsentResponse(w http.ResponseWriter) error
+}
+
+type AppGetConsent200JSONResponse ConsentVersion
+
+func (response AppGetConsent200JSONResponse) VisitAppGetConsentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppGetConsentdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppGetConsentdefaultJSONResponse) VisitAppGetConsentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AppGetMeRequestObject struct {
 }
 
@@ -2704,6 +2849,9 @@ type StrictServerInterface interface {
 	// AppLoginTelegram 用 Telegram 小程序 initData 登录，返回跑者令牌
 	// (POST /app/auth/telegram)
 	AppLoginTelegram(ctx context.Context, request AppLoginTelegramRequestObject) (AppLoginTelegramResponseObject, error)
+	// AppGetConsent 当前生效的同意书版本；所请求语言没有时依次回退到英文、中文
+	// (GET /app/consents)
+	AppGetConsent(ctx context.Context, request AppGetConsentRequestObject) (AppGetConsentResponseObject, error)
 	// AppGetMe 当前跑者
 	// (GET /app/me)
 	AppGetMe(ctx context.Context, request AppGetMeRequestObject) (AppGetMeResponseObject, error)
@@ -3330,6 +3478,32 @@ func (sh *strictHandler) AppLoginTelegram(ctx *gin.Context) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AppLoginTelegramResponseObject); ok {
 		if err := validResponse.VisitAppLoginTelegramResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppGetConsent operation middleware
+func (sh *strictHandler) AppGetConsent(ctx *gin.Context, params AppGetConsentParams) {
+	var request AppGetConsentRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppGetConsent(ctx, request.(AppGetConsentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppGetConsent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppGetConsentResponseObject); ok {
+		if err := validResponse.VisitAppGetConsentResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

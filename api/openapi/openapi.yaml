@@ -742,6 +742,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /app/consents:
+    get:
+      operationId: appGetConsent
+      tags: [app-consents]
+      summary: 当前生效的同意书版本；所请求语言没有时依次回退到英文、中文
+      x-auth: app
+      parameters:
+        - name: purpose
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [REGISTRATION]
+        - name: lang
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [zh, en, km]
+      responses:
+        '200':
+          description: 当前生效的同意书
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentVersion'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     ErrorResponse:
@@ -1378,3 +1410,32 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RunnerProfile'
+    ConsentItem:
+      type: object
+      required: [key, title, description]
+      properties:
+        key:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          description: 没有说明时为空串
+    ConsentVersion:
+      type: object
+      required: [version, lang, effectiveDate, fullText, items]
+      properties:
+        version:
+          type: string
+        lang:
+          type: string
+          description: 实际返回的语言，可能是回退后的 en 或 zh；签署时原样提交
+        effectiveDate:
+          type: string
+          format: date
+        fullText:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsentItem'

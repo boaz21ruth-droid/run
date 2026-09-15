@@ -9,6 +9,7 @@ import (
 	"werun/api/internal/httpapi/apigen"
 	"werun/api/internal/platform/apperr"
 	"werun/api/internal/platform/httpx"
+	"werun/api/internal/platform/i18n"
 )
 
 // Handlers 实现 apigen.StrictServerInterface 中的跑者接口。
@@ -167,4 +168,32 @@ func toRunnerProfile(p Profile) apigen.RunnerProfile {
 		TshirtSize:     apigen.TShirtSize(p.Data.TShirtSize),
 		IsSelf:         p.IsSelf,
 	}
+}
+
+func (h *Handlers) AppGetConsent(ctx context.Context, req apigen.AppGetConsentRequestObject) (apigen.AppGetConsentResponseObject, error) {
+	if string(req.Params.Purpose) != PurposeRegistration {
+		return nil, apperr.New(http.StatusUnprocessableEntity, apperr.CodeValidation).
+			WithField("purpose", "field.invalid", nil)
+	}
+	lang := httpx.LangOf(ctx)
+	if req.Params.Lang != nil {
+		if l, ok := i18n.Parse(string(*req.Params.Lang)); ok {
+			lang = l
+		}
+	}
+	v, err := h.svc.CurrentConsent(ctx, PurposeRegistration, lang)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]apigen.ConsentItem, 0, len(v.Items))
+	for _, item := range v.Items {
+		items = append(items, apigen.ConsentItem{Key: item.Key, Title: item.Title, Description: item.Description})
+	}
+	return apigen.AppGetConsent200JSONResponse{
+		Version:       v.Version,
+		Lang:          v.Lang,
+		EffectiveDate: openapi_types.Date{Time: v.EffectiveDate},
+		FullText:      v.FullText,
+		Items:         items,
+	}, nil
 }

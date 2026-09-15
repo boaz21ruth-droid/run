@@ -34,6 +34,7 @@ const runnerBotToken = "123456:http-test-token"
 type runnerEnv struct {
 	router  http.Handler
 	iam     *iam.Service
+	runners *runner.Service
 	catalog *i18n.Catalog
 }
 
@@ -47,15 +48,16 @@ func newRunnerEnv(t *testing.T) runnerEnv {
 	require.NoError(t, err)
 	secret := []byte(strings.Repeat("k", 32))
 	iamSvc := iam.NewService(pool, secret, iam.NewLoginLimiter(time.Now), time.Now)
+	runners := runner.NewService(pool, secret, runnerBotToken, pii, time.Now)
 	router := httpapi.NewRouter(httpapi.RouterDeps{
 		Log:     logx.New("error", io.Discard),
 		Catalog: catalog,
 		Pool:    pool,
 		IAM:     iamSvc,
-		Runner:  runner.NewService(pool, secret, runnerBotToken, pii, time.Now),
+		Runner:  runners,
 		Env:     "dev",
 	})
-	return runnerEnv{router: router, iam: iamSvc, catalog: catalog}
+	return runnerEnv{router: router, iam: iamSvc, runners: runners, catalog: catalog}
 }
 
 func (e runnerEnv) do(t *testing.T, method, path string, body any, header http.Header) *httptest.ResponseRecorder {
@@ -295,4 +297,50 @@ func TestAppProfilesRequireRunnerToken(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
 	assert.Equal(t, apperr.CodeUnauthenticated, decodeRunnerError(t, rec).Error.Code)
+}
+
+func TestAppGetConsent(t *testing.T) {
+	e := newRunnerEnv(t)
+	ctx := context.Background()
+	auth := bearer(e.loginRunner(t, 10001, "Dara Sok").Token)
+
+	rec := e.do(t, http.MethodGet, "/api/app/consents?purpose=REGISTRATION&lang=km", nil, auth)
+	assert.Equal(t, http.StatusNotFound, rec.Code, "还没有发布任何版本")
+	assert.Equal(t, apperr.CodeNotFound, decodeRunnerError(t, rec).Error.Code)
+
+	effective := time.Now().AddDate(0, 0, -2)
+	require.NoError(t, e.runners.PublishConsent(ctx, runner.PublishConsentInput{
+		Purpose:       runner.PurposeRegistration,
+		Version:       "REG-HTTP-v1",
+		Lang:          "en",
+		EffectiveDate: effective,
+		FullText:      "Registration consent body",
+		Items: []runner.ConsentItem{
+			{Key: "rules", Title: "I follow the race rules", Description: "Cut-off times apply"},
+			{Key: "health", Title: "I am fit to run"},
+		},
+	}))
+
+	rec = e.do(t, http.MethodGet, "/api/app/consents?purpose=REGISTRATION&lang=km", nil, auth)
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	var got apigen.ConsentVersion
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &got))
+	assert.Equal(t, "REG-HTTP-v1", got.Version)
+	assert.Equal(t, "en", got.Lang, "高棉文缺失时回退到英文")
+	assert.Equal(t, effective.Format(time.DateOnly), got.EffectiveDate.Format(time.DateOnly))
+	assert.Equal(t, "Registration consent body", got.FullText)
+	assert.Equal(t, []apigen.ConsentItem{
+		{Key: "rules", Title: "I follow the race rules", Description: "Cut-off times apply"},
+		{Key: "health", Title: "I am fit to run", Description: ""},
+	}, got.Items)
+
+	rec = e.do(t, http.MethodGet, "/api/app/consents?purpose=COMMUNITY", nil, auth)
+	assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
+	assert.Equal(t, apperr.CodeValidation, decodeRunnerError(t, rec).Error.Code)
+
+	rec = e.do(t, http.MethodGet, "/api/app/consents", nil, auth)
+	assert.Equal(t, http.StatusBadRequest, rec.Code, "purpose 必填")
+
+	rec = e.do(t, http.MethodGet, "/api/app/consents?purpose=REGISTRATION", nil, nil)
+	assert.Equal(t, http.StatusUnauthorized, rec.Code)
 }

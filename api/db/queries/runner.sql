@@ -81,3 +81,30 @@ WHERE user_id = @user_id AND is_self AND id <> @except_id;
 
 -- name: DeleteProfile :execrows
 DELETE FROM runner_profiles WHERE id = @id AND user_id = @user_id;
+
+-- name: InsertConsentVersion :exec
+INSERT INTO disclaimer_versions (version, lang, effective_date, full_text, items, text_sha256, purpose)
+VALUES (@version, @lang, @effective_date, @full_text, @items, @text_sha256, @purpose);
+
+-- name: GetCurrentConsent :one
+SELECT version, lang, effective_date, full_text, items
+FROM disclaimer_versions
+WHERE purpose = @purpose
+  AND lang = @lang
+  AND effective_date <= @today::date
+ORDER BY effective_date DESC, created_at DESC, version DESC
+LIMIT 1;
+
+-- name: GetConsentVersion :one
+SELECT version, lang, purpose, items, text_sha256
+FROM disclaimer_versions
+WHERE version = @version AND lang = @lang;
+
+-- name: InsertConsentSignature :one
+INSERT INTO disclaimer_signatures (version, lang, text_sha256, user_id, checked_items, signed_at, ip, user_agent)
+VALUES (@version, @lang, @text_sha256, @user_id, @checked_items, @signed_at, @ip, @user_agent)
+RETURNING id;
+
+-- name: InsertRegistrationConsent :exec
+INSERT INTO registration_consents (signature_id, reg_order_id, free_signup_id)
+VALUES (@signature_id, sqlc.narg(reg_order_id), sqlc.narg(free_signup_id));

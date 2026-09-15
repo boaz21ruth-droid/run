@@ -401,6 +401,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/app/consents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 当前生效的同意书版本；所请求语言没有时依次回退到英文、中文 */
+        get: operations["appGetConsent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -744,6 +761,21 @@ export interface components {
         };
         RunnerProfileList: {
             items: components["schemas"]["RunnerProfile"][];
+        };
+        ConsentItem: {
+            key: string;
+            title: string;
+            /** @description 没有说明时为空串 */
+            description: string;
+        };
+        ConsentVersion: {
+            version: string;
+            /** @description 实际返回的语言，可能是回退后的 en 或 zh；签署时原样提交 */
+            lang: string;
+            /** Format: date */
+            effectiveDate: string;
+            fullText: string;
+            items: components["schemas"]["ConsentItem"][];
         };
     };
     responses: never;
@@ -1687,6 +1719,38 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appGetConsent: {
+        parameters: {
+            query: {
+                purpose: "REGISTRATION";
+                lang?: "zh" | "en" | "km";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 当前生效的同意书 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentVersion"];
+                };
             };
             /** @description 错误 */
             default: {
