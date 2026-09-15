@@ -5,7 +5,10 @@ import { EventDetailPage } from "./pages/EventDetailPage";
 import { EventsPage } from "./pages/EventsPage";
 import { HomePage } from "./pages/HomePage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { OrderDetailPage } from "./pages/OrderDetailPage";
+import { OrdersPage } from "./pages/OrdersPage";
 import { ProfilesPage } from "./pages/ProfilesPage";
+import { RegisterPage } from "./pages/RegisterPage";
 
 export const routes: RouteObject[] = [
   {
@@ -18,7 +21,12 @@ export const routes: RouteObject[] = [
       {
         // 需要跑者登录的页面；Task 14、18、22 的页面也加在这里
         element: <RequireRunner />,
-        children: [{ path: "profiles", element: <ProfilesPage /> }],
+        children: [
+          { path: "profiles", element: <ProfilesPage /> },
+          { path: "events/:slug/register", element: <RegisterPage /> },
+          { path: "orders", element: <OrdersPage /> },
+          { path: "orders/:orderNo", element: <OrderDetailPage /> },
+        ],
       },
       { path: "*", element: <NotFoundPage /> },
     ],

@@ -1,10 +1,11 @@
 import { ApiError } from "@werun/api-client";
 import { useLang } from "@werun/i18n";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { QueryState } from "../components/QueryState";
 import { formatKm, formatNumber, formatRaceDate, formatTime } from "../format";
 import { usePublicEvent } from "../queries";
+import { registrationAvailable } from "../register/model";
 import { NotFoundPage } from "./NotFoundPage";
 import styles from "./Page.module.css";
 
@@ -31,6 +32,17 @@ export function EventDetailPage() {
               {t("event.city")}：{data.city}
             </span>
           </p>
+          {registrationAvailable(data) ? (
+            data.categories.some((category) => !category.soldOut) ? (
+              <Link to={`/events/${data.slug}/register`} className={styles.cta} data-testid="register-button">
+                {t("register.cta")}
+              </Link>
+            ) : (
+              <p className={styles.muted} data-testid="register-sold-out">
+                {t("register.allSoldOut")}
+              </p>
+            )
+          ) : null}
           <h2 className={styles.title}>{t("event.categories")}</h2>
           <div className={styles.tableWrap}>
             <table className={styles.table}>
@@ -46,7 +58,10 @@ export function EventDetailPage() {
               <tbody>
                 {data.categories.map((category) => (
                   <tr key={category.code}>
-                    <th scope="row">{category.name}</th>
+                    <th scope="row">
+                      {category.name}
+                      {category.soldOut ? <span className={styles.badge}>{t("register.soldOut")}</span> : null}
+                    </th>
                     <td className={styles.num}>{t("event.km", { km: formatKm(category.distanceM, lang) })}</td>
                     <td className={styles.num}>{formatNumber(category.capacity, lang)}</td>
                     <td className={styles.num}>{formatTime(category.startAt, lang)}</td>

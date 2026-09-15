@@ -25,4 +25,31 @@ describe("EventDetailPage", () => {
     );
     expect(await screen.findByRole("heading", { name: "Page not found" })).toBeInTheDocument();
   });
+
+  it("RACE 开放报名且有余额时显示报名按钮", async () => {
+    window.localStorage.setItem("werun.lang", "en");
+    renderApp("/events/phnom-penh-half-2026", async () => jsonResponse(200, halfMarathon));
+
+    const button = await screen.findByTestId("register-button");
+    expect(button).toHaveAttribute("href", "/events/phnom-penh-half-2026/register");
+    expect(button).toHaveTextContent("Register");
+  });
+
+  it("未开放报名时不显示报名按钮", async () => {
+    window.localStorage.setItem("werun.lang", "en");
+    renderApp("/events/phnom-penh-half-2026", async () => jsonResponse(200, { ...halfMarathon, registrationOpen: false }));
+
+    expect(await screen.findByRole("heading", { name: "Phnom Penh Half Marathon 2026" })).toBeInTheDocument();
+    expect(screen.queryByTestId("register-button")).not.toBeInTheDocument();
+  });
+
+  it("所有组别售罄时显示已满", async () => {
+    window.localStorage.setItem("werun.lang", "en");
+    const soldOut = { ...halfMarathon, categories: halfMarathon.categories.map((c) => ({ ...c, soldOut: true })) };
+    renderApp("/events/phnom-penh-half-2026", async () => jsonResponse(200, soldOut));
+
+    expect(await screen.findByTestId("register-sold-out")).toHaveTextContent("All categories are sold out.");
+    expect(screen.queryByTestId("register-button")).not.toBeInTheDocument();
+    expect(screen.getByRole("row", { name: /Half marathon/ })).toHaveTextContent("Sold out");
+  });
 });

@@ -64,5 +64,98 @@
       "save": "Couldn't save. Please try again.",
       "delete": "Couldn't delete. Please try again."
     }
+  },
+  "register": {
+    "cta": "Register",
+    "allSoldOut": "All categories are sold out.",
+    "title": "Register: {{event}}",
+    "closed": "Registration for this event is not open.",
+    "soldOut": "Sold out",
+    "soldOutOption": "{{name}} (sold out)",
+    "steps": {
+      "participants": "Runners & categories",
+      "details": "Runner details",
+      "confirm": "Review & submit"
+    },
+    "next": "Next",
+    "back": "Back",
+    "participant": "Runner {{n}}",
+    "addParticipant": "Add a runner",
+    "removeParticipant": "Remove",
+    "category": "Category",
+    "chooseCategory": "Choose a category",
+    "profile": "Runner details",
+    "newProfile": "Enter new runner details",
+    "savedProfile": "Saved runner: {{name}} (ID {{idNo}})",
+    "saveProfile": "Save as a saved runner",
+    "errors": {
+      "tooYoung": "Must be at least {{minAge}} on race day.",
+      "soldOut": "This category is sold out.",
+      "duplicateProfile": "This runner has already been added.",
+      "duplicateIdNo": "Another runner in this order has the same ID number.",
+      "network": "Network problem. Please check your connection and try again."
+    },
+    "quote": {
+      "title": "Estimated price",
+      "listAmount": "Subtotal",
+      "discount": "Discount",
+      "amount": "Estimated total",
+      "loading": "Calculating price…",
+      "identNote": "This is an estimate. When you place the order, 1–50 cents are taken off so we can match your transfer. The exact amount to transfer is shown after you place the order."
+    },
+    "coupon": {
+      "label": "Coupon code",
+      "apply": "Apply",
+      "applied": "Coupon applied: {{amount}} off"
+    },
+    "consent": {
+      "title": "Registration waiver",
+      "version": "Version {{version}}",
+      "loading": "Loading waiver…"
+    },
+    "submit": "Place order",
+    "submitting": "Placing order…"
+  },
+  "orders": {
+    "nav": "My orders",
+    "title": "My orders",
+    "empty": "You have no orders yet.",
+    "detailTitle": "Order {{orderNo}}",
+    "participants": "Runners: {{n}}",
+    "deadline": "Please pay before {{time}}",
+    "status": {
+      "PENDING_PAYMENT": "Awaiting payment",
+      "PROOF_SUBMITTED": "Under review",
+      "PROOF_REJECTED": "Proof rejected",
+      "PAID": "Confirmed",
+      "PARTIALLY_REFUNDED": "Partially refunded",
+      "REFUNDED": "Refunded",
+      "EXPIRED": "Expired",
+      "CANCELLED": "Cancelled"
+    },
+    "table": {
+      "name": "Runner",
+      "category": "Category",
+      "listPrice": "Price",
+      "paid": "You pay",
+      "registration": "Registration"
+    },
+    "regStatus": {
+      "PENDING": "Pending",
+      "CONFIRMED": "Confirmed",
+      "CANCELLED": "Cancelled"
+    },
+    "amount": {
+      "list": "Subtotal",
+      "coupon": "Coupon discount",
+      "ident": "Matching cents",
+      "total": "Total to pay",
+      "identHint": "Taken off so we can match your transfer."
+    },
+    "pay": "Pay now",
+    "cancel": "Cancel order",
+    "cancelAsk": "Cancel this order? Your spots will be released.",
+    "cancelConfirm": "Yes, cancel",
+    "cancelKeep": "Keep order"
   }
 }

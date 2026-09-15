@@ -64,5 +64,98 @@
       "save": "保存失败，请稍后再试。",
       "delete": "删除失败，请稍后再试。"
     }
+  },
+  "register": {
+    "cta": "报名",
+    "allSoldOut": "所有组别名额已满。",
+    "title": "报名：{{event}}",
+    "closed": "该赛事当前未开放报名。",
+    "soldOut": "已满",
+    "soldOutOption": "{{name}}（已满）",
+    "steps": {
+      "participants": "参赛人与组别",
+      "details": "参赛资料",
+      "confirm": "确认订单"
+    },
+    "next": "下一步",
+    "back": "上一步",
+    "participant": "参赛人 {{n}}",
+    "addParticipant": "添加参赛人",
+    "removeParticipant": "移除",
+    "category": "组别",
+    "chooseCategory": "请选择组别",
+    "profile": "参赛人资料",
+    "newProfile": "填写新的参赛人",
+    "savedProfile": "常用参赛人：{{name}}（证件 {{idNo}}）",
+    "saveProfile": "保存为常用参赛人",
+    "errors": {
+      "tooYoung": "比赛当天须年满 {{minAge}} 岁。",
+      "soldOut": "该组别名额已满。",
+      "duplicateProfile": "同一位参赛人不能重复添加。",
+      "duplicateIdNo": "同一订单内证件号不能重复。",
+      "network": "网络不稳定，请检查网络后重试。"
+    },
+    "quote": {
+      "title": "费用预估",
+      "listAmount": "原价合计",
+      "discount": "优惠",
+      "amount": "预计应付",
+      "loading": "正在计算费用…",
+      "identNote": "此为预估金额。下单时还会减去 1–50 美分的识别尾数，方便核对你的转账；实际转账金额以下单后显示的为准。"
+    },
+    "coupon": {
+      "label": "优惠码",
+      "apply": "应用",
+      "applied": "已使用优惠码，减免 {{amount}}"
+    },
+    "consent": {
+      "title": "报名同意书",
+      "version": "版本 {{version}}",
+      "loading": "正在加载同意书…"
+    },
+    "submit": "提交订单",
+    "submitting": "正在提交…"
+  },
+  "orders": {
+    "nav": "我的订单",
+    "title": "我的订单",
+    "empty": "还没有订单。",
+    "detailTitle": "订单 {{orderNo}}",
+    "participants": "参赛人数：{{n}}",
+    "deadline": "请在 {{time}} 前完成付款",
+    "status": {
+      "PENDING_PAYMENT": "待付款",
+      "PROOF_SUBMITTED": "审核中",
+      "PROOF_REJECTED": "凭证被驳回",
+      "PAID": "已确认",
+      "PARTIALLY_REFUNDED": "部分退款",
+      "REFUNDED": "已退款",
+      "EXPIRED": "已过期",
+      "CANCELLED": "已取消"
+    },
+    "table": {
+      "name": "参赛人",
+      "category": "组别",
+      "listPrice": "原价",
+      "paid": "实付",
+      "registration": "报名状态"
+    },
+    "regStatus": {
+      "PENDING": "待确认",
+      "CONFIRMED": "已确认",
+      "CANCELLED": "已取消"
+    },
+    "amount": {
+      "list": "原价合计",
+      "coupon": "优惠码减免",
+      "ident": "识别尾数",
+      "total": "应付",
+      "identHint": "为方便核对转账而减去的尾数。"
+    },
+    "pay": "去付款",
+    "cancel": "取消订单",
+    "cancelAsk": "取消后名额会被释放，确定取消吗？",
+    "cancelConfirm": "确定取消",
+    "cancelKeep": "暂不取消"
   }
 }

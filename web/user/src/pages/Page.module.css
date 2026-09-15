@@ -96,3 +96,30 @@
     gap: 20px;
   }
 }
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-bottom: 20px;
+  padding: 0 24px;
+  border-radius: 100px;
+  background: var(--brand-fill);
+  color: #fff;
+  font-weight: 700;
+}
+
+.cta:hover {
+  color: #fff;
+}
+
+.badge {
+  display: inline-flex;
+  margin-left: 8px;
+  padding: 0 8px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--stop-tint);
+  color: var(--stop);
+}

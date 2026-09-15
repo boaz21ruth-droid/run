@@ -1,3 +1,4 @@
+import type { Schemas } from "@werun/api-client";
 import type { Lang } from "@werun/i18n";
 
 const RACE_TIME_ZONE = "Asia/Phnom_Penh";
@@ -30,4 +31,18 @@ export function formatKm(distanceM: number, lang: Lang): string {
 
 export function formatNumber(value: number, lang: Lang): string {
   return new Intl.NumberFormat(INTL_LOCALES[lang]).format(value);
+}
+
+/** 三语文本按当前语言显示，缺失时依次回退英文、中文、高棉文 */
+export function pickText(text: Schemas["LocalizedText"], lang: Lang): string {
+  return text[lang] ?? text.en ?? text.zh ?? text.km ?? "";
+}
+
+/** 截止时间、下单时间等按浏览器时区显示 */
+export function formatDateTime(isoDateTime: string, lang: Lang): string {
+  return new Intl.DateTimeFormat(INTL_LOCALES[lang], {
+    dateStyle: "medium",
+    timeStyle: "short",
+    hourCycle: "h23",
+  }).format(new Date(isoDateTime));
 }
