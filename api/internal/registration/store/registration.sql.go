@@ -888,6 +888,47 @@ func (q *Queries) LockOrderForBuyer(ctx context.Context, arg LockOrderForBuyerPa
 	return i, err
 }
 
+const lockRegOrderByID = `-- name: LockRegOrderByID :one
+SELECT id, order_no, event_id, buyer_user_id, buyer_name, buyer_phone_e164, buyer_email, status, reservation_state, reservation_release_kind, list_amount_cents, discount_cents, ident_offset_cents, amount_cents, currency, coupon_id, payment_account_id, deadline_at, paid_at, expired_at, cancelled_at, cancel_reason, source, archived, version, created_at, updated_at FROM reg_orders
+WHERE id = $1
+FOR UPDATE
+`
+
+func (q *Queries) LockRegOrderByID(ctx context.Context, id int64) (RegOrder, error) {
+	row := q.db.QueryRow(ctx, lockRegOrderByID, id)
+	var i RegOrder
+	err := row.Scan(
+		&i.ID,
+		&i.OrderNo,
+		&i.EventID,
+		&i.BuyerUserID,
+		&i.BuyerName,
+		&i.BuyerPhoneE164,
+		&i.BuyerEmail,
+		&i.Status,
+		&i.ReservationState,
+		&i.ReservationReleaseKind,
+		&i.ListAmountCents,
+		&i.DiscountCents,
+		&i.IdentOffsetCents,
+		&i.AmountCents,
+		&i.Currency,
+		&i.CouponID,
+		&i.PaymentAccountID,
+		&i.DeadlineAt,
+		&i.PaidAt,
+		&i.ExpiredAt,
+		&i.CancelledAt,
+		&i.CancelReason,
+		&i.Source,
+		&i.Archived,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const lockRegOrderByNo = `-- name: LockRegOrderByNo :one
 SELECT id, order_no, event_id, buyer_user_id, buyer_name, buyer_phone_e164, buyer_email, status, reservation_state, reservation_release_kind, list_amount_cents, discount_cents, ident_offset_cents, amount_cents, currency, coupon_id, payment_account_id, deadline_at, paid_at, expired_at, cancelled_at, cancel_reason, source, archived, version, created_at, updated_at FROM reg_orders
 WHERE order_no = $1
@@ -1048,6 +1089,30 @@ func (q *Queries) SelectRegistrationPaymentAccount(ctx context.Context, eventID 
 	var id int64
 	err := row.Scan(&id)
 	return id, err
+}
+
+const setOrderProofRejected = `-- name: SetOrderProofRejected :execrows
+UPDATE reg_orders
+SET status = 'PROOF_REJECTED',
+    deadline_at = $1::timestamptz,
+    version = version + 1
+WHERE id = $2
+  AND reservation_state = 'RESERVED'
+  AND status = 'PROOF_SUBMITTED'
+`
+
+type SetOrderProofRejectedParams struct {
+	DeadlineAt time.Time
+	ID         int64
+}
+
+// 条件更新：只有预留仍为 RESERVED、处于审核中的订单能被驳回并进入重传期。
+func (q *Queries) SetOrderProofRejected(ctx context.Context, arg SetOrderProofRejectedParams) (int64, error) {
+	result, err := q.db.Exec(ctx, setOrderProofRejected, arg.DeadlineAt, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const setOrderProofSubmitted = `-- name: SetOrderProofSubmitted :execrows

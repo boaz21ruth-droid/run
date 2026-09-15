@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 
@@ -25,11 +26,35 @@ func (s *Service) LockOrderByNo(ctx context.Context, tx pgx.Tx, orderNo string) 
 	return orderFromLockedRow(row), nil
 }
 
+// LockOrderByID 在调用方事务里按主键锁定订单行（FOR UPDATE）；不存在返回 ORDER_NOT_FOUND。
+func (s *Service) LockOrderByID(ctx context.Context, tx pgx.Tx, id int64) (Order, error) {
+	row, err := store.New(tx).LockRegOrderByID(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Order{}, apperr.New(http.StatusNotFound, apperr.CodeOrderNotFound)
+	}
+	if err != nil {
+		return Order{}, fmt.Errorf("lock order %d: %w", id, err)
+	}
+	return orderFromLockedRow(row), nil
+}
+
 // MarkProofSubmitted 把待付款或被驳回的订单改为审核中并清空截止时间；状态不符返回 ORDER_STATE_CONFLICT。
 func (s *Service) MarkProofSubmitted(ctx context.Context, tx pgx.Tx, orderID int64) error {
 	n, err := store.New(tx).SetOrderProofSubmitted(ctx, orderID)
 	if err != nil {
 		return fmt.Errorf("mark order %d proof submitted: %w", orderID, err)
+	}
+	if n != 1 {
+		return apperr.New(http.StatusConflict, apperr.CodeOrderStateConflict)
+	}
+	return nil
+}
+
+// MarkProofRejected 把审核中的订单改为被驳回，并设置重传截止时间；状态不符返回 ORDER_STATE_CONFLICT。
+func (s *Service) MarkProofRejected(ctx context.Context, tx pgx.Tx, orderID int64, deadline time.Time) error {
+	n, err := store.New(tx).SetOrderProofRejected(ctx, store.SetOrderProofRejectedParams{ID: orderID, DeadlineAt: deadline.UTC()})
+	if err != nil {
+		return fmt.Errorf("mark order %d proof rejected: %w", orderID, err)
 	}
 	if n != 1 {
 		return apperr.New(http.StatusConflict, apperr.CodeOrderStateConflict)

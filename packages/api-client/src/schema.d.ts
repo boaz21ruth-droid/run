@@ -538,6 +538,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/proofs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 凭证审核队列（默认待审，按提交时间升序） */
+        get: operations["adminListProofs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/proofs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 凭证详情（含订单、参赛人、历史凭证） */
+        get: operations["adminGetProof"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/proofs/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 审核通过（登记到账，多付登记异常，订单确认） */
+        post: operations["adminApproveProof"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/proofs/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 驳回凭证（订单进入重传期） */
+        post: operations["adminRejectProof"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/files/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 凭证截图原图（仅被凭证引用的 PAYMENT_PROOF 私有文件；Cache-Control private, no-store） */
+        get: operations["adminGetFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1248,6 +1333,34 @@ export interface components {
             participants: components["schemas"]["AdminOrderParticipant"][];
             proofs: components["schemas"]["AdminProofHistoryItem"][];
             receipts: components["schemas"]["AdminReceiptItem"][];
+        };
+        ProofQueueItem: {
+            proof: components["schemas"]["Proof"];
+            /** Format: int64 */
+            amountCents: number;
+            eventName: components["schemas"]["LocalizedText"];
+            /** Format: date-time */
+            waitingSince: string;
+            overSla: boolean;
+        };
+        ProofQueue: {
+            items: components["schemas"]["ProofQueueItem"][];
+        };
+        ProofDetail: {
+            proof: components["schemas"]["Proof"];
+            order: components["schemas"]["AdminOrderDetail"];
+        };
+        ApproveProofRequest: {
+            /** Format: int64 */
+            receivedAmountCents: number;
+            /** Format: date-time */
+            receivedAt: string;
+            note?: string | null;
+        };
+        RejectProofRequest: {
+            /** @enum {string} */
+            rejectCode: "NOT_RECEIVED" | "AMOUNT_MISMATCH" | "DUPLICATE_TXN" | "UNREADABLE" | "WRONG_ACCOUNT" | "FRAUD" | "OTHER";
+            rejectReason?: string | null;
         };
     };
     responses: never;
@@ -2485,6 +2598,169 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminOrderDetail"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminListProofs: {
+        parameters: {
+            query?: {
+                status?: "SUBMITTED" | "APPROVED" | "REJECTED";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 凭证列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProofQueue"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminGetProof: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 凭证详情 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProofDetail"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminApproveProof: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveProofRequest"];
+            };
+        };
+        responses: {
+            /** @description 已通过 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProofDetail"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminRejectProof: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectProofRequest"];
+            };
+        };
+        responses: {
+            /** @description 已驳回 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProofDetail"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminGetFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 图片字节 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/*": string;
                 };
             };
             /** @description 错误 */

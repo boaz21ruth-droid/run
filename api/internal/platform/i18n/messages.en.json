@@ -28,6 +28,7 @@
   "PRICE_TIER_SOLD_OUT": "The current price tier just sold out. Please check the price again.",
   "ORDER_EXPIRED": "This order has passed its deadline. Please register again.",
   "PROOF_TXN_REF_USED": "This transaction reference is already used by another payment proof or receipt. Check it and try again.",
+  "RECEIVED_AMOUNT_TOO_LOW": "The received amount is less than the amount due ({amountDue}). Reject the proof as an amount mismatch instead.",
   "field.required": "Required.",
   "field.invalid": "Invalid value.",
   "field.too_long": "Must be at most {max} characters.",

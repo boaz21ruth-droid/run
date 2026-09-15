@@ -684,6 +684,39 @@ func (e QuoteParticipantAudience) Valid() bool {
 	}
 }
 
+// Defines values for RejectProofRequestRejectCode.
+const (
+	RejectProofRequestRejectCodeAMOUNTMISMATCH RejectProofRequestRejectCode = "AMOUNT_MISMATCH"
+	RejectProofRequestRejectCodeDUPLICATETXN   RejectProofRequestRejectCode = "DUPLICATE_TXN"
+	RejectProofRequestRejectCodeFRAUD          RejectProofRequestRejectCode = "FRAUD"
+	RejectProofRequestRejectCodeNOTRECEIVED    RejectProofRequestRejectCode = "NOT_RECEIVED"
+	RejectProofRequestRejectCodeOTHER          RejectProofRequestRejectCode = "OTHER"
+	RejectProofRequestRejectCodeUNREADABLE     RejectProofRequestRejectCode = "UNREADABLE"
+	RejectProofRequestRejectCodeWRONGACCOUNT   RejectProofRequestRejectCode = "WRONG_ACCOUNT"
+)
+
+// Valid indicates whether the value is a known member of the RejectProofRequestRejectCode enum.
+func (e RejectProofRequestRejectCode) Valid() bool {
+	switch e {
+	case RejectProofRequestRejectCodeAMOUNTMISMATCH:
+		return true
+	case RejectProofRequestRejectCodeDUPLICATETXN:
+		return true
+	case RejectProofRequestRejectCodeFRAUD:
+		return true
+	case RejectProofRequestRejectCodeNOTRECEIVED:
+		return true
+	case RejectProofRequestRejectCodeOTHER:
+		return true
+	case RejectProofRequestRejectCodeUNREADABLE:
+		return true
+	case RejectProofRequestRejectCodeWRONGACCOUNT:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for Role.
 const (
 	RoleADMIN          Role = "ADMIN"
@@ -813,6 +846,27 @@ func (e AdminUpdatePaymentAccountMultipartBodyActive) Valid() bool {
 	case AdminUpdatePaymentAccountMultipartBodyActiveFalse:
 		return true
 	case AdminUpdatePaymentAccountMultipartBodyActiveTrue:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminListProofsParamsStatus.
+const (
+	AdminListProofsParamsStatusAPPROVED  AdminListProofsParamsStatus = "APPROVED"
+	AdminListProofsParamsStatusREJECTED  AdminListProofsParamsStatus = "REJECTED"
+	AdminListProofsParamsStatusSUBMITTED AdminListProofsParamsStatus = "SUBMITTED"
+)
+
+// Valid indicates whether the value is a known member of the AdminListProofsParamsStatus enum.
+func (e AdminListProofsParamsStatus) Valid() bool {
+	switch e {
+	case AdminListProofsParamsStatusAPPROVED:
+		return true
+	case AdminListProofsParamsStatusREJECTED:
+		return true
+	case AdminListProofsParamsStatusSUBMITTED:
 		return true
 	default:
 		return false
@@ -1058,6 +1112,13 @@ type AppUser struct {
 
 // AppUserLocale defines model for AppUser.Locale.
 type AppUserLocale string
+
+// ApproveProofRequest defines model for ApproveProofRequest.
+type ApproveProofRequest struct {
+	Note                *string   `json:"note,omitempty"`
+	ReceivedAmountCents int64     `json:"receivedAmountCents"`
+	ReceivedAt          time.Time `json:"receivedAt"`
+}
 
 // ConsentItem defines model for ConsentItem.
 type ConsentItem struct {
@@ -1425,6 +1486,26 @@ type Proof struct {
 // ProofStatus defines model for Proof.Status.
 type ProofStatus string
 
+// ProofDetail defines model for ProofDetail.
+type ProofDetail struct {
+	Order AdminOrderDetail `json:"order"`
+	Proof Proof            `json:"proof"`
+}
+
+// ProofQueue defines model for ProofQueue.
+type ProofQueue struct {
+	Items []ProofQueueItem `json:"items"`
+}
+
+// ProofQueueItem defines model for ProofQueueItem.
+type ProofQueueItem struct {
+	AmountCents  int64         `json:"amountCents"`
+	EventName    LocalizedText `json:"eventName"`
+	OverSla      bool          `json:"overSla"`
+	Proof        Proof         `json:"proof"`
+	WaitingSince time.Time     `json:"waitingSince"`
+}
+
 // PublicCategory defines model for PublicCategory.
 type PublicCategory struct {
 	Capacity  int32     `json:"capacity"`
@@ -1498,6 +1579,15 @@ type QuoteRequest struct {
 	CouponCode   *string                 `json:"couponCode,omitempty"`
 	Participants []QuoteParticipantInput `json:"participants"`
 }
+
+// RejectProofRequest defines model for RejectProofRequest.
+type RejectProofRequest struct {
+	RejectCode   RejectProofRequestRejectCode `json:"rejectCode"`
+	RejectReason *string                      `json:"rejectReason,omitempty"`
+}
+
+// RejectProofRequestRejectCode defines model for RejectProofRequest.RejectCode.
+type RejectProofRequestRejectCode string
 
 // Role defines model for Role.
 type Role string
@@ -1626,6 +1716,14 @@ type AdminUpdatePaymentAccountMultipartBody struct {
 // AdminUpdatePaymentAccountMultipartBodyActive defines parameters for AdminUpdatePaymentAccount.
 type AdminUpdatePaymentAccountMultipartBodyActive string
 
+// AdminListProofsParams defines parameters for AdminListProofs.
+type AdminListProofsParams struct {
+	Status *AdminListProofsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+}
+
+// AdminListProofsParamsStatus defines parameters for AdminListProofs.
+type AdminListProofsParamsStatus string
+
 // AppGetConsentParams defines parameters for AppGetConsent.
 type AppGetConsentParams struct {
 	Purpose AppGetConsentParamsPurpose `form:"purpose" json:"purpose"`
@@ -1670,6 +1768,12 @@ type AdminUpdatePaymentAccountMultipartRequestBody AdminUpdatePaymentAccountMult
 
 // AdminUpdatePriceRuleJSONRequestBody defines body for AdminUpdatePriceRule for application/json ContentType.
 type AdminUpdatePriceRuleJSONRequestBody = PriceRuleInput
+
+// AdminApproveProofJSONRequestBody defines body for AdminApproveProof for application/json ContentType.
+type AdminApproveProofJSONRequestBody = ApproveProofRequest
+
+// AdminRejectProofJSONRequestBody defines body for AdminRejectProof for application/json ContentType.
+type AdminRejectProofJSONRequestBody = RejectProofRequest
 
 // AppLoginTelegramJSONRequestBody defines body for AppLoginTelegram for application/json ContentType.
 type AppLoginTelegramJSONRequestBody = AppLoginRequest
@@ -1727,6 +1831,9 @@ type ServerInterface interface {
 	// AdminUpdateEventRegistration 修改报名开关与报名时间（开放前校验发布状态、价格档与收款账户）
 	// (PATCH /admin/events/{id}/registration)
 	AdminUpdateEventRegistration(c *gin.Context, id int64)
+	// AdminGetFile 凭证截图原图（仅被凭证引用的 PAYMENT_PROOF 私有文件；Cache-Control private, no-store）
+	// (GET /admin/files/{id})
+	AdminGetFile(c *gin.Context, id int64)
 	// AdminGetMe 当前员工与权限
 	// (GET /admin/me)
 	AdminGetMe(c *gin.Context)
@@ -1748,6 +1855,18 @@ type ServerInterface interface {
 	// AdminUpdatePriceRule 修改价格档（已有占用时不可改价格、人群、关联组别）
 	// (PUT /admin/price-rules/{id})
 	AdminUpdatePriceRule(c *gin.Context, id int64)
+	// AdminListProofs 凭证审核队列（默认待审，按提交时间升序）
+	// (GET /admin/proofs)
+	AdminListProofs(c *gin.Context, params AdminListProofsParams)
+	// AdminGetProof 凭证详情（含订单、参赛人、历史凭证）
+	// (GET /admin/proofs/{id})
+	AdminGetProof(c *gin.Context, id int64)
+	// AdminApproveProof 审核通过（登记到账，多付登记异常，订单确认）
+	// (POST /admin/proofs/{id}/approve)
+	AdminApproveProof(c *gin.Context, id int64)
+	// AdminRejectProof 驳回凭证（订单进入重传期）
+	// (POST /admin/proofs/{id}/reject)
+	AdminRejectProof(c *gin.Context, id int64)
 	// AppLogout 吊销当前跑者令牌
 	// (POST /app/auth/logout)
 	AppLogout(c *gin.Context)
@@ -2058,6 +2177,31 @@ func (siw *ServerInterfaceWrapper) AdminUpdateEventRegistration(c *gin.Context) 
 	siw.Handler.AdminUpdateEventRegistration(c, id)
 }
 
+// AdminGetFile operation middleware
+func (siw *ServerInterfaceWrapper) AdminGetFile(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminGetFile(c, id)
+}
+
 // AdminGetMe operation middleware
 func (siw *ServerInterfaceWrapper) AdminGetMe(c *gin.Context) {
 
@@ -2229,6 +2373,108 @@ func (siw *ServerInterfaceWrapper) AdminUpdatePriceRule(c *gin.Context) {
 	}
 
 	siw.Handler.AdminUpdatePriceRule(c, id)
+}
+
+// AdminListProofs operation middleware
+func (siw *ServerInterfaceWrapper) AdminListProofs(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params AdminListProofsParams
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "status", c.Request.URL.Query(), &params.Status, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter status: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminListProofs(c, params)
+}
+
+// AdminGetProof operation middleware
+func (siw *ServerInterfaceWrapper) AdminGetProof(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminGetProof(c, id)
+}
+
+// AdminApproveProof operation middleware
+func (siw *ServerInterfaceWrapper) AdminApproveProof(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminApproveProof(c, id)
+}
+
+// AdminRejectProof operation middleware
+func (siw *ServerInterfaceWrapper) AdminRejectProof(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminRejectProof(c, id)
 }
 
 // AppLogout operation middleware
@@ -2691,6 +2937,11 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/app/orders/:orderNo/proofs", wrapper.AppSubmitProof)
 	router.GET(options.BaseURL+"/admin/orders", wrapper.AdminListOrders)
 	router.GET(options.BaseURL+"/admin/orders/:id", wrapper.AdminGetOrder)
+	router.GET(options.BaseURL+"/admin/proofs", wrapper.AdminListProofs)
+	router.GET(options.BaseURL+"/admin/proofs/:id", wrapper.AdminGetProof)
+	router.POST(options.BaseURL+"/admin/proofs/:id/approve", wrapper.AdminApproveProof)
+	router.POST(options.BaseURL+"/admin/proofs/:id/reject", wrapper.AdminRejectProof)
+	router.GET(options.BaseURL+"/admin/files/:id", wrapper.AdminGetFile)
 }
 
 type AdminLoginRequestObject struct {
@@ -3156,6 +3407,52 @@ func (response AdminUpdateEventRegistrationdefaultJSONResponse) VisitAdminUpdate
 	return err
 }
 
+type AdminGetFileRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminGetFileResponseObject interface {
+	VisitAdminGetFileResponse(w http.ResponseWriter) error
+}
+
+type AdminGetFile200ImageResponse struct {
+	Body          io.Reader
+	ContentType   string
+	ContentLength int64
+}
+
+func (response AdminGetFile200ImageResponse) VisitAdminGetFileResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", response.ContentType)
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
+type AdminGetFiledefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminGetFiledefaultJSONResponse) VisitAdminGetFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AdminGetMeRequestObject struct {
 }
 
@@ -3418,6 +3715,164 @@ type AdminUpdatePriceRuledefaultJSONResponse struct {
 }
 
 func (response AdminUpdatePriceRuledefaultJSONResponse) VisitAdminUpdatePriceRuleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListProofsRequestObject struct {
+	Params AdminListProofsParams
+}
+
+type AdminListProofsResponseObject interface {
+	VisitAdminListProofsResponse(w http.ResponseWriter) error
+}
+
+type AdminListProofs200JSONResponse ProofQueue
+
+func (response AdminListProofs200JSONResponse) VisitAdminListProofsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListProofsdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminListProofsdefaultJSONResponse) VisitAdminListProofsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminGetProofRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminGetProofResponseObject interface {
+	VisitAdminGetProofResponse(w http.ResponseWriter) error
+}
+
+type AdminGetProof200JSONResponse ProofDetail
+
+func (response AdminGetProof200JSONResponse) VisitAdminGetProofResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminGetProofdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminGetProofdefaultJSONResponse) VisitAdminGetProofResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminApproveProofRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminApproveProofJSONRequestBody
+}
+
+type AdminApproveProofResponseObject interface {
+	VisitAdminApproveProofResponse(w http.ResponseWriter) error
+}
+
+type AdminApproveProof200JSONResponse ProofDetail
+
+func (response AdminApproveProof200JSONResponse) VisitAdminApproveProofResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminApproveProofdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminApproveProofdefaultJSONResponse) VisitAdminApproveProofResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminRejectProofRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminRejectProofJSONRequestBody
+}
+
+type AdminRejectProofResponseObject interface {
+	VisitAdminRejectProofResponse(w http.ResponseWriter) error
+}
+
+type AdminRejectProof200JSONResponse ProofDetail
+
+func (response AdminRejectProof200JSONResponse) VisitAdminRejectProofResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminRejectProofdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminRejectProofdefaultJSONResponse) VisitAdminRejectProofResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -4214,6 +4669,9 @@ type StrictServerInterface interface {
 	// AdminUpdateEventRegistration 修改报名开关与报名时间（开放前校验发布状态、价格档与收款账户）
 	// (PATCH /admin/events/{id}/registration)
 	AdminUpdateEventRegistration(ctx context.Context, request AdminUpdateEventRegistrationRequestObject) (AdminUpdateEventRegistrationResponseObject, error)
+	// AdminGetFile 凭证截图原图（仅被凭证引用的 PAYMENT_PROOF 私有文件；Cache-Control private, no-store）
+	// (GET /admin/files/{id})
+	AdminGetFile(ctx context.Context, request AdminGetFileRequestObject) (AdminGetFileResponseObject, error)
 	// AdminGetMe 当前员工与权限
 	// (GET /admin/me)
 	AdminGetMe(ctx context.Context, request AdminGetMeRequestObject) (AdminGetMeResponseObject, error)
@@ -4235,6 +4693,18 @@ type StrictServerInterface interface {
 	// AdminUpdatePriceRule 修改价格档（已有占用时不可改价格、人群、关联组别）
 	// (PUT /admin/price-rules/{id})
 	AdminUpdatePriceRule(ctx context.Context, request AdminUpdatePriceRuleRequestObject) (AdminUpdatePriceRuleResponseObject, error)
+	// AdminListProofs 凭证审核队列（默认待审，按提交时间升序）
+	// (GET /admin/proofs)
+	AdminListProofs(ctx context.Context, request AdminListProofsRequestObject) (AdminListProofsResponseObject, error)
+	// AdminGetProof 凭证详情（含订单、参赛人、历史凭证）
+	// (GET /admin/proofs/{id})
+	AdminGetProof(ctx context.Context, request AdminGetProofRequestObject) (AdminGetProofResponseObject, error)
+	// AdminApproveProof 审核通过（登记到账，多付登记异常，订单确认）
+	// (POST /admin/proofs/{id}/approve)
+	AdminApproveProof(ctx context.Context, request AdminApproveProofRequestObject) (AdminApproveProofResponseObject, error)
+	// AdminRejectProof 驳回凭证（订单进入重传期）
+	// (POST /admin/proofs/{id}/reject)
+	AdminRejectProof(ctx context.Context, request AdminRejectProofRequestObject) (AdminRejectProofResponseObject, error)
 	// AppLogout 吊销当前跑者令牌
 	// (POST /app/auth/logout)
 	AppLogout(ctx context.Context, request AppLogoutRequestObject) (AppLogoutResponseObject, error)
@@ -4695,6 +5165,32 @@ func (sh *strictHandler) AdminUpdateEventRegistration(ctx *gin.Context, id int64
 	}
 }
 
+// AdminGetFile operation middleware
+func (sh *strictHandler) AdminGetFile(ctx *gin.Context, id int64) {
+	var request AdminGetFileRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminGetFile(ctx, request.(AdminGetFileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminGetFile")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminGetFileResponseObject); ok {
+		if err := validResponse.VisitAdminGetFileResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // AdminGetMe operation middleware
 func (sh *strictHandler) AdminGetMe(ctx *gin.Context) {
 	var request AdminGetMeRequestObject
@@ -4885,6 +5381,124 @@ func (sh *strictHandler) AdminUpdatePriceRule(ctx *gin.Context, id int64) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AdminUpdatePriceRuleResponseObject); ok {
 		if err := validResponse.VisitAdminUpdatePriceRuleResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminListProofs operation middleware
+func (sh *strictHandler) AdminListProofs(ctx *gin.Context, params AdminListProofsParams) {
+	var request AdminListProofsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminListProofs(ctx, request.(AdminListProofsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminListProofs")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminListProofsResponseObject); ok {
+		if err := validResponse.VisitAdminListProofsResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminGetProof operation middleware
+func (sh *strictHandler) AdminGetProof(ctx *gin.Context, id int64) {
+	var request AdminGetProofRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminGetProof(ctx, request.(AdminGetProofRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminGetProof")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminGetProofResponseObject); ok {
+		if err := validResponse.VisitAdminGetProofResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminApproveProof operation middleware
+func (sh *strictHandler) AdminApproveProof(ctx *gin.Context, id int64) {
+	var request AdminApproveProofRequestObject
+
+	request.Id = id
+
+	var body AdminApproveProofJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminApproveProof(ctx, request.(AdminApproveProofRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminApproveProof")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminApproveProofResponseObject); ok {
+		if err := validResponse.VisitAdminApproveProofResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminRejectProof operation middleware
+func (sh *strictHandler) AdminRejectProof(ctx *gin.Context, id int64) {
+	var request AdminRejectProofRequestObject
+
+	request.Id = id
+
+	var body AdminRejectProofJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminRejectProof(ctx, request.(AdminRejectProofRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminRejectProof")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminRejectProofResponseObject); ok {
+		if err := validResponse.VisitAdminRejectProofResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

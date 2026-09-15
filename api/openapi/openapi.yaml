@@ -1012,6 +1012,149 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /admin/proofs:
+    get:
+      operationId: adminListProofs
+      summary: 凭证审核队列（默认待审，按提交时间升序）
+      x-permission: proof_review
+      x-access: read
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [SUBMITTED, APPROVED, REJECTED]
+      responses:
+        '200':
+          description: 凭证列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProofQueue'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/proofs/{id}:
+    get:
+      operationId: adminGetProof
+      summary: 凭证详情（含订单、参赛人、历史凭证）
+      x-permission: proof_review
+      x-access: read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 凭证详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProofDetail'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/proofs/{id}/approve:
+    post:
+      operationId: adminApproveProof
+      summary: 审核通过（登记到账，多付登记异常，订单确认）
+      x-permission: proof_review
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveProofRequest'
+      responses:
+        '200':
+          description: 已通过
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProofDetail'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/proofs/{id}/reject:
+    post:
+      operationId: adminRejectProof
+      summary: 驳回凭证（订单进入重传期）
+      x-permission: proof_review
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectProofRequest'
+      responses:
+        '200':
+          description: 已驳回
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProofDetail'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/files/{id}:
+    get:
+      operationId: adminGetFile
+      summary: 凭证截图原图（仅被凭证引用的 PAYMENT_PROOF 私有文件；Cache-Control private, no-store）
+      x-permission: proof_review
+      x-access: read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 图片字节
+          content:
+            'image/*':
+              schema:
+                type: string
+                format: binary
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     ErrorResponse:
@@ -2179,3 +2322,45 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AdminReceiptItem'
+    ProofQueueItem:
+      type: object
+      required: [proof, amountCents, eventName, waitingSince, overSla]
+      properties:
+        proof:
+          $ref: '#/components/schemas/Proof'
+        amountCents: { type: integer, format: int64 }
+        eventName:
+          $ref: '#/components/schemas/LocalizedText'
+        waitingSince: { type: string, format: date-time }
+        overSla: { type: boolean }
+    ProofQueue:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProofQueueItem'
+    ProofDetail:
+      type: object
+      required: [proof, order]
+      properties:
+        proof:
+          $ref: '#/components/schemas/Proof'
+        order:
+          $ref: '#/components/schemas/AdminOrderDetail'
+    ApproveProofRequest:
+      type: object
+      required: [receivedAmountCents, receivedAt]
+      properties:
+        receivedAmountCents: { type: integer, format: int64, minimum: 1 }
+        receivedAt: { type: string, format: date-time }
+        note: { type: string, nullable: true, maxLength: 500 }
+    RejectProofRequest:
+      type: object
+      required: [rejectCode]
+      properties:
+        rejectCode:
+          type: string
+          enum: [NOT_RECEIVED, AMOUNT_MISMATCH, DUPLICATE_TXN, UNREADABLE, WRONG_ACCOUNT, FRAUD, OTHER]
+        rejectReason: { type: string, nullable: true, maxLength: 500 }

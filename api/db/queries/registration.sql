@@ -249,3 +249,18 @@ SELECT c.code, cr.discount_cents, cr.state
 FROM coupon_redemptions cr
 JOIN coupons c ON c.id = cr.coupon_id
 WHERE cr.order_id = @order_id;
+
+-- name: LockRegOrderByID :one
+SELECT * FROM reg_orders
+WHERE id = @id
+FOR UPDATE;
+
+-- name: SetOrderProofRejected :execrows
+-- 条件更新：只有预留仍为 RESERVED、处于审核中的订单能被驳回并进入重传期。
+UPDATE reg_orders
+SET status = 'PROOF_REJECTED',
+    deadline_at = sqlc.arg(deadline_at)::timestamptz,
+    version = version + 1
+WHERE id = @id
+  AND reservation_state = 'RESERVED'
+  AND status = 'PROOF_SUBMITTED';

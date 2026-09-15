@@ -47,6 +47,49 @@ func (q *Queries) GetPaymentAccountForUpdate(ctx context.Context, id int64) (Pay
 	return i, err
 }
 
+const getPaymentProofForReview = `-- name: GetPaymentProofForReview :one
+SELECT p.id, p.proof_no, p.reg_order_id, p.merch_order_id, p.payment_account_id, p.file_id, p.submitted_by_user_id, p.declared_amount_cents, p.declared_currency, p.bank_txn_ref, p.declared_paid_at, p.payer_name, p.payer_account_masked, p.remark, p.is_late, p.dup_file_hit, p.status, p.reviewed_by, p.reviewed_at, p.reject_code, p.reject_reason, p.created_at, o.order_no
+FROM payment_proofs p
+JOIN reg_orders o ON o.id = p.reg_order_id
+WHERE p.id = $1
+`
+
+type GetPaymentProofForReviewRow struct {
+	PaymentProof PaymentProof
+	OrderNo      string
+}
+
+func (q *Queries) GetPaymentProofForReview(ctx context.Context, id int64) (GetPaymentProofForReviewRow, error) {
+	row := q.db.QueryRow(ctx, getPaymentProofForReview, id)
+	var i GetPaymentProofForReviewRow
+	err := row.Scan(
+		&i.PaymentProof.ID,
+		&i.PaymentProof.ProofNo,
+		&i.PaymentProof.RegOrderID,
+		&i.PaymentProof.MerchOrderID,
+		&i.PaymentProof.PaymentAccountID,
+		&i.PaymentProof.FileID,
+		&i.PaymentProof.SubmittedByUserID,
+		&i.PaymentProof.DeclaredAmountCents,
+		&i.PaymentProof.DeclaredCurrency,
+		&i.PaymentProof.BankTxnRef,
+		&i.PaymentProof.DeclaredPaidAt,
+		&i.PaymentProof.PayerName,
+		&i.PaymentProof.PayerAccountMasked,
+		&i.PaymentProof.Remark,
+		&i.PaymentProof.IsLate,
+		&i.PaymentProof.DupFileHit,
+		&i.PaymentProof.Status,
+		&i.PaymentProof.ReviewedBy,
+		&i.PaymentProof.ReviewedAt,
+		&i.PaymentProof.RejectCode,
+		&i.PaymentProof.RejectReason,
+		&i.PaymentProof.CreatedAt,
+		&i.OrderNo,
+	)
+	return i, err
+}
+
 const insertPaymentAccount = `-- name: InsertPaymentAccount :one
 INSERT INTO payment_accounts (name, provider, account_name, account_no_masked, currency, qr_file_id,
                               scope, event_id, active, created_by)
@@ -95,6 +138,33 @@ func (q *Queries) InsertPaymentAccount(ctx context.Context, arg InsertPaymentAcc
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const insertPaymentException = `-- name: InsertPaymentException :one
+INSERT INTO payment_exceptions (exception_no, domain, type, reg_order_id, receipt_id, amount_cents, status, note)
+VALUES ($1, 'REGISTRATION', 'OVERPAID', $2::bigint, $3, $4, 'OPEN', $5::text)
+RETURNING id
+`
+
+type InsertPaymentExceptionParams struct {
+	ExceptionNo string
+	RegOrderID  int64
+	ReceiptID   int64
+	AmountCents int64
+	Note        *string
+}
+
+func (q *Queries) InsertPaymentException(ctx context.Context, arg InsertPaymentExceptionParams) (int64, error) {
+	row := q.db.QueryRow(ctx, insertPaymentException,
+		arg.ExceptionNo,
+		arg.RegOrderID,
+		arg.ReceiptID,
+		arg.AmountCents,
+		arg.Note,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const insertPaymentProof = `-- name: InsertPaymentProof :one
@@ -162,6 +232,60 @@ func (q *Queries) InsertPaymentProof(ctx context.Context, arg InsertPaymentProof
 	return i, err
 }
 
+const insertPaymentReceipt = `-- name: InsertPaymentReceipt :one
+INSERT INTO payment_receipts (
+  payment_account_id, txn_ref, amount_cents, currency, received_at,
+  proof_id, reg_order_id, match_status, recorded_by_type, recorded_by
+) VALUES (
+  $1, $2, $3, 'USD', $4,
+  $5::bigint, $6::bigint, $7, 'STAFF', $8::bigint
+)
+RETURNING id
+`
+
+type InsertPaymentReceiptParams struct {
+	PaymentAccountID int64
+	TxnRef           string
+	AmountCents      int64
+	ReceivedAt       time.Time
+	ProofID          int64
+	RegOrderID       int64
+	MatchStatus      string
+	RecordedBy       int64
+}
+
+func (q *Queries) InsertPaymentReceipt(ctx context.Context, arg InsertPaymentReceiptParams) (int64, error) {
+	row := q.db.QueryRow(ctx, insertPaymentReceipt,
+		arg.PaymentAccountID,
+		arg.TxnRef,
+		arg.AmountCents,
+		arg.ReceivedAt,
+		arg.ProofID,
+		arg.RegOrderID,
+		arg.MatchStatus,
+		arg.RecordedBy,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const isProofFile = `-- name: IsProofFile :one
+SELECT EXISTS (
+  SELECT 1 FROM files f
+  JOIN payment_proofs p ON p.file_id = f.id
+  WHERE f.id = $1 AND f.purpose = 'PAYMENT_PROOF' AND f.visibility = 'PRIVATE'
+)
+`
+
+// 只认被凭证引用、用途为 PAYMENT_PROOF 且私有的文件。
+func (q *Queries) IsProofFile(ctx context.Context, fileID int64) (bool, error) {
+	row := q.db.QueryRow(ctx, isProofFile, fileID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const listPaymentAccounts = `-- name: ListPaymentAccounts :many
 SELECT id, name, provider, account_name, account_no_masked, currency, qr_file_id, scope, event_id, active, created_by, created_at FROM payment_accounts
 ORDER BY active DESC, id
@@ -198,6 +322,159 @@ func (q *Queries) ListPaymentAccounts(ctx context.Context) ([]PaymentAccount, er
 		return nil, err
 	}
 	return items, nil
+}
+
+const listProofQueue = `-- name: ListProofQueue :many
+SELECT p.id, p.proof_no, p.reg_order_id, p.merch_order_id, p.payment_account_id, p.file_id, p.submitted_by_user_id, p.declared_amount_cents, p.declared_currency, p.bank_txn_ref, p.declared_paid_at, p.payer_name, p.payer_account_masked, p.remark, p.is_late, p.dup_file_hit, p.status, p.reviewed_by, p.reviewed_at, p.reject_code, p.reject_reason, p.created_at, o.order_no, o.amount_cents AS order_amount_cents, e.name AS event_name
+FROM payment_proofs p
+JOIN reg_orders o ON o.id = p.reg_order_id
+JOIN events e ON e.id = o.event_id
+WHERE p.status = $1
+ORDER BY p.created_at, p.id
+LIMIT 500
+`
+
+type ListProofQueueRow struct {
+	PaymentProof     PaymentProof
+	OrderNo          string
+	OrderAmountCents int64
+	EventName        []byte
+}
+
+func (q *Queries) ListProofQueue(ctx context.Context, status string) ([]ListProofQueueRow, error) {
+	rows, err := q.db.Query(ctx, listProofQueue, status)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListProofQueueRow
+	for rows.Next() {
+		var i ListProofQueueRow
+		if err := rows.Scan(
+			&i.PaymentProof.ID,
+			&i.PaymentProof.ProofNo,
+			&i.PaymentProof.RegOrderID,
+			&i.PaymentProof.MerchOrderID,
+			&i.PaymentProof.PaymentAccountID,
+			&i.PaymentProof.FileID,
+			&i.PaymentProof.SubmittedByUserID,
+			&i.PaymentProof.DeclaredAmountCents,
+			&i.PaymentProof.DeclaredCurrency,
+			&i.PaymentProof.BankTxnRef,
+			&i.PaymentProof.DeclaredPaidAt,
+			&i.PaymentProof.PayerName,
+			&i.PaymentProof.PayerAccountMasked,
+			&i.PaymentProof.Remark,
+			&i.PaymentProof.IsLate,
+			&i.PaymentProof.DupFileHit,
+			&i.PaymentProof.Status,
+			&i.PaymentProof.ReviewedBy,
+			&i.PaymentProof.ReviewedAt,
+			&i.PaymentProof.RejectCode,
+			&i.PaymentProof.RejectReason,
+			&i.PaymentProof.CreatedAt,
+			&i.OrderNo,
+			&i.OrderAmountCents,
+			&i.EventName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const lockPaymentProof = `-- name: LockPaymentProof :one
+SELECT id, proof_no, reg_order_id, merch_order_id, payment_account_id, file_id, submitted_by_user_id, declared_amount_cents, declared_currency, bank_txn_ref, declared_paid_at, payer_name, payer_account_masked, remark, is_late, dup_file_hit, status, reviewed_by, reviewed_at, reject_code, reject_reason, created_at FROM payment_proofs
+WHERE id = $1
+FOR UPDATE
+`
+
+func (q *Queries) LockPaymentProof(ctx context.Context, id int64) (PaymentProof, error) {
+	row := q.db.QueryRow(ctx, lockPaymentProof, id)
+	var i PaymentProof
+	err := row.Scan(
+		&i.ID,
+		&i.ProofNo,
+		&i.RegOrderID,
+		&i.MerchOrderID,
+		&i.PaymentAccountID,
+		&i.FileID,
+		&i.SubmittedByUserID,
+		&i.DeclaredAmountCents,
+		&i.DeclaredCurrency,
+		&i.BankTxnRef,
+		&i.DeclaredPaidAt,
+		&i.PayerName,
+		&i.PayerAccountMasked,
+		&i.Remark,
+		&i.IsLate,
+		&i.DupFileHit,
+		&i.Status,
+		&i.ReviewedBy,
+		&i.ReviewedAt,
+		&i.RejectCode,
+		&i.RejectReason,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const markPaymentProofApproved = `-- name: MarkPaymentProofApproved :execrows
+UPDATE payment_proofs
+SET status = 'APPROVED',
+    reviewed_by = $1::bigint,
+    reviewed_at = $2::timestamptz
+WHERE id = $3 AND status = 'SUBMITTED'
+`
+
+type MarkPaymentProofApprovedParams struct {
+	ReviewedBy int64
+	ReviewedAt time.Time
+	ID         int64
+}
+
+func (q *Queries) MarkPaymentProofApproved(ctx context.Context, arg MarkPaymentProofApprovedParams) (int64, error) {
+	result, err := q.db.Exec(ctx, markPaymentProofApproved, arg.ReviewedBy, arg.ReviewedAt, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const markPaymentProofRejected = `-- name: MarkPaymentProofRejected :execrows
+UPDATE payment_proofs
+SET status = 'REJECTED',
+    reviewed_by = $1::bigint,
+    reviewed_at = $2::timestamptz,
+    reject_code = $3::text,
+    reject_reason = $4::text
+WHERE id = $5 AND status = 'SUBMITTED'
+`
+
+type MarkPaymentProofRejectedParams struct {
+	ReviewedBy   int64
+	ReviewedAt   time.Time
+	RejectCode   string
+	RejectReason *string
+	ID           int64
+}
+
+func (q *Queries) MarkPaymentProofRejected(ctx context.Context, arg MarkPaymentProofRejectedParams) (int64, error) {
+	result, err := q.db.Exec(ctx, markPaymentProofRejected,
+		arg.ReviewedBy,
+		arg.ReviewedAt,
+		arg.RejectCode,
+		arg.RejectReason,
+		arg.ID,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const updatePaymentAccount = `-- name: UpdatePaymentAccount :one
