@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/multipart.ts"
   },
   "scripts": {
     "gen": "openapi-typescript ../../api/openapi/openapi.yaml -o src/schema.d.ts",
@@ -15,6 +16,7 @@
     "openapi-fetch": "0.17.0"
   },
   "devDependencies": {
+    "@types/node": "24.13.4",
     "openapi-typescript": "7.13.0",
     "typescript": "5.9.3",
     "vite": "7.3.6",

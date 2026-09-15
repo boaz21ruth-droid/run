@@ -1,0 +1,142 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 560px;
+}
+
+.label {
+  font-size: 13px;
+  color: var(--ink-mute);
+}
+
+.amount,
+.qrWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--card);
+}
+
+.amountValue {
+  font-family: var(--mono);
+  font-size: 34px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--brand);
+}
+
+.hint,
+.help {
+  font-size: 14px;
+  color: var(--ink-mid);
+}
+
+.qrWrap {
+  align-items: center;
+  gap: 8px;
+}
+
+.qr {
+  width: min(280px, 100%);
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+
+.rows {
+  display: grid;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.row dt {
+  font-size: 14px;
+  color: var(--ink-mute);
+}
+
+.row dd {
+  margin: 0;
+  text-align: right;
+}
+
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.orderNoCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copy {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  background: var(--card);
+  color: var(--brand);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.countdownRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.countdown {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.expired,
+.formError {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--stop-tint);
+  color: var(--stop);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  font: inherit;
+}
+
+.fieldError {
+  font-size: 13px;
+  color: var(--stop);
+}

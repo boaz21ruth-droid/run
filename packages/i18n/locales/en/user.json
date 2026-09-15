@@ -12,6 +12,51 @@
     "cutoff": "Cut-off"
   },
   "notFound": { "title": "Page not found", "body": "The link may be out of date.", "home": "Back to home" },
+  "pay": {
+    "title": "Payment",
+    "scanQr": "Open your banking app and scan the QR code above",
+    "qrAlt": "Payment QR code",
+    "accountName": "Account name",
+    "accountNo": "Account number",
+    "amount": "Amount due",
+    "amountHint": "Please transfer exactly this amount.",
+    "amountHintIdent": "Please transfer exactly this amount. The odd cents ({{cents}}¢ off) help us identify your order.",
+    "orderNo": "Put this order number in the transfer note",
+    "copy": "Copy",
+    "copied": "Copied",
+    "countdown": "Time left to pay",
+    "expired": "The payment window has closed and this order will expire. If you already paid, contact support.",
+    "upload": "I've paid — upload proof",
+    "backToOrder": "View order"
+  },
+  "proof": {
+    "title": "Upload payment proof",
+    "intro": "Upload a screenshot of the successful transfer and enter the transaction reference.",
+    "file": "Payment screenshot",
+    "fileHelp": "JPG, PNG or WebP, up to 5 MB",
+    "txnRef": "Transaction reference",
+    "txnRefHelp": "The Transaction ID or Reference on your bank receipt",
+    "amount": "Amount paid (USD)",
+    "paidAt": "Payment time (optional)",
+    "submit": "Submit proof",
+    "submitting": "Submitting…",
+    "reregister": "Register again",
+    "error": {
+      "fileRequired": "Choose a payment screenshot",
+      "fileType": "Only JPG, PNG or WebP images are accepted",
+      "fileTooLarge": "The image must be 5 MB or smaller",
+      "txnRefLength": "The transaction reference must be 4–64 characters, not counting spaces",
+      "amountInvalid": "Enter an amount above 0 with at most two decimals",
+      "paidAtInvalid": "The payment time is not valid"
+    },
+    "serverError": {
+      "ORDER_EXPIRED": "This order has expired. Please register again.",
+      "PROOF_TXN_REF_USED": "This transaction reference has already been submitted. Check it and try again.",
+      "FILE_TOO_LARGE": "The image is larger than 5 MB. Compress it and try again.",
+      "FILE_TYPE_NOT_ALLOWED": "We couldn't read this image. Upload a JPG, PNG or WebP screenshot.",
+      "ORDER_STATE_CONFLICT": "Proof can't be uploaded for this order right now. Refresh to see its status."
+    }
+  },
   "auth": {
     "checking": "Checking your sign-in…",
     "openInTelegram": {
@@ -156,6 +201,27 @@
     "cancel": "Cancel order",
     "cancelAsk": "Cancel this order? Your spots will be released.",
     "cancelConfirm": "Yes, cancel",
-    "cancelKeep": "Keep order"
+    "cancelKeep": "Keep order",
+    "panel": {
+      "reviewing": "Your proof is in. Finance usually reviews it within 24 hours and we'll notify you on Telegram.",
+      "rejectedTitle": "Your proof wasn't accepted",
+      "rejectReason": "Reason: {{reason}}",
+      "reuploadBy": "Upload a new proof by {{deadline}}",
+      "reupload": "Upload new proof",
+      "paid": "Your registration is confirmed. Show the ticket below on race day.",
+      "ticketAlt": "Race ticket for {{name}}",
+      "expired": "This order has expired and the spots were released.",
+      "registerAgain": "Register again",
+      "cancelled": "This order was cancelled."
+    },
+    "rejectCode": {
+      "NOT_RECEIVED": "Payment not received",
+      "AMOUNT_MISMATCH": "Amount doesn't match",
+      "DUPLICATE_TXN": "Duplicate transaction",
+      "UNREADABLE": "Screenshot unreadable",
+      "WRONG_ACCOUNT": "Paid to the wrong account",
+      "FRAUD": "Proof looks suspicious",
+      "OTHER": "Other reason"
+    }
   }
 }

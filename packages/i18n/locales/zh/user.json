@@ -12,6 +12,51 @@
     "cutoff": "关门"
   },
   "notFound": { "title": "页面不存在", "body": "链接可能已经失效。", "home": "回到首页" },
+  "pay": {
+    "title": "付款",
+    "scanQr": "打开银行 App 扫描上方二维码转账",
+    "qrAlt": "收款二维码",
+    "accountName": "收款户名",
+    "accountNo": "收款账号",
+    "amount": "应付金额",
+    "amountHint": "请按此金额准确转账。",
+    "amountHintIdent": "请按此金额准确转账，尾数（已优惠 {{cents}} 美分）用于识别你的订单。",
+    "orderNo": "转账备注填写订单号",
+    "copy": "复制",
+    "copied": "已复制",
+    "countdown": "剩余付款时间",
+    "expired": "付款时间已到，订单即将失效。如果已经付款，请尽快联系客服。",
+    "upload": "我已付款，上传凭证",
+    "backToOrder": "查看订单"
+  },
+  "proof": {
+    "title": "上传付款凭证",
+    "intro": "上传转账成功页面的截图，并填写交易号。",
+    "file": "付款截图",
+    "fileHelp": "JPG、PNG 或 WebP，不超过 5 MB",
+    "txnRef": "交易号",
+    "txnRefHelp": "银行回执上的交易号（Transaction ID / Reference）",
+    "amount": "付款金额（美元）",
+    "paidAt": "付款时间（可不填）",
+    "submit": "提交凭证",
+    "submitting": "提交中…",
+    "reregister": "重新报名",
+    "error": {
+      "fileRequired": "请选择付款截图",
+      "fileType": "只支持 JPG、PNG、WebP 图片",
+      "fileTooLarge": "图片不能超过 5 MB",
+      "txnRefLength": "交易号需为 4–64 个字符（不含空格）",
+      "amountInvalid": "请输入大于 0 的金额，最多两位小数",
+      "paidAtInvalid": "付款时间格式不正确"
+    },
+    "serverError": {
+      "ORDER_EXPIRED": "订单已过期，请重新报名。",
+      "PROOF_TXN_REF_USED": "这个交易号已经提交过，请核对后重新填写。",
+      "FILE_TOO_LARGE": "图片超过 5 MB，请压缩后重试。",
+      "FILE_TYPE_NOT_ALLOWED": "无法识别这张图片，请上传 JPG、PNG 或 WebP 截图。",
+      "ORDER_STATE_CONFLICT": "这个订单现在不能上传凭证，请刷新后查看订单状态。"
+    }
+  },
   "auth": {
     "checking": "正在确认身份…",
     "openInTelegram": {
@@ -156,6 +201,27 @@
     "cancel": "取消订单",
     "cancelAsk": "取消后名额会被释放，确定取消吗？",
     "cancelConfirm": "确定取消",
-    "cancelKeep": "暂不取消"
+    "cancelKeep": "暂不取消",
+    "panel": {
+      "reviewing": "凭证已提交，财务通常在 24 小时内完成审核，结果会通过 Telegram 通知你。",
+      "rejectedTitle": "凭证未通过审核",
+      "rejectReason": "原因：{{reason}}",
+      "reuploadBy": "请在 {{deadline}} 前重新上传",
+      "reupload": "重新上传凭证",
+      "paid": "报名已确认，比赛当天出示下面的参赛凭证。",
+      "ticketAlt": "{{name}} 的参赛凭证",
+      "expired": "订单已过期，名额已释放。",
+      "registerAgain": "重新报名",
+      "cancelled": "订单已取消。"
+    },
+    "rejectCode": {
+      "NOT_RECEIVED": "未收到这笔款项",
+      "AMOUNT_MISMATCH": "金额不符",
+      "DUPLICATE_TXN": "交易号重复",
+      "UNREADABLE": "截图看不清",
+      "WRONG_ACCOUNT": "转错账户",
+      "FRAUD": "凭证存疑",
+      "OTHER": "其他原因"
+    }
   }
 }

@@ -6,6 +6,8 @@
  * `Content-Type`/boundary 都正确；问题只出现在事后解码阶段，用 `.clone()` 与否结果一样）。这是这套
  * 工具链的已知限制，不是被测代码的问题：生产环境下浏览器的 fetch/FormData 是同一实现，不存在这个断言。
  * 用读取原始字节、按 boundary 手工切分的方式绕开这条解码路径。
+ *
+ * 仅供测试文件导入（web/admin、web/user 共用），不参与生产构建。
  */
 export interface MultipartField {
   type: string;

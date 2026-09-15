@@ -7,6 +7,8 @@ import { QueryState } from "../components/QueryState";
 import { formatDateTime, pickText } from "../format";
 import { useCancelOrder, useMyOrder } from "../orders/api";
 import orders from "../orders/Orders.module.css";
+import { OrderStatePanel } from "../orders/OrderStatePanel";
+import { formatCountdown, useCountdown } from "../pay/useCountdown";
 import { NotFoundPage } from "./NotFoundPage";
 import styles from "./Page.module.css";
 
@@ -20,7 +22,7 @@ export function OrderDetailPage() {
   return <QueryState query={order}>{(data) => <OrderDetailView order={data} />}</QueryState>;
 }
 
-// Task 18 在此补全审核中、驳回原因与重传、已确认参赛凭证、过期等状态
+// 审核中、驳回原因与重传、已确认参赛凭证、已过期、已取消的说明由 OrderStatePanel 渲染
 function OrderDetailView({ order }: { order: Schemas["OrderDetail"] }) {
   const { t } = useTranslation("user");
   const lang = useLang();
@@ -31,6 +33,7 @@ function OrderDetailView({ order }: { order: Schemas["OrderDetail"] }) {
   const couponDiscount = order.discountCents - order.identOffsetCents;
   const canPay = order.status === "PENDING_PAYMENT" || order.status === "PROOF_REJECTED";
   const canCancel = order.status === "PENDING_PAYMENT";
+  const remaining = useCountdown(canPay ? order.deadlineAt : null);
 
   return (
     <article>
@@ -42,6 +45,11 @@ function OrderDetailView({ order }: { order: Schemas["OrderDetail"] }) {
         </span>
         {canPay && order.deadlineAt ? (
           <span data-testid="order-deadline">{t("orders.deadline", { time: formatDateTime(order.deadlineAt, lang) })}</span>
+        ) : null}
+        {canPay && remaining !== null ? (
+          <span data-testid="order-countdown" aria-label={t("pay.countdown")}>
+            {formatCountdown(remaining)}
+          </span>
         ) : null}
       </p>
 
@@ -95,6 +103,8 @@ function OrderDetailView({ order }: { order: Schemas["OrderDetail"] }) {
           <dd data-testid="order-amount">{formatUsd(order.amountCents)}</dd>
         </div>
       </dl>
+
+      <OrderStatePanel order={order} />
 
       {cancel.error ? (
         <p className={orders.error} role="alert" data-testid="form-error">

@@ -95,7 +95,8 @@
   font-weight: 700;
 }
 
-.hint {
+.hint,
+.help {
   font-size: 13px;
   color: var(--ink-mute);
 }
@@ -108,21 +109,34 @@
 }
 
 .primary,
-.secondary {
+.secondary,
+.primaryButton {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 44px;
   padding: 0 20px;
   border-radius: 100px;
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+  text-decoration: none;
 }
 
-.primary {
+.primary,
+.primaryButton {
   border: 1px solid var(--brand);
   background: var(--brand-fill);
   color: #fff;
+}
+
+.primaryButton {
+  border: 0;
+}
+
+.primaryButton:disabled {
+  opacity: 0.6;
+  cursor: progress;
 }
 
 .secondary {
@@ -143,4 +157,52 @@
   border-radius: 10px;
   background: var(--stop-tint);
   color: var(--stop);
+}
+
+.notice,
+.rejectBox,
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.notice {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--card);
+}
+
+.rejectBox {
+  padding: 14px 16px;
+  border-radius: var(--r);
+  background: var(--stop-tint);
+  color: var(--stop);
+}
+
+.sectionTitle {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.ticketList {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ticket {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--card);
 }

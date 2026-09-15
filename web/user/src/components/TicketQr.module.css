@@ -1,0 +1,10 @@
+.qr,
+.placeholder {
+  width: 200px;
+  height: 200px;
+}
+
+.placeholder {
+  border-radius: 8px;
+  background: var(--sunk);
+}
