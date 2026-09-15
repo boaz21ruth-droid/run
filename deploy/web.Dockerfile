@@ -19,6 +19,9 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
 COPY tsconfig.base.json ./
 COPY packages ./packages
 COPY web ./web
+# 用户端「在 Telegram 中打开」链接里的机器人用户名，Vite 构建时写入产物
+ARG VITE_TELEGRAM_BOT_USERNAME=werun_bot
+ENV VITE_TELEGRAM_BOT_USERNAME=${VITE_TELEGRAM_BOT_USERNAME}
 RUN pnpm --filter @werun/user --filter @werun/admin run build
 
 # ---- 运行阶段 ----

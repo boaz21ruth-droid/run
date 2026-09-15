@@ -5,6 +5,8 @@
 export const TELEGRAM_SDK_URL = "https://telegram.org/js/telegram-web-app.js";
 
 export interface TelegramWebApp {
+  /** 原样传给 POST /api/app/auth/telegram 的签名查询串；不在 Telegram 中打开时为空串 */
+  initData: string;
   ready(): void;
   expand(): void;
   themeParams: Record<string, string | undefined>;
@@ -41,18 +43,22 @@ export function loadTelegramSdk(): Promise<TelegramWebApp> {
     return Promise.resolve(window.Telegram.WebApp);
   }
   return new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = TELEGRAM_SDK_URL;
-    script.async = true;
-    script.onload = () => {
+    // 主题适配与登录会同时等待 SDK：复用已插入的 script，只下载一次
+    let script = document.querySelector<HTMLScriptElement>(`script[src="${TELEGRAM_SDK_URL}"]`);
+    if (!script) {
+      script = document.createElement("script");
+      script.src = TELEGRAM_SDK_URL;
+      script.async = true;
+      document.head.appendChild(script);
+    }
+    script.addEventListener("load", () => {
       if (window.Telegram?.WebApp) {
         resolve(window.Telegram.WebApp);
       } else {
         reject(new Error("Telegram SDK 已加载，但 window.Telegram.WebApp 不存在"));
       }
-    };
-    script.onerror = () => reject(new Error(`无法加载 ${TELEGRAM_SDK_URL}`));
-    document.head.appendChild(script);
+    });
+    script.addEventListener("error", () => reject(new Error(`无法加载 ${TELEGRAM_SDK_URL}`)));
   });
 }
 

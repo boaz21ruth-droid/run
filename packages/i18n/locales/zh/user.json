@@ -11,5 +11,58 @@
     "start": "发枪",
     "cutoff": "关门"
   },
-  "notFound": { "title": "页面不存在", "body": "链接可能已经失效。", "home": "回到首页" }
+  "notFound": { "title": "页面不存在", "body": "链接可能已经失效。", "home": "回到首页" },
+  "auth": {
+    "checking": "正在确认身份…",
+    "openInTelegram": {
+      "title": "请在 Telegram 中打开",
+      "body": "报名和管理常用参赛人需要在 WeRun 的 Telegram 小程序里登录。普通浏览器仍可以浏览赛事。",
+      "action": "打开 Telegram"
+    }
+  },
+  "profiles": {
+    "nav": "常用参赛人",
+    "title": "常用参赛人",
+    "empty": "还没有常用参赛人。保存在这里的资料，报名时可以直接选择。",
+    "create": "添加参赛人",
+    "createTitle": "添加参赛人",
+    "editTitle": "编辑参赛人",
+    "edit": "编辑",
+    "delete": "删除",
+    "deleteConfirm": "确定删除 {{name}}？",
+    "confirmDelete": "确认删除",
+    "cancel": "取消",
+    "save": "保存",
+    "saving": "正在保存…",
+    "self": "本人",
+    "idNoLabel": "证件号",
+    "phoneLabel": "手机",
+    "idNoKeepHint": "当前证件号 {{masked}}，留空则不修改。",
+    "choose": "请选择",
+    "fields": {
+      "fullName": "姓名（与证件一致）",
+      "gender": "性别",
+      "birthDate": "出生日期",
+      "nationality": "国籍",
+      "nationalityHint": "两位国家代码，例如 KH、CN",
+      "idType": "证件类型",
+      "idNo": "证件号",
+      "phone": "手机号",
+      "phoneHint": "带国家码，例如 +85512345678",
+      "email": "邮箱（选填）",
+      "emergencyName": "紧急联系人姓名",
+      "emergencyPhone": "紧急联系人电话",
+      "tshirtSize": "T 恤尺码",
+      "isSelf": "这是我本人"
+    },
+    "gender": { "M": "男", "F": "女", "X": "其他" },
+    "idType": { "NATIONAL_ID": "身份证", "PASSPORT": "护照", "OTHER": "其他证件" },
+    "errors": {
+      "required": "必填。",
+      "invalid": "格式不正确。",
+      "form": "请检查标出的字段。",
+      "save": "保存失败，请稍后再试。",
+      "delete": "删除失败，请稍后再试。"
+    }
+  }
 }

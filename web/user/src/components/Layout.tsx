@@ -22,6 +22,9 @@ export function Layout() {
             <NavLink to="/events" className={navClass}>
               {t("common:nav.events")}
             </NavLink>
+            <NavLink to="/profiles" className={navClass}>
+              {t("profiles.nav")}
+            </NavLink>
           </nav>
           <LanguageSwitch />
         </div>

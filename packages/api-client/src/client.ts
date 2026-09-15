@@ -7,6 +7,8 @@ export interface ApiClientOptions {
   client: "user" | "admin";
   baseUrl?: string;
   getLang: () => string;
+  /** 跑者令牌；返回非空串时设置 Authorization: Bearer <token> */
+  getAuthToken?: () => string | null;
   onUnauthorized?: () => void;
 }
 
@@ -16,6 +18,10 @@ function werunMiddleware(options: ApiClientOptions): Middleware {
       request.headers.set("Accept-Language", options.getLang());
       if (options.client === "admin") {
         request.headers.set("X-WeRun-Client", "admin");
+      }
+      const token = options.getAuthToken?.();
+      if (token) {
+        request.headers.set("Authorization", `Bearer ${token}`);
       }
       return request;
     },

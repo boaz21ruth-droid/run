@@ -11,5 +11,58 @@
     "start": "Start",
     "cutoff": "Cut-off"
   },
-  "notFound": { "title": "Page not found", "body": "The link may be out of date.", "home": "Back to home" }
+  "notFound": { "title": "Page not found", "body": "The link may be out of date.", "home": "Back to home" },
+  "auth": {
+    "checking": "Checking your sign-in…",
+    "openInTelegram": {
+      "title": "Open in Telegram",
+      "body": "Registration and saved runners are available in the WeRun mini app on Telegram. You can still browse events here.",
+      "action": "Open Telegram"
+    }
+  },
+  "profiles": {
+    "nav": "Saved runners",
+    "title": "Saved runners",
+    "empty": "No saved runners yet. Runners saved here can be picked when you register.",
+    "create": "Add runner",
+    "createTitle": "Add runner",
+    "editTitle": "Edit runner",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Delete {{name}}?",
+    "confirmDelete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…",
+    "self": "Myself",
+    "idNoLabel": "ID",
+    "phoneLabel": "Phone",
+    "idNoKeepHint": "Current ID number {{masked}}. Leave blank to keep it.",
+    "choose": "Select…",
+    "fields": {
+      "fullName": "Full name (as on ID)",
+      "gender": "Gender",
+      "birthDate": "Date of birth",
+      "nationality": "Nationality",
+      "nationalityHint": "Two-letter country code, e.g. KH or CN",
+      "idType": "ID type",
+      "idNo": "ID number",
+      "phone": "Mobile number",
+      "phoneHint": "Include the country code, e.g. +85512345678",
+      "email": "Email (optional)",
+      "emergencyName": "Emergency contact name",
+      "emergencyPhone": "Emergency contact number",
+      "tshirtSize": "T-shirt size",
+      "isSelf": "This is me"
+    },
+    "gender": { "M": "Male", "F": "Female", "X": "Other" },
+    "idType": { "NATIONAL_ID": "National ID", "PASSPORT": "Passport", "OTHER": "Other ID" },
+    "errors": {
+      "required": "Required.",
+      "invalid": "Invalid format.",
+      "form": "Please check the highlighted fields.",
+      "save": "Couldn't save. Please try again.",
+      "delete": "Couldn't delete. Please try again."
+    }
+  }
 }

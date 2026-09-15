@@ -73,6 +73,8 @@ jobs:
       - run: pnpm test
       - run: pnpm i18n:check
       - run: pnpm build
+        env:
+          VITE_TELEGRAM_BOT_USERNAME: werun_e2e_bot
 
   e2e:
     name: End-to-end
@@ -189,6 +191,8 @@ jobs:
           file: deploy/web.Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
+          build-args: |
+            VITE_TELEGRAM_BOT_USERNAME=${{ vars.WERUN_TELEGRAM_BOT_USERNAME || 'werun_bot' }}
           tags: |
             ${{ steps.names.outputs.web }}:${{ github.sha }}
             ${{ steps.names.outputs.web }}:main

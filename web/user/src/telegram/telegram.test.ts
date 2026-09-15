@@ -1,6 +1,14 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { TELEGRAM_SDK_URL, applyTelegramTheme, initTelegram, isTelegram, type RouterLike, type TelegramWebApp } from "./telegram";
+import {
+  TELEGRAM_SDK_URL,
+  applyTelegramTheme,
+  initTelegram,
+  isTelegram,
+  loadTelegramSdk,
+  type RouterLike,
+  type TelegramWebApp,
+} from "./telegram";
 
 function fakeWebApp(): TelegramWebApp {
   return {
@@ -8,6 +16,7 @@ function fakeWebApp(): TelegramWebApp {
     expand: vi.fn(),
     themeParams: { bg_color: "#ffffff", button_color: "#0f66ae" },
     viewportStableHeight: 640,
+    initData: "user=%7B%7D&auth_date=1&hash=abc",
     onEvent: vi.fn(),
     BackButton: { show: vi.fn(), hide: vi.fn(), onClick: vi.fn() },
   };
@@ -74,5 +83,28 @@ describe("applyTelegramTheme", () => {
     const webApp = fakeWebApp();
     applyTelegramTheme(webApp);
     expect(document.documentElement.style.getPropertyValue("--tg-button-color")).toBe("#0f66ae");
+  });
+});
+
+describe("loadTelegramSdk", () => {
+  it("并发调用只插入一个 script，加载完成后都拿到 WebApp", async () => {
+    const first = loadTelegramSdk();
+    const second = loadTelegramSdk();
+
+    const scripts = document.querySelectorAll(`script[src="${TELEGRAM_SDK_URL}"]`);
+    expect(scripts).toHaveLength(1);
+
+    const webApp = fakeWebApp();
+    window.Telegram = { WebApp: webApp };
+    scripts[0]!.dispatchEvent(new Event("load"));
+
+    await expect(first).resolves.toBe(webApp);
+    await expect(second).resolves.toBe(webApp);
+  });
+
+  it("脚本加载失败时拒绝", async () => {
+    const pending = loadTelegramSdk();
+    document.querySelector(`script[src="${TELEGRAM_SDK_URL}"]`)!.dispatchEvent(new Event("error"));
+    await expect(pending).rejects.toThrow(TELEGRAM_SDK_URL);
   });
 });

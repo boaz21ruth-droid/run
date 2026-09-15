@@ -69,6 +69,8 @@ services:
     build:
       context: ..
       dockerfile: deploy/web.Dockerfile
+      args:
+        VITE_TELEGRAM_BOT_USERNAME: ${WERUN_TELEGRAM_BOT_USERNAME:-werun_bot}
     environment:
       WERUN_USER_HOST: ${WERUN_USER_HOST:?WERUN_USER_HOST is required}
       WERUN_ADMIN_HOST: ${WERUN_ADMIN_HOST:?WERUN_ADMIN_HOST is required}

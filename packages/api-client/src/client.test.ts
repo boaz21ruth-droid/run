@@ -92,6 +92,36 @@ describe("createApiClient", () => {
     expect(request.url).toBe("http://localhost/api/admin/events/42/publish");
   });
 
+  it("getAuthToken 返回非空令牌时带 Authorization: Bearer，每次请求重新读取", async () => {
+    const fetchMock = stubFetch(() => jsonResponse(200, { items: [] }));
+    let token: string | null = "runner-token-1";
+    const client = createApiClient({
+      client: "user",
+      baseUrl: BASE_URL,
+      getLang: () => "en",
+      getAuthToken: () => token,
+    });
+
+    await client.GET("/events");
+    token = null;
+    await client.GET("/events");
+    token = "";
+    await client.GET("/events");
+
+    expect(fetchMock.mock.calls[0]![0].headers.get("Authorization")).toBe("Bearer runner-token-1");
+    expect(fetchMock.mock.calls[1]![0].headers.get("Authorization")).toBeNull();
+    expect(fetchMock.mock.calls[2]![0].headers.get("Authorization")).toBeNull();
+  });
+
+  it("没有 getAuthToken 时不带 Authorization", async () => {
+    const fetchMock = stubFetch(() => jsonResponse(200, { items: [] }));
+    const client = createApiClient({ client: "admin", baseUrl: BASE_URL, getLang: () => "en" });
+
+    await client.GET("/admin/events");
+
+    expect(firstRequest(fetchMock).headers.get("Authorization")).toBeNull();
+  });
+
   it("收到 401 时调用 onUnauthorized", async () => {
     stubFetch(() => jsonResponse(401, { error: { code: "UNAUTHENTICATED", message: "Please sign in" } }));
     const onUnauthorized = vi.fn();

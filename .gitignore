@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!web/user/.env.development
 .vercel/
 
 # dependencies & build output
