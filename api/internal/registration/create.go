@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,6 +22,7 @@ import (
 	"werun/api/internal/platform/db"
 	"werun/api/internal/platform/httpx"
 	"werun/api/internal/platform/idgen"
+	"werun/api/internal/platform/piicrypt"
 	"werun/api/internal/platform/settings"
 	"werun/api/internal/pricing"
 	"werun/api/internal/registration/store"
@@ -87,15 +89,36 @@ func normalizeCreateInput(in CreateOrderInput) (CreateOrderInput, error) {
 	return out, nil
 }
 
-// requestHash 是规范化输入（不含幂等键）的 JSON 的 SHA-256。结构体字段顺序固定，json.Marshal 输出稳定。
-func requestHash(in CreateOrderInput) ([]byte, error) {
+// requestHash 是 requestHashPayload 的 SHA-256。结构体字段顺序固定，json.Marshal 输出稳定。
+func requestHash(in CreateOrderInput, pii *piicrypt.Cipher) ([]byte, error) {
+	raw, err := requestHashPayload(in, pii)
+	if err != nil {
+		return nil, err
+	}
+	sum := sha256.Sum256(raw)
+	return sum[:], nil
+}
+
+// requestHashPayload 返回参与幂等哈希的 JSON：规范化输入去掉幂等键，每位参赛人的证件号替换为
+// hex(PII 密钥下的 HMAC)（与 registrations.id_no_hash 同一算法）。请求里其它字段在库里都有明文，
+// 若哈希直接覆盖明文证件号，拿到数据库的人就能离线穷举证件号。不修改入参。
+func requestHashPayload(in CreateOrderInput, pii *piicrypt.Cipher) ([]byte, error) {
 	in.IdempotencyKey = ""
+	parts := make([]OrderParticipantInput, len(in.Participants))
+	for i, p := range in.Participants {
+		if p.Profile != nil {
+			prof := *p.Profile
+			prof.IDNo = hex.EncodeToString(pii.Hash(prof.IDNo))
+			p.Profile = &prof
+		}
+		parts[i] = p
+	}
+	in.Participants = parts
 	raw, err := json.Marshal(in)
 	if err != nil {
 		return nil, fmt.Errorf("encode order request: %w", err)
 	}
-	sum := sha256.Sum256(raw)
-	return sum[:], nil
+	return raw, nil
 }
 
 func registrationOpen(status, eventType string, open bool, opensAt, closesAt *time.Time, now time.Time) bool {
@@ -114,7 +137,7 @@ func (s *Service) CreateOrder(ctx context.Context, u runner.User, in CreateOrder
 	if err != nil {
 		return OrderDetail{}, err
 	}
-	hash, err := requestHash(norm)
+	hash, err := requestHash(norm, s.runners.PII())
 	if err != nil {
 		return OrderDetail{}, err
 	}

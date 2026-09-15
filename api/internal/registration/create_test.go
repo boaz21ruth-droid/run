@@ -281,10 +281,23 @@ func TestCreateOrderIdempotencyKey(t *testing.T) {
 	require.Equal(t, 1, fx.Count(t, e.pool, `SELECT count(*) FROM reg_orders`))
 	require.Equal(t, fx.Counts{Reserved: 1}, e.counts(t, "event_categories", e.event.CategoryIDs[0]))
 
+	reformatted := e.input("replay-key-0001", fx.Profile("Sam Rith", "r12 3456", "KH", "1990-01-01"))
+	replayed, err := e.svc.CreateOrder(ctx, e.user, reformatted, testMeta)
+	require.NoError(t, err, "证件号只是格式不同，规范化后是同一请求")
+	require.Equal(t, first.OrderNo, replayed.OrderNo)
+
 	changed := in
 	changed.CouponCode = "NOPE"
 	_, err = e.svc.CreateOrder(ctx, e.user, changed, testMeta)
 	requireAppErr(t, err, apperr.CodeIdempotencyKeyReused, http.StatusUnprocessableEntity)
+
+	otherIDNo := e.input("replay-key-0001", fx.Profile("Sam Rith", "R123457", "KH", "1990-01-01"))
+	_, err = e.svc.CreateOrder(ctx, e.user, otherIDNo, testMeta)
+	requireAppErr(t, err, apperr.CodeIdempotencyKeyReused, http.StatusUnprocessableEntity)
+	require.Equal(t, 1, fx.Count(t, e.pool, `SELECT count(*) FROM reg_orders`))
+	require.Equal(t, 0, fx.Count(t, e.pool,
+		`SELECT count(*) FROM idempotency_keys WHERE response_body::text LIKE '%R123456%' OR encode(request_hash, 'escape') LIKE '%R123456%'`),
+		"幂等记录里没有明文证件号")
 
 	other := fx.Runner(t, e.pool, 900002, "Other")
 	otherIn := e.input("replay-key-0001", fx.Profile("Other Runner", "O123456", "KH", "1990-01-01"))

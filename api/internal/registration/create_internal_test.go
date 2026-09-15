@@ -1,6 +1,9 @@
 package registration
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -10,6 +13,7 @@ import (
 
 	"werun/api/internal/httpapi/apigen"
 	"werun/api/internal/platform/apperr"
+	"werun/api/internal/platform/piicrypt"
 	"werun/api/internal/runner"
 )
 
@@ -114,11 +118,12 @@ func TestRequestHashIgnoresKeyItemOrderAndFormatting(t *testing.T) {
 	c := validCreateInput()
 	c.Participants[0].CategoryID = 12
 
+	pii := testPII(t)
 	hash := func(in CreateOrderInput) []byte {
 		t.Helper()
 		norm, err := normalizeCreateInput(in)
 		require.NoError(t, err)
-		h, err := requestHash(norm)
+		h, err := requestHash(norm, pii)
 		require.NoError(t, err)
 		require.Len(t, h, 32)
 		return h
@@ -126,6 +131,53 @@ func TestRequestHashIgnoresKeyItemOrderAndFormatting(t *testing.T) {
 
 	require.Equal(t, hash(a), hash(b))
 	require.NotEqual(t, hash(a), hash(c))
+}
+
+func testPII(t *testing.T) *piicrypt.Cipher {
+	t.Helper()
+	c, err := piicrypt.New([]byte("0123456789abcdef0123456789abcdef"))
+	require.NoError(t, err)
+	return c
+}
+
+func TestRequestHashDoesNotExposeIDNumber(t *testing.T) {
+	pii := testPII(t)
+	norm, err := normalizeCreateInput(validCreateInput())
+	require.NoError(t, err)
+
+	payload, err := requestHashPayload(norm, pii)
+	require.NoError(t, err)
+	require.NotContains(t, string(payload), "N01234567", "哈希前的载荷不含明文证件号")
+	require.Contains(t, string(payload), hex.EncodeToString(pii.Hash("N01234567")))
+	require.Equal(t, "N01234567", norm.Participants[0].Profile.IDNo, "不修改入参")
+
+	h, err := requestHash(norm, pii)
+	require.NoError(t, err)
+	sum := sha256.Sum256(payload)
+	require.Equal(t, sum[:], h)
+
+	// 旧算法：直接对含明文证件号的规范化输入做 SHA-256。新哈希必须与之不同。
+	plainIn := norm
+	plainIn.IdempotencyKey = ""
+	plain, err := json.Marshal(plainIn)
+	require.NoError(t, err)
+	require.Contains(t, string(plain), "N01234567")
+	old := sha256.Sum256(plain)
+	require.NotEqual(t, old[:], h)
+
+	otherID := validCreateInput()
+	otherID.Participants[0].Profile.IDNo = "N01234568"
+	otherNorm, err := normalizeCreateInput(otherID)
+	require.NoError(t, err)
+	otherHash, err := requestHash(otherNorm, pii)
+	require.NoError(t, err)
+	require.NotEqual(t, h, otherHash, "证件号不同，哈希不同")
+
+	otherKey, err := piicrypt.New([]byte("fedcba9876543210fedcba9876543210"))
+	require.NoError(t, err)
+	keyed, err := requestHash(norm, otherKey)
+	require.NoError(t, err)
+	require.NotEqual(t, h, keyed, "证件号只经服务端密钥影响哈希")
 }
 
 func TestRegistrationOpen(t *testing.T) {
