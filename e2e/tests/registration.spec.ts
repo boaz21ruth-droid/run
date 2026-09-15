@@ -31,6 +31,10 @@ const percentCode = `PCT${RUN}`;
 const waiverCode = `FREE${RUN}`;
 const accountName = `E2E ABA ${runId}`;
 const rejectReason = `截图看不清 ${runId}`;
+// PNG 颜色种子取自 runId（毫秒时间戳）：不同运行的文件 sha256 不同，重跑不会触发重复截图标记；
+// 同一次运行内按序号偏移（低 24 位互不相同），二维码与两张凭证彼此不同。
+const seedBase = Number.parseInt(runId, 36);
+const pngSeed = (n: number) => (seedBase + n) & 0xffffff;
 const CONSENT_KEYS = ["rules", "health", "terms"] as const;
 
 const runnerA = runnerUser("Dara", "zh");
@@ -182,7 +186,7 @@ test("FINANCE 为该赛事建收款账户并上传二维码", async ({ browser }
   await expect(active).toHaveAttribute("aria-checked", "true");
   await page
     .getByTestId("payment-account-qr-input")
-    .setInputFiles({ name: "qr.png", mimeType: "image/png", buffer: makePng(0x33aa55) });
+    .setInputFiles({ name: "qr.png", mimeType: "image/png", buffer: makePng(pngSeed(0)) });
   await page.getByTestId("payment-account-submit").click();
 
   await expect(page.locator('[data-testid^="payment-account-row-"]').filter({ hasText: accountName })).toBeVisible();
@@ -237,7 +241,7 @@ test("跑者 A 两人同单用百分比优惠码下单，付款页金额与算�
 
   await page.getByTestId("pay-upload-link").click();
   await expect(page).toHaveURL(new RegExp(`/orders/${shared.orderNo}/proof$`));
-  await uploadProof(page, `E2E${RUN}A`, makePng(0x112233));
+  await uploadProof(page, `E2E${RUN}A`, makePng(pngSeed(1)));
 
   await context.close();
 });
@@ -263,7 +267,7 @@ test("跑者看到驳回原因并用新交易号重传", async ({ browser }) => 
   await expect(page.getByTestId("order-reject-reason")).toContainText(rejectReason);
   await page.getByTestId("order-reupload").click();
   await expect(page).toHaveURL(new RegExp(`/orders/${shared.orderNo}/proof$`));
-  await uploadProof(page, `E2E${RUN}B`, makePng(0x445566));
+  await uploadProof(page, `E2E${RUN}B`, makePng(pngSeed(2)));
 
   await context.close();
 });

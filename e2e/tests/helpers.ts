@@ -176,6 +176,28 @@ export function makePng(seed: number): Buffer {
   ]);
 }
 
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+/** 本地日期 "YYYY-MM-DD"，从今天起 days 天后 */
+function localDateAfterDays(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
+/**
+ * e2e 赛事的比赛日期：今天起约 120 天后，格式 "YYYY-MM-DD"（后台日期选择器与接口都用这个格式），
+ * 模块加载时算一次，同一次运行内各用例一致。不再写死日期，避免日期过去后 CI 失败。
+ * 其余日期都跟它保持一致：组别起跑/关门时间用 raceDateTime() 取同一天；报名开放不设起止时间
+ * （开关打开即刻生效），早鸟价按配额而不是截止日期，所以只需要比赛日期在未来。
+ */
+export const RACE_DATE = localDateAfterDays(120);
+
+/** 比赛当天的本地时间 "YYYY-MM-DD HH:mm"（组别 startAt/cutoffAt 选择器的格式） */
+export function raceDateTime(time: string): string {
+  return `${RACE_DATE} ${time}`;
+}
+
 export interface NewEvent {
   slug: string;
   name: { zh: string; en: string; km: string };
@@ -197,7 +219,7 @@ export async function createAndPublishEvent(page: Page, ev: NewEvent): Promise<v
   await page.locator("#event_name_en").fill(ev.name.en);
   await page.locator("#event_name_km").fill(ev.name.km);
   await page.locator("#event_city").fill("Phnom Penh");
-  await fillDate(page, "#event_raceDate", "2027-01-17");
+  await fillDate(page, "#event_raceDate", RACE_DATE);
 
   await page.locator("#event_categories_0_code").fill("5K");
   await page.locator("#event_categories_0_name_zh").fill("欢乐 5K");
@@ -205,8 +227,8 @@ export async function createAndPublishEvent(page: Page, ev: NewEvent): Promise<v
   await page.locator("#event_categories_0_name_km").fill("រត់ 5K");
   await page.locator("#event_categories_0_distanceM").fill("5000");
   await page.locator("#event_categories_0_capacity").fill(String(ev.capacity));
-  await fillDate(page, "#event_categories_0_startAt", "2027-01-17 06:00");
-  await fillDate(page, "#event_categories_0_cutoffAt", "2027-01-17 08:00");
+  await fillDate(page, "#event_categories_0_startAt", raceDateTime("06:00"));
+  await fillDate(page, "#event_categories_0_cutoffAt", raceDateTime("08:00"));
 
   await page.getByTestId("event-form-submit").click();
   await expect(page).toHaveURL(`${ADMIN_URL}/events`);
@@ -275,6 +297,5 @@ export function centsToPlainUsd(cents: number): string {
 /** 本地时间 "YYYY-MM-DD HH:mm"，默认为 1 分钟前（到账时间不能晚于现在） */
 export function pickerNow(offsetMinutes = -1): string {
   const d = new Date(Date.now() + offsetMinutes * 60_000);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }

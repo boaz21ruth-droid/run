@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { ADMIN, ADMIN_URL, OPS, USER_URL } from "./env";
-import { fillDate, loginAdmin, presetLanguage } from "./helpers";
+import { fillDate, loginAdmin, presetLanguage, RACE_DATE, raceDateTime } from "./helpers";
 
 const runId = Date.now().toString(36);
 const slug = `e2e-${runId}`;
@@ -27,7 +27,7 @@ test("OPS 新建并发布赛事", async ({ browser }) => {
   await page.locator("#event_name_en").fill(name.en);
   await page.locator("#event_name_km").fill(name.km);
   await page.locator("#event_city").fill("Phnom Penh");
-  await fillDate(page, "#event_raceDate", "2027-01-17");
+  await fillDate(page, "#event_raceDate", RACE_DATE);
 
   // 表单默认已带一个空组别
   await page.locator("#event_categories_0_code").fill("10K");
@@ -36,8 +36,8 @@ test("OPS 新建并发布赛事", async ({ browser }) => {
   await page.locator("#event_categories_0_name_km").fill("រត់ 10K");
   await page.locator("#event_categories_0_distanceM").fill("10000");
   await page.locator("#event_categories_0_capacity").fill("500");
-  await fillDate(page, "#event_categories_0_startAt", "2027-01-17 06:00");
-  await fillDate(page, "#event_categories_0_cutoffAt", "2027-01-17 09:00");
+  await fillDate(page, "#event_categories_0_startAt", raceDateTime("06:00"));
+  await fillDate(page, "#event_categories_0_cutoffAt", raceDateTime("09:00"));
 
   await page.getByTestId("event-form-submit").click();
   await expect(page).toHaveURL(`${ADMIN_URL}/events`);
@@ -98,7 +98,7 @@ test("ADMIN 只读：能看列表，没有新建按钮，直接调用新建接�
     organizerType: "OFFICIAL",
     name: { zh: "不应创建", en: "Should not be created", km: "មិនគួរបង្កើត" },
     city: "Phnom Penh",
-    raceDate: "2027-01-17",
+    raceDate: RACE_DATE,
     categories: [],
   });
 
