@@ -46,6 +46,7 @@ var OperationAuths = map[string]OperationAuth{
 	"AdminUpdatePaymentAccount":    {Kind: AuthPermission, Permission: "payment_account_manage", Access: "write"},
 	"AdminUpdatePriceRule":         {Kind: AuthPermission, Permission: "price_config", Access: "write"},
 	"AppCancelOrder":               {Kind: AuthApp},
+	"AppCreateFreeSignup":          {Kind: AuthApp},
 	"AppCreateOrder":               {Kind: AuthApp},
 	"AppCreateProfile":             {Kind: AuthApp},
 	"AppDeleteProfile":             {Kind: AuthApp},

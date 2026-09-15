@@ -435,6 +435,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/app/events/{slug}/free-signups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 免费活动报名（同一跑者可为家人报多人） */
+        post: operations["appCreateFreeSignup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/app/orders": {
         parameters: {
             query?: never;
@@ -996,6 +1013,41 @@ export interface components {
             effectiveDate: string;
             fullText: string;
             items: components["schemas"]["ConsentItem"][];
+        };
+        FreeSignupConsent: {
+            version: string;
+            /** @enum {string} */
+            lang: "zh" | "en" | "km";
+            checkedItems: string[];
+        };
+        FreeSignupRequest: {
+            /** Format: int64 */
+            categoryId: number;
+            fullName: string;
+            /** @description E.164，例如 +85512345678 */
+            phone: string;
+            emergencyName: string;
+            emergencyPhone: string;
+            /** @enum {string} */
+            gender?: "M" | "F" | "X";
+            /**
+             * Format: date
+             * @description 组别 minAge > 0 时必填
+             */
+            birthDate?: string;
+            consents: components["schemas"]["FreeSignupConsent"];
+        };
+        FreeSignup: {
+            /** Format: int64 */
+            id: number;
+            signupNo: string;
+            eventSlug: string;
+            /** Format: int64 */
+            categoryId: number;
+            fullName: string;
+            status: string;
+            /** Format: date-time */
+            createdAt: string;
         };
         QuoteParticipantInput: {
             /** Format: int64 */
@@ -2373,6 +2425,41 @@ export interface operations {
                 };
             };
             /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appCreateFreeSignup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FreeSignupRequest"];
+            };
+        };
+        responses: {
+            /** @description 报名成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FreeSignup"];
+                };
+            };
+            /** @description 错误（REGISTRATION_CLOSED、CATEGORY_SOLD_OUT、ALREADY_REGISTERED、CONSENT_INVALID、VALIDATION_FAILED、EVENT_NOT_FOUND） */
             default: {
                 headers: {
                     [name: string]: unknown;

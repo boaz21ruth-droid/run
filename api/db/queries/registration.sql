@@ -307,3 +307,30 @@ USING (
 ) d
 WHERE k.scope = d.scope AND k.subject = d.subject AND k.key = d.key
   AND k.expires_at < @now::timestamptz;
+
+-- name: FreeSignupLockEvent :one
+SELECT id, event_type, status, registration_open, registration_opens_at, registration_closes_at, race_date
+FROM events
+WHERE slug = @slug
+FOR SHARE;
+
+-- name: FreeSignupGetCategory :one
+SELECT id, min_age
+FROM event_categories
+WHERE id = @id AND event_id = @event_id;
+
+-- name: FreeSignupTakeSeat :execrows
+UPDATE event_categories
+SET used_count = used_count + 1
+WHERE id = @id AND used_count + reserved_count + 1 <= capacity;
+
+-- name: InsertFreeSignup :one
+INSERT INTO free_signups (
+  signup_no, event_id, category_id, user_id, full_name, phone_e164,
+  gender, birth_date, emergency_name, emergency_phone, source
+) VALUES (
+  @signup_no, @event_id, @category_id, @user_id::bigint, @full_name, @phone_e164,
+  NULLIF(@gender::text, ''), NULLIF(@birth_date::text, '')::date,
+  @emergency_name::text, @emergency_phone::text, 'TELEGRAM'
+)
+RETURNING id, signup_no, status, created_at;

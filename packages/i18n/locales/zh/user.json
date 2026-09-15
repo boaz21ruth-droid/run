@@ -223,5 +223,38 @@
       "FRAUD": "凭证存疑",
       "OTHER": "其他原因"
     }
+  },
+  "free": {
+    "title": "免费报名",
+    "button": "免费报名",
+    "category": "组别",
+    "chooseCategory": "请选择组别",
+    "soldOut": "已满",
+    "minAgeHint": "最低年龄 {{minAge}} 岁（按比赛当天计算）",
+    "fullName": "姓名",
+    "phone": "手机号",
+    "phoneHint": "带国家区号，例如 +85512345678",
+    "emergencyName": "紧急联系人姓名",
+    "emergencyPhone": "紧急联系人电话",
+    "gender": "性别",
+    "optional": "（选填）",
+    "genderUnset": "不填写",
+    "genderM": "男",
+    "genderF": "女",
+    "genderX": "其他",
+    "birthDate": "出生日期",
+    "consentTitle": "报名同意书",
+    "consentFullText": "查看全文",
+    "consentHint": "逐项勾选后才能提交",
+    "submit": "提交报名",
+    "submitting": "提交中…",
+    "required": "必填",
+    "phoneInvalid": "请输入带国家区号的手机号，例如 +85512345678",
+    "tooYoung": "比赛当天须年满 {{minAge}} 岁",
+    "alreadyRegistered": "该姓名和手机号已报名这个组别",
+    "closed": "该活动当前未开放报名",
+    "doneTitle": "报名成功",
+    "doneBody": "报名编号：{{signupNo}}",
+    "doneBack": "返回活动详情"
   }
 }

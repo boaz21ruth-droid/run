@@ -223,5 +223,38 @@
       "FRAUD": "Proof looks suspicious",
       "OTHER": "Other reason"
     }
+  },
+  "free": {
+    "title": "Free sign-up",
+    "button": "Sign up for free",
+    "category": "Category",
+    "chooseCategory": "Choose a category",
+    "soldOut": "Full",
+    "minAgeHint": "Minimum age {{minAge}} on race day",
+    "fullName": "Full name",
+    "phone": "Phone number",
+    "phoneHint": "Include the country code, e.g. +85512345678",
+    "emergencyName": "Emergency contact name",
+    "emergencyPhone": "Emergency contact phone",
+    "gender": "Gender",
+    "optional": "(optional)",
+    "genderUnset": "Prefer not to say",
+    "genderM": "Male",
+    "genderF": "Female",
+    "genderX": "Other",
+    "birthDate": "Date of birth",
+    "consentTitle": "Registration consent",
+    "consentFullText": "Read the full text",
+    "consentHint": "Tick every item to submit",
+    "submit": "Submit sign-up",
+    "submitting": "Submitting…",
+    "required": "Required",
+    "phoneInvalid": "Enter a phone number with the country code, e.g. +85512345678",
+    "tooYoung": "Must be at least {{minAge}} years old on race day",
+    "alreadyRegistered": "This name and phone number are already signed up for this category",
+    "closed": "Registration for this activity is not open",
+    "doneTitle": "You are signed up",
+    "doneBody": "Sign-up number: {{signupNo}}",
+    "doneBack": "Back to the activity"
   }
 }

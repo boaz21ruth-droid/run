@@ -3,6 +3,7 @@ import { RequireRunner } from "./auth/RequireRunner";
 import { Layout } from "./components/Layout";
 import { EventDetailPage } from "./pages/EventDetailPage";
 import { EventsPage } from "./pages/EventsPage";
+import { FreeSignupPage } from "./pages/FreeSignupPage";
 import { HomePage } from "./pages/HomePage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { OrderDetailPage } from "./pages/OrderDetailPage";
@@ -26,6 +27,7 @@ export const routes: RouteObject[] = [
         children: [
           { path: "profiles", element: <ProfilesPage /> },
           { path: "events/:slug/register", element: <RegisterPage /> },
+          { path: "events/:slug/free-signup", element: <FreeSignupPage /> },
           { path: "orders", element: <OrdersPage /> },
           { path: "orders/:orderNo", element: <OrderDetailPage /> },
           { path: "orders/:orderNo/pay", element: <PayPage /> },

@@ -43,6 +43,15 @@ export function EventDetailPage() {
               </p>
             )
           ) : null}
+          {data.eventType === "FREE_ACTIVITY" && data.registrationOpen ? (
+            <Link
+              to={`/events/${data.slug}/free-signup`}
+              className={styles.freeSignupAction}
+              data-testid="free-signup-button"
+            >
+              {t("free.button")}
+            </Link>
+          ) : null}
           <h2 className={styles.title}>{t("event.categories")}</h2>
           <div className={styles.tableWrap}>
             <table className={styles.table}>

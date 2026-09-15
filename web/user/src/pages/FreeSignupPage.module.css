@@ -1,0 +1,119 @@
+.form {
+  display: grid;
+  gap: 16px;
+  max-width: 560px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-mid);
+}
+
+.input {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--stop);
+}
+
+.hint {
+  display: block;
+  font-size: 13px;
+  color: var(--ink-mute);
+}
+
+.fieldError {
+  font-size: 13px;
+  color: var(--stop);
+}
+
+.consent {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--card);
+}
+
+.fullText summary {
+  cursor: pointer;
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.fullText p {
+  margin-top: 8px;
+  white-space: pre-wrap;
+  color: var(--ink-mid);
+}
+
+.consentItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.consentItem input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: var(--brand);
+}
+
+.consentText {
+  display: grid;
+  gap: 2px;
+}
+
+.formError {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--stop-tint);
+  color: var(--stop);
+}
+
+.submit {
+  min-height: 48px;
+  border: 0;
+  border-radius: 100px;
+  background: var(--brand);
+  color: var(--card);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.done {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--card);
+}
+
+.doneTitle {
+  font-size: 20px;
+  font-weight: 700;
+}

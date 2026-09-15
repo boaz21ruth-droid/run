@@ -366,6 +366,48 @@ func (e DiscountType) Valid() bool {
 	}
 }
 
+// Defines values for FreeSignupConsentLang.
+const (
+	FreeSignupConsentLangEn FreeSignupConsentLang = "en"
+	FreeSignupConsentLangKm FreeSignupConsentLang = "km"
+	FreeSignupConsentLangZh FreeSignupConsentLang = "zh"
+)
+
+// Valid indicates whether the value is a known member of the FreeSignupConsentLang enum.
+func (e FreeSignupConsentLang) Valid() bool {
+	switch e {
+	case FreeSignupConsentLangEn:
+		return true
+	case FreeSignupConsentLangKm:
+		return true
+	case FreeSignupConsentLangZh:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for FreeSignupRequestGender.
+const (
+	FreeSignupRequestGenderF FreeSignupRequestGender = "F"
+	FreeSignupRequestGenderM FreeSignupRequestGender = "M"
+	FreeSignupRequestGenderX FreeSignupRequestGender = "X"
+)
+
+// Valid indicates whether the value is a known member of the FreeSignupRequestGender enum.
+func (e FreeSignupRequestGender) Valid() bool {
+	switch e {
+	case FreeSignupRequestGenderF:
+		return true
+	case FreeSignupRequestGenderM:
+		return true
+	case FreeSignupRequestGenderX:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for Gender.
 const (
 	GenderF Gender = "F"
@@ -1225,6 +1267,45 @@ type ErrorResponse struct {
 	} `json:"error"`
 }
 
+// FreeSignup defines model for FreeSignup.
+type FreeSignup struct {
+	CategoryId int64     `json:"categoryId"`
+	CreatedAt  time.Time `json:"createdAt"`
+	EventSlug  string    `json:"eventSlug"`
+	FullName   string    `json:"fullName"`
+	Id         int64     `json:"id"`
+	SignupNo   string    `json:"signupNo"`
+	Status     string    `json:"status"`
+}
+
+// FreeSignupConsent defines model for FreeSignupConsent.
+type FreeSignupConsent struct {
+	CheckedItems []string              `json:"checkedItems"`
+	Lang         FreeSignupConsentLang `json:"lang"`
+	Version      string                `json:"version"`
+}
+
+// FreeSignupConsentLang defines model for FreeSignupConsent.Lang.
+type FreeSignupConsentLang string
+
+// FreeSignupRequest defines model for FreeSignupRequest.
+type FreeSignupRequest struct {
+	// BirthDate 组别 minAge > 0 时必填
+	BirthDate      *openapi_types.Date      `json:"birthDate,omitempty"`
+	CategoryId     int64                    `json:"categoryId"`
+	Consents       FreeSignupConsent        `json:"consents"`
+	EmergencyName  string                   `json:"emergencyName"`
+	EmergencyPhone string                   `json:"emergencyPhone"`
+	FullName       string                   `json:"fullName"`
+	Gender         *FreeSignupRequestGender `json:"gender,omitempty"`
+
+	// Phone E.164，例如 +85512345678
+	Phone string `json:"phone"`
+}
+
+// FreeSignupRequestGender defines model for FreeSignupRequest.Gender.
+type FreeSignupRequestGender string
+
 // Gender defines model for Gender.
 type Gender string
 
@@ -1778,6 +1859,9 @@ type AdminRejectProofJSONRequestBody = RejectProofRequest
 // AppLoginTelegramJSONRequestBody defines body for AppLoginTelegram for application/json ContentType.
 type AppLoginTelegramJSONRequestBody = AppLoginRequest
 
+// AppCreateFreeSignupJSONRequestBody defines body for AppCreateFreeSignup for application/json ContentType.
+type AppCreateFreeSignupJSONRequestBody = FreeSignupRequest
+
 // AppQuoteJSONRequestBody defines body for AppQuote for application/json ContentType.
 type AppQuoteJSONRequestBody = QuoteRequest
 
@@ -1876,6 +1960,9 @@ type ServerInterface interface {
 	// AppGetConsent 当前生效的同意书版本；所请求语言没有时依次回退到英文、中文
 	// (GET /app/consents)
 	AppGetConsent(c *gin.Context, params AppGetConsentParams)
+	// AppCreateFreeSignup 免费活动报名（同一跑者可为家人报多人）
+	// (POST /app/events/{slug}/free-signups)
+	AppCreateFreeSignup(c *gin.Context, slug string)
 	// AppQuote 报名算价预览（不占名额、不选识别分）
 	// (POST /app/events/{slug}/quote)
 	AppQuote(c *gin.Context, slug string)
@@ -2538,6 +2625,31 @@ func (siw *ServerInterfaceWrapper) AppGetConsent(c *gin.Context) {
 	siw.Handler.AppGetConsent(c, params)
 }
 
+// AppCreateFreeSignup operation middleware
+func (siw *ServerInterfaceWrapper) AppCreateFreeSignup(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "slug" -------------
+	var slug string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Param("slug"), &slug, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppCreateFreeSignup(c, slug)
+}
+
 // AppQuote operation middleware
 func (siw *ServerInterfaceWrapper) AppQuote(c *gin.Context) {
 
@@ -2930,6 +3042,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.PUT(options.BaseURL+"/app/profiles/:id", wrapper.AppUpdateProfile)
 	router.GET(options.BaseURL+"/app/consents", wrapper.AppGetConsent)
 	router.POST(options.BaseURL+"/app/events/:slug/quote", wrapper.AppQuote)
+	router.POST(options.BaseURL+"/app/events/:slug/free-signups", wrapper.AppCreateFreeSignup)
 	router.GET(options.BaseURL+"/app/orders", wrapper.AppListOrders)
 	router.POST(options.BaseURL+"/app/orders", wrapper.AppCreateOrder)
 	router.GET(options.BaseURL+"/app/orders/:orderNo", wrapper.AppGetOrder)
@@ -3994,6 +4107,46 @@ func (response AppGetConsentdefaultJSONResponse) VisitAppGetConsentResponse(w ht
 	return err
 }
 
+type AppCreateFreeSignupRequestObject struct {
+	Slug string `json:"slug"`
+	Body *AppCreateFreeSignupJSONRequestBody
+}
+
+type AppCreateFreeSignupResponseObject interface {
+	VisitAppCreateFreeSignupResponse(w http.ResponseWriter) error
+}
+
+type AppCreateFreeSignup201JSONResponse FreeSignup
+
+func (response AppCreateFreeSignup201JSONResponse) VisitAppCreateFreeSignupResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppCreateFreeSignupdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppCreateFreeSignupdefaultJSONResponse) VisitAppCreateFreeSignupResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AppQuoteRequestObject struct {
 	Slug string `json:"slug"`
 	Body *AppQuoteJSONRequestBody
@@ -4714,6 +4867,9 @@ type StrictServerInterface interface {
 	// AppGetConsent 当前生效的同意书版本；所请求语言没有时依次回退到英文、中文
 	// (GET /app/consents)
 	AppGetConsent(ctx context.Context, request AppGetConsentRequestObject) (AppGetConsentResponseObject, error)
+	// AppCreateFreeSignup 免费活动报名（同一跑者可为家人报多人）
+	// (POST /app/events/{slug}/free-signups)
+	AppCreateFreeSignup(ctx context.Context, request AppCreateFreeSignupRequestObject) (AppCreateFreeSignupResponseObject, error)
 	// AppQuote 报名算价预览（不占名额、不选识别分）
 	// (POST /app/events/{slug}/quote)
 	AppQuote(ctx context.Context, request AppQuoteRequestObject) (AppQuoteResponseObject, error)
@@ -5580,6 +5736,39 @@ func (sh *strictHandler) AppGetConsent(ctx *gin.Context, params AppGetConsentPar
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AppGetConsentResponseObject); ok {
 		if err := validResponse.VisitAppGetConsentResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppCreateFreeSignup operation middleware
+func (sh *strictHandler) AppCreateFreeSignup(ctx *gin.Context, slug string) {
+	var request AppCreateFreeSignupRequestObject
+
+	request.Slug = slug
+
+	var body AppCreateFreeSignupJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppCreateFreeSignup(ctx, request.(AppCreateFreeSignupRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppCreateFreeSignup")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppCreateFreeSignupResponseObject); ok {
+		if err := validResponse.VisitAppCreateFreeSignupResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

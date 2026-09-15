@@ -338,6 +338,75 @@ func (q *Queries) ConfirmOrderRegistrations(ctx context.Context, arg ConfirmOrde
 	return result.RowsAffected(), nil
 }
 
+const freeSignupGetCategory = `-- name: FreeSignupGetCategory :one
+SELECT id, min_age
+FROM event_categories
+WHERE id = $1 AND event_id = $2
+`
+
+type FreeSignupGetCategoryParams struct {
+	ID      int64
+	EventID int64
+}
+
+type FreeSignupGetCategoryRow struct {
+	ID     int64
+	MinAge int16
+}
+
+func (q *Queries) FreeSignupGetCategory(ctx context.Context, arg FreeSignupGetCategoryParams) (FreeSignupGetCategoryRow, error) {
+	row := q.db.QueryRow(ctx, freeSignupGetCategory, arg.ID, arg.EventID)
+	var i FreeSignupGetCategoryRow
+	err := row.Scan(&i.ID, &i.MinAge)
+	return i, err
+}
+
+const freeSignupLockEvent = `-- name: FreeSignupLockEvent :one
+SELECT id, event_type, status, registration_open, registration_opens_at, registration_closes_at, race_date
+FROM events
+WHERE slug = $1
+FOR SHARE
+`
+
+type FreeSignupLockEventRow struct {
+	ID                   int64
+	EventType            string
+	Status               string
+	RegistrationOpen     bool
+	RegistrationOpensAt  *time.Time
+	RegistrationClosesAt *time.Time
+	RaceDate             time.Time
+}
+
+func (q *Queries) FreeSignupLockEvent(ctx context.Context, slug string) (FreeSignupLockEventRow, error) {
+	row := q.db.QueryRow(ctx, freeSignupLockEvent, slug)
+	var i FreeSignupLockEventRow
+	err := row.Scan(
+		&i.ID,
+		&i.EventType,
+		&i.Status,
+		&i.RegistrationOpen,
+		&i.RegistrationOpensAt,
+		&i.RegistrationClosesAt,
+		&i.RaceDate,
+	)
+	return i, err
+}
+
+const freeSignupTakeSeat = `-- name: FreeSignupTakeSeat :execrows
+UPDATE event_categories
+SET used_count = used_count + 1
+WHERE id = $1 AND used_count + reserved_count + 1 <= capacity
+`
+
+func (q *Queries) FreeSignupTakeSeat(ctx context.Context, id int64) (int64, error) {
+	result, err := q.db.Exec(ctx, freeSignupTakeSeat, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const getEventForQuote = `-- name: GetEventForQuote :one
 SELECT id, event_type, status, race_date
 FROM events
@@ -536,6 +605,61 @@ func (q *Queries) GetOrderPaymentAccount(ctx context.Context, id int64) (GetOrde
 		&i.AccountName,
 		&i.AccountNoMasked,
 		&i.QrFileID,
+	)
+	return i, err
+}
+
+const insertFreeSignup = `-- name: InsertFreeSignup :one
+INSERT INTO free_signups (
+  signup_no, event_id, category_id, user_id, full_name, phone_e164,
+  gender, birth_date, emergency_name, emergency_phone, source
+) VALUES (
+  $1, $2, $3, $4::bigint, $5, $6,
+  NULLIF($7::text, ''), NULLIF($8::text, '')::date,
+  $9::text, $10::text, 'TELEGRAM'
+)
+RETURNING id, signup_no, status, created_at
+`
+
+type InsertFreeSignupParams struct {
+	SignupNo       string
+	EventID        int64
+	CategoryID     int64
+	UserID         int64
+	FullName       string
+	PhoneE164      string
+	Gender         string
+	BirthDate      string
+	EmergencyName  string
+	EmergencyPhone string
+}
+
+type InsertFreeSignupRow struct {
+	ID        int64
+	SignupNo  string
+	Status    string
+	CreatedAt time.Time
+}
+
+func (q *Queries) InsertFreeSignup(ctx context.Context, arg InsertFreeSignupParams) (InsertFreeSignupRow, error) {
+	row := q.db.QueryRow(ctx, insertFreeSignup,
+		arg.SignupNo,
+		arg.EventID,
+		arg.CategoryID,
+		arg.UserID,
+		arg.FullName,
+		arg.PhoneE164,
+		arg.Gender,
+		arg.BirthDate,
+		arg.EmergencyName,
+		arg.EmergencyPhone,
+	)
+	var i InsertFreeSignupRow
+	err := row.Scan(
+		&i.ID,
+		&i.SignupNo,
+		&i.Status,
+		&i.CreatedAt,
 	)
 	return i, err
 }

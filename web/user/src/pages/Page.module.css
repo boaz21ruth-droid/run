@@ -123,3 +123,17 @@
   background: var(--stop-tint);
   color: var(--stop);
 }
+
+.freeSignupAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin-bottom: 20px;
+  padding: 0 24px;
+  border-radius: 100px;
+  background: var(--brand);
+  color: var(--card);
+  font-weight: 700;
+  text-decoration: none;
+}
