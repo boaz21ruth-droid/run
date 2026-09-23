@@ -113,6 +113,11 @@ export class AuthController {
     return this.last ?? Promise.resolve(false);
   }
 
+  /** 「我的」页保存资料成功后，直接用接口返回的跑者更新状态，让顶栏/其它读取者跟着刷新；不重新请求 /app/me。 */
+  setUser(user: Schemas["AppUser"]): void {
+    this.set({ status: "authenticated", user });
+  }
+
   async logout(): Promise<void> {
     this.loggingOut = true;
     try {

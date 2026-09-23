@@ -28,6 +28,8 @@ export interface UseAuthResult extends AuthState {
   requestCode: (phone: string) => Promise<Schemas["PhoneCodeSent"]>;
   /** 浏览器模式：校验验证码并登录 */
   loginWithPhone: (phone: string, code: string) => Promise<void>;
+  /** 用接口返回的跑者直接更新状态（例如保存「我的」资料后），让顶栏等读取者立即看到新值 */
+  setUser: (user: Schemas["AppUser"]) => void;
 }
 
 export function useAuth(): UseAuthResult {
@@ -45,5 +47,6 @@ export function useAuth(): UseAuthResult {
     },
     requestCode: (phone) => controller.requestCode(phone),
     loginWithPhone: (phone, code) => controller.loginWithPhone(phone, code),
+    setUser: (user) => controller.setUser(user),
   };
 }

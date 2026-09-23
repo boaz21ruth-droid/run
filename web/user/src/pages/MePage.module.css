@@ -1,0 +1,86 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 480px;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+.row {
+  display: grid;
+  gap: 4px;
+}
+
+.row input,
+.row select {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line-hard);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+}
+
+.row small {
+  color: var(--ink-mute);
+}
+
+.info {
+  display: grid;
+  gap: 4px;
+  color: var(--ink-mid);
+}
+
+.info span:first-child {
+  font-size: 13px;
+  color: var(--ink-mute);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.save {
+  min-height: 44px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 100px;
+  background: var(--brand);
+  color: var(--card);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.save:disabled {
+  background: var(--line-hard);
+  color: var(--ink-mute);
+  cursor: not-allowed;
+}
+
+.status {
+  color: var(--leaf);
+}
+
+.error {
+  color: var(--stop);
+}
+
+.logout {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--line-hard);
+  border-radius: 100px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}

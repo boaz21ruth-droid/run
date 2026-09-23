@@ -88,6 +88,19 @@
     "login": "Log in",
     "logout": "Log out"
   },
+  "me": {
+    "nav": "My account",
+    "title": "My account",
+    "displayName": "Display name",
+    "displayNameHint": "Used for greetings and notifications; it doesn't change your runner profiles.",
+    "locale": "Language",
+    "phone": "Phone",
+    "telegram": "Telegram",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "logout": "Log out"
+  },
   "profiles": {
     "nav": "Saved runners",
     "title": "Saved runners",

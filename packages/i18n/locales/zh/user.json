@@ -88,6 +88,19 @@
     "login": "登录",
     "logout": "退出登录"
   },
+  "me": {
+    "nav": "我的",
+    "title": "我的账号",
+    "displayName": "显示名",
+    "displayNameHint": "用于页面问候与通知，不影响参赛人资料",
+    "locale": "语言",
+    "phone": "手机号",
+    "telegram": "Telegram",
+    "save": "保存",
+    "saving": "正在保存…",
+    "saved": "已保存",
+    "logout": "退出登录"
+  },
   "profiles": {
     "nav": "常用参赛人",
     "title": "常用参赛人",

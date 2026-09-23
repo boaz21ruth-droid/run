@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Link, NavLink, Outlet } from "react-router";
+import { useAuth } from "../auth/AuthProvider";
+import { isBrowserMode } from "../auth/session";
 import styles from "./Layout.module.css";
 import { LanguageSwitch } from "./LanguageSwitch";
 
@@ -29,6 +31,7 @@ export function Layout() {
               {t("profiles.nav")}
             </NavLink>
           </nav>
+          <UserMenu />
           <LanguageSwitch />
         </div>
       </header>
@@ -37,4 +40,25 @@ export function Layout() {
       </main>
     </div>
   );
+}
+
+/** 未登录（浏览器模式）时显示登录入口，已登录时显示显示名/手机号，链接到「我的」账号页 */
+function UserMenu() {
+  const { status, user } = useAuth();
+  const { t } = useTranslation("user");
+  if (status === "authenticated" && user) {
+    return (
+      <NavLink to="/me" className={styles.userLink} data-testid="nav-me">
+        {user.displayName || user.phoneMasked || t("me.nav")}
+      </NavLink>
+    );
+  }
+  if (status === "unauthenticated" && isBrowserMode()) {
+    return (
+      <NavLink to="/login" className={styles.userLink} data-testid="nav-login">
+        {t("auth.login")}
+      </NavLink>
+    );
+  }
+  return null;
 }

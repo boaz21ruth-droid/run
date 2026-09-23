@@ -188,6 +188,20 @@ describe("AuthController", () => {
     expect(window.localStorage.getItem(TOKEN_KEY)).toBeNull();
   });
 
+  it("setUser 直接用给定的跑者更新已登录状态并通知订阅者", async () => {
+    const deps = makeDeps();
+    const auth = new AuthController(deps);
+    await auth.start();
+    const listener = vi.fn();
+    auth.subscribe(listener);
+    const updated: Schemas["AppUser"] = { ...runner, displayName: "Dara" };
+
+    auth.setUser(updated);
+
+    expect(auth.getState()).toEqual({ status: "authenticated", user: updated });
+    expect(listener).toHaveBeenCalledOnce();
+  });
+
   it("loginWithPhone 排在进行中的 start() 之后，不被随后才落地的 initData 登录冲掉", async () => {
     const deps = makeDeps(null);
     const gate = deferred<string | null>();

@@ -59,6 +59,19 @@
   border-bottom-color: var(--brand-fill);
 }
 
+.userLink {
+  margin-left: auto;
+  color: var(--ink-mid);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (min-width: 1024px) {
+  .userLink {
+    margin-left: 0;
+  }
+}
+
 .main {
   max-width: var(--shell-max);
   margin: 0 auto;
