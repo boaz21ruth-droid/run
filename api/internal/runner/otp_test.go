@@ -320,3 +320,16 @@ func TestRequestPhoneCodePassesOTPIDAsPayload(t *testing.T) {
 	require.Len(t, f.sender.payloads, 1)
 	assert.Equal(t, strconv.FormatInt(id, 10), f.sender.payloads[0], "payload 必须是 auth_otps 主键")
 }
+
+func TestFixedSenderCustomCode(t *testing.T) {
+	f := newFixtureWithSender(t, runner.FixedOTPSender{Code: "000000"})
+	ctx := context.Background()
+	_, err := f.svc.RequestPhoneCode(ctx, phoneA, testMeta)
+	require.NoError(t, err)
+
+	_, err = f.svc.VerifyPhoneCode(ctx, phoneA, runner.FixedOTPCode, "zh", testMeta)
+	requireAppError(t, err, http.StatusUnprocessableEntity, apperr.CodeOTPInvalid)
+
+	_, err = f.svc.VerifyPhoneCode(ctx, phoneA, "000000", "zh", testMeta)
+	require.NoError(t, err)
+}

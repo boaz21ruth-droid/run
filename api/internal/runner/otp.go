@@ -249,8 +249,8 @@ func (s *Service) UpdateMe(ctx context.Context, userID int64, displayName, local
 }
 
 func (s *Service) newCode() (string, error) {
-	if _, fixed := s.otp.(FixedOTPSender); fixed {
-		return FixedOTPCode, nil
+	if f, fixed := s.otp.(FixedOTPSender); fixed {
+		return f.FixedCode(), nil
 	}
 	n, err := rand.Int(rand.Reader, big.NewInt(1_000_000))
 	if err != nil {

@@ -27,8 +27,18 @@ func (s LogOTPSender) Send(ctx context.Context, phone, code, payload string) (st
 	return "", nil
 }
 
-// FixedOTPSender 不发送任何东西；Service 在它生效时把验证码固定为 FixedOTPCode。
-type FixedOTPSender struct{}
+// FixedOTPSender 不发送任何东西；Service 在它生效时把验证码固定为 Code，Code 为空时用 FixedOTPCode。
+type FixedOTPSender struct {
+	Code string
+}
+
+// FixedCode 返回生效的固定验证码。
+func (f FixedOTPSender) FixedCode() string {
+	if f.Code != "" {
+		return f.Code
+	}
+	return FixedOTPCode
+}
 
 func (FixedOTPSender) Send(context.Context, string, string, string) (string, error) {
 	return "", nil

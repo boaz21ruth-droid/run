@@ -256,3 +256,42 @@ func TestLoadOTPSenderProd(t *testing.T) {
 		})
 	}
 }
+
+func TestLoadOTPFixedCode(t *testing.T) {
+	cases := []struct {
+		name, env, sender, code, token string
+		wantErr                        string
+		wantCode                       string
+	}{
+		{name: "prod fixed 需要固定码", env: "prod", sender: "fixed", wantErr: "WERUN_OTP_FIXED_CODE"},
+		{name: "prod fixed 带固定码放行", env: "prod", sender: "fixed", code: "000000", wantCode: "000000"},
+		{name: "prod log 仍禁止", env: "prod", sender: "log", code: "000000", token: "gw", wantErr: "WERUN_OTP_SENDER=log"},
+		{name: "固定码必须 6 位数字", env: "dev", sender: "fixed", code: "12ab", wantErr: "WERUN_OTP_FIXED_CODE"},
+		{name: "dev 固定码可选", env: "dev", sender: "fixed", wantCode: ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			setRequired(t)
+			unset(t, "WERUN_OTP_SENDER", "WERUN_TELEGRAM_GATEWAY_TOKEN", "WERUN_OTP_FIXED_CODE")
+			t.Setenv("WERUN_ENV", tc.env)
+			if tc.env == "prod" {
+				t.Setenv("WERUN_APP_BASE_URL", "https://suosdey.top")
+			}
+			t.Setenv("WERUN_OTP_SENDER", tc.sender)
+			if tc.code != "" {
+				t.Setenv("WERUN_OTP_FIXED_CODE", tc.code)
+			}
+			if tc.token != "" {
+				t.Setenv("WERUN_TELEGRAM_GATEWAY_TOKEN", tc.token)
+			}
+			cfg, err := config.Load()
+			if tc.wantErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantCode, cfg.OTPFixedCode)
+		})
+	}
+}

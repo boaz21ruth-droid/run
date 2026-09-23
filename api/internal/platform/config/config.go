@@ -6,10 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/caarlos0/env/v11"
 )
+
+// fixedCodePattern 是 WERUN_OTP_FIXED_CODE 的格式：6 位数字。
+var fixedCodePattern = regexp.MustCompile(`^[0-9]{6}$`)
 
 // Config 是 werun 进程的全部运行配置。
 type Config struct {
@@ -26,6 +30,7 @@ type Config struct {
 	AppBaseURL           string `env:"WERUN_APP_BASE_URL,required"`
 	OTPSender            string `env:"WERUN_OTP_SENDER"` // "" | telegram | log | fixed
 	TelegramGatewayToken string `env:"WERUN_TELEGRAM_GATEWAY_TOKEN"`
+	OTPFixedCode         string `env:"WERUN_OTP_FIXED_CODE"` // 6 位数字；设置后 fixed 发送器用它代替默认码，并允许 prod 使用 fixed
 }
 
 // Load 解析并校验环境变量。返回的错误会列出所有不合法的变量，而不是只报第一个。
@@ -77,8 +82,13 @@ func Load() (Config, error) {
 	default:
 		errs = append(errs, fmt.Errorf("WERUN_OTP_SENDER must be telegram, log, fixed or empty, got %q", cfg.OTPSender))
 	}
-	if cfg.IsProd() && (cfg.OTPSender == "log" || cfg.OTPSender == "fixed") {
-		errs = append(errs, fmt.Errorf("WERUN_OTP_SENDER=%s is not allowed when WERUN_ENV=prod", cfg.OTPSender))
+	cfg.OTPFixedCode = strings.TrimSpace(cfg.OTPFixedCode)
+	if cfg.OTPFixedCode != "" && !fixedCodePattern.MatchString(cfg.OTPFixedCode) {
+		errs = append(errs, fmt.Errorf("WERUN_OTP_FIXED_CODE must be exactly 6 digits, got %q", cfg.OTPFixedCode))
+	}
+	// prod 只在显式设置 WERUN_OTP_FIXED_CODE 时才允许 fixed（临时未接 Gateway 的过渡方案）；log 一律禁止。
+	if cfg.IsProd() && (cfg.OTPSender == "log" || (cfg.OTPSender == "fixed" && cfg.OTPFixedCode == "")) {
+		errs = append(errs, fmt.Errorf("WERUN_OTP_SENDER=%s is not allowed when WERUN_ENV=prod (fixed requires WERUN_OTP_FIXED_CODE)", cfg.OTPSender))
 	}
 	if cfg.OTPSenderKind() == "telegram" && cfg.TelegramGatewayToken == "" {
 		errs = append(errs, errors.New("WERUN_TELEGRAM_GATEWAY_TOKEN must be set when the OTP sender is telegram"))

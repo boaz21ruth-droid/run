@@ -112,7 +112,10 @@ func newOTPSender(cfg config.Config, log *slog.Logger) runner.OTPSender {
 	case "log":
 		return runner.LogOTPSender{Log: log}
 	case "fixed":
-		return runner.FixedOTPSender{}
+		if cfg.IsProd() {
+			log.Warn("OTP sender is FIXED in prod: anyone knowing WERUN_OTP_FIXED_CODE can log in as any phone number; switch to telegram before real users arrive")
+		}
+		return runner.FixedOTPSender{Code: cfg.OTPFixedCode}
 	default:
 		// config.Load 已校验取值，这里不可达；真走到说明配置校验与本函数脱节了。
 		panic(fmt.Sprintf("unknown OTP sender %q", cfg.OTPSenderKind()))
