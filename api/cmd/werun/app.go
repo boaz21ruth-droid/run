@@ -81,7 +81,8 @@ func Bootstrap(ctx context.Context) (*App, error) {
 	}
 	app := &App{Cfg: cfg, Log: log, Catalog: cat, Pool: pool, Store: files, PII: pii, Inserter: inserter}
 	app.Notify = notify.NewService(app.Inserter, app.Catalog, app.Cfg.AppBaseURL)
-	app.Runner = runner.NewService(app.Pool, []byte(app.Cfg.SessionSecret), app.Cfg.TelegramBotToken, app.PII, time.Now, runner.FixedOTPSender{}, runner.NewOTPLimiter(time.Now))
+	app.Runner = runner.NewService(app.Pool, []byte(app.Cfg.SessionSecret), app.Cfg.TelegramBotToken, app.PII, time.Now,
+		newOTPSender(app.Cfg, app.Log), runner.NewOTPLimiter(time.Now))
 	app.IAM = iam.NewService(app.Pool, []byte(app.Cfg.SessionSecret), iam.NewLoginLimiter(time.Now), time.Now)
 	app.Events = event.NewService(app.Pool)
 	app.Pricing = pricing.NewService(app.Pool, time.Now)
@@ -101,6 +102,18 @@ func newNotifySender(cfg config.Config, log *slog.Logger) notify.Sender {
 		return notify.NewTelegramSender(cfg.TelegramBotToken, notify.DefaultTelegramBaseURL, &http.Client{Timeout: 10 * time.Second})
 	}
 	return notify.LogSender{Log: log}
+}
+
+// newOTPSender 按 WERUN_OTP_SENDER 选择验证码发送器（config.Load 已保证 prod 只能是 telegram）。
+func newOTPSender(cfg config.Config, log *slog.Logger) runner.OTPSender {
+	switch cfg.OTPSenderKind() {
+	case "telegram":
+		return runner.NewGatewaySender(cfg.TelegramGatewayToken, runner.DefaultGatewayBaseURL, &http.Client{Timeout: 10 * time.Second})
+	case "log":
+		return runner.LogOTPSender{Log: log}
+	default:
+		return runner.FixedOTPSender{}
+	}
 }
 
 // JobDeps 汇总 River worker 的依赖；serve --with-worker 与 worker 命令共用。
