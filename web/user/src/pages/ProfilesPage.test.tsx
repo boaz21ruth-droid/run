@@ -62,10 +62,11 @@ describe("ProfilesPage", () => {
     expect(await screen.findByText(/No saved runners yet/)).toBeInTheDocument();
   });
 
-  it("不在 Telegram 中时显示 open-in-telegram，不请求参赛人", async () => {
-    const { requests } = renderApp("/profiles", apiRoutes({}), { initData: null });
+  it("浏览器模式未登录时跳到手机号登录页，不请求参赛人", async () => {
+    const { requests, router } = renderApp("/profiles", apiRoutes({}), { initData: null });
 
-    expect(await screen.findByTestId("open-in-telegram")).toBeInTheDocument();
+    await screen.findByTestId("login-phone");
+    expect(router.state.location.pathname).toBe("/login");
     expect(requests).toHaveLength(0);
   });
 

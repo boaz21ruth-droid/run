@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet } from "react-router";
+import { Link, Navigate, Outlet, useLocation } from "react-router";
 import pageStyles from "../pages/Page.module.css";
 import { useAuth } from "./AuthProvider";
 import styles from "./RequireRunner.module.css";
+import { isBrowserMode } from "./session";
 
 /** 构建时注入的机器人用户名生成 t.me 链接；没有配置时返回 null */
 export function telegramBotLink(username: string | undefined = import.meta.env.VITE_TELEGRAM_BOT_USERNAME): string | null {
@@ -23,6 +24,7 @@ export function OpenInTelegram() {
           {t("auth.openInTelegram.action")}
         </a>
       )}
+      <Link to="/login">{t("auth.openInTelegram.phoneLogin")}</Link>
     </section>
   );
 }
@@ -31,6 +33,7 @@ export function OpenInTelegram() {
 export function RequireRunner({ children }: { children?: ReactNode }) {
   const { status } = useAuth();
   const { t } = useTranslation("user");
+  const location = useLocation();
 
   if (status === "idle" || status === "loading") {
     return (
@@ -40,6 +43,10 @@ export function RequireRunner({ children }: { children?: ReactNode }) {
     );
   }
   if (status === "unauthenticated") {
+    if (isBrowserMode()) {
+      const next = encodeURIComponent(location.pathname + location.search);
+      return <Navigate to={`/login?next=${next}`} replace />;
+    }
     return <OpenInTelegram />;
   }
   return <>{children ?? <Outlet />}</>;

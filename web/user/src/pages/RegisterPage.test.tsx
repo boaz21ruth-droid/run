@@ -53,9 +53,10 @@ describe("RegisterPage", () => {
     window.localStorage.setItem("werun.lang", "en");
   });
 
-  it("不在 Telegram 中时显示 open-in-telegram", async () => {
-    renderApp(PATH, routes(), { initData: null });
-    expect(await screen.findByTestId("open-in-telegram")).toBeInTheDocument();
+  it("浏览器模式未登录时跳到手机号登录页", async () => {
+    const { router } = renderApp(PATH, routes(), { initData: null });
+    await screen.findByTestId("login-phone");
+    expect(router.state.location.pathname).toBe("/login");
   });
 
   it("未开放报名时显示提示", async () => {

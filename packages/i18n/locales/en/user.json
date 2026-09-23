@@ -61,9 +61,32 @@
     "checking": "Checking your sign-in…",
     "openInTelegram": {
       "title": "Open in Telegram",
-      "body": "Registration and saved runners are available in the WeRun mini app on Telegram. You can still browse events here.",
-      "action": "Open Telegram"
-    }
+      "body": "Registration and saved runners are available in the WeRun mini app on Telegram. You can still browse events here. You can also log in with your phone number.",
+      "action": "Open Telegram",
+      "phoneLogin": "Log in with phone"
+    },
+    "phone": {
+      "title": "Log in with phone",
+      "intro": "We'll send a verification code through Telegram to the account linked to this phone number.",
+      "countryCode": "Country code",
+      "number": "Phone number",
+      "numberPlaceholder": "12 345 678",
+      "sendCode": "Send code",
+      "sending": "Sending…",
+      "resendIn": "Resend in {{seconds}}s",
+      "resend": "Resend",
+      "code": "Verification code",
+      "codeHint": "6 digits, valid for 5 minutes",
+      "verify": "Log in",
+      "verifying": "Logging in…",
+      "sentTo": "Code sent to {{phone}}",
+      "changeNumber": "Change number",
+      "orTelegram": "You can also open the WeRun mini app in Telegram — no code needed.",
+      "sendFailed": "Couldn't send the code. Please try again.",
+      "verifyFailed": "Couldn't log in. Please try again."
+    },
+    "login": "Log in",
+    "logout": "Log out"
   },
   "profiles": {
     "nav": "Saved runners",

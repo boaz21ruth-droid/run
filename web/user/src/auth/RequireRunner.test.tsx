@@ -7,9 +7,11 @@ import { RequireRunner } from "./RequireRunner";
 const guarded = [{ path: "/", element: <RequireRunner><p>runner only</p></RequireRunner> }];
 
 describe("RequireRunner", () => {
-  it("没有 initData 时显示在 Telegram 中打开，链接指向机器人，不发请求", async () => {
+  it("在 Telegram 中打开但没有 initData 时显示在 Telegram 中打开，链接指向机器人，不发请求", async () => {
     window.localStorage.setItem("werun.lang", "en");
     vi.stubEnv("VITE_TELEGRAM_BOT_USERNAME", "werun_test_bot");
+    // 模拟在 Telegram 小程序里打开，但 SDK 没能给出 initData（浏览器模式下才走 /login 重定向）
+    window.location.hash = "#tgWebAppData=test";
 
     const { requests } = renderRoutes(guarded, "/", apiRoutes({}), { initData: null });
 
@@ -20,14 +22,15 @@ describe("RequireRunner", () => {
     expect(requests).toHaveLength(0);
   });
 
-  it("没有配置机器人用户名时不显示链接", async () => {
+  it("没有配置机器人用户名时不显示机器人链接", async () => {
     window.localStorage.setItem("werun.lang", "en");
     vi.stubEnv("VITE_TELEGRAM_BOT_USERNAME", "");
+    window.location.hash = "#tgWebAppData=test";
 
     renderRoutes(guarded, "/", apiRoutes({}), { initData: null });
 
     await screen.findByTestId("open-in-telegram");
-    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Open Telegram" })).not.toBeInTheDocument();
   });
 
   it("登录成功后渲染受保护内容并保存令牌", async () => {
@@ -78,5 +81,17 @@ describe("RequireRunner", () => {
     expect(await screen.findByText("runner only")).toBeInTheDocument();
     expect(requests).toHaveLength(1);
     expect(requests[0]!.headers.get("Authorization")).toBe("Bearer stored-token");
+  });
+
+  it("浏览器模式未登录时跳到 /login 并带 next", async () => {
+    window.localStorage.setItem("werun.lang", "en");
+    const guardedAtOrders = [
+      { path: "/orders", element: <RequireRunner><p>runner only</p></RequireRunner> },
+      { path: "/login", element: <p>login page</p> },
+    ];
+    const { router } = renderRoutes(guardedAtOrders, "/orders", apiRoutes({}), { initData: null });
+
+    await waitFor(() => expect(router.state.location.pathname).toBe("/login"));
+    expect(router.state.location.search).toBe("?next=%2Forders");
   });
 });

@@ -61,9 +61,32 @@
     "checking": "正在确认身份…",
     "openInTelegram": {
       "title": "请在 Telegram 中打开",
-      "body": "报名和管理常用参赛人需要在 WeRun 的 Telegram 小程序里登录。普通浏览器仍可以浏览赛事。",
-      "action": "打开 Telegram"
-    }
+      "body": "报名和管理常用参赛人需要在 WeRun 的 Telegram 小程序里登录。普通浏览器仍可以浏览赛事。也可以用手机号登录。",
+      "action": "打开 Telegram",
+      "phoneLogin": "用手机号登录"
+    },
+    "phone": {
+      "title": "手机号登录",
+      "intro": "验证码会通过 Telegram 发送到这个手机号绑定的账号。",
+      "countryCode": "国家码",
+      "number": "手机号",
+      "numberPlaceholder": "12 345 678",
+      "sendCode": "发送验证码",
+      "sending": "正在发送…",
+      "resendIn": "{{seconds}} 秒后可重新发送",
+      "resend": "重新发送",
+      "code": "验证码",
+      "codeHint": "6 位数字，5 分钟内有效",
+      "verify": "登录",
+      "verifying": "正在登录…",
+      "sentTo": "验证码已发送到 {{phone}}",
+      "changeNumber": "换个号码",
+      "orTelegram": "也可以在 Telegram 中打开 WeRun 小程序，无需验证码。",
+      "sendFailed": "发送失败，请稍后再试",
+      "verifyFailed": "登录失败，请重试"
+    },
+    "login": "登录",
+    "logout": "退出登录"
   },
   "profiles": {
     "nav": "常用参赛人",

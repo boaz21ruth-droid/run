@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import type { Schemas } from "@werun/api-client";
 import { createContext, useContext, useEffect, useSyncExternalStore, type ReactNode } from "react";
 import type { AuthController, AuthState } from "./controller";
 
@@ -23,6 +24,10 @@ function useAuthController(): AuthController {
 export interface UseAuthResult extends AuthState {
   relogin: () => Promise<boolean>;
   logout: () => Promise<void>;
+  /** 浏览器模式：向手机号发送验证码 */
+  requestCode: (phone: string) => Promise<Schemas["PhoneCodeSent"]>;
+  /** 浏览器模式：校验验证码并登录 */
+  loginWithPhone: (phone: string, code: string) => Promise<void>;
 }
 
 export function useAuth(): UseAuthResult {
@@ -38,5 +43,7 @@ export function useAuth(): UseAuthResult {
       // 清掉上一位跑者的缓存数据
       queryClient.clear();
     },
+    requestCode: (phone) => controller.requestCode(phone),
+    loginWithPhone: (phone, code) => controller.loginWithPhone(phone, code),
   };
 }
