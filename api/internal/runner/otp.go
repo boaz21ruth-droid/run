@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math/big"
 	"net/http"
 	"regexp"
@@ -80,17 +81,24 @@ func (s *Service) RequestPhoneCode(ctx context.Context, phone string, meta httpx
 	}
 	requestID, sendErr := s.otp.Send(ctx, phone, code)
 	if sendErr != nil {
-		if err := s.q.ConsumeOTP(ctx, store.ConsumeOTPParams{ID: id, ConsumedAt: s.now()}); err != nil {
-			return CodeRequest{}, fmt.Errorf("runner: void otp after send failure: %w", err)
+		// 作废写入放到 context.WithoutCancel：sendErr 最常见的原因就是调用方 ctx 被取消
+		// 或超时，若沿用 ctx，这条“作废”写入会立刻失败，导致未送达的验证码在 5 分钟内
+		// 继续有效，且原始发送失败原因被技术性错误掩盖。
+		cause := sendErr
+		if voidErr := s.q.ConsumeOTP(context.WithoutCancel(ctx), store.ConsumeOTPParams{ID: id, ConsumedAt: s.now()}); voidErr != nil {
+			cause = errors.Join(sendErr, fmt.Errorf("runner: void otp id=%d after send failure: %w", id, voidErr))
 		}
 		if errors.Is(sendErr, ErrPhoneUnreachable) {
-			return CodeRequest{}, apperr.New(http.StatusUnprocessableEntity, apperr.CodeOTPPhoneNotOnTelegram).Wrap(sendErr)
+			return CodeRequest{}, apperr.New(http.StatusUnprocessableEntity, apperr.CodeOTPPhoneNotOnTelegram).Wrap(cause)
 		}
-		return CodeRequest{}, apperr.New(http.StatusBadGateway, apperr.CodeOTPSendFailed).Wrap(sendErr)
+		return CodeRequest{}, apperr.New(http.StatusBadGateway, apperr.CodeOTPSendFailed).Wrap(cause)
 	}
 	if requestID != "" {
-		if err := s.q.SetOTPProviderRequestID(ctx, store.SetOTPProviderRequestIDParams{ID: id, ProviderRequestID: &requestID}); err != nil {
-			return CodeRequest{}, fmt.Errorf("runner: store provider request id: %w", err)
+		// 只是对账用的记录；同样用 context.WithoutCancel 避免被调用方取消影响。发送已经
+		// 成功，用户手上已经有一个能用的验证码，这里失败不应该让整个请求变成 500——
+		// 那样会白白占掉限流名额，且 60 秒内无法重试。失败只记日志。
+		if err := s.q.SetOTPProviderRequestID(context.WithoutCancel(ctx), store.SetOTPProviderRequestIDParams{ID: id, ProviderRequestID: &requestID}); err != nil {
+			slog.WarnContext(ctx, "runner: store otp provider request id failed", "otp_id", id, "error", err)
 		}
 	}
 	return CodeRequest{ExpiresIn: otpTTL, ResendAfter: otpResendAfter, Channel: "telegram"}, nil
@@ -106,9 +114,11 @@ func (s *Service) VerifyPhoneCode(ctx context.Context, phone, code, locale strin
 	if !ValidE164(phone) {
 		return Session{}, apperr.New(http.StatusUnprocessableEntity, apperr.CodeOTPPhoneInvalid)
 	}
-	if _, ok := i18n.Parse(locale); !ok {
-		locale = string(i18n.Default)
+	lang, ok := i18n.Parse(locale)
+	if !ok {
+		lang = i18n.Default
 	}
+	locale = string(lang)
 	raw := make([]byte, tokenBytes)
 	if _, err := rand.Read(raw); err != nil {
 		return Session{}, fmt.Errorf("runner: generate session token: %w", err)
@@ -190,10 +200,13 @@ func (s *Service) UpdateMe(ctx context.Context, userID int64, displayName, local
 	if displayName != nil && (utf8.RuneCountInString(*displayName) == 0 || utf8.RuneCountInString(*displayName) > displayNameMax) {
 		return User{}, apperr.New(http.StatusUnprocessableEntity, apperr.CodeValidation).WithField("displayName", "field.too_long", nil)
 	}
+	var canonicalLocale string
 	if locale != nil {
-		if _, ok := i18n.Parse(*locale); !ok {
+		lang, ok := i18n.Parse(*locale)
+		if !ok {
 			return User{}, apperr.New(http.StatusUnprocessableEntity, apperr.CodeValidation).WithField("locale", "field.invalid", nil)
 		}
+		canonicalLocale = string(lang)
 	}
 	var user User
 	err := db.InTx(ctx, s.pool, func(tx pgx.Tx) error {
@@ -207,7 +220,7 @@ func (s *Service) UpdateMe(ctx context.Context, userID int64, displayName, local
 			name = displayName
 		}
 		if locale != nil {
-			lang = *locale
+			lang = canonicalLocale
 		}
 		row, err := q.UpdateUserProfile(ctx, store.UpdateUserProfileParams{ID: userID, DisplayName: name, Locale: lang})
 		if err != nil {

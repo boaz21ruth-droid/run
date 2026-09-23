@@ -169,6 +169,20 @@ func TestVerifyPhoneCodeExpired(t *testing.T) {
 	requireAppError(t, err, 422, apperr.CodeOTPExpired)
 }
 
+func TestVerifyPhoneCodeCanonicalizesLocale(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	_, _ = f.svc.RequestPhoneCode(ctx, phoneA, testMeta)
+
+	sess, err := f.svc.VerifyPhoneCode(ctx, phoneA, f.sender.last(phoneA), "zh-CN", testMeta)
+
+	require.NoError(t, err)
+	assert.Equal(t, "zh", sess.User.Locale)
+	var stored string
+	require.NoError(t, f.pool.QueryRow(ctx, "SELECT locale FROM users WHERE id=$1", sess.User.ID).Scan(&stored))
+	assert.Equal(t, "zh", stored, "存库前必须先规范化，否则 CHECK 约束会拒绝 zh-CN")
+}
+
 func TestVerifyPhoneCodeDisabledUser(t *testing.T) {
 	f := newFixture(t)
 	ctx := context.Background()
@@ -205,6 +219,23 @@ func TestUpdateMe(t *testing.T) {
 	bad := "fr"
 	_, err = f.svc.UpdateMe(ctx, sess.User.ID, nil, &bad, testMeta)
 	requireAppError(t, err, 422, apperr.CodeValidation)
+}
+
+func TestUpdateMeCanonicalizesLocale(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	_, _ = f.svc.RequestPhoneCode(ctx, phoneA, testMeta)
+	sess, err := f.svc.VerifyPhoneCode(ctx, phoneA, f.sender.last(phoneA), "zh", testMeta)
+	require.NoError(t, err)
+
+	locale := "zh-CN"
+	u, err := f.svc.UpdateMe(ctx, sess.User.ID, nil, &locale, testMeta)
+
+	require.NoError(t, err)
+	assert.Equal(t, "zh", u.Locale)
+	var stored string
+	require.NoError(t, f.pool.QueryRow(ctx, "SELECT locale FROM users WHERE id=$1", sess.User.ID).Scan(&stored))
+	assert.Equal(t, "zh", stored, "存库前必须先规范化，否则 CHECK 约束会拒绝 zh-CN")
 }
 
 func TestFixedSenderUsesFixedCode(t *testing.T) {
