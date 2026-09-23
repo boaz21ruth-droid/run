@@ -9,9 +9,15 @@ const EXPIRY_SKEW_MS = 30_000;
 
 export type LocationLike = Pick<Location, "hash" | "search">;
 
+/** 浏览器模式（非 Telegram Mini App）：跑者可以直接用手机号登录 */
+export function isBrowserMode(location: LocationLike = window.location): boolean {
+  return !isTelegram(location);
+}
+
 function storage(): Storage | null {
   try {
-    return window.sessionStorage;
+    // Telegram Mini App 关掉就丢登录态，用 sessionStorage；普通浏览器需要跨会话保留，用 localStorage
+    return isTelegram() ? window.sessionStorage : window.localStorage;
   } catch {
     // 隐私模式等场景禁用存储时，令牌只保存在内存之外，每次都用 initData 重新登录
     return null;

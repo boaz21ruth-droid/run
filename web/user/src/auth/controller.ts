@@ -13,6 +13,12 @@ export interface AuthControllerDeps {
   login: (initData: string) => Promise<Schemas["AppSession"]>;
   me: () => Promise<Schemas["AppUser"]>;
   logout: () => Promise<void>;
+  /** 浏览器模式：向手机号发送验证码 */
+  requestCode: (phone: string) => Promise<Schemas["PhoneCodeSent"]>;
+  /** 浏览器模式：校验验证码并登录 */
+  verifyCode: (phone: string, code: string) => Promise<Schemas["AppSession"]>;
+  /** 是否处于浏览器模式（非 Telegram Mini App） */
+  browserMode: () => boolean;
 }
 
 /**
@@ -60,12 +66,32 @@ export class AuthController {
     return this.track(this.loginWithInitData());
   }
 
-  /** api-client 收到 401 时调用：清掉令牌并重新登录一次。 */
+  /** 浏览器模式：发送验证码 */
+  requestCode(phone: string): Promise<Schemas["PhoneCodeSent"]> {
+    return this.deps.requestCode(phone);
+  }
+
+  /** 浏览器模式：校验验证码并登录；失败时抛出 ApiError，状态保持不变 */
+  async loginWithPhone(phone: string, code: string): Promise<void> {
+    const session = await this.deps.verifyCode(phone, code);
+    saveToken(session.token, session.expiresAt);
+    this.set({ status: "authenticated", user: session.user });
+  }
+
+  /**
+   * api-client 收到 401 时调用：清掉令牌。Telegram 模式下重新登录一次；
+   * 浏览器模式没有 initData 可用，直接进入 unauthenticated，让跑者手动重新输入手机号。
+   */
   handleUnauthorized(): void {
     if (this.loggingOut) {
       return;
     }
     clearToken();
+    if (this.deps.browserMode()) {
+      this.set({ status: "unauthenticated", user: null });
+      this.last = Promise.resolve(false);
+      return;
+    }
     this.last = this.relogin();
   }
 
@@ -106,7 +132,13 @@ export class AuthController {
         this.set({ status: "authenticated", user });
         return true;
       } catch {
-        // 令牌被吊销或已过期：继续用 initData 登录
+        // 令牌被吊销或已过期
+        if (this.deps.browserMode()) {
+          // 浏览器模式没有 initData 可用，直接失败，等跑者手动重新登录
+          this.fail();
+          return false;
+        }
+        // Telegram 模式：继续用 initData 登录
       }
     }
     return this.loginWithInitData();

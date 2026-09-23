@@ -32,6 +32,13 @@ function makeDeps(initData: string | null = "signed-init-data") {
     login: vi.fn<AuthControllerDeps["login"]>(async () => session("tok-1")),
     me: vi.fn<AuthControllerDeps["me"]>(async () => runner),
     logout: vi.fn<AuthControllerDeps["logout"]>(async () => undefined),
+    requestCode: vi.fn<AuthControllerDeps["requestCode"]>(async () => ({
+      expiresInSeconds: 300,
+      resendAfterSeconds: 60,
+      channel: "telegram" as const,
+    })),
+    verifyCode: vi.fn<AuthControllerDeps["verifyCode"]>(async () => session("tok-phone")),
+    browserMode: vi.fn<AuthControllerDeps["browserMode"]>(() => false),
   };
   return deps;
 }
@@ -59,7 +66,7 @@ describe("AuthController", () => {
 
     expect(deps.login).toHaveBeenCalledWith("signed-init-data");
     expect(auth.getState()).toEqual({ status: "authenticated", user: runner });
-    expect(window.sessionStorage.getItem(TOKEN_KEY)).toBe("tok-1");
+    expect(window.localStorage.getItem(TOKEN_KEY)).toBe("tok-1");
     expect(listener).toHaveBeenCalled();
   });
 
@@ -85,7 +92,7 @@ describe("AuthController", () => {
     await expect(auth.start()).resolves.toBe(true);
 
     expect(deps.login).toHaveBeenCalledOnce();
-    expect(window.sessionStorage.getItem(TOKEN_KEY)).toBe("tok-2");
+    expect(window.localStorage.getItem(TOKEN_KEY)).toBe("tok-2");
   });
 
   it("start 与 relogin 并发时只登录一次，重复 start 不再请求", async () => {
@@ -109,12 +116,12 @@ describe("AuthController", () => {
     auth.handleUnauthorized();
     auth.handleUnauthorized();
 
-    expect(window.sessionStorage.getItem(TOKEN_KEY)).toBeNull();
+    expect(window.localStorage.getItem(TOKEN_KEY)).toBeNull();
     expect(auth.getState().status).toBe("authenticated");
     second.resolve(session("tok-2"));
     await expect(auth.lastRelogin()).resolves.toBe(true);
     expect(deps.login).toHaveBeenCalledTimes(2);
-    expect(window.sessionStorage.getItem(TOKEN_KEY)).toBe("tok-2");
+    expect(window.localStorage.getItem(TOKEN_KEY)).toBe("tok-2");
   });
 
   it("重新登录失败时变为 unauthenticated", async () => {
@@ -127,7 +134,7 @@ describe("AuthController", () => {
 
     await expect(auth.lastRelogin()).resolves.toBe(false);
     expect(auth.getState()).toEqual({ status: "unauthenticated", user: null });
-    expect(window.sessionStorage.getItem(TOKEN_KEY)).toBeNull();
+    expect(window.localStorage.getItem(TOKEN_KEY)).toBeNull();
   });
 
   it("还没有收到过 401 时 lastRelogin 为 false", async () => {
@@ -149,6 +156,35 @@ describe("AuthController", () => {
     expect(deps.logout).toHaveBeenCalledOnce();
     expect(deps.login).toHaveBeenCalledOnce();
     expect(auth.getState()).toEqual({ status: "unauthenticated", user: null });
-    expect(window.sessionStorage.getItem(TOKEN_KEY)).toBeNull();
+    expect(window.localStorage.getItem(TOKEN_KEY)).toBeNull();
+  });
+
+  it("loginWithPhone 成功后保存令牌并进入 authenticated", async () => {
+    const deps = makeDeps(null);
+    const controller = new AuthController(deps);
+    await controller.start();
+    expect(controller.getState().status).toBe("unauthenticated");
+
+    await controller.loginWithPhone("+85512345678", "123456");
+
+    expect(deps.verifyCode).toHaveBeenCalledWith("+85512345678", "123456");
+    expect(controller.getState().status).toBe("authenticated");
+    expect(window.localStorage.getItem(TOKEN_KEY)).toBe("tok-phone");
+  });
+
+  it("浏览器模式下 401 只清令牌，不重登", async () => {
+    const deps = makeDeps(null);
+    deps.browserMode.mockReturnValue(true);
+    saveToken("tok-old", "2099-01-01T00:00:00Z");
+    const controller = new AuthController(deps);
+    await controller.start();
+    expect(controller.getState().status).toBe("authenticated");
+
+    controller.handleUnauthorized();
+    await controller.lastRelogin();
+
+    expect(deps.login).not.toHaveBeenCalled();
+    expect(controller.getState().status).toBe("unauthenticated");
+    expect(window.localStorage.getItem(TOKEN_KEY)).toBeNull();
   });
 });

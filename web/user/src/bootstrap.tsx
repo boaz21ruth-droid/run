@@ -7,7 +7,7 @@ import { RouterProvider, type createMemoryRouter } from "react-router";
 import { ApiProvider } from "./api";
 import { AuthProvider } from "./auth/AuthProvider";
 import { AuthController } from "./auth/controller";
-import { readToken, resolveInitData } from "./auth/session";
+import { isBrowserMode, readToken, resolveInitData } from "./auth/session";
 
 /** createBrowserRouter 与 createMemoryRouter 返回同一类型 */
 type DataRouter = ReturnType<typeof createMemoryRouter>;
@@ -43,6 +43,9 @@ export function createUserApp(options: UserAppOptions): UserApp {
     logout: async () => {
       unwrap(await api.POST("/app/auth/logout"));
     },
+    requestCode: async (phone) => unwrap(await api.POST("/app/auth/phone/request", { body: { phone } })),
+    verifyCode: async (phone, code) => unwrap(await api.POST("/app/auth/phone/verify", { body: { phone, code } })),
+    browserMode: () => isBrowserMode(),
   });
 
   const api = createApiClient({

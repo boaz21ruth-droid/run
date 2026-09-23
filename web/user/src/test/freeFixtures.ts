@@ -35,8 +35,9 @@ export const runnerSession = {
   user: { id: 7, telegramUserId: 7001, telegramUsername: "dara", displayName: "Dara Sok", locale: "en" },
 };
 
-/** 让 RequireRunner 视为已登录：令牌与开发登录参数都写入 sessionStorage（契约补充 7） */
+/** 让 RequireRunner 视为已登录（Telegram 模式）：令牌与开发登录参数都写入 sessionStorage（契约补充 7） */
 export function presetRunnerSession(): void {
+  window.location.hash = "#tgWebAppData=test";
   window.sessionStorage.setItem("werun.appToken", runnerSession.token);
   window.sessionStorage.setItem("werun.appTokenExpiresAt", runnerSession.expiresAt);
   window.sessionStorage.setItem("werun.devInitData", "user=%7B%22id%22%3A7001%7D&auth_date=1&hash=test");

@@ -21,6 +21,10 @@ export function renderRoutes(routeObjects: RouteObject[], path: string, handler:
       return handler(request);
     }),
   );
+  // 带 initData 的用例模拟在 Telegram Mini App 中打开；没有传 initData 的用例保持地址不变（默认不带 tgWebAppData，浏览器模式）
+  if (options.initData) {
+    window.location.hash = "#tgWebAppData=test";
+  }
   const router = createMemoryRouter(routeObjects, { initialEntries: [path] });
   const app = createUserApp({
     router,
