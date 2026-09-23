@@ -37,7 +37,7 @@ func TestStatusListsEveryMigrationAsApplied(t *testing.T) {
 	lines, err := migrate.Status(context.Background(), pool)
 
 	require.NoError(t, err)
-	require.Len(t, lines, 10)
+	require.Len(t, lines, 11)
 	assert.Equal(t, "0001_foundation.sql applied", lines[0])
 	for _, line := range lines {
 		assert.True(t, strings.HasSuffix(line, " applied"), line)
@@ -60,6 +60,6 @@ func TestDownUnmarksLatestVersion(t *testing.T) {
 
 	lines, err := migrate.Status(ctx, pool)
 	require.NoError(t, err)
-	assert.Equal(t, "0010_registration_payment.sql pending", lines[len(lines)-1])
-	assert.Equal(t, "0009_content_community.sql applied", lines[len(lines)-2])
+	assert.Equal(t, "0011_web_login.sql pending", lines[len(lines)-1])
+	assert.Equal(t, "0010_registration_payment.sql applied", lines[len(lines)-2])
 }
