@@ -33,6 +33,7 @@ func setRequired(t *testing.T) {
 	t.Setenv("WERUN_TELEGRAM_BOT_TOKEN", "123456:e2e-test-token")
 	t.Setenv("WERUN_TELEGRAM_BOT_USERNAME", "werun_e2e_bot")
 	t.Setenv("WERUN_APP_BASE_URL", "http://werun.localhost")
+	t.Setenv("WERUN_TELEGRAM_GATEWAY_TOKEN", "gw-test-token") // prod 默认发送器为 telegram，需要此项才合法
 }
 
 func TestLoadAppliesDefaults(t *testing.T) {
@@ -210,4 +211,48 @@ func TestLoadValidatesAppBaseURL(t *testing.T) {
 	cfg, err := config.Load()
 	require.NoError(t, err)
 	assert.Equal(t, "https://app.werun.asia", cfg.AppBaseURL, "去掉结尾斜杠，便于拼接 /orders/<orderNo>")
+}
+
+func TestLoadOTPSenderDefaults(t *testing.T) {
+	setRequired(t)
+	unset(t, "WERUN_OTP_SENDER", "WERUN_TELEGRAM_GATEWAY_TOKEN")
+
+	cfg, err := config.Load()
+	require.NoError(t, err)
+	assert.Equal(t, "fixed", cfg.OTPSenderKind(), "dev 默认 fixed")
+}
+
+func TestLoadOTPSenderProd(t *testing.T) {
+	cases := []struct {
+		name, sender, token string
+		wantErr             string
+	}{
+		{name: "prod 默认 telegram 但缺 token", wantErr: "WERUN_TELEGRAM_GATEWAY_TOKEN"},
+		{name: "prod 拒绝 fixed", sender: "fixed", token: "gw", wantErr: "WERUN_OTP_SENDER"},
+		{name: "prod 拒绝 log", sender: "log", token: "gw", wantErr: "WERUN_OTP_SENDER"},
+		{name: "prod telegram 有 token", sender: "telegram", token: "gw"},
+		{name: "非法值", sender: "sms", token: "gw", wantErr: "WERUN_OTP_SENDER"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			setRequired(t)
+			unset(t, "WERUN_OTP_SENDER", "WERUN_TELEGRAM_GATEWAY_TOKEN")
+			t.Setenv("WERUN_ENV", "prod")
+			t.Setenv("WERUN_APP_BASE_URL", "https://suosdey.top")
+			if tc.sender != "" {
+				t.Setenv("WERUN_OTP_SENDER", tc.sender)
+			}
+			if tc.token != "" {
+				t.Setenv("WERUN_TELEGRAM_GATEWAY_TOKEN", tc.token)
+			}
+			cfg, err := config.Load()
+			if tc.wantErr == "" {
+				require.NoError(t, err)
+				assert.Equal(t, "telegram", cfg.OTPSenderKind())
+				return
+			}
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), tc.wantErr)
+		})
+	}
 }

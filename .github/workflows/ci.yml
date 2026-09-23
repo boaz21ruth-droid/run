@@ -116,6 +116,7 @@ jobs:
             echo "WERUN_TELEGRAM_BOT_USERNAME=werun_e2e_bot"
             echo "WERUN_TELEGRAM_SEND=off"
             echo "WERUN_APP_BASE_URL=http://werun.localhost"
+            echo "WERUN_OTP_SENDER=fixed"
           } >> .env
 
       - name: Start stack
