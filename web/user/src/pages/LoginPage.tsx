@@ -8,9 +8,22 @@ import pageStyles from "./Page.module.css";
 
 const COUNTRY_CODES = ["+855", "+86", "+65", "+66", "+84", "+1", "+44", "+61"];
 
-/** 只接受同源相对路径，避免用 next 参数跳到外部站点 */
+/**
+ * 只接受同源相对路径，避免用 next 参数跳到外部站点。
+ * 除了排除 "//" 开头的协议相对地址，还要拒绝反斜杠：浏览器的 URL 解析（history.pushState /
+ * react-router 用的就是它）对特殊 scheme 会把 "\" 当 "/" 处理，"/\\evil.com" 看起来像同源路径，
+ * 实际解析出来 host 是 evil.com。用 new URL() 相对 origin 解析后比对 origin 兜底。
+ */
 function safeNext(raw: string | null): string {
-  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\")) {
+    return "/";
+  }
+  try {
+    const resolved = new URL(raw, window.location.origin);
+    return resolved.origin === window.location.origin ? raw : "/";
+  } catch {
+    return "/";
+  }
 }
 
 export function LoginPage() {
