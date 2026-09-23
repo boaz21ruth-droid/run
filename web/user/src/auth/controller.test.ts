@@ -187,4 +187,26 @@ describe("AuthController", () => {
     expect(controller.getState().status).toBe("unauthenticated");
     expect(window.localStorage.getItem(TOKEN_KEY)).toBeNull();
   });
+
+  it("loginWithPhone 排在进行中的 start() 之后，不被随后才落地的 initData 登录冲掉", async () => {
+    const deps = makeDeps(null);
+    const gate = deferred<string | null>();
+    deps.resolveInitData.mockReturnValue(gate.promise);
+    const controller = new AuthController(deps);
+
+    const started = controller.start();
+    const loggedInWithPhone = controller.loginWithPhone("+85512345678", "123456");
+
+    // start() 的 restore() 还卡在 resolveInitData 上；现在才让它落地（返回 null，
+    // 走 loginWithInitData 的 fail() 分支）。若 loginWithPhone 没有排队等待，
+    // 这个 fail() 会晚于 loginWithPhone 的 set(authenticated) 执行，把令牌冲掉。
+    gate.resolve(null);
+
+    await expect(started).resolves.toBe(false);
+    await loggedInWithPhone;
+
+    expect(deps.verifyCode).toHaveBeenCalledWith("+85512345678", "123456");
+    expect(controller.getState().status).toBe("authenticated");
+    expect(window.localStorage.getItem(TOKEN_KEY)).toBe("tok-phone");
+  });
 });

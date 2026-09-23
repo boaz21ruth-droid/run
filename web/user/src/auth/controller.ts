@@ -71,11 +71,24 @@ export class AuthController {
     return this.deps.requestCode(phone);
   }
 
-  /** 浏览器模式：校验验证码并登录；失败时抛出 ApiError，状态保持不变 */
+  /**
+   * 浏览器模式：校验验证码并登录。先等任何进行中的 start()/relogin() 结束，
+   * 避免它稍后才用（不存在的）initData 登录失败并调用 fail()，把这里刚保存的令牌冲掉；
+   * 再把自己的校验+保存也纳入 pending，让并发的 start() 复用同一个 Promise 而不是抢跑一次新的 restore()。
+   * 失败时抛出 ApiError，状态保持不变。
+   */
   async loginWithPhone(phone: string, code: string): Promise<void> {
+    if (this.pending) {
+      await this.pending;
+    }
+    await this.track(this.verifyPhone(phone, code));
+  }
+
+  private async verifyPhone(phone: string, code: string): Promise<boolean> {
     const session = await this.deps.verifyCode(phone, code);
     saveToken(session.token, session.expiresAt);
     this.set({ status: "authenticated", user: session.user });
+    return true;
   }
 
   /**

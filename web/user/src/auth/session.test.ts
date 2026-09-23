@@ -6,6 +6,7 @@ import {
   TOKEN_KEY,
   clearToken,
   readToken,
+  resetSessionModeForTests,
   resolveInitData,
   saveToken,
 } from "./session";
@@ -50,6 +51,8 @@ describe("session storage by environment", () => {
     window.localStorage.clear();
     window.sessionStorage.clear();
     window.location.hash = "";
+    // 每个用例可能改了 hash 来切换模式；下一个用例前必须重新探测，否则会沿用上一个用例锁定的模式
+    resetSessionModeForTests();
   });
 
   it("浏览器模式写 localStorage", () => {
@@ -64,6 +67,15 @@ describe("session storage by environment", () => {
   it("Telegram 模式写 sessionStorage", () => {
     window.location.hash = "#tgWebAppData=x";
     saveToken("tok", "2099-01-01T00:00:00Z");
+    expect(window.sessionStorage.getItem(TOKEN_KEY)).toBe("tok");
+    expect(window.localStorage.getItem(TOKEN_KEY)).toBeNull();
+  });
+
+  it("模式只在首次用到存储时探测一次：SDK 事后把 tgWebAppData 从地址栏移除也不影响", () => {
+    window.location.hash = "#tgWebAppData=x";
+    saveToken("tok", "2099-01-01T00:00:00Z"); // 首次调用存储，锁定为 Telegram 模式
+    window.location.hash = ""; // 模拟 Telegram WebApp SDK 加载后把 tgWebAppData 从地址栏拿掉
+    expect(readToken()).toBe("tok");
     expect(window.sessionStorage.getItem(TOKEN_KEY)).toBe("tok");
     expect(window.localStorage.getItem(TOKEN_KEY)).toBeNull();
   });
