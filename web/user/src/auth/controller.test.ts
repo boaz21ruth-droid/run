@@ -7,6 +7,7 @@ const runner: Schemas["AppUser"] = {
   id: 1,
   telegramUserId: 10001,
   telegramUsername: "darasok",
+  phoneMasked: null,
   displayName: "Sok Dara",
   locale: "en",
 };

@@ -47,7 +47,14 @@ export function runnerSession(token = "tok-1"): Schemas["AppSession"] {
   return {
     token,
     expiresAt: "2099-01-01T00:00:00Z",
-    user: { id: 1, telegramUserId: 10001, telegramUsername: "darasok", displayName: "Sok Dara", locale: "en" },
+    user: {
+      id: 1,
+      telegramUserId: 10001,
+      telegramUsername: "darasok",
+      phoneMasked: null,
+      displayName: "Sok Dara",
+      locale: "en",
+    },
   };
 }
 

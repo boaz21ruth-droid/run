@@ -3,6 +3,8 @@ package runner
 import (
 	"context"
 	"net/http"
+	"strings"
+	"time"
 
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
@@ -56,6 +58,55 @@ func (h *Handlers) AppGetMe(ctx context.Context, _ apigen.AppGetMeRequestObject)
 	return apigen.AppGetMe200JSONResponse(toAppUser(u)), nil
 }
 
+// AppRequestPhoneCode 向手机号发送登录验证码。
+func (h *Handlers) AppRequestPhoneCode(ctx context.Context, req apigen.AppRequestPhoneCodeRequestObject) (apigen.AppRequestPhoneCodeResponseObject, error) {
+	if req.Body == nil {
+		return nil, apperr.New(http.StatusBadRequest, apperr.CodeBadRequest)
+	}
+	res, err := h.svc.RequestPhoneCode(ctx, strings.TrimSpace(req.Body.Phone), httpx.MetaOf(ctx))
+	if err != nil {
+		return nil, err
+	}
+	return apigen.AppRequestPhoneCode200JSONResponse{
+		ExpiresInSeconds:   int(res.ExpiresIn / time.Second),
+		ResendAfterSeconds: int(res.ResendAfter / time.Second),
+		Channel:            apigen.PhoneCodeSentChannel(res.Channel),
+	}, nil
+}
+
+// AppVerifyPhoneCode 校验验证码并签发跑者令牌。
+func (h *Handlers) AppVerifyPhoneCode(ctx context.Context, req apigen.AppVerifyPhoneCodeRequestObject) (apigen.AppVerifyPhoneCodeResponseObject, error) {
+	if req.Body == nil {
+		return nil, apperr.New(http.StatusBadRequest, apperr.CodeBadRequest)
+	}
+	sess, err := h.svc.VerifyPhoneCode(ctx, strings.TrimSpace(req.Body.Phone), strings.TrimSpace(req.Body.Code), string(httpx.LangOf(ctx)), httpx.MetaOf(ctx))
+	if err != nil {
+		return nil, err
+	}
+	return apigen.AppVerifyPhoneCode200JSONResponse{Token: sess.Token, ExpiresAt: sess.ExpiresAt, User: toAppUser(sess.User)}, nil
+}
+
+// AppUpdateMe 修改显示名或语言。
+func (h *Handlers) AppUpdateMe(ctx context.Context, req apigen.AppUpdateMeRequestObject) (apigen.AppUpdateMeResponseObject, error) {
+	u, err := currentUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if req.Body == nil {
+		return nil, apperr.New(http.StatusBadRequest, apperr.CodeBadRequest)
+	}
+	var locale *string
+	if req.Body.Locale != nil {
+		l := string(*req.Body.Locale)
+		locale = &l
+	}
+	updated, err := h.svc.UpdateMe(ctx, u.ID, req.Body.DisplayName, locale, httpx.MetaOf(ctx))
+	if err != nil {
+		return nil, err
+	}
+	return apigen.AppUpdateMe200JSONResponse(toAppUser(updated)), nil
+}
+
 // currentUser 取认证中间件放入的跑者；取不到说明接口没有声明 x-auth: app。
 func currentUser(ctx context.Context) (User, error) {
 	u, ok := UserFrom(ctx)
@@ -66,13 +117,18 @@ func currentUser(ctx context.Context) (User, error) {
 }
 
 func toAppUser(u User) apigen.AppUser {
-	return apigen.AppUser{
-		Id:               u.ID,
-		TelegramUserId:   u.TelegramUserID,
-		TelegramUsername: u.TelegramUsername,
-		DisplayName:      u.DisplayName,
-		Locale:           apigen.AppUserLocale(u.Locale),
+	out := apigen.AppUser{Id: u.ID, DisplayName: u.DisplayName, Locale: apigen.AppUserLocale(u.Locale)}
+	if u.TelegramUserID != 0 {
+		id := u.TelegramUserID
+		out.TelegramUserId = &id
+		name := u.TelegramUsername
+		out.TelegramUsername = &name
 	}
+	if u.Phone != "" {
+		m := maskPhone(u.Phone)
+		out.PhoneMasked = &m
+	}
+	return out
 }
 
 func (h *Handlers) AppListProfiles(ctx context.Context, _ apigen.AppListProfilesRequestObject) (apigen.AppListProfilesResponseObject, error) {

@@ -612,6 +612,56 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /app/auth/phone/request:
+    post:
+      operationId: appRequestPhoneCode
+      tags: [app-auth]
+      summary: 向手机号发送登录验证码（经 Telegram Gateway）
+      x-auth: none
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhoneCodeRequest'
+      responses:
+        '200':
+          description: 已发送
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhoneCodeSent'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /app/auth/phone/verify:
+    post:
+      operationId: appVerifyPhoneCode
+      tags: [app-auth]
+      summary: 校验验证码并签发跑者令牌
+      x-auth: none
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhoneCodeVerify'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppSession'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /app/auth/logout:
     post:
       operationId: appLogout
@@ -636,6 +686,30 @@ paths:
       responses:
         '200':
           description: 当前跑者
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppUser'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      operationId: appUpdateMe
+      tags: [app-auth]
+      summary: 修改显示名或语言
+      x-auth: app
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMeRequest'
+      responses:
+        '200':
+          description: 已更新
           content:
             application/json:
               schema:
@@ -1737,7 +1811,7 @@ components:
           maxLength: 4096
     AppUser:
       type: object
-      required: [id, telegramUserId, telegramUsername, displayName, locale]
+      required: [id, telegramUserId, telegramUsername, phoneMasked, displayName, locale]
       properties:
         id:
           type: integer
@@ -1745,10 +1819,58 @@ components:
         telegramUserId:
           type: integer
           format: int64
+          nullable: true
         telegramUsername:
           type: string
+          nullable: true
+        phoneMasked:
+          type: string
+          nullable: true
+          description: 形如 +855***678；没有手机号时为 null
         displayName:
           type: string
+        locale:
+          type: string
+          enum: [zh, en, km]
+    PhoneCodeRequest:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+          description: E.164，例如 +85512345678
+          minLength: 8
+          maxLength: 16
+    PhoneCodeSent:
+      type: object
+      required: [expiresInSeconds, resendAfterSeconds, channel]
+      properties:
+        expiresInSeconds:
+          type: integer
+        resendAfterSeconds:
+          type: integer
+        channel:
+          type: string
+          enum: [telegram]
+    PhoneCodeVerify:
+      type: object
+      required: [phone, code]
+      properties:
+        phone:
+          type: string
+          minLength: 8
+          maxLength: 16
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+    UpdateMeRequest:
+      type: object
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 64
         locale:
           type: string
           enum: [zh, en, km]

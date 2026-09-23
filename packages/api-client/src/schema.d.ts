@@ -331,6 +331,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/app/auth/phone/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 向手机号发送登录验证码（经 Telegram Gateway） */
+        post: operations["appRequestPhoneCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/app/auth/phone/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 校验验证码并签发跑者令牌 */
+        post: operations["appVerifyPhoneCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/app/auth/logout": {
         parameters: {
             query?: never;
@@ -362,7 +396,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** 修改显示名或语言 */
+        patch: operations["appUpdateMe"];
         trace?: never;
     };
     "/app/profiles": {
@@ -940,11 +975,32 @@ export interface components {
             /** Format: int64 */
             id: number;
             /** Format: int64 */
-            telegramUserId: number;
-            telegramUsername: string;
+            telegramUserId: number | null;
+            telegramUsername: string | null;
+            /** @description 形如 +855***678；没有手机号时为 null */
+            phoneMasked: string | null;
             displayName: string;
             /** @enum {string} */
             locale: "zh" | "en" | "km";
+        };
+        PhoneCodeRequest: {
+            /** @description E.164，例如 +85512345678 */
+            phone: string;
+        };
+        PhoneCodeSent: {
+            expiresInSeconds: number;
+            resendAfterSeconds: number;
+            /** @enum {string} */
+            channel: "telegram";
+        };
+        PhoneCodeVerify: {
+            phone: string;
+            code: string;
+        };
+        UpdateMeRequest: {
+            displayName?: string;
+            /** @enum {string} */
+            locale?: "zh" | "en" | "km";
         };
         AppSession: {
             token: string;
@@ -2186,6 +2242,72 @@ export interface operations {
             };
         };
     };
+    appRequestPhoneCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhoneCodeRequest"];
+            };
+        };
+        responses: {
+            /** @description 已发送 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhoneCodeSent"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appVerifyPhoneCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhoneCodeVerify"];
+            };
+        };
+        responses: {
+            /** @description 登录成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppSession"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     appLogout: {
         parameters: {
             query?: never;
@@ -2223,6 +2345,39 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description 当前跑者 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppUser"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appUpdateMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMeRequest"];
+            };
+        };
+        responses: {
+            /** @description 已更新 */
             200: {
                 headers: {
                     [name: string]: unknown;

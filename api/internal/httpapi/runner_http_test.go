@@ -111,7 +111,8 @@ func TestAppLoginTelegramReturnsTokenAndMe(t *testing.T) {
 
 	assert.NotEmpty(t, sess.Token)
 	assert.WithinDuration(t, before.Add(24*time.Hour), sess.ExpiresAt, time.Minute)
-	assert.Equal(t, int64(10001), sess.User.TelegramUserId)
+	require.NotNil(t, sess.User.TelegramUserId)
+	assert.Equal(t, int64(10001), *sess.User.TelegramUserId)
 	assert.Equal(t, "Dara Sok", sess.User.DisplayName)
 	assert.Equal(t, apigen.AppUserLocale("en"), sess.User.Locale)
 
@@ -343,4 +344,41 @@ func TestAppGetConsent(t *testing.T) {
 
 	rec = e.do(t, http.MethodGet, "/api/app/consents?purpose=REGISTRATION", nil, nil)
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
+}
+
+func TestPhoneLoginFlowHTTP(t *testing.T) {
+	e := newRunnerEnv(t) // 使用 FixedOTPSender，验证码恒为 123456
+
+	rec := e.do(t, http.MethodPost, "/api/app/auth/phone/request", map[string]any{"phone": "+85512345678"}, nil)
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	var sent apigen.PhoneCodeSent
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &sent))
+	assert.Equal(t, 300, sent.ExpiresInSeconds)
+	assert.Equal(t, 60, sent.ResendAfterSeconds)
+
+	rec = e.do(t, http.MethodPost, "/api/app/auth/phone/verify", map[string]any{"phone": "+85512345678", "code": "000000"}, nil)
+	require.Equal(t, http.StatusUnprocessableEntity, rec.Code)
+	errBody := decodeRunnerError(t, rec)
+	assert.Equal(t, apperr.CodeOTPInvalid, errBody.Error.Code)
+	require.NotNil(t, errBody.Error.Fields)
+	assert.Equal(t, "4", (*errBody.Error.Fields)["attemptsLeft"])
+
+	rec = e.do(t, http.MethodPost, "/api/app/auth/phone/verify", map[string]any{"phone": "+85512345678", "code": "123456"}, nil)
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	var sess apigen.AppSession
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &sess))
+	assert.Nil(t, sess.User.TelegramUserId)
+	require.NotNil(t, sess.User.PhoneMasked)
+	assert.Equal(t, "+855***678", *sess.User.PhoneMasked)
+
+	rec = e.do(t, http.MethodPatch, "/api/app/me", map[string]any{"displayName": "Dara", "locale": "en"}, bearer(sess.Token))
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	assert.Contains(t, rec.Body.String(), `"displayName":"Dara"`)
+}
+
+func TestPhoneRequestRejectsBadPhoneHTTP(t *testing.T) {
+	e := newRunnerEnv(t)
+	rec := e.do(t, http.MethodPost, "/api/app/auth/phone/request", map[string]any{"phone": "012345678"}, nil)
+	assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
+	assert.Equal(t, apperr.CodeOTPPhoneInvalid, decodeRunnerError(t, rec).Error.Code)
 }

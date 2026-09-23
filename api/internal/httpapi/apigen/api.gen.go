@@ -648,6 +648,21 @@ func (e PaymentProvider) Valid() bool {
 	}
 }
 
+// Defines values for PhoneCodeSentChannel.
+const (
+	PhoneCodeSentChannelTelegram PhoneCodeSentChannel = "telegram"
+)
+
+// Valid indicates whether the value is a known member of the PhoneCodeSentChannel enum.
+func (e PhoneCodeSentChannel) Valid() bool {
+	switch e {
+	case PhoneCodeSentChannelTelegram:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PriceAudience.
 const (
 	PriceAudienceALL   PriceAudience = "ALL"
@@ -816,6 +831,27 @@ func (e TShirtSize) Valid() bool {
 	case TShirtSizeXS:
 		return true
 	case TShirtSizeXXL:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UpdateMeRequestLocale.
+const (
+	UpdateMeRequestLocaleEn UpdateMeRequestLocale = "en"
+	UpdateMeRequestLocaleKm UpdateMeRequestLocale = "km"
+	UpdateMeRequestLocaleZh UpdateMeRequestLocale = "zh"
+)
+
+// Valid indicates whether the value is a known member of the UpdateMeRequestLocale enum.
+func (e UpdateMeRequestLocale) Valid() bool {
+	switch e {
+	case UpdateMeRequestLocaleEn:
+		return true
+	case UpdateMeRequestLocaleKm:
+		return true
+	case UpdateMeRequestLocaleZh:
 		return true
 	default:
 		return false
@@ -1145,11 +1181,14 @@ type AppSession struct {
 
 // AppUser defines model for AppUser.
 type AppUser struct {
-	DisplayName      string        `json:"displayName"`
-	Id               int64         `json:"id"`
-	Locale           AppUserLocale `json:"locale"`
-	TelegramUserId   int64         `json:"telegramUserId"`
-	TelegramUsername string        `json:"telegramUsername"`
+	DisplayName string        `json:"displayName"`
+	Id          int64         `json:"id"`
+	Locale      AppUserLocale `json:"locale"`
+
+	// PhoneMasked 形如 +855***678；没有手机号时为 null
+	PhoneMasked      *string `json:"phoneMasked"`
+	TelegramUserId   *int64  `json:"telegramUserId"`
+	TelegramUsername *string `json:"telegramUsername"`
 }
 
 // AppUserLocale defines model for AppUser.Locale.
@@ -1484,6 +1523,28 @@ type PaymentAccountScope string
 // PaymentProvider defines model for PaymentProvider.
 type PaymentProvider string
 
+// PhoneCodeRequest defines model for PhoneCodeRequest.
+type PhoneCodeRequest struct {
+	// Phone E.164，例如 +85512345678
+	Phone string `json:"phone"`
+}
+
+// PhoneCodeSent defines model for PhoneCodeSent.
+type PhoneCodeSent struct {
+	Channel            PhoneCodeSentChannel `json:"channel"`
+	ExpiresInSeconds   int                  `json:"expiresInSeconds"`
+	ResendAfterSeconds int                  `json:"resendAfterSeconds"`
+}
+
+// PhoneCodeSentChannel defines model for PhoneCodeSent.Channel.
+type PhoneCodeSentChannel string
+
+// PhoneCodeVerify defines model for PhoneCodeVerify.
+type PhoneCodeVerify struct {
+	Code  string `json:"code"`
+	Phone string `json:"phone"`
+}
+
 // PriceAudience defines model for PriceAudience.
 type PriceAudience string
 
@@ -1744,6 +1805,15 @@ type UpdateEventRegistrationRequest struct {
 	OpensAt  *time.Time `json:"opensAt,omitempty"`
 }
 
+// UpdateMeRequest defines model for UpdateMeRequest.
+type UpdateMeRequest struct {
+	DisplayName *string                `json:"displayName,omitempty"`
+	Locale      *UpdateMeRequestLocale `json:"locale,omitempty"`
+}
+
+// UpdateMeRequestLocale defines model for UpdateMeRequest.Locale.
+type UpdateMeRequestLocale string
+
 // AdminListCouponsParams defines parameters for AdminListCoupons.
 type AdminListCouponsParams struct {
 	EventId *int64 `form:"eventId,omitempty" json:"eventId,omitempty"`
@@ -1856,6 +1926,12 @@ type AdminApproveProofJSONRequestBody = ApproveProofRequest
 // AdminRejectProofJSONRequestBody defines body for AdminRejectProof for application/json ContentType.
 type AdminRejectProofJSONRequestBody = RejectProofRequest
 
+// AppRequestPhoneCodeJSONRequestBody defines body for AppRequestPhoneCode for application/json ContentType.
+type AppRequestPhoneCodeJSONRequestBody = PhoneCodeRequest
+
+// AppVerifyPhoneCodeJSONRequestBody defines body for AppVerifyPhoneCode for application/json ContentType.
+type AppVerifyPhoneCodeJSONRequestBody = PhoneCodeVerify
+
 // AppLoginTelegramJSONRequestBody defines body for AppLoginTelegram for application/json ContentType.
 type AppLoginTelegramJSONRequestBody = AppLoginRequest
 
@@ -1864,6 +1940,9 @@ type AppCreateFreeSignupJSONRequestBody = FreeSignupRequest
 
 // AppQuoteJSONRequestBody defines body for AppQuote for application/json ContentType.
 type AppQuoteJSONRequestBody = QuoteRequest
+
+// AppUpdateMeJSONRequestBody defines body for AppUpdateMe for application/json ContentType.
+type AppUpdateMeJSONRequestBody = UpdateMeRequest
 
 // AppCreateOrderJSONRequestBody defines body for AppCreateOrder for application/json ContentType.
 type AppCreateOrderJSONRequestBody = CreateOrderRequest
@@ -1954,6 +2033,12 @@ type ServerInterface interface {
 	// AppLogout 吊销当前跑者令牌
 	// (POST /app/auth/logout)
 	AppLogout(c *gin.Context)
+	// AppRequestPhoneCode 向手机号发送登录验证码（经 Telegram Gateway）
+	// (POST /app/auth/phone/request)
+	AppRequestPhoneCode(c *gin.Context)
+	// AppVerifyPhoneCode 校验验证码并签发跑者令牌
+	// (POST /app/auth/phone/verify)
+	AppVerifyPhoneCode(c *gin.Context)
 	// AppLoginTelegram 用 Telegram 小程序 initData 登录，返回跑者令牌
 	// (POST /app/auth/telegram)
 	AppLoginTelegram(c *gin.Context)
@@ -1969,6 +2054,9 @@ type ServerInterface interface {
 	// AppGetMe 当前跑者
 	// (GET /app/me)
 	AppGetMe(c *gin.Context)
+	// AppUpdateMe 修改显示名或语言
+	// (PATCH /app/me)
+	AppUpdateMe(c *gin.Context)
 	// AppListOrders 我的订单（最近 100 张，新的在前）
 	// (GET /app/orders)
 	AppListOrders(c *gin.Context)
@@ -2577,6 +2665,32 @@ func (siw *ServerInterfaceWrapper) AppLogout(c *gin.Context) {
 	siw.Handler.AppLogout(c)
 }
 
+// AppRequestPhoneCode operation middleware
+func (siw *ServerInterfaceWrapper) AppRequestPhoneCode(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppRequestPhoneCode(c)
+}
+
+// AppVerifyPhoneCode operation middleware
+func (siw *ServerInterfaceWrapper) AppVerifyPhoneCode(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppVerifyPhoneCode(c)
+}
+
 // AppLoginTelegram operation middleware
 func (siw *ServerInterfaceWrapper) AppLoginTelegram(c *gin.Context) {
 
@@ -2686,6 +2800,19 @@ func (siw *ServerInterfaceWrapper) AppGetMe(c *gin.Context) {
 	}
 
 	siw.Handler.AppGetMe(c)
+}
+
+// AppUpdateMe operation middleware
+func (siw *ServerInterfaceWrapper) AppUpdateMe(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppUpdateMe(c)
 }
 
 // AppListOrders operation middleware
@@ -3034,8 +3161,11 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/admin/payment-accounts", wrapper.AdminCreatePaymentAccount)
 	router.PUT(options.BaseURL+"/admin/payment-accounts/:id", wrapper.AdminUpdatePaymentAccount)
 	router.POST(options.BaseURL+"/app/auth/telegram", wrapper.AppLoginTelegram)
+	router.POST(options.BaseURL+"/app/auth/phone/request", wrapper.AppRequestPhoneCode)
+	router.POST(options.BaseURL+"/app/auth/phone/verify", wrapper.AppVerifyPhoneCode)
 	router.POST(options.BaseURL+"/app/auth/logout", wrapper.AppLogout)
 	router.GET(options.BaseURL+"/app/me", wrapper.AppGetMe)
+	router.PATCH(options.BaseURL+"/app/me", wrapper.AppUpdateMe)
 	router.GET(options.BaseURL+"/app/profiles", wrapper.AppListProfiles)
 	router.POST(options.BaseURL+"/app/profiles", wrapper.AppCreateProfile)
 	router.DELETE(options.BaseURL+"/app/profiles/:id", wrapper.AppDeleteProfile)
@@ -4029,6 +4159,84 @@ func (response AppLogoutdefaultJSONResponse) VisitAppLogoutResponse(w http.Respo
 	return err
 }
 
+type AppRequestPhoneCodeRequestObject struct {
+	Body *AppRequestPhoneCodeJSONRequestBody
+}
+
+type AppRequestPhoneCodeResponseObject interface {
+	VisitAppRequestPhoneCodeResponse(w http.ResponseWriter) error
+}
+
+type AppRequestPhoneCode200JSONResponse PhoneCodeSent
+
+func (response AppRequestPhoneCode200JSONResponse) VisitAppRequestPhoneCodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppRequestPhoneCodedefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppRequestPhoneCodedefaultJSONResponse) VisitAppRequestPhoneCodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppVerifyPhoneCodeRequestObject struct {
+	Body *AppVerifyPhoneCodeJSONRequestBody
+}
+
+type AppVerifyPhoneCodeResponseObject interface {
+	VisitAppVerifyPhoneCodeResponse(w http.ResponseWriter) error
+}
+
+type AppVerifyPhoneCode200JSONResponse AppSession
+
+func (response AppVerifyPhoneCode200JSONResponse) VisitAppVerifyPhoneCodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppVerifyPhoneCodedefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppVerifyPhoneCodedefaultJSONResponse) VisitAppVerifyPhoneCodeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AppLoginTelegramRequestObject struct {
 	Body *AppLoginTelegramJSONRequestBody
 }
@@ -4214,6 +4422,45 @@ type AppGetMedefaultJSONResponse struct {
 }
 
 func (response AppGetMedefaultJSONResponse) VisitAppGetMeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppUpdateMeRequestObject struct {
+	Body *AppUpdateMeJSONRequestBody
+}
+
+type AppUpdateMeResponseObject interface {
+	VisitAppUpdateMeResponse(w http.ResponseWriter) error
+}
+
+type AppUpdateMe200JSONResponse AppUser
+
+func (response AppUpdateMe200JSONResponse) VisitAppUpdateMeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppUpdateMedefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppUpdateMedefaultJSONResponse) VisitAppUpdateMeResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -4861,6 +5108,12 @@ type StrictServerInterface interface {
 	// AppLogout 吊销当前跑者令牌
 	// (POST /app/auth/logout)
 	AppLogout(ctx context.Context, request AppLogoutRequestObject) (AppLogoutResponseObject, error)
+	// AppRequestPhoneCode 向手机号发送登录验证码（经 Telegram Gateway）
+	// (POST /app/auth/phone/request)
+	AppRequestPhoneCode(ctx context.Context, request AppRequestPhoneCodeRequestObject) (AppRequestPhoneCodeResponseObject, error)
+	// AppVerifyPhoneCode 校验验证码并签发跑者令牌
+	// (POST /app/auth/phone/verify)
+	AppVerifyPhoneCode(ctx context.Context, request AppVerifyPhoneCodeRequestObject) (AppVerifyPhoneCodeResponseObject, error)
 	// AppLoginTelegram 用 Telegram 小程序 initData 登录，返回跑者令牌
 	// (POST /app/auth/telegram)
 	AppLoginTelegram(ctx context.Context, request AppLoginTelegramRequestObject) (AppLoginTelegramResponseObject, error)
@@ -4876,6 +5129,9 @@ type StrictServerInterface interface {
 	// AppGetMe 当前跑者
 	// (GET /app/me)
 	AppGetMe(ctx context.Context, request AppGetMeRequestObject) (AppGetMeResponseObject, error)
+	// AppUpdateMe 修改显示名或语言
+	// (PATCH /app/me)
+	AppUpdateMe(ctx context.Context, request AppUpdateMeRequestObject) (AppUpdateMeResponseObject, error)
 	// AppListOrders 我的订单（最近 100 张，新的在前）
 	// (GET /app/orders)
 	AppListOrders(ctx context.Context, request AppListOrdersRequestObject) (AppListOrdersResponseObject, error)
@@ -5686,6 +5942,68 @@ func (sh *strictHandler) AppLogout(ctx *gin.Context) {
 	}
 }
 
+// AppRequestPhoneCode operation middleware
+func (sh *strictHandler) AppRequestPhoneCode(ctx *gin.Context) {
+	var request AppRequestPhoneCodeRequestObject
+
+	var body AppRequestPhoneCodeJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppRequestPhoneCode(ctx, request.(AppRequestPhoneCodeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppRequestPhoneCode")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppRequestPhoneCodeResponseObject); ok {
+		if err := validResponse.VisitAppRequestPhoneCodeResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppVerifyPhoneCode operation middleware
+func (sh *strictHandler) AppVerifyPhoneCode(ctx *gin.Context) {
+	var request AppVerifyPhoneCodeRequestObject
+
+	var body AppVerifyPhoneCodeJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppVerifyPhoneCode(ctx, request.(AppVerifyPhoneCodeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppVerifyPhoneCode")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppVerifyPhoneCodeResponseObject); ok {
+		if err := validResponse.VisitAppVerifyPhoneCodeResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // AppLoginTelegram operation middleware
 func (sh *strictHandler) AppLoginTelegram(ctx *gin.Context) {
 	var request AppLoginTelegramRequestObject
@@ -5826,6 +6144,37 @@ func (sh *strictHandler) AppGetMe(ctx *gin.Context) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AppGetMeResponseObject); ok {
 		if err := validResponse.VisitAppGetMeResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppUpdateMe operation middleware
+func (sh *strictHandler) AppUpdateMe(ctx *gin.Context) {
+	var request AppUpdateMeRequestObject
+
+	var body AppUpdateMeJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppUpdateMe(ctx, request.(AppUpdateMeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppUpdateMe")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppUpdateMeResponseObject); ok {
+		if err := validResponse.VisitAppUpdateMeResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {
