@@ -38,14 +38,27 @@ export function MePage() {
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // 只提交真正改动的字段：手机号登录的新跑者显示名为空，把空显示名一起发过去会被
+    // 接口按 displayName 必填拒绝，连带语言也改不了。两个字段都没动时不发请求。
+    const trimmed = displayName.trim();
+    const body: { displayName?: string; locale?: Locale } = {};
+    if (trimmed !== "" && trimmed !== user.displayName) {
+      body.displayName = trimmed;
+    }
+    if (locale !== user.locale) {
+      body.locale = locale;
+    }
+    setDisplayName(trimmed);
     setSaving(true);
     setSaved(false);
     setError(null);
     try {
-      const updated = unwrap(await api.PATCH("/app/me", { body: { displayName, locale } }));
-      setUser(updated);
-      setDisplayName(updated.displayName);
-      setLocale(updated.locale);
+      if (Object.keys(body).length > 0) {
+        const updated = unwrap(await api.PATCH("/app/me", { body }));
+        setUser(updated);
+        setDisplayName(updated.displayName);
+        setLocale(updated.locale);
+      }
       setSaved(true);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("profiles.errors.save"));

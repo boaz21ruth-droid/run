@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 	"unicode/utf8"
 
@@ -79,7 +80,7 @@ func (s *Service) RequestPhoneCode(ctx context.Context, phone string, meta httpx
 	if err != nil {
 		return CodeRequest{}, err
 	}
-	requestID, sendErr := s.otp.Send(ctx, phone, code)
+	requestID, sendErr := s.otp.Send(ctx, phone, code, strconv.FormatInt(id, 10))
 	if sendErr != nil {
 		// 作废写入放到 context.WithoutCancel：sendErr 最常见的原因就是调用方 ctx 被取消
 		// 或超时，若沿用 ctx，这条“作废”写入会立刻失败，导致未送达的验证码在 5 分钟内
@@ -113,6 +114,10 @@ func (s *Service) RequestPhoneCode(ctx context.Context, phone string, meta httpx
 func (s *Service) VerifyPhoneCode(ctx context.Context, phone, code, locale string, meta httpx.Meta) (Session, error) {
 	if !ValidE164(phone) {
 		return Session{}, apperr.New(http.StatusUnprocessableEntity, apperr.CodeOTPPhoneInvalid)
+	}
+	if wait, ok := s.limiter.AllowVerify(meta.IP); !ok {
+		return Session{}, apperr.New(http.StatusTooManyRequests, apperr.CodeRateLimited).
+			WithField("retryAfterSeconds", strconv.Itoa(int(wait/time.Second)), nil)
 	}
 	lang, ok := i18n.Parse(locale)
 	if !ok {
@@ -195,10 +200,17 @@ func (s *Service) VerifyPhoneCode(ctx context.Context, phone, code, locale strin
 	return Session{Token: base64.RawURLEncoding.EncodeToString(raw), ExpiresAt: expiresAt, User: user}, nil
 }
 
-// UpdateMe 修改显示名与语言；nil 表示不改。
+// UpdateMe 修改显示名与语言；nil 表示不改。显示名先去掉首尾空白，空串按 field.required 拒绝。
 func (s *Service) UpdateMe(ctx context.Context, userID int64, displayName, locale *string, meta httpx.Meta) (User, error) {
-	if displayName != nil && (utf8.RuneCountInString(*displayName) == 0 || utf8.RuneCountInString(*displayName) > displayNameMax) {
-		return User{}, apperr.New(http.StatusUnprocessableEntity, apperr.CodeValidation).WithField("displayName", "field.too_long", nil)
+	if displayName != nil {
+		trimmed := strings.TrimSpace(*displayName)
+		if trimmed == "" {
+			return User{}, apperr.New(http.StatusUnprocessableEntity, apperr.CodeValidation).WithField("displayName", "field.required", nil)
+		}
+		if utf8.RuneCountInString(trimmed) > displayNameMax {
+			return User{}, apperr.New(http.StatusUnprocessableEntity, apperr.CodeValidation).WithField("displayName", "field.too_long", nil)
+		}
+		displayName = &trimmed
 	}
 	var canonicalLocale string
 	if locale != nil {

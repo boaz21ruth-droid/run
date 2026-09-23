@@ -12,11 +12,11 @@ const routes = [
   { path: "/events/abc", element: <p>event page</p> },
 ];
 
-/** 走完发码 + 验证码的完整流程，返回登录成功后落地的 router */
+/** 走完发码 + 验证码的完整流程，返回登录成功后的渲染结果（router、queryClient 等） */
 async function loginFrom(nextRaw: string | undefined) {
   const user = userEvent.setup();
   const path = nextRaw === undefined ? "/login" : `/login?next=${encodeURIComponent(nextRaw)}`;
-  const { router } = renderRoutes(
+  const rendered = renderRoutes(
     routes,
     path,
     apiRoutes({
@@ -33,7 +33,7 @@ async function loginFrom(nextRaw: string | undefined) {
   await user.type(screen.getByTestId("login-code"), "123456");
   await user.click(screen.getByTestId("login-verify"));
 
-  return router;
+  return rendered;
 }
 
 describe("LoginPage", () => {
@@ -90,28 +90,56 @@ describe("LoginPage", () => {
   });
 
   it("next 用反斜杠伪装同源路径时登录后停在首页", async () => {
-    const router = await loginFrom("/\\evil.com");
+    const { router } = await loginFrom("/\\evil.com");
     await waitFor(() => expect(router.state.location.pathname).toBe("/"));
   });
 
   it("next 是协议相对地址时登录后停在首页", async () => {
-    const router = await loginFrom("//evil.com");
+    const { router } = await loginFrom("//evil.com");
     await waitFor(() => expect(router.state.location.pathname).toBe("/"));
   });
 
   it("next 是绝对外部地址时登录后停在首页", async () => {
-    const router = await loginFrom("https://evil.com");
+    const { router } = await loginFrom("https://evil.com");
     await waitFor(() => expect(router.state.location.pathname).toBe("/"));
   });
 
   it("next 是 javascript 伪协议时登录后停在首页", async () => {
-    const router = await loginFrom("javascript:alert(1)");
+    const { router } = await loginFrom("javascript:alert(1)");
     await waitFor(() => expect(router.state.location.pathname).toBe("/"));
   });
 
   it("next 带查询串的同源路径时精确跳转到该路径", async () => {
-    const router = await loginFrom("/events/abc?x=1");
+    const { router } = await loginFrom("/events/abc?x=1");
     await waitFor(() => expect(router.state.location.pathname).toBe("/events/abc"));
     expect(router.state.location.search).toBe("?x=1");
+  });
+
+  it("next 指回登录页时登录后停在首页，不打转", async () => {
+    const { router } = await loginFrom("/login");
+    await waitFor(() => expect(router.state.location.pathname).toBe("/"));
+  });
+
+  it("手机号登录成功后清空上一位跑者的查询缓存", async () => {
+    const user = userEvent.setup();
+    const { queryClient } = renderRoutes(
+      routes,
+      "/login",
+      apiRoutes({
+        "POST /api/app/auth/phone/request": () =>
+          jsonResponse(200, { expiresInSeconds: 300, resendAfterSeconds: 60, channel: "telegram" }),
+        "POST /api/app/auth/phone/verify": () => jsonResponse(200, runnerSession("tok")),
+      }),
+      { initData: null },
+    );
+    queryClient.setQueryData(["orders"], [{ id: 1, runner: "A" }]);
+
+    await user.type(screen.getByTestId("login-phone"), "12345678");
+    await user.click(screen.getByTestId("login-send"));
+    await screen.findByTestId("login-code");
+    await user.type(screen.getByTestId("login-code"), "123456");
+    await user.click(screen.getByTestId("login-verify"));
+
+    await waitFor(() => expect(queryClient.getQueryData(["orders"])).toBeUndefined());
   });
 });

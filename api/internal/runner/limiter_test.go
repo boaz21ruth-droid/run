@@ -50,3 +50,22 @@ func TestOTPLimiterIPHourlyCap(t *testing.T) {
 	_, ok = l.Allow("+85519999999", "203.0.113.10")
 	assert.True(t, ok, "另一个 IP 不受影响")
 }
+
+func TestOTPLimiterVerifyIPCap(t *testing.T) {
+	clock := &testClock{t: baseNow}
+	l := runner.NewOTPLimiter(clock.Now)
+	for i := 0; i < 30; i++ {
+		_, ok := l.AllowVerify("203.0.113.7")
+		assert.True(t, ok, "第 %d 次校验", i+1)
+	}
+	wait, ok := l.AllowVerify("203.0.113.7")
+	assert.False(t, ok, "同 IP 10 分钟内第 31 次校验被拒")
+	assert.Equal(t, 10*time.Minute, wait)
+
+	_, ok = l.AllowVerify("203.0.113.8")
+	assert.True(t, ok, "另一个 IP 不受影响")
+
+	clock.t = clock.t.Add(10 * time.Minute)
+	_, ok = l.AllowVerify("203.0.113.7")
+	assert.True(t, ok, "窗口滑过后恢复")
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -17,12 +18,13 @@ import (
 
 // fakeSender 记录最近一次发送的验证码；err 非空时返回它。
 type fakeSender struct {
-	mu    sync.Mutex
-	codes map[string]string
-	err   error
+	mu       sync.Mutex
+	codes    map[string]string
+	payloads []string
+	err      error
 }
 
-func (f *fakeSender) Send(_ context.Context, phone, code string) (string, error) {
+func (f *fakeSender) Send(_ context.Context, phone, code, payload string) (string, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	if f.err != nil {
@@ -32,6 +34,7 @@ func (f *fakeSender) Send(_ context.Context, phone, code string) (string, error)
 		f.codes = map[string]string{}
 	}
 	f.codes[phone] = code
+	f.payloads = append(f.payloads, payload)
 	return "req-" + code, nil
 }
 
@@ -213,9 +216,30 @@ func TestUpdateMe(t *testing.T) {
 	assert.Equal(t, "Sok Dara", u.DisplayName)
 	assert.Equal(t, "en", u.Locale)
 
+	padded := "  Sok Dara  "
+	u, err = f.svc.UpdateMe(ctx, sess.User.ID, &padded, nil, testMeta)
+	require.NoError(t, err)
+	assert.Equal(t, "Sok Dara", u.DisplayName, "显示名先去首尾空白再存")
+
 	tooLong := string(make([]rune, 65))
 	_, err = f.svc.UpdateMe(ctx, sess.User.ID, &tooLong, nil, testMeta)
 	requireAppError(t, err, 422, apperr.CodeValidation)
+	appErr, _ := apperr.As(err)
+	assert.Equal(t, "field.too_long", appErr.Fields["displayName"].Key)
+
+	for _, empty := range []string{"", "   "} {
+		_, err = f.svc.UpdateMe(ctx, sess.User.ID, &empty, nil, testMeta)
+		requireAppError(t, err, 422, apperr.CodeValidation)
+		appErr, _ = apperr.As(err)
+		assert.Equal(t, "field.required", appErr.Fields["displayName"].Key, "空显示名是必填错误，不是过长")
+	}
+
+	// 只改语言（新手机号跑者显示名为空时前端只会发 locale）
+	onlyLocale := "km"
+	u, err = f.svc.UpdateMe(ctx, sess.User.ID, nil, &onlyLocale, testMeta)
+	require.NoError(t, err)
+	assert.Equal(t, "km", u.Locale)
+
 	bad := "fr"
 	_, err = f.svc.UpdateMe(ctx, sess.User.ID, nil, &bad, testMeta)
 	requireAppError(t, err, 422, apperr.CodeValidation)
@@ -245,4 +269,54 @@ func TestFixedSenderUsesFixedCode(t *testing.T) {
 	require.NoError(t, err)
 	_, err = f.svc.VerifyPhoneCode(ctx, phoneA, runner.FixedOTPCode, "zh", testMeta)
 	require.NoError(t, err)
+}
+
+func TestVerifyPhoneCodeRateLimitsPerIP(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	meta := testMeta
+	meta.IP = "203.0.113.31"
+	_, err := f.svc.RequestPhoneCode(ctx, phoneA, meta)
+	require.NoError(t, err)
+
+	// 前 30 次（这里全用错码）只消耗校验配额与尝试次数，不会被限流拒绝
+	for i := 0; i < 30; i++ {
+		_, err = f.svc.VerifyPhoneCode(ctx, phoneA, "000000", "zh", meta)
+		requireAppError(t, err, http.StatusUnprocessableEntity, wrongCodeErrCode(i))
+	}
+
+	_, err = f.svc.VerifyPhoneCode(ctx, phoneA, "000000", "zh", meta)
+	requireAppError(t, err, http.StatusTooManyRequests, apperr.CodeRateLimited)
+	appErr, _ := apperr.As(err)
+	assert.Equal(t, "600", appErr.Fields["retryAfterSeconds"].Key)
+
+	// 另一个 IP 的配额独立：同样的请求不会被限流拒绝（此时验证码已作废，返回业务错误）
+	other := testMeta
+	other.IP = "203.0.113.32"
+	_, err = f.svc.VerifyPhoneCode(ctx, phoneA, "000000", "zh", other)
+	requireAppError(t, err, http.StatusUnprocessableEntity, apperr.CodeOTPExpired)
+}
+
+// wrongCodeErrCode：第 1~5 次错码返回 OTP_INVALID，之后验证码已被作废/耗尽，返回 OTP_ATTEMPTS_EXCEEDED 或 OTP_EXPIRED。
+func wrongCodeErrCode(i int) string {
+	switch {
+	case i < 5:
+		return apperr.CodeOTPInvalid
+	case i == 5:
+		return apperr.CodeOTPAttemptsExceeded
+	default:
+		return apperr.CodeOTPExpired
+	}
+}
+
+func TestRequestPhoneCodePassesOTPIDAsPayload(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	_, err := f.svc.RequestPhoneCode(ctx, phoneA, testMeta)
+	require.NoError(t, err)
+
+	var id int64
+	require.NoError(t, f.pool.QueryRow(ctx, "SELECT id FROM auth_otps WHERE phone_e164=$1", phoneA).Scan(&id))
+	require.Len(t, f.sender.payloads, 1)
+	assert.Equal(t, strconv.FormatInt(id, 10), f.sender.payloads[0], "payload 必须是 auth_otps 主键")
 }

@@ -20,7 +20,11 @@ function safeNext(raw: string | null): string {
   }
   try {
     const resolved = new URL(raw, window.location.origin);
-    return resolved.origin === window.location.origin ? raw : "/";
+    if (resolved.origin !== window.location.origin) {
+      return "/";
+    }
+    // next 指回登录页本身会在登录成功后原地打转，退回首页
+    return resolved.pathname === "/login" ? "/" : raw;
   } catch {
     return "/";
   }

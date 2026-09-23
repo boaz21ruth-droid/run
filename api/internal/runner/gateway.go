@@ -32,6 +32,10 @@ type gatewayRequest struct {
 	PhoneNumber string `json:"phone_number"`
 	Code        string `json:"code"`
 	TTL         int    `json:"ttl"`
+	// Payload 是 Gateway 原样回传的自定义字段（文档 https://core.telegram.org/gateway/api
+	// 的 sendVerificationMessage：payload / "Custom payload, 0-128 bytes"），这里放
+	// auth_otps 的主键，便于用回执反查本地验证码记录。
+	Payload string `json:"payload"`
 }
 
 type gatewayResponse struct {
@@ -42,7 +46,15 @@ type gatewayResponse struct {
 	} `json:"result"`
 }
 
-// 号码类错误码：Gateway 明确表示这个号码收不到消息。
+// 号码类错误码：Gateway 明确表示这个号码收不到消息，这类错误映射成 ErrPhoneUnreachable，
+// 对用户提示“换个号码”，其余错误一律按通道故障处理（502）。
+//
+// 注意：官方文档 https://core.telegram.org/gateway/api（2026-09 查阅）只说明
+// “ok=false 时错误写在 error 字段（例如 ACCESS_TOKEN_INVALID）”，并没有给出完整的
+// 错误码清单，https://core.telegram.org/gateway/verification-tutorial 与
+// https://core.telegram.org/gateway 同样没有。因此下面这几个码是按 Telegram 一贯
+// 的命名约定推断的，未经官方文档验证；未命中的错误码会落到通道故障分支（更保守：
+// 提示稍后重试而不是让用户换号码），所以清单不全不会造成安全或数据问题。
 var gatewayPhoneErrors = map[string]bool{
 	"PHONE_NUMBER_INVALID":   true,
 	"PHONE_NUMBER_NOT_FOUND": true,
@@ -50,8 +62,8 @@ var gatewayPhoneErrors = map[string]bool{
 	"PHONE_NUMBER_BANNED":    true,
 }
 
-func (s *GatewaySender) Send(ctx context.Context, phone, code string) (string, error) {
-	body, err := json.Marshal(gatewayRequest{PhoneNumber: phone, Code: code, TTL: otpTTLSeconds})
+func (s *GatewaySender) Send(ctx context.Context, phone, code, payload string) (string, error) {
+	body, err := json.Marshal(gatewayRequest{PhoneNumber: phone, Code: code, TTL: otpTTLSeconds, Payload: payload})
 	if err != nil {
 		return "", fmt.Errorf("runner: gateway request: %w", err)
 	}

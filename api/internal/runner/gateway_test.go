@@ -34,13 +34,14 @@ func TestGatewaySenderSuccess(t *testing.T) {
 	defer srv.Close()
 	s := runner.NewGatewaySender("gw-token", srv.URL, srv.Client())
 
-	id, err := s.Send(context.Background(), "+85512345678", "482910")
+	id, err := s.Send(context.Background(), "+85512345678", "482910", "4711")
 
 	require.NoError(t, err)
 	assert.Equal(t, "req-1", id)
 	assert.Equal(t, "+85512345678", got["phone_number"])
 	assert.Equal(t, "482910", got["code"])
 	assert.Equal(t, float64(300), got["ttl"])
+	assert.Equal(t, "4711", got["payload"], "payload 透传 auth_otps 主键，用于回执对账")
 }
 
 func TestGatewaySenderPhoneUnreachable(t *testing.T) {
@@ -48,7 +49,7 @@ func TestGatewaySenderPhoneUnreachable(t *testing.T) {
 	defer srv.Close()
 	s := runner.NewGatewaySender("gw-token", srv.URL, srv.Client())
 
-	_, err := s.Send(context.Background(), "+85512345678", "482910")
+	_, err := s.Send(context.Background(), "+85512345678", "482910", "4711")
 
 	assert.True(t, errors.Is(err, runner.ErrPhoneUnreachable))
 }
@@ -58,7 +59,7 @@ func TestGatewaySenderServerError(t *testing.T) {
 	defer srv.Close()
 	s := runner.NewGatewaySender("gw-token", srv.URL, srv.Client())
 
-	_, err := s.Send(context.Background(), "+85512345678", "482910")
+	_, err := s.Send(context.Background(), "+85512345678", "482910", "4711")
 
 	require.Error(t, err)
 	assert.False(t, errors.Is(err, runner.ErrPhoneUnreachable))
@@ -73,13 +74,13 @@ func TestGatewaySenderTimeout(t *testing.T) {
 	defer srv.Close()
 	s := runner.NewGatewaySender("gw-token", srv.URL, &http.Client{Timeout: 50 * time.Millisecond})
 
-	_, err := s.Send(context.Background(), "+85512345678", "482910")
+	_, err := s.Send(context.Background(), "+85512345678", "482910", "4711")
 
 	require.Error(t, err)
 }
 
 func TestFixedAndLogSenders(t *testing.T) {
-	id, err := runner.FixedOTPSender{}.Send(context.Background(), "+85512345678", "123456")
+	id, err := runner.FixedOTPSender{}.Send(context.Background(), "+85512345678", "123456", "1")
 	require.NoError(t, err)
 	assert.Empty(t, id)
 }

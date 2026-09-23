@@ -111,8 +111,11 @@ func newOTPSender(cfg config.Config, log *slog.Logger) runner.OTPSender {
 		return runner.NewGatewaySender(cfg.TelegramGatewayToken, runner.DefaultGatewayBaseURL, &http.Client{Timeout: 10 * time.Second})
 	case "log":
 		return runner.LogOTPSender{Log: log}
-	default:
+	case "fixed":
 		return runner.FixedOTPSender{}
+	default:
+		// config.Load 已校验取值，这里不可达；真走到说明配置校验与本函数脱节了。
+		panic(fmt.Sprintf("unknown OTP sender %q", cfg.OTPSenderKind()))
 	}
 }
 

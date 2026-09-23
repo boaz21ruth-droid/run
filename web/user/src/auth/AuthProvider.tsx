@@ -46,7 +46,12 @@ export function useAuth(): UseAuthResult {
       queryClient.clear();
     },
     requestCode: (phone) => controller.requestCode(phone),
-    loginWithPhone: (phone, code) => controller.loginWithPhone(phone, code),
+    loginWithPhone: async (phone, code) => {
+      await controller.loginWithPhone(phone, code);
+      // 和 logout 一样清缓存：401 之后换一位跑者在同一个标签页登录时，
+      // 上一位跑者的 /app/orders 等缓存不能继续渲染
+      queryClient.clear();
+    },
     setUser: (user) => controller.setUser(user),
   };
 }
