@@ -2,6 +2,14 @@ import { createHmac } from "node:crypto";
 import type { Page } from "@playwright/test";
 import { TELEGRAM_BOT_TOKEN, USER_URL } from "./env";
 
+/** 浏览器模式：在登录页用固定验证码 123456 登录（compose 环境 WERUN_OTP_SENDER=fixed） */
+export async function loginByPhone(page: Page, localNumber: string): Promise<void> {
+  await page.getByTestId("login-phone").fill(localNumber);
+  await page.getByTestId("login-send").click();
+  await page.getByTestId("login-code").fill("123456");
+  await page.getByTestId("login-verify").click();
+}
+
 /** 与 web/user/src/telegram/telegram.ts 的 TELEGRAM_SDK_URL 相同 */
 export const TELEGRAM_SDK_URL = "https://telegram.org/js/telegram-web-app.js";
 
