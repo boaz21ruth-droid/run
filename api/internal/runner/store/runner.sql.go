@@ -26,6 +26,36 @@ func (q *Queries) ClearSelfProfiles(ctx context.Context, arg ClearSelfProfilesPa
 	return err
 }
 
+const consumeActiveOTPs = `-- name: ConsumeActiveOTPs :exec
+UPDATE auth_otps SET consumed_at = $1::timestamptz
+WHERE phone_e164 = $2 AND purpose = 'LOGIN' AND consumed_at IS NULL
+`
+
+type ConsumeActiveOTPsParams struct {
+	ConsumedAt time.Time
+	PhoneE164  string
+}
+
+// 同一号码同时只保留一条有效验证码：新码写入前把旧的全部标记消费。
+func (q *Queries) ConsumeActiveOTPs(ctx context.Context, arg ConsumeActiveOTPsParams) error {
+	_, err := q.db.Exec(ctx, consumeActiveOTPs, arg.ConsumedAt, arg.PhoneE164)
+	return err
+}
+
+const consumeOTP = `-- name: ConsumeOTP :exec
+UPDATE auth_otps SET consumed_at = $1::timestamptz WHERE id = $2
+`
+
+type ConsumeOTPParams struct {
+	ConsumedAt time.Time
+	ID         int64
+}
+
+func (q *Queries) ConsumeOTP(ctx context.Context, arg ConsumeOTPParams) error {
+	_, err := q.db.Exec(ctx, consumeOTP, arg.ConsumedAt, arg.ID)
+	return err
+}
+
 const deleteProfile = `-- name: DeleteProfile :execrows
 DELETE FROM runner_profiles WHERE id = $1 AND user_id = $2
 `
@@ -41,6 +71,34 @@ func (q *Queries) DeleteProfile(ctx context.Context, arg DeleteProfileParams) (i
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const getActiveOTPForUpdate = `-- name: GetActiveOTPForUpdate :one
+SELECT id, code_hash, attempts, expires_at
+FROM auth_otps
+WHERE phone_e164 = $1 AND purpose = 'LOGIN' AND consumed_at IS NULL
+ORDER BY created_at DESC
+LIMIT 1
+FOR UPDATE
+`
+
+type GetActiveOTPForUpdateRow struct {
+	ID        int64
+	CodeHash  []byte
+	Attempts  int16
+	ExpiresAt time.Time
+}
+
+func (q *Queries) GetActiveOTPForUpdate(ctx context.Context, phoneE164 string) (GetActiveOTPForUpdateRow, error) {
+	row := q.db.QueryRow(ctx, getActiveOTPForUpdate, phoneE164)
+	var i GetActiveOTPForUpdateRow
+	err := row.Scan(
+		&i.ID,
+		&i.CodeHash,
+		&i.Attempts,
+		&i.ExpiresAt,
+	)
+	return i, err
 }
 
 const getConsentVersion = `-- name: GetConsentVersion :one
@@ -187,6 +245,7 @@ const getUserSession = `-- name: GetUserSession :one
 SELECT s.expires_at,
        s.revoked_at,
        u.id AS user_id,
+       u.phone_e164,
        u.telegram_user_id,
        u.telegram_username,
        u.display_name,
@@ -202,6 +261,7 @@ type GetUserSessionRow struct {
 	ExpiresAt        time.Time
 	RevokedAt        *time.Time
 	UserID           int64
+	PhoneE164        *string
 	TelegramUserID   *int64
 	TelegramUsername *string
 	DisplayName      *string
@@ -216,6 +276,7 @@ func (q *Queries) GetUserSession(ctx context.Context, tokenHash []byte) (GetUser
 		&i.ExpiresAt,
 		&i.RevokedAt,
 		&i.UserID,
+		&i.PhoneE164,
 		&i.TelegramUserID,
 		&i.TelegramUsername,
 		&i.DisplayName,
@@ -223,6 +284,17 @@ func (q *Queries) GetUserSession(ctx context.Context, tokenHash []byte) (GetUser
 		&i.Status,
 	)
 	return i, err
+}
+
+const incrementOTPAttempts = `-- name: IncrementOTPAttempts :one
+UPDATE auth_otps SET attempts = attempts + 1 WHERE id = $1 RETURNING attempts
+`
+
+func (q *Queries) IncrementOTPAttempts(ctx context.Context, id int64) (int16, error) {
+	row := q.db.QueryRow(ctx, incrementOTPAttempts, id)
+	var attempts int16
+	err := row.Scan(&attempts)
+	return attempts, err
 }
 
 const insertConsentSignature = `-- name: InsertConsentSignature :one
@@ -284,6 +356,33 @@ func (q *Queries) InsertConsentVersion(ctx context.Context, arg InsertConsentVer
 		arg.Purpose,
 	)
 	return err
+}
+
+const insertOTP = `-- name: InsertOTP :one
+INSERT INTO auth_otps (phone_e164, code_hash, purpose, expires_at, ip, created_at)
+VALUES ($1, $2, 'LOGIN', $3::timestamptz, $4, $5::timestamptz)
+RETURNING id
+`
+
+type InsertOTPParams struct {
+	PhoneE164 string
+	CodeHash  []byte
+	ExpiresAt time.Time
+	Ip        *netip.Addr
+	CreatedAt time.Time
+}
+
+func (q *Queries) InsertOTP(ctx context.Context, arg InsertOTPParams) (int64, error) {
+	row := q.db.QueryRow(ctx, insertOTP,
+		arg.PhoneE164,
+		arg.CodeHash,
+		arg.ExpiresAt,
+		arg.Ip,
+		arg.CreatedAt,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const insertProfile = `-- name: InsertProfile :one
@@ -466,6 +565,20 @@ func (q *Queries) RevokeUserSession(ctx context.Context, arg RevokeUserSessionPa
 	return err
 }
 
+const setOTPProviderRequestID = `-- name: SetOTPProviderRequestID :exec
+UPDATE auth_otps SET provider_request_id = $1 WHERE id = $2
+`
+
+type SetOTPProviderRequestIDParams struct {
+	ProviderRequestID *string
+	ID                int64
+}
+
+func (q *Queries) SetOTPProviderRequestID(ctx context.Context, arg SetOTPProviderRequestIDParams) error {
+	_, err := q.db.Exec(ctx, setOTPProviderRequestID, arg.ProviderRequestID, arg.ID)
+	return err
+}
+
 const updateProfile = `-- name: UpdateProfile :one
 UPDATE runner_profiles
 SET full_name       = $1,
@@ -544,6 +657,83 @@ func (q *Queries) UpdateProfile(ctx context.Context, arg UpdateProfileParams) (R
 	return i, err
 }
 
+const updateUserProfile = `-- name: UpdateUserProfile :one
+UPDATE users SET display_name = $1, locale = $2
+WHERE id = $3
+RETURNING id, phone_e164, telegram_user_id, telegram_username, display_name, locale, status
+`
+
+type UpdateUserProfileParams struct {
+	DisplayName *string
+	Locale      string
+	ID          int64
+}
+
+type UpdateUserProfileRow struct {
+	ID               int64
+	PhoneE164        *string
+	TelegramUserID   *int64
+	TelegramUsername *string
+	DisplayName      *string
+	Locale           string
+	Status           string
+}
+
+func (q *Queries) UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) (UpdateUserProfileRow, error) {
+	row := q.db.QueryRow(ctx, updateUserProfile, arg.DisplayName, arg.Locale, arg.ID)
+	var i UpdateUserProfileRow
+	err := row.Scan(
+		&i.ID,
+		&i.PhoneE164,
+		&i.TelegramUserID,
+		&i.TelegramUsername,
+		&i.DisplayName,
+		&i.Locale,
+		&i.Status,
+	)
+	return i, err
+}
+
+const upsertPhoneUser = `-- name: UpsertPhoneUser :one
+INSERT INTO users (phone_e164, locale, last_login_at)
+VALUES ($1, $2, $3::timestamptz)
+ON CONFLICT (phone_e164) DO UPDATE
+SET last_login_at = EXCLUDED.last_login_at
+RETURNING id, phone_e164, telegram_user_id, telegram_username, display_name, locale, status
+`
+
+type UpsertPhoneUserParams struct {
+	PhoneE164   *string
+	Locale      string
+	LastLoginAt time.Time
+}
+
+type UpsertPhoneUserRow struct {
+	ID               int64
+	PhoneE164        *string
+	TelegramUserID   *int64
+	TelegramUsername *string
+	DisplayName      *string
+	Locale           string
+	Status           string
+}
+
+// 首次手机号登录创建跑者；再次登录只更新最近登录时间，不覆盖 locale 与显示名。
+func (q *Queries) UpsertPhoneUser(ctx context.Context, arg UpsertPhoneUserParams) (UpsertPhoneUserRow, error) {
+	row := q.db.QueryRow(ctx, upsertPhoneUser, arg.PhoneE164, arg.Locale, arg.LastLoginAt)
+	var i UpsertPhoneUserRow
+	err := row.Scan(
+		&i.ID,
+		&i.PhoneE164,
+		&i.TelegramUserID,
+		&i.TelegramUsername,
+		&i.DisplayName,
+		&i.Locale,
+		&i.Status,
+	)
+	return i, err
+}
+
 const upsertTelegramUser = `-- name: UpsertTelegramUser :one
 INSERT INTO users (telegram_user_id, telegram_username, display_name, locale, last_login_at)
 VALUES ($1::bigint, $2, $3, $4, $5::timestamptz)
@@ -551,7 +741,7 @@ ON CONFLICT (telegram_user_id) DO UPDATE
 SET telegram_username = EXCLUDED.telegram_username,
     display_name      = EXCLUDED.display_name,
     last_login_at     = EXCLUDED.last_login_at
-RETURNING id, telegram_user_id, telegram_username, display_name, locale, status
+RETURNING id, phone_e164, telegram_user_id, telegram_username, display_name, locale, status
 `
 
 type UpsertTelegramUserParams struct {
@@ -564,6 +754,7 @@ type UpsertTelegramUserParams struct {
 
 type UpsertTelegramUserRow struct {
 	ID               int64
+	PhoneE164        *string
 	TelegramUserID   *int64
 	TelegramUsername *string
 	DisplayName      *string
@@ -583,6 +774,7 @@ func (q *Queries) UpsertTelegramUser(ctx context.Context, arg UpsertTelegramUser
 	var i UpsertTelegramUserRow
 	err := row.Scan(
 		&i.ID,
+		&i.PhoneE164,
 		&i.TelegramUserID,
 		&i.TelegramUsername,
 		&i.DisplayName,

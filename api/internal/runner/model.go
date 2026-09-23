@@ -6,6 +6,7 @@ import "time"
 // User 是已登录的跑者。
 type User struct {
 	ID               int64
+	Phone            string // E.164，可空
 	TelegramUserID   int64
 	TelegramUsername string
 	DisplayName      string

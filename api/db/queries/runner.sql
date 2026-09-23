@@ -6,7 +6,7 @@ ON CONFLICT (telegram_user_id) DO UPDATE
 SET telegram_username = EXCLUDED.telegram_username,
     display_name      = EXCLUDED.display_name,
     last_login_at     = EXCLUDED.last_login_at
-RETURNING id, telegram_user_id, telegram_username, display_name, locale, status;
+RETURNING id, phone_e164, telegram_user_id, telegram_username, display_name, locale, status;
 
 -- name: InsertUserSession :exec
 INSERT INTO sessions (subject_type, subject_id, token_hash, expires_at, ip, user_agent, created_at)
@@ -16,6 +16,7 @@ VALUES ('USER', @user_id, @token_hash, @expires_at, @ip, @user_agent, @created_a
 SELECT s.expires_at,
        s.revoked_at,
        u.id AS user_id,
+       u.phone_e164,
        u.telegram_user_id,
        u.telegram_username,
        u.display_name,
@@ -108,3 +109,43 @@ RETURNING id;
 -- name: InsertRegistrationConsent :exec
 INSERT INTO registration_consents (signature_id, reg_order_id, free_signup_id)
 VALUES (@signature_id, sqlc.narg(reg_order_id), sqlc.narg(free_signup_id));
+
+-- name: InsertOTP :one
+INSERT INTO auth_otps (phone_e164, code_hash, purpose, expires_at, ip, created_at)
+VALUES (@phone_e164, @code_hash, 'LOGIN', @expires_at::timestamptz, @ip, @created_at::timestamptz)
+RETURNING id;
+
+-- name: ConsumeActiveOTPs :exec
+-- 同一号码同时只保留一条有效验证码：新码写入前把旧的全部标记消费。
+UPDATE auth_otps SET consumed_at = @consumed_at::timestamptz
+WHERE phone_e164 = @phone_e164 AND purpose = 'LOGIN' AND consumed_at IS NULL;
+
+-- name: SetOTPProviderRequestID :exec
+UPDATE auth_otps SET provider_request_id = @provider_request_id WHERE id = @id;
+
+-- name: GetActiveOTPForUpdate :one
+SELECT id, code_hash, attempts, expires_at
+FROM auth_otps
+WHERE phone_e164 = @phone_e164 AND purpose = 'LOGIN' AND consumed_at IS NULL
+ORDER BY created_at DESC
+LIMIT 1
+FOR UPDATE;
+
+-- name: IncrementOTPAttempts :one
+UPDATE auth_otps SET attempts = attempts + 1 WHERE id = @id RETURNING attempts;
+
+-- name: ConsumeOTP :exec
+UPDATE auth_otps SET consumed_at = @consumed_at::timestamptz WHERE id = @id;
+
+-- name: UpsertPhoneUser :one
+-- 首次手机号登录创建跑者；再次登录只更新最近登录时间，不覆盖 locale 与显示名。
+INSERT INTO users (phone_e164, locale, last_login_at)
+VALUES (@phone_e164, @locale, @last_login_at::timestamptz)
+ON CONFLICT (phone_e164) DO UPDATE
+SET last_login_at = EXCLUDED.last_login_at
+RETURNING id, phone_e164, telegram_user_id, telegram_username, display_name, locale, status;
+
+-- name: UpdateUserProfile :one
+UPDATE users SET display_name = @display_name, locale = @locale
+WHERE id = @id
+RETURNING id, phone_e164, telegram_user_id, telegram_username, display_name, locale, status;

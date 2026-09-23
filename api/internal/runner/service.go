@@ -85,7 +85,7 @@ func (s *Service) LoginTelegram(ctx context.Context, initData string, meta httpx
 			return apperr.New(http.StatusForbidden, apperr.CodeForbidden).
 				Wrap(fmt.Errorf("runner: user %d is %s", row.ID, row.Status))
 		}
-		user = userFromColumns(row.ID, row.TelegramUserID, row.TelegramUsername, row.DisplayName, row.Locale)
+		user = userFromColumns(row.ID, row.PhoneE164, row.TelegramUserID, row.TelegramUsername, row.DisplayName, row.Locale)
 
 		if err := q.InsertUserSession(ctx, store.InsertUserSessionParams{
 			UserID:    user.ID,
@@ -134,7 +134,7 @@ func (s *Service) Authenticate(ctx context.Context, token string) (User, error) 
 	if row.RevokedAt != nil || !s.now().Before(row.ExpiresAt) || row.Status != statusActive {
 		return User{}, unauthenticated()
 	}
-	return userFromColumns(row.UserID, row.TelegramUserID, row.TelegramUsername, row.DisplayName, row.Locale), nil
+	return userFromColumns(row.UserID, row.PhoneE164, row.TelegramUserID, row.TelegramUsername, row.DisplayName, row.Locale), nil
 }
 
 // Logout 吊销令牌对应的跑者会话；令牌格式不对时什么也不做。
@@ -180,9 +180,10 @@ func displayName(u TelegramUser) string {
 	return name
 }
 
-func userFromColumns(id int64, telegramUserID *int64, telegramUsername, name *string, locale string) User {
+func userFromColumns(id int64, phone *string, telegramUserID *int64, telegramUsername, name *string, locale string) User {
 	u := User{
 		ID:               id,
+		Phone:            derefString(phone),
 		TelegramUsername: derefString(telegramUsername),
 		DisplayName:      derefString(name),
 		Locale:           locale,

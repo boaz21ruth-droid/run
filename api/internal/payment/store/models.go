@@ -31,15 +31,16 @@ type AuditLog struct {
 }
 
 type AuthOtp struct {
-	ID         int64
-	PhoneE164  string
-	CodeHash   []byte
-	Purpose    string
-	Attempts   int16
-	ExpiresAt  time.Time
-	ConsumedAt *time.Time
-	Ip         *netip.Addr
-	CreatedAt  time.Time
+	ID                int64
+	PhoneE164         string
+	CodeHash          []byte
+	Purpose           string
+	Attempts          int16
+	ExpiresAt         time.Time
+	ConsumedAt        *time.Time
+	Ip                *netip.Addr
+	CreatedAt         time.Time
+	ProviderRequestID *string
 }
 
 type BankStatementImport struct {
