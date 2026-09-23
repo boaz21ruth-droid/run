@@ -45,6 +45,12 @@ const (
 	CodeOrderExpired              = "ORDER_EXPIRED"
 	CodeProofTxnRefUsed           = "PROOF_TXN_REF_USED"
 	CodeReceivedAmountTooLow      = "RECEIVED_AMOUNT_TOO_LOW"
+	CodeOTPPhoneInvalid           = "OTP_PHONE_INVALID"
+	CodeOTPPhoneNotOnTelegram     = "OTP_PHONE_NOT_ON_TELEGRAM"
+	CodeOTPSendFailed             = "OTP_SEND_FAILED"
+	CodeOTPInvalid                = "OTP_INVALID"
+	CodeOTPExpired                = "OTP_EXPIRED"
+	CodeOTPAttemptsExceeded       = "OTP_ATTEMPTS_EXCEEDED"
 )
 
 // AllCodes 列出全部错误码，供文案完整性测试使用。新增错误码时必须同时加到这里。
@@ -85,6 +91,12 @@ var AllCodes = []string{
 	CodeOrderExpired,
 	CodeProofTxnRefUsed,
 	CodeReceivedAmountTooLow,
+	CodeOTPPhoneInvalid,
+	CodeOTPPhoneNotOnTelegram,
+	CodeOTPSendFailed,
+	CodeOTPInvalid,
+	CodeOTPExpired,
+	CodeOTPAttemptsExceeded,
 }
 
 // FieldError 描述某个字段的错误：文案 key 与参数。

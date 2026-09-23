@@ -59,7 +59,7 @@ func newFreeEnv(t *testing.T) freeEnv {
 	inserter, err := jobs.NewInserter(pool)
 	require.NoError(t, err)
 
-	runners := runner.NewService(pool, []byte(strings.Repeat("s", 32)), freeBotToken, pii, clock)
+	runners := runner.NewService(pool, []byte(strings.Repeat("s", 32)), freeBotToken, pii, clock, runner.FixedOTPSender{}, runner.NewOTPLimiter(clock))
 	prices := pricing.NewService(pool, clock)
 	notifier := notify.NewService(inserter, catalog, "http://werun.localhost")
 	svc := registration.NewService(pool, runners, prices, notifier, clock)

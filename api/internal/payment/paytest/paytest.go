@@ -122,7 +122,7 @@ func NewEnv(t testing.TB) *Env {
 
 	clock := NewClock(time.Now().Truncate(time.Second))
 	files := &RecordingStore{Store: disk}
-	runners := runner.NewService(pool, sessionSecret, BotToken, pii, clock.Now)
+	runners := runner.NewService(pool, sessionSecret, BotToken, pii, clock.Now, runner.FixedOTPSender{}, runner.NewOTPLimiter(clock.Now))
 	prices := pricing.NewService(pool, clock.Now)
 	notifier := notifytest.New(t, pool)
 	orders := registration.NewService(pool, runners, prices, notifier, clock.Now)

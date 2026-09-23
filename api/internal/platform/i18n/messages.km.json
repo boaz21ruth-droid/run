@@ -66,5 +66,11 @@
   "notify.reject_code.UNREADABLE": "រូបថតអេក្រង់មើលមិនច្បាស់",
   "notify.reject_code.WRONG_ACCOUNT": "បានផ្ទេរទៅគណនីខុស",
   "notify.reject_code.FRAUD": "មិនអាចផ្ទៀងផ្ទាត់ភស្តុតាងបានទេ",
-  "notify.reject_code.OTHER": "មូលហេតុផ្សេងទៀត"
+  "notify.reject_code.OTHER": "មូលហេតុផ្សេងទៀត",
+  "OTP_PHONE_INVALID": "សូមបញ្ចូលលេខទូរស័ព្ទត្រឹមត្រូវ រួមទាំងលេខកូដប្រទេស ឧ. +85512345678។",
+  "OTP_PHONE_NOT_ON_TELEGRAM": "លេខនេះមិនបានចុះឈ្មោះក្នុង Telegram ទេ ដូច្នេះមិនអាចទទួលកូដបានទេ។ សូមប្រើលេខផ្សេង ឬបើក WeRun ក្នុង Telegram។",
+  "OTP_SEND_FAILED": "មិនអាចផ្ញើកូដបានឥឡូវនេះទេ។ សូមព្យាយាមម្តងទៀតបន្តិចក្រោយមក។",
+  "OTP_INVALID": "កូដមិនត្រឹមត្រូវទេ។",
+  "OTP_EXPIRED": "កូដផុតកំណត់ ឬមិនមានទេ។ សូមស្នើសុំកូដថ្មី។",
+  "OTP_ATTEMPTS_EXCEEDED": "ព្យាយាមខុសច្រើនដងពេក។ សូមស្នើសុំកូដថ្មី។"
 }

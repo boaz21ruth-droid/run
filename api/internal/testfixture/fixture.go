@@ -218,7 +218,7 @@ func PII(t testing.TB) *piicrypt.Cipher {
 // RunnerService 构造 runner.Service。
 func RunnerService(t testing.TB, pool *pgxpool.Pool, now func() time.Time) *runner.Service {
 	t.Helper()
-	return runner.NewService(pool, []byte(SessionSecret), BotToken, PII(t), now)
+	return runner.NewService(pool, []byte(SessionSecret), BotToken, PII(t), now, runner.FixedOTPSender{}, runner.NewOTPLimiter(now))
 }
 
 // RegistrationConsent 发布中文 REGISTRATION 同意书 REG-TEST-v1（勾选项 rules、health、terms），返回全部勾选的签署输入。

@@ -66,5 +66,11 @@
   "notify.reject_code.UNREADABLE": "截图无法辨认",
   "notify.reject_code.WRONG_ACCOUNT": "转入的收款账户不正确",
   "notify.reject_code.FRAUD": "凭证信息无法核实",
-  "notify.reject_code.OTHER": "其他原因"
+  "notify.reject_code.OTHER": "其他原因",
+  "OTP_PHONE_INVALID": "手机号格式不正确，请带国家码，例如 +85512345678。",
+  "OTP_PHONE_NOT_ON_TELEGRAM": "这个手机号没有注册 Telegram，无法接收验证码。请换一个号码，或在 Telegram 中打开 WeRun 小程序。",
+  "OTP_SEND_FAILED": "验证码暂时发不出去，请稍后再试。",
+  "OTP_INVALID": "验证码不正确。",
+  "OTP_EXPIRED": "验证码已过期或不存在，请重新获取。",
+  "OTP_ATTEMPTS_EXCEEDED": "错误次数过多，请重新获取验证码。"
 }

@@ -48,7 +48,7 @@ func newRunnerEnv(t *testing.T) runnerEnv {
 	require.NoError(t, err)
 	secret := []byte(strings.Repeat("k", 32))
 	iamSvc := iam.NewService(pool, secret, iam.NewLoginLimiter(time.Now), time.Now)
-	runners := runner.NewService(pool, secret, runnerBotToken, pii, time.Now)
+	runners := runner.NewService(pool, secret, runnerBotToken, pii, time.Now, runner.FixedOTPSender{}, runner.NewOTPLimiter(time.Now))
 	router := httpapi.NewRouter(httpapi.RouterDeps{
 		Log:     logx.New("error", io.Discard),
 		Catalog: catalog,

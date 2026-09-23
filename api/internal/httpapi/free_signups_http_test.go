@@ -65,7 +65,7 @@ func newFreeSignupHTTPEnv(t *testing.T) fshEnv {
 
 	iamSvc := iam.NewService(pool, []byte(strings.Repeat("k", 32)), iam.NewLoginLimiter(time.Now), time.Now)
 	events := event.NewService(pool)
-	runners := runner.NewService(pool, []byte(strings.Repeat("k", 32)), fshBotToken, pii, now)
+	runners := runner.NewService(pool, []byte(strings.Repeat("k", 32)), fshBotToken, pii, now, runner.FixedOTPSender{}, runner.NewOTPLimiter(now))
 	prices := pricing.NewService(pool, now)
 	notifier := notify.NewService(inserter, catalog, "http://werun.localhost")
 	orders := registration.NewService(pool, runners, prices, notifier, now)

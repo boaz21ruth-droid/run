@@ -31,24 +31,30 @@ type testClock struct{ t time.Time }
 func (c *testClock) Now() time.Time { return c.t }
 
 type fixture struct {
-	pool  *pgxpool.Pool
-	svc   *runner.Service
-	clock *testClock
-	pii   *piicrypt.Cipher
+	pool   *pgxpool.Pool
+	svc    *runner.Service
+	clock  *testClock
+	pii    *piicrypt.Cipher
+	sender *fakeSender
 }
 
 func newFixture(t *testing.T) fixture {
+	t.Helper()
+	return newFixtureWithSender(t, &fakeSender{})
+}
+
+func newFixtureWithSender(t *testing.T, sender runner.OTPSender) fixture {
 	t.Helper()
 	pool := dbtest.NewPool(t)
 	pii, err := piicrypt.New([]byte(strings.Repeat("p", 32)))
 	require.NoError(t, err)
 	clock := &testClock{t: baseNow}
-	return fixture{
-		pool:  pool,
-		svc:   runner.NewService(pool, testSessionSecret, testBotToken, pii, clock.Now),
-		clock: clock,
-		pii:   pii,
+	f := fixture{pool: pool, clock: clock, pii: pii}
+	if fs, ok := sender.(*fakeSender); ok {
+		f.sender = fs
 	}
+	f.svc = runner.NewService(pool, testSessionSecret, testBotToken, pii, clock.Now, sender, runner.NewOTPLimiter(clock.Now))
+	return f
 }
 
 func (f fixture) login(t *testing.T, tg runner.TelegramUser) runner.Session {
@@ -177,7 +183,7 @@ func TestLoginTelegramRejectsInvalidInitData(t *testing.T) {
 func TestLoginTelegramRejectsBlankBotToken(t *testing.T) {
 	f := newFixture(t)
 	ctx := context.Background()
-	svc := runner.NewService(f.pool, testSessionSecret, "", f.pii, f.clock.Now)
+	svc := runner.NewService(f.pool, testSessionSecret, "", f.pii, f.clock.Now, runner.FixedOTPSender{}, runner.NewOTPLimiter(f.clock.Now))
 
 	forged := runner.SignInitData("", runner.TelegramUser{ID: 10001, FirstName: "Mallory"}, baseNow)
 	_, err := svc.LoginTelegram(ctx, forged, testMeta)

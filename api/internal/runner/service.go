@@ -32,7 +32,7 @@ const (
 	statusActive = "ACTIVE"
 )
 
-// Service 负责跑者登录与会话、常用参赛人、同意书。
+// Service 负责跑者登录与会话、常用参赛人、同意书、手机号验证码登录。
 type Service struct {
 	pool     *pgxpool.Pool
 	q        *store.Queries
@@ -40,11 +40,14 @@ type Service struct {
 	botToken string
 	pii      *piicrypt.Cipher
 	now      func() time.Time
+	otp      OTPSender
+	limiter  *OTPLimiter
 }
 
-// NewService：sessionSecret 与员工会话共用 WERUN_SESSION_SECRET；now 在测试中注入。
+// NewService：sessionSecret 与员工会话共用 WERUN_SESSION_SECRET；now 在测试中注入；
+// otp 为 FixedOTPSender 时验证码固定为 FixedOTPCode。
 // botToken 为空时 VerifyInitData 拒绝一切登录（config.Load 已禁止空 token）。
-func NewService(pool *pgxpool.Pool, sessionSecret []byte, botToken string, pii *piicrypt.Cipher, now func() time.Time) *Service {
+func NewService(pool *pgxpool.Pool, sessionSecret []byte, botToken string, pii *piicrypt.Cipher, now func() time.Time, otp OTPSender, limiter *OTPLimiter) *Service {
 	return &Service{
 		pool:     pool,
 		q:        store.New(pool),
@@ -52,6 +55,8 @@ func NewService(pool *pgxpool.Pool, sessionSecret []byte, botToken string, pii *
 		botToken: botToken,
 		pii:      pii,
 		now:      now,
+		otp:      otp,
+		limiter:  limiter,
 	}
 }
 

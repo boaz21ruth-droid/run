@@ -241,6 +241,37 @@ func (q *Queries) GetProfileForUpdate(ctx context.Context, arg GetProfileForUpda
 	return i, err
 }
 
+const getUserByID = `-- name: GetUserByID :one
+SELECT id, phone_e164, telegram_user_id, telegram_username, display_name, locale, status
+FROM users
+WHERE id = $1
+`
+
+type GetUserByIDRow struct {
+	ID               int64
+	PhoneE164        *string
+	TelegramUserID   *int64
+	TelegramUsername *string
+	DisplayName      *string
+	Locale           string
+	Status           string
+}
+
+func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, error) {
+	row := q.db.QueryRow(ctx, getUserByID, id)
+	var i GetUserByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.PhoneE164,
+		&i.TelegramUserID,
+		&i.TelegramUsername,
+		&i.DisplayName,
+		&i.Locale,
+		&i.Status,
+	)
+	return i, err
+}
+
 const getUserSession = `-- name: GetUserSession :one
 SELECT s.expires_at,
        s.revoked_at,

@@ -66,5 +66,11 @@
   "notify.reject_code.UNREADABLE": "Screenshot is unreadable",
   "notify.reject_code.WRONG_ACCOUNT": "Paid to the wrong account",
   "notify.reject_code.FRAUD": "Proof could not be verified",
-  "notify.reject_code.OTHER": "Other reason"
+  "notify.reject_code.OTHER": "Other reason",
+  "OTP_PHONE_INVALID": "Enter a valid phone number with country code, e.g. +85512345678.",
+  "OTP_PHONE_NOT_ON_TELEGRAM": "This number isn't registered on Telegram, so we can't deliver the code. Use another number or open WeRun inside Telegram.",
+  "OTP_SEND_FAILED": "We couldn't send the code right now. Please try again shortly.",
+  "OTP_INVALID": "The code is incorrect.",
+  "OTP_EXPIRED": "The code has expired or doesn't exist. Request a new one.",
+  "OTP_ATTEMPTS_EXCEEDED": "Too many wrong attempts. Request a new code."
 }

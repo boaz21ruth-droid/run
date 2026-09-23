@@ -81,7 +81,7 @@ func Bootstrap(ctx context.Context) (*App, error) {
 	}
 	app := &App{Cfg: cfg, Log: log, Catalog: cat, Pool: pool, Store: files, PII: pii, Inserter: inserter}
 	app.Notify = notify.NewService(app.Inserter, app.Catalog, app.Cfg.AppBaseURL)
-	app.Runner = runner.NewService(app.Pool, []byte(app.Cfg.SessionSecret), app.Cfg.TelegramBotToken, app.PII, time.Now)
+	app.Runner = runner.NewService(app.Pool, []byte(app.Cfg.SessionSecret), app.Cfg.TelegramBotToken, app.PII, time.Now, runner.FixedOTPSender{}, runner.NewOTPLimiter(time.Now))
 	app.IAM = iam.NewService(app.Pool, []byte(app.Cfg.SessionSecret), iam.NewLoginLimiter(time.Now), time.Now)
 	app.Events = event.NewService(app.Pool)
 	app.Pricing = pricing.NewService(app.Pool, time.Now)

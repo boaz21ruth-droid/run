@@ -1,4 +1,4 @@
-// Package runner 是跑者模块：Telegram 登录与会话、常用参赛人、报名同意书。
+// Package runner 是跑者模块：Telegram 登录与手机号验证码登录、会话、常用参赛人、报名同意书。
 package runner
 
 import "time"

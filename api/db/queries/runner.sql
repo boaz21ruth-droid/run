@@ -149,3 +149,8 @@ RETURNING id, phone_e164, telegram_user_id, telegram_username, display_name, loc
 UPDATE users SET display_name = @display_name, locale = @locale
 WHERE id = @id
 RETURNING id, phone_e164, telegram_user_id, telegram_username, display_name, locale, status;
+
+-- name: GetUserByID :one
+SELECT id, phone_e164, telegram_user_id, telegram_username, display_name, locale, status
+FROM users
+WHERE id = @id;
