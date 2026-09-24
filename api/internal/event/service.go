@@ -281,7 +281,14 @@ func (s *Service) ListPublic(ctx context.Context) ([]Event, error) {
 	if err != nil {
 		return nil, fmt.Errorf("list public events: %w", err)
 	}
-	return withCategories(ctx, q, rows)
+	events, err := withCategories(ctx, q, rows)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.loadFromPrice(ctx, q, events); err != nil {
+		return nil, err
+	}
+	return events, nil
 }
 
 // GetPublic 按 slug 取已发布且公开展示的赛事；不存在或未公开返回 EVENT_NOT_FOUND。
@@ -298,7 +305,40 @@ func (s *Service) GetPublic(ctx context.Context, slug string) (Event, error) {
 	if err != nil {
 		return Event{}, err
 	}
+	if err := s.loadFromPrice(ctx, q, events); err != nil {
+		return Event{}, err
+	}
 	return events[0], nil
+}
+
+// loadFromPrice 批量填充公开赛事的 FromPriceCents：当前在售价格档（销售窗口覆盖当前时间、
+// 配额未用尽，判定口径同 internal/pricing 的 SelectTier）中的最低价；没有在售价格档则留空。
+func (s *Service) loadFromPrice(ctx context.Context, q *store.Queries, events []Event) error {
+	if len(events) == 0 {
+		return nil
+	}
+	ids := make([]int64, 0, len(events))
+	for _, e := range events {
+		ids = append(ids, e.ID)
+	}
+	rows, err := q.MinAvailablePriceCentsByEvents(ctx, store.MinAvailablePriceCentsByEventsParams{
+		EventIds: ids,
+		Now:      s.now().UTC(),
+	})
+	if err != nil {
+		return fmt.Errorf("load min available price of events: %w", err)
+	}
+	byEvent := make(map[int64]int64, len(rows))
+	for _, r := range rows {
+		byEvent[r.EventID] = r.MinPriceCents
+	}
+	for i := range events {
+		if cents, ok := byEvent[events[i].ID]; ok {
+			v := cents
+			events[i].FromPriceCents = &v
+		}
+	}
+	return nil
 }
 
 func withCategories(ctx context.Context, q *store.Queries, rows []store.Event) ([]Event, error) {
@@ -361,6 +401,7 @@ func eventFromRow(r store.Event) (Event, error) {
 		RegistrationOpen:     r.RegistrationOpen,
 		RegistrationOpensAt:  r.RegistrationOpensAt,
 		RegistrationClosesAt: r.RegistrationClosesAt,
+		CoverFileID:          r.CoverFileID,
 	}, nil
 }
 

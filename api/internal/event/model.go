@@ -48,7 +48,10 @@ type Event struct {
 	RegistrationOpen     bool
 	RegistrationOpensAt  *time.Time
 	RegistrationClosesAt *time.Time
+	CoverFileID          *int64
 	Categories           []Category
+	// FromPriceCents 是当前在售价格档中的最低价（分）；仅公开列表/详情会填充，nil 表示没有在售价格档。
+	FromPriceCents *int64
 }
 
 // CategoryInput 是新建赛事时提交的组别。

@@ -1337,7 +1337,7 @@ components:
           type: string
     PublicCategory:
       type: object
-      required: [id, code, name, distanceM, capacity, startAt, cutoffAt, minAge, soldOut]
+      required: [id, code, name, distanceM, capacity, startAt, cutoffAt, minAge, soldOut, remaining]
       properties:
         id:
           type: integer
@@ -1364,9 +1364,13 @@ components:
         soldOut:
           type: boolean
           description: used_count + reserved_count >= capacity
+        remaining:
+          type: integer
+          format: int32
+          description: max(capacity - used_count - reserved_count, 0)
     PublicEvent:
       type: object
-      required: [id, slug, eventType, name, city, raceDate, registrationOpen, registrationOpensAt, registrationClosesAt, categories]
+      required: [id, slug, eventType, name, city, raceDate, registrationOpen, registrationOpensAt, registrationClosesAt, categories, fromPriceCents, coverUrl]
       properties:
         id:
           type: integer
@@ -1397,6 +1401,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PublicCategory'
+        fromPriceCents:
+          type: integer
+          format: int64
+          nullable: true
+          description: 当前在售价格档中的最低价（分）；没有在售价格档（如免费活动）时为空
+        coverUrl:
+          type: string
+          nullable: true
+          description: 封面图公开访问地址（/api/files/{id}）；未设置封面时为空
     PublicEventList:
       type: object
       required: [items]

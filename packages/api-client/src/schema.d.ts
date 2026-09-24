@@ -734,6 +734,11 @@ export interface components {
             minAge: number;
             /** @description used_count + reserved_count >= capacity */
             soldOut: boolean;
+            /**
+             * Format: int32
+             * @description max(capacity - used_count - reserved_count, 0)
+             */
+            remaining: number;
         };
         PublicEvent: {
             /** Format: int64 */
@@ -751,6 +756,13 @@ export interface components {
             /** Format: date-time */
             registrationClosesAt: string | null;
             categories: components["schemas"]["PublicCategory"][];
+            /**
+             * Format: int64
+             * @description 当前在售价格档中的最低价（分）；没有在售价格档（如免费活动）时为空
+             */
+            fromPriceCents: number | null;
+            /** @description 封面图公开访问地址（/api/files/{id}）；未设置封面时为空 */
+            coverUrl: string | null;
         };
         PublicEventList: {
             items: components["schemas"]["PublicEvent"][];

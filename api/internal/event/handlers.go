@@ -2,6 +2,7 @@ package event
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -124,6 +125,7 @@ func toPublicEvent(e Event, lang i18n.Lang) apigen.PublicEvent {
 			CutoffAt:  derefTime(c.CutoffAt),
 			MinAge:    int32(c.MinAge),
 			SoldOut:   int64(c.UsedCount)+int64(c.ReservedCount) >= int64(c.Capacity),
+			Remaining: remainingOf(c),
 		})
 	}
 	return apigen.PublicEvent{
@@ -137,7 +139,28 @@ func toPublicEvent(e Event, lang i18n.Lang) apigen.PublicEvent {
 		RegistrationOpensAt:  e.RegistrationOpensAt,
 		RegistrationClosesAt: e.RegistrationClosesAt,
 		Categories:           cats,
+		FromPriceCents:       e.FromPriceCents,
+		CoverUrl:             coverURLOf(e.CoverFileID),
 	}
+}
+
+// remainingOf 返回组别剩余名额：capacity - used_count - reserved_count，下限为 0。
+func remainingOf(c Category) int32 {
+	remaining := c.Capacity - c.UsedCount - c.ReservedCount
+	if remaining < 0 {
+		return 0
+	}
+	return remaining
+}
+
+// coverURLOf 返回封面图的公开访问地址（沿用 OrderPaymentAccount.QrFileId 注释里
+// /api/files/{id} 的约定）；未设置封面时返回 nil。
+func coverURLOf(fileID *int64) *string {
+	if fileID == nil {
+		return nil
+	}
+	url := fmt.Sprintf("/api/files/%d", *fileID)
+	return &url
 }
 
 func toAdminEvent(e Event) apigen.AdminEvent {

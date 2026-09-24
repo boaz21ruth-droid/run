@@ -422,6 +422,50 @@ func (q *Queries) ListPublicEvents(ctx context.Context) ([]Event, error) {
 	return items, nil
 }
 
+const minAvailablePriceCentsByEvents = `-- name: MinAvailablePriceCentsByEvents :many
+SELECT event_id, min(price_cents)::bigint AS min_price_cents
+FROM price_rules
+WHERE event_id = ANY($1::bigint[])
+  AND (sale_starts_at IS NULL OR sale_starts_at <= $2::timestamptz)
+  AND (sale_ends_at IS NULL OR sale_ends_at > $2::timestamptz)
+  AND (quota IS NULL OR used_count + reserved_count < quota)
+GROUP BY event_id
+`
+
+type MinAvailablePriceCentsByEventsParams struct {
+	EventIds []int64
+	Now      time.Time
+}
+
+type MinAvailablePriceCentsByEventsRow struct {
+	EventID       int64
+	MinPriceCents int64
+}
+
+// 批量取多个赛事当前在售价格档中的最低价（分）：销售窗口覆盖当前时间（sale_starts_at
+// 为空或不晚于当前时间，sale_ends_at 为空或晚于当前时间），且配额未用尽（quota 为空或
+// used_count + reserved_count 未达到 quota）。判定口径与 internal/pricing 的 SelectTier 一致。
+// 没有任何在售价格档的赛事不会出现在结果里。
+func (q *Queries) MinAvailablePriceCentsByEvents(ctx context.Context, arg MinAvailablePriceCentsByEventsParams) ([]MinAvailablePriceCentsByEventsRow, error) {
+	rows, err := q.db.Query(ctx, minAvailablePriceCentsByEvents, arg.EventIds, arg.Now)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MinAvailablePriceCentsByEventsRow
+	for rows.Next() {
+		var i MinAvailablePriceCentsByEventsRow
+		if err := rows.Scan(&i.EventID, &i.MinPriceCents); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const publishEvent = `-- name: PublishEvent :one
 UPDATE events
 SET status = 'PUBLISHED',

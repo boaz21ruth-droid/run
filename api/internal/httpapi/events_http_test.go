@@ -174,6 +174,12 @@ func TestOpsCreatesAndPublishesEventThenPublicSeesIt(t *testing.T) {
 	require.Equal(t, published.Categories[0].Id, detail.Categories[0].Id)
 	require.Equal(t, int32(0), detail.Categories[0].MinAge)
 	require.False(t, detail.Categories[0].SoldOut)
+	require.Equal(t, int32(800), detail.Categories[0].Remaining, "无人报名时剩余名额等于容量")
+	require.Nil(t, detail.FromPriceCents, "没有价格档时起价为空")
+	require.Nil(t, detail.CoverUrl, "没有封面时为空")
+	require.Nil(t, list.Items[0].FromPriceCents)
+	require.Nil(t, list.Items[0].CoverUrl)
+	require.Equal(t, int32(800), list.Items[0].Categories[0].Remaining)
 
 	rec = env.do(t, http.MethodGet, "/api/events/does-not-exist", nil, nil, nil)
 	require.Equal(t, http.StatusNotFound, rec.Code, rec.Body.String())

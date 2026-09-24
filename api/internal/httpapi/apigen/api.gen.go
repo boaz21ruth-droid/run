@@ -1658,6 +1658,9 @@ type PublicCategory struct {
 	MinAge    int32     `json:"minAge"`
 	Name      string    `json:"name"`
 
+	// Remaining max(capacity - used_count - reserved_count, 0)
+	Remaining int32 `json:"remaining"`
+
 	// SoldOut used_count + reserved_count >= capacity
 	SoldOut bool      `json:"soldOut"`
 	StartAt time.Time `json:"startAt"`
@@ -1665,16 +1668,22 @@ type PublicCategory struct {
 
 // PublicEvent defines model for PublicEvent.
 type PublicEvent struct {
-	Categories           []PublicCategory     `json:"categories"`
-	City                 string               `json:"city"`
-	EventType            PublicEventEventType `json:"eventType"`
-	Id                   int64                `json:"id"`
-	Name                 string               `json:"name"`
-	RaceDate             openapi_types.Date   `json:"raceDate"`
-	RegistrationClosesAt *time.Time           `json:"registrationClosesAt"`
-	RegistrationOpen     bool                 `json:"registrationOpen"`
-	RegistrationOpensAt  *time.Time           `json:"registrationOpensAt"`
-	Slug                 string               `json:"slug"`
+	Categories []PublicCategory `json:"categories"`
+	City       string           `json:"city"`
+
+	// CoverUrl 封面图公开访问地址（/api/files/{id}）；未设置封面时为空
+	CoverUrl  *string              `json:"coverUrl"`
+	EventType PublicEventEventType `json:"eventType"`
+
+	// FromPriceCents 当前在售价格档中的最低价（分）；没有在售价格档（如免费活动）时为空
+	FromPriceCents       *int64             `json:"fromPriceCents"`
+	Id                   int64              `json:"id"`
+	Name                 string             `json:"name"`
+	RaceDate             openapi_types.Date `json:"raceDate"`
+	RegistrationClosesAt *time.Time         `json:"registrationClosesAt"`
+	RegistrationOpen     bool               `json:"registrationOpen"`
+	RegistrationOpensAt  *time.Time         `json:"registrationOpensAt"`
+	Slug                 string             `json:"slug"`
 }
 
 // PublicEventEventType defines model for PublicEvent.EventType.

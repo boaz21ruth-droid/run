@@ -10,6 +10,8 @@ export const halfMarathon: Schemas["PublicEvent"] = {
   registrationOpen: true,
   registrationOpensAt: null,
   registrationClosesAt: null,
+  fromPriceCents: null,
+  coverUrl: null,
   categories: [
     {
       id: 11,
@@ -21,6 +23,7 @@ export const halfMarathon: Schemas["PublicEvent"] = {
       cutoffAt: "2026-11-15T02:30:00Z",
       minAge: 16,
       soldOut: false,
+      remaining: 800,
     },
     {
       id: 12,
@@ -32,6 +35,7 @@ export const halfMarathon: Schemas["PublicEvent"] = {
       cutoffAt: "2026-11-15T02:00:00Z",
       minAge: 0,
       soldOut: false,
+      remaining: 1200,
     },
   ],
 };
