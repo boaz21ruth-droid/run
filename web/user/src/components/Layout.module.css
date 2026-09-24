@@ -1,6 +1,10 @@
 .app {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
   min-height: var(--tg-viewport-height, 100vh);
+  /* 首屏破出容器铺满视口，这里兜住不出横向滚动条 */
+  overflow-x: clip;
 }
 
 .header {
@@ -73,9 +77,10 @@
 }
 
 .main {
+  width: 100%;
   max-width: var(--shell-max);
   margin: 0 auto;
-  padding: 20px var(--gutter) 48px;
+  padding: 20px var(--gutter) 56px;
 }
 
 @media (min-width: 1024px) {

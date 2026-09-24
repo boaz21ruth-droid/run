@@ -1,6 +1,47 @@
 {
-  "home": { "title": "近期赛事", "viewAll": "查看全部赛事" },
-  "events": { "title": "全部赛事", "empty": "暂时没有开放的赛事" },
+  "home": {
+    "title": "近期赛事",
+    "viewAll": "查看全部赛事",
+    "hero": {
+      "title": "每一步，\n都值得被记录。",
+      "sub": "柬埔寨的真实赛事：报名、成绩、照片、跑者社群。",
+      "cta": "查看赛事",
+      "telegram": "在 Telegram 打开",
+      "imageAlt": "清晨的金边河畔，跑者们迎着日出出发"
+    },
+    "next": {
+      "label": "下一场",
+      "remaining": "剩余 {{n}} 个名额",
+      "register": "立即报名",
+      "details": "查看详情",
+      "soldOut": "名额已满"
+    },
+    "stats": {
+      "open": "场赛事开放报名",
+      "spots": "个名额可报",
+      "nextStart": "最近一场起跑"
+    },
+    "how": {
+      "title": "怎么报名",
+      "step1": "选赛事和组别",
+      "step2": "填写参赛人资料",
+      "step3": "扫码转账，上传截图",
+      "note": "财务核对后，会通过 Telegram 通知你结果。"
+    }
+  },
+  "events": {
+    "title": "全部赛事",
+    "empty": "暂时没有开放的赛事",
+    "count": "{{n}} 场赛事",
+    "status": {
+      "open": "报名中",
+      "almostFull": "名额紧张",
+      "soldOut": "已满",
+      "free": "免费",
+      "closed": "未开放",
+      "upcoming": "即将开放"
+    }
+  },
   "event": {
     "date": "比赛日期",
     "city": "城市",
@@ -9,9 +50,19 @@
     "km": "{{km}} 公里",
     "capacity": "名额",
     "start": "发枪",
-    "cutoff": "关门"
+    "cutoff": "关门",
+    "remaining": "剩 {{n}}",
+    "from": "{{price}} 起",
+    "freeEntry": "免费参加",
+    "spotsLeft": "剩余名额",
+    "spotsOf": "{{remaining}} / {{capacity}}",
+    "coverAlt": "{{name}} 封面"
   },
-  "notFound": { "title": "页面不存在", "body": "链接可能已经失效。", "home": "回到首页" },
+  "notFound": {
+    "title": "页面不存在",
+    "body": "链接可能已经失效。",
+    "home": "回到首页"
+  },
   "pay": {
     "title": "付款",
     "scanQr": "打开银行 App 扫描上方二维码转账",
@@ -136,8 +187,16 @@
       "tshirtSize": "T 恤尺码",
       "isSelf": "这是我本人"
     },
-    "gender": { "M": "男", "F": "女", "X": "其他" },
-    "idType": { "NATIONAL_ID": "身份证", "PASSPORT": "护照", "OTHER": "其他证件" },
+    "gender": {
+      "M": "男",
+      "F": "女",
+      "X": "其他"
+    },
+    "idType": {
+      "NATIONAL_ID": "身份证",
+      "PASSPORT": "护照",
+      "OTHER": "其他证件"
+    },
     "errors": {
       "required": "必填。",
       "invalid": "格式不正确。",
@@ -292,5 +351,10 @@
     "doneTitle": "报名成功",
     "doneBody": "报名编号：{{signupNo}}",
     "doneBack": "返回活动详情"
+  },
+  "footer": {
+    "tagline": "柬埔寨的跑步赛事，报名到成绩一站完成。",
+    "bot": "Telegram 机器人",
+    "language": "语言"
   }
 }

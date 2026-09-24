@@ -38,6 +38,16 @@ export function pickText(text: Schemas["LocalizedText"], lang: Lang): string {
   return text[lang] ?? text.en ?? text.zh ?? text.km ?? "";
 }
 
+/** 赛事日期拆成"大日 + 小月"给卡片与首屏用；full 是完整可读日期，供屏幕阅读器 */
+export function raceDayParts(isoDate: string, lang: Lang): { day: string; month: string; full: string } {
+  const date = new Date(`${isoDate}T00:00:00Z`);
+  return {
+    day: new Intl.DateTimeFormat("en-US", { day: "numeric", timeZone: "UTC" }).format(date),
+    month: new Intl.DateTimeFormat(INTL_LOCALES[lang], { month: "short", timeZone: "UTC" }).format(date),
+    full: formatRaceDate(isoDate, lang),
+  };
+}
+
 /** 截止时间、下单时间等按浏览器时区显示 */
 export function formatDateTime(isoDateTime: string, lang: Lang): string {
   return new Intl.DateTimeFormat(INTL_LOCALES[lang], {

@@ -5,3 +5,7 @@
 @import "@fontsource/noto-sans-khmer/khmer-400.css";
 @import "@fontsource/noto-sans-khmer/khmer-600.css";
 @import "@fontsource/noto-sans-khmer/khmer-700.css";
+/* 号码布风格的窄体数字字：只用于数字、组别代号、价格与倒计时，不用于任何语言的标题正文 */
+@import "@fontsource/barlow-condensed/latin-600.css";
+@import "@fontsource/barlow-condensed/latin-700.css";
+@import "@fontsource/barlow-condensed/latin-800.css";

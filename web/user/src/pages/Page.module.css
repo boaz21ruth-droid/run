@@ -137,3 +137,32 @@
   font-weight: 700;
   text-decoration: none;
 }
+
+/* 首页各区块 */
+.section {
+  margin-top: 36px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.sectionHead .title {
+  margin-bottom: 0;
+}
+
+.sectionHead .more {
+  margin-top: 0;
+  white-space: nowrap;
+}
+
+.count {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--ink-mute);
+}

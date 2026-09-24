@@ -1,0 +1,324 @@
+/* 首屏从内容容器里破出去，铺满视口宽度 */
+.hero {
+  position: relative;
+  margin: -20px calc(-1 * var(--gutter)) 0;
+  overflow: hidden;
+  color: #fff;
+  background: var(--night-deep);
+}
+
+@media (min-width: 1024px) {
+  .hero {
+    margin: -20px calc(50% - 50vw) 0;
+  }
+}
+
+/* 手机：照片只铺上面一段，卡片与统计落在深蓝底上；取景对准跑者与吴哥 */
+.photo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 640px;
+  object-fit: cover;
+  object-position: 50% 70%;
+}
+
+.shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(11, 37, 64, 0) 0%,
+    rgba(11, 37, 64, 0.2) 40%,
+    rgba(11, 37, 64, 0.85) 560px,
+    var(--night-deep) 640px
+  );
+}
+
+/* 桌面：照片铺满，底部与左侧压深蓝保证文字对比 */
+@media (min-width: 1024px) {
+  .photo {
+    height: 100%;
+    object-position: 62% 40%;
+  }
+
+  .shade {
+    background:
+      linear-gradient(180deg, rgba(11, 37, 64, 0) 0%, rgba(11, 37, 64, 0.35) 45%, rgba(11, 37, 64, 0.9) 100%),
+      linear-gradient(90deg, rgba(11, 37, 64, 0.3) 0%, rgba(11, 37, 64, 0) 60%);
+  }
+}
+
+.inner {
+  position: relative;
+  display: grid;
+  gap: 24px;
+  max-width: var(--shell-max);
+  margin: 0 auto;
+  padding: 300px var(--gutter) 28px;
+}
+
+@media (min-width: 1024px) {
+  .inner {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    grid-template-rows: auto auto;
+    column-gap: 48px;
+    padding-top: 120px;
+    padding-bottom: 40px;
+    min-height: 640px;
+    align-content: end;
+  }
+}
+
+.copy {
+  max-width: 600px;
+}
+
+.title {
+  margin: 0 0 12px;
+  font-size: clamp(34px, 6.4vw, 60px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+/* 中文一行字数更少但每字更宽：字号略小，且不在句中折行 */
+:global([lang="zh"]) .title {
+  font-size: clamp(30px, 5.4vw, 52px);
+  line-height: 1.2;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+[data-script="khmer"] .title {
+  font-size: clamp(28px, 5.2vw, 48px);
+  line-height: 1.35;
+}
+
+.sub {
+  margin: 0 0 20px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 44ch;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: 100px;
+  background: var(--brand-fill);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(8, 119, 255, 0.35);
+}
+
+.primary:hover {
+  color: #fff;
+  background: var(--brand);
+}
+
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 20px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 100px;
+  color: #fff;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(6px);
+}
+
+.ghost:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* 下一场：一张白卡浮在照片上，页面加载时只浮入这一次 */
+.next {
+  position: relative;
+  padding: 20px;
+  border-radius: var(--r-lg);
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 24px 60px rgba(4, 20, 40, 0.45);
+  animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@media (min-width: 1024px) {
+  .next {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: end;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .next {
+    animation: none;
+  }
+}
+
+.nextLabel {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 100px;
+  background: var(--sun);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.nextName {
+  margin: 12px 0 8px;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.nextWhen {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.nextDay {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 40px;
+  line-height: 0.9;
+  color: var(--brand);
+}
+
+.nextMonth {
+  font-weight: 700;
+  color: var(--ink-mid);
+}
+
+.nextCity {
+  margin-left: auto;
+  font-size: 14px;
+  color: var(--ink-mute);
+}
+
+.nextDistances {
+  display: flex;
+  gap: 14px;
+  margin: 12px 0 0;
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--line);
+  list-style: none;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.nextDistances li + li {
+  color: var(--ink-mute);
+  font-weight: 700;
+}
+
+.nextFoot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0 16px;
+}
+
+.nextPrice {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 22px;
+}
+
+.nextRemaining {
+  font-size: 13px;
+  color: var(--ink-mute);
+}
+
+.nextActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.link {
+  font-weight: 600;
+}
+
+/* 真实统计：三格窄体大数字 */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+@media (min-width: 1024px) {
+  .stats {
+    grid-column: 1;
+    grid-row: 2;
+    margin-top: 32px;
+  }
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.statValue {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1;
+  color: #fff;
+}
+
+.statUnit {
+  margin-left: 4px;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.statLabel {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+}

@@ -1,6 +1,47 @@
 {
-  "home": { "title": "Upcoming races", "viewAll": "See all events" },
-  "events": { "title": "All events", "empty": "No events are open right now" },
+  "home": {
+    "title": "Upcoming races",
+    "viewAll": "See all events",
+    "hero": {
+      "title": "Every step\ndeserves to be kept.",
+      "sub": "Real races across Cambodia: registration, results, photos and the runners' community.",
+      "cta": "See the races",
+      "telegram": "Open in Telegram",
+      "imageAlt": "Runners on the Phnom Penh riverside at sunrise"
+    },
+    "next": {
+      "label": "Next race",
+      "remaining": "{{n}} spots left",
+      "register": "Register now",
+      "details": "Details",
+      "soldOut": "Sold out"
+    },
+    "stats": {
+      "open": "races open for registration",
+      "spots": "spots available",
+      "nextStart": "next start"
+    },
+    "how": {
+      "title": "How registration works",
+      "step1": "Pick a race and a category",
+      "step2": "Fill in the runner's details",
+      "step3": "Pay by QR and upload the receipt",
+      "note": "Once finance confirms the payment, you'll hear back on Telegram."
+    }
+  },
+  "events": {
+    "title": "All events",
+    "empty": "No events are open right now",
+    "count": "{{n}} races",
+    "status": {
+      "open": "Open",
+      "almostFull": "Almost full",
+      "soldOut": "Sold out",
+      "free": "Free",
+      "closed": "Not open",
+      "upcoming": "Opens soon"
+    }
+  },
   "event": {
     "date": "Race day",
     "city": "City",
@@ -9,9 +50,19 @@
     "km": "{{km}} km",
     "capacity": "Spots",
     "start": "Start",
-    "cutoff": "Cut-off"
+    "cutoff": "Cut-off",
+    "remaining": "{{n}} left",
+    "from": "from {{price}}",
+    "freeEntry": "Free entry",
+    "spotsLeft": "Spots left",
+    "spotsOf": "{{remaining}} / {{capacity}}",
+    "coverAlt": "Cover of {{name}}"
   },
-  "notFound": { "title": "Page not found", "body": "The link may be out of date.", "home": "Back to home" },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The link may be out of date.",
+    "home": "Back to home"
+  },
   "pay": {
     "title": "Payment",
     "scanQr": "Open your banking app and scan the QR code above",
@@ -136,8 +187,16 @@
       "tshirtSize": "T-shirt size",
       "isSelf": "This is me"
     },
-    "gender": { "M": "Male", "F": "Female", "X": "Other" },
-    "idType": { "NATIONAL_ID": "National ID", "PASSPORT": "Passport", "OTHER": "Other ID" },
+    "gender": {
+      "M": "Male",
+      "F": "Female",
+      "X": "Other"
+    },
+    "idType": {
+      "NATIONAL_ID": "National ID",
+      "PASSPORT": "Passport",
+      "OTHER": "Other ID"
+    },
     "errors": {
       "required": "Required.",
       "invalid": "Invalid format.",
@@ -292,5 +351,10 @@
     "doneTitle": "You are signed up",
     "doneBody": "Sign-up number: {{signupNo}}",
     "doneBack": "Back to the activity"
+  },
+  "footer": {
+    "tagline": "Running races in Cambodia, from registration to results.",
+    "bot": "Telegram bot",
+    "language": "Language"
   }
 }

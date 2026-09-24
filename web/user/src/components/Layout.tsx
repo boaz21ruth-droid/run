@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Link, NavLink, Outlet } from "react-router";
 import { useAuth } from "../auth/AuthProvider";
 import { isBrowserMode } from "../auth/session";
+import { Footer } from "./Footer";
 import styles from "./Layout.module.css";
 import { LanguageSwitch } from "./LanguageSwitch";
 
@@ -38,6 +39,7 @@ export function Layout() {
       <main className={styles.main}>
         <Outlet />
       </main>
+      <Footer />
     </div>
   );
 }

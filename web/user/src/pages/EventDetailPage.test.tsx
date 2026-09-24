@@ -11,11 +11,12 @@ describe("EventDetailPage", () => {
     expect(await screen.findByRole("heading", { name: "Phnom Penh Half Marathon 2026" })).toBeInTheDocument();
     expect(new URL(requests[0]!.url).pathname).toBe("/api/events/phnom-penh-half-2026");
 
-    const row = screen.getByRole("row", { name: /Half marathon/ });
-    expect(row).toHaveTextContent("21.1 km");
-    expect(row).toHaveTextContent("800");
-    expect(row).toHaveTextContent("06:00");
-    expect(row).toHaveTextContent("09:30");
+    const card = screen.getByTestId("category-21K");
+    expect(card).toHaveTextContent("Half marathon");
+    expect(card).toHaveTextContent("21.1");
+    expect(card).toHaveTextContent("800 / 800");
+    expect(card).toHaveTextContent("06:00");
+    expect(card).toHaveTextContent("09:30");
   });
 
   it("赛事不存在时显示 404 页面", async () => {
@@ -50,6 +51,6 @@ describe("EventDetailPage", () => {
 
     expect(await screen.findByTestId("register-sold-out")).toHaveTextContent("All categories are sold out.");
     expect(screen.queryByTestId("register-button")).not.toBeInTheDocument();
-    expect(screen.getByRole("row", { name: /Half marathon/ })).toHaveTextContent("Sold out");
+    expect(screen.getByTestId("category-21K")).toHaveTextContent("Sold out");
   });
 });
