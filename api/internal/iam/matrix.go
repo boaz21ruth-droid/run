@@ -123,7 +123,7 @@ var matrix = map[Permission]map[Role]Access{
 	PermPriceConfig:          row("R", "W", "R", "", "", "", ""),
 	PermCouponManage:         row("R", "W", "R", "R", "", "", ""),
 	PermPaymentAccountManage: row("R", "R", "W", "", "", "", ""),
-	PermProofReview:          row("R", "R", "W", "R", "", "", ""),
+	PermProofReview:          row("W", "R", "W", "R", "", "", ""), // 2026-09-24 用户要求 ADMIN 也可审核凭证（偏离 admin.html 矩阵）
 }
 
 func row(admin, ops, finance, support, raceSupervisor, raceStaff, photographer string) map[Role]Access {

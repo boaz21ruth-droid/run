@@ -22,7 +22,7 @@ func TestMatrixCellsMatchDemo(t *testing.T) {
 		{PermPriceConfig, map[Role]Access{RoleAdmin: AccessRead, RoleOps: AccessWrite, RoleFinance: AccessRead}},
 		{PermCouponManage, map[Role]Access{RoleAdmin: AccessRead, RoleOps: AccessWrite, RoleFinance: AccessRead, RoleSupport: AccessRead}},
 		{PermPaymentAccountManage, map[Role]Access{RoleAdmin: AccessRead, RoleOps: AccessRead, RoleFinance: AccessWrite}},
-		{PermProofReview, map[Role]Access{RoleAdmin: AccessRead, RoleOps: AccessRead, RoleFinance: AccessWrite, RoleSupport: AccessRead}},
+		{PermProofReview, map[Role]Access{RoleAdmin: AccessWrite, RoleOps: AccessRead, RoleFinance: AccessWrite, RoleSupport: AccessRead}},
 	}
 	for _, tc := range cases {
 		t.Run(string(tc.perm), func(t *testing.T) {
