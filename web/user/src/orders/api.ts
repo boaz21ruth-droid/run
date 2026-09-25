@@ -35,3 +35,13 @@ export function useCancelOrder(orderNo: string) {
     },
   });
 }
+
+export const FREE_SIGNUPS_KEY = ["free-signups"] as const;
+
+export function useMyFreeSignups() {
+  const api = useApi();
+  return useQuery({
+    queryKey: FREE_SIGNUPS_KEY,
+    queryFn: async () => unwrap(await api.GET("/app/free-signups")).items,
+  });
+}

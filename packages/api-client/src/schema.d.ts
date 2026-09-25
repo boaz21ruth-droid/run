@@ -487,6 +487,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/app/free-signups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 我的免费报名（最近 100 条，新的在前） */
+        get: operations["appListFreeSignups"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/app/orders": {
         parameters: {
             query?: never;
@@ -1116,6 +1133,22 @@ export interface components {
             status: string;
             /** Format: date-time */
             createdAt: string;
+        };
+        FreeSignupSummary: {
+            signupNo: string;
+            eventSlug: string;
+            eventName: components["schemas"]["LocalizedText"];
+            /** Format: date */
+            raceDate: string;
+            categoryName: components["schemas"]["LocalizedText"];
+            fullName: string;
+            /** @enum {string} */
+            status: "REGISTERED" | "CANCELLED" | "ATTENDED" | "NO_SHOW";
+            /** Format: date-time */
+            createdAt: string;
+        };
+        FreeSignupList: {
+            items: components["schemas"]["FreeSignupSummary"][];
         };
         QuoteParticipantInput: {
             /** Format: int64 */
@@ -2627,6 +2660,35 @@ export interface operations {
                 };
             };
             /** @description 错误（REGISTRATION_CLOSED、CATEGORY_SOLD_OUT、ALREADY_REGISTERED、CONSENT_INVALID、VALIDATION_FAILED、EVENT_NOT_FOUND） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appListFreeSignups: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 免费报名列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FreeSignupList"];
+                };
+            };
+            /** @description 错误 */
             default: {
                 headers: {
                     [name: string]: unknown;

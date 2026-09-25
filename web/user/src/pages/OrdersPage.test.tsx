@@ -2,7 +2,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { jsonResponse } from "../test/fixtures";
-import { inTelegram, orderDetail, orderSummary, runnerRoutes } from "../test/orderFixtures";
+import { freeSignupSummary, inTelegram, orderDetail, orderSummary, runnerRoutes } from "../test/orderFixtures";
 import { renderApp } from "../test/renderApp";
 
 describe("OrdersPage", () => {
@@ -22,6 +22,7 @@ describe("OrdersPage", () => {
             ],
           }),
         "GET /api/app/orders/WR7K2M9QXA": () => jsonResponse(200, orderDetail()),
+        "GET /api/app/free-signups": () => jsonResponse(200, { items: [] }),
       }),
       inTelegram,
     );
@@ -39,7 +40,36 @@ describe("OrdersPage", () => {
 
   it("没有订单时显示空状态", async () => {
     window.localStorage.setItem("werun.lang", "zh");
-    renderApp("/orders", runnerRoutes({ "GET /api/app/orders": () => jsonResponse(200, { items: [] }) }), inTelegram);
-    expect(await screen.findByTestId("orders-empty")).toHaveTextContent("还没有订单。");
+    renderApp(
+      "/orders",
+      runnerRoutes({
+        "GET /api/app/orders": () => jsonResponse(200, { items: [] }),
+        "GET /api/app/free-signups": () => jsonResponse(200, { items: [] }),
+      }),
+      inTelegram,
+    );
+    expect(await screen.findByTestId("orders-empty")).toHaveTextContent("还没有订单或报名。");
+  });
+
+  it("只有免费报名时也列出来，并可进入活动详情", async () => {
+    const { router } = renderApp(
+      "/orders",
+      runnerRoutes({
+        "GET /api/app/orders": () => jsonResponse(200, { items: [] }),
+        "GET /api/app/free-signups": () => jsonResponse(200, { items: [freeSignupSummary()] }),
+      }),
+      inTelegram,
+    );
+
+    const item = await screen.findByTestId("free-signup-item-FS7K2M9QXA");
+    expect(item).toHaveTextContent("Registered");
+    expect(item).toHaveTextContent("Riverside Family Run");
+    expect(item).toHaveTextContent("Family 5K");
+    expect(item).toHaveTextContent("Dara Sok");
+    expect(item).toHaveTextContent("Free");
+    expect(screen.queryByTestId("orders-empty")).not.toBeInTheDocument();
+
+    await userEvent.click(item);
+    await waitFor(() => expect(router.state.location.pathname).toBe("/events/riverside-family-run"));
   });
 });

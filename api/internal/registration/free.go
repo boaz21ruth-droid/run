@@ -14,6 +14,7 @@ import (
 	"werun/api/internal/platform/apperr"
 	"werun/api/internal/platform/db"
 	"werun/api/internal/platform/httpx"
+	"werun/api/internal/platform/i18n"
 	"werun/api/internal/platform/idgen"
 	"werun/api/internal/pricing"
 	"werun/api/internal/registration/store"
@@ -50,6 +51,48 @@ type FreeSignup struct {
 	FullName   string
 	Status     string
 	CreatedAt  time.Time
+}
+
+// FreeSignupSummary 是跑者“我的报名”里的一条免费报名。
+type FreeSignupSummary struct {
+	SignupNo     string
+	EventSlug    string
+	EventName    i18n.Text
+	RaceDate     time.Time
+	CategoryName i18n.Text
+	FullName     string
+	Status       string
+	CreatedAt    time.Time
+}
+
+// ListMyFreeSignups 返回当前跑者最近 100 条免费报名，新的在前。
+func (s *Service) ListMyFreeSignups(ctx context.Context, u runner.User) ([]FreeSignupSummary, error) {
+	rows, err := store.New(s.pool).ListFreeSignupsForUser(ctx, u.ID)
+	if err != nil {
+		return nil, fmt.Errorf("list free signups of user %d: %w", u.ID, err)
+	}
+	out := make([]FreeSignupSummary, 0, len(rows))
+	for _, r := range rows {
+		eventName, err := decodeText(r.EventName, "event name")
+		if err != nil {
+			return nil, err
+		}
+		catName, err := decodeText(r.CategoryName, "category name")
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, FreeSignupSummary{
+			SignupNo:     r.SignupNo,
+			EventSlug:    r.EventSlug,
+			EventName:    eventName,
+			RaceDate:     r.RaceDate,
+			CategoryName: catName,
+			FullName:     r.FullName,
+			Status:       r.Status,
+			CreatedAt:    r.CreatedAt,
+		})
+	}
+	return out, nil
 }
 
 // CreateFreeSignup 按 spec 6.7 为免费活动报名：同一跑者可为家人报多人，

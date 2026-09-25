@@ -86,7 +86,10 @@ function FreeSignupForm({ event, consent }: { event: PublicEvent; consent: Regis
       <section className={styles.done} data-testid="free-signup-done">
         <h2 className={styles.doneTitle}>{t("free.doneTitle")}</h2>
         <p>{t("free.doneBody", { signupNo: create.data.signupNo })}</p>
-        <Link to={`/events/${event.slug}`}>{t("free.doneBack")}</Link>
+        <p className={styles.doneLinks}>
+          <Link to="/orders">{t("free.doneOrders")}</Link>
+          <Link to={`/events/${event.slug}`}>{t("free.doneBack")}</Link>
+        </p>
       </section>
     );
   }

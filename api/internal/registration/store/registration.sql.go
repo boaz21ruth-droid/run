@@ -841,6 +841,57 @@ func (q *Queries) ListDueOrderIDsForExpiry(ctx context.Context, arg ListDueOrder
 	return items, nil
 }
 
+const listFreeSignupsForUser = `-- name: ListFreeSignupsForUser :many
+SELECT fs.signup_no, fs.full_name, fs.status, fs.created_at,
+       e.slug AS event_slug, e.name AS event_name, e.race_date, ec.name AS category_name
+FROM free_signups fs
+JOIN events e ON e.id = fs.event_id
+JOIN event_categories ec ON ec.id = fs.category_id
+WHERE fs.user_id = $1::bigint
+ORDER BY fs.created_at DESC, fs.id DESC
+LIMIT 100
+`
+
+type ListFreeSignupsForUserRow struct {
+	SignupNo     string
+	FullName     string
+	Status       string
+	CreatedAt    time.Time
+	EventSlug    string
+	EventName    []byte
+	RaceDate     time.Time
+	CategoryName []byte
+}
+
+func (q *Queries) ListFreeSignupsForUser(ctx context.Context, userID int64) ([]ListFreeSignupsForUserRow, error) {
+	rows, err := q.db.Query(ctx, listFreeSignupsForUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListFreeSignupsForUserRow
+	for rows.Next() {
+		var i ListFreeSignupsForUserRow
+		if err := rows.Scan(
+			&i.SignupNo,
+			&i.FullName,
+			&i.Status,
+			&i.CreatedAt,
+			&i.EventSlug,
+			&i.EventName,
+			&i.RaceDate,
+			&i.CategoryName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listOrderParticipantDetails = `-- name: ListOrderParticipantDetails :many
 SELECT r.id AS registration_id, r.reg_no, op.category_id, ec.name AS category_name, r.full_name,
        op.price_rule_id, op.list_price_cents, op.paid_cents, r.status AS registration_status, r.ticket_code

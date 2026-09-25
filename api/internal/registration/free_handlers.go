@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	openapi_types "github.com/oapi-codegen/runtime/types"
+
 	"werun/api/internal/httpapi/apigen"
 	"werun/api/internal/platform/apperr"
 	"werun/api/internal/platform/httpx"
@@ -54,4 +56,30 @@ func (h *Handlers) AppCreateFreeSignup(ctx context.Context, req apigen.AppCreate
 		Status:     fs.Status,
 		CreatedAt:  fs.CreatedAt,
 	}, nil
+}
+
+// AppListFreeSignups 我的免费报名。
+func (h *Handlers) AppListFreeSignups(ctx context.Context, _ apigen.AppListFreeSignupsRequestObject) (apigen.AppListFreeSignupsResponseObject, error) {
+	u, err := currentRunner(ctx)
+	if err != nil {
+		return nil, err
+	}
+	signups, err := h.svc.ListMyFreeSignups(ctx, u)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]apigen.FreeSignupSummary, 0, len(signups))
+	for _, fs := range signups {
+		items = append(items, apigen.FreeSignupSummary{
+			SignupNo:     fs.SignupNo,
+			EventSlug:    fs.EventSlug,
+			EventName:    localizedToAPI(fs.EventName),
+			RaceDate:     openapi_types.Date{Time: fs.RaceDate},
+			CategoryName: localizedToAPI(fs.CategoryName),
+			FullName:     fs.FullName,
+			Status:       apigen.FreeSignupSummaryStatus(fs.Status),
+			CreatedAt:    fs.CreatedAt,
+		})
+	}
+	return apigen.AppListFreeSignups200JSONResponse{Items: items}, nil
 }

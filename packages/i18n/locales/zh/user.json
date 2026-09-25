@@ -259,7 +259,7 @@
   "orders": {
     "nav": "我的订单",
     "title": "我的订单",
-    "empty": "还没有订单。",
+    "empty": "还没有订单或报名。",
     "detailTitle": "订单 {{orderNo}}",
     "participants": "参赛人数：{{n}}",
     "deadline": "请在 {{time}} 前完成付款",
@@ -317,6 +317,16 @@
       "WRONG_ACCOUNT": "转错账户",
       "FRAUD": "凭证存疑",
       "OTHER": "其他原因"
+    },
+    "paidSection": "付费订单",
+    "freeSection": "免费报名",
+    "freePrice": "免费",
+    "raceDate": "比赛日期 {{date}}",
+    "freeStatus": {
+      "REGISTERED": "已报名",
+      "CANCELLED": "已取消",
+      "ATTENDED": "已签到",
+      "NO_SHOW": "未到场"
     }
   },
   "free": {
@@ -350,7 +360,8 @@
     "closed": "该活动当前未开放报名",
     "doneTitle": "报名成功",
     "doneBody": "报名编号：{{signupNo}}",
-    "doneBack": "返回活动详情"
+    "doneBack": "返回活动详情",
+    "doneOrders": "查看我的报名"
   },
   "footer": {
     "tagline": "柬埔寨的跑步赛事，报名到成绩一站完成。",

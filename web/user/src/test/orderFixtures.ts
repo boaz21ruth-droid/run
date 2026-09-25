@@ -115,3 +115,17 @@ export function orderSummary(overrides: Partial<Schemas["OrderSummary"]> = {}): 
     ...overrides,
   };
 }
+
+export function freeSignupSummary(overrides: Partial<Schemas["FreeSignupSummary"]> = {}): Schemas["FreeSignupSummary"] {
+  return {
+    signupNo: "FS7K2M9QXA",
+    eventSlug: "riverside-family-run",
+    eventName: { zh: "河畔亲子跑", en: "Riverside Family Run", km: "ការរត់គ្រួសារមាត់ទន្លេ" },
+    raceDate: "2026-11-15",
+    categoryName: { zh: "亲子 5K", en: "Family 5K", km: "គ្រួសារ 5K" },
+    fullName: "Dara Sok",
+    status: "REGISTERED",
+    createdAt: "2026-09-25T10:09:00Z",
+    ...overrides,
+  };
+}

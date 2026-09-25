@@ -334,3 +334,13 @@ INSERT INTO free_signups (
   @emergency_name::text, @emergency_phone::text, 'TELEGRAM'
 )
 RETURNING id, signup_no, status, created_at;
+
+-- name: ListFreeSignupsForUser :many
+SELECT fs.signup_no, fs.full_name, fs.status, fs.created_at,
+       e.slug AS event_slug, e.name AS event_name, e.race_date, ec.name AS category_name
+FROM free_signups fs
+JOIN events e ON e.id = fs.event_id
+JOIN event_categories ec ON ec.id = fs.category_id
+WHERE fs.user_id = @user_id::bigint
+ORDER BY fs.created_at DESC, fs.id DESC
+LIMIT 100;

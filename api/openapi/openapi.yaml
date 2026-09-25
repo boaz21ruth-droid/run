@@ -909,6 +909,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /app/free-signups:
+    get:
+      operationId: appListFreeSignups
+      tags: [app-free-signup]
+      summary: 我的免费报名（最近 100 条，新的在前）
+      x-auth: app
+      responses:
+        '200':
+          description: 免费报名列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreeSignupList'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /app/orders:
     get:
       operationId: appListOrders
@@ -2076,6 +2095,37 @@ components:
         createdAt:
           type: string
           format: date-time
+    FreeSignupSummary:
+      type: object
+      required: [signupNo, eventSlug, eventName, raceDate, categoryName, fullName, status, createdAt]
+      properties:
+        signupNo:
+          type: string
+        eventSlug:
+          type: string
+        eventName:
+          $ref: '#/components/schemas/LocalizedText'
+        raceDate:
+          type: string
+          format: date
+        categoryName:
+          $ref: '#/components/schemas/LocalizedText'
+        fullName:
+          type: string
+        status:
+          type: string
+          enum: [REGISTERED, CANCELLED, ATTENDED, NO_SHOW]
+        createdAt:
+          type: string
+          format: date-time
+    FreeSignupList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FreeSignupSummary'
     QuoteParticipantInput:
       type: object
       required: [categoryId, nationality, birthDate]

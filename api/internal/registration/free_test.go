@@ -404,3 +404,36 @@ func TestCreateFreeSignupValidatesFieldsBeforeTouchingDatabase(t *testing.T) {
 	require.Contains(t, ae.Fields, "fullName")
 	require.Equal(t, "field.required", ae.Fields["categoryId"].Key)
 }
+
+func TestListMyFreeSignupsReturnsOnlyOwnNewestFirst(t *testing.T) {
+	env := newFreeEnv(t)
+	ctx := context.Background()
+	u := env.login(t, 7101)
+	other := env.login(t, 7102)
+	_, categoryID := env.createEvent(t, freeOpen("riverside-list", 10))
+
+	first, err := env.svc.CreateFreeSignup(ctx, u, "riverside-list", freeInput(categoryID, "Dara Sok", "+85512345678"), freeMeta)
+	require.NoError(t, err)
+	second, err := env.svc.CreateFreeSignup(ctx, u, "riverside-list", freeInput(categoryID, "Mealea Sok", "+85512345678"), freeMeta)
+	require.NoError(t, err)
+	_, err = env.svc.CreateFreeSignup(ctx, other, "riverside-list", freeInput(categoryID, "Vanna Kim", "+85511111111"), freeMeta)
+	require.NoError(t, err)
+
+	list, err := env.svc.ListMyFreeSignups(ctx, u)
+
+	require.NoError(t, err)
+	require.Len(t, list, 2)
+	require.Equal(t, second.SignupNo, list[0].SignupNo)
+	require.Equal(t, first.SignupNo, list[1].SignupNo)
+	got := list[1]
+	require.Equal(t, "riverside-list", got.EventSlug)
+	require.Equal(t, "Riverside Family Run", got.EventName[i18n.EN])
+	require.Equal(t, "Family 5K", got.CategoryName[i18n.EN])
+	require.Equal(t, freeRaceDate, got.RaceDate.UTC())
+	require.Equal(t, "Dara Sok", got.FullName)
+	require.Equal(t, "REGISTERED", got.Status)
+
+	none, err := env.svc.ListMyFreeSignups(ctx, env.login(t, 7103))
+	require.NoError(t, err)
+	require.Empty(t, none)
+}

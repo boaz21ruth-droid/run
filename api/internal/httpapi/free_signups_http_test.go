@@ -209,3 +209,42 @@ func TestAppCreateFreeSignupReturnsFieldErrors(t *testing.T) {
 	require.Equal(t, apperr.CodeValidation, body.Error.Code)
 	require.Contains(t, body.Error.Fields, "fullName")
 }
+
+func (e fshEnv) list(t *testing.T, token string) *httptest.ResponseRecorder {
+	t.Helper()
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/api/app/free-signups", nil)
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	rec := httptest.NewRecorder()
+	e.router.ServeHTTP(rec, req)
+	return rec
+}
+
+func TestAppListFreeSignupsShowsOwnSignups(t *testing.T) {
+	env := newFreeSignupHTTPEnv(t)
+	token := env.token(t, 8201)
+	rec := env.post(t, fshBody(env.categoryID, "Dara Sok"), token, "en")
+	require.Equal(t, http.StatusCreated, rec.Code, rec.Body.String())
+	created := eventsDecode[apigen.FreeSignup](t, rec)
+
+	rec = env.list(t, token)
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	list := eventsDecode[apigen.FreeSignupList](t, rec)
+	require.Len(t, list.Items, 1)
+	got := list.Items[0]
+	require.Equal(t, created.SignupNo, got.SignupNo)
+	require.Equal(t, fshSlug, got.EventSlug)
+	require.NotNil(t, got.EventName.En)
+	require.NotNil(t, got.CategoryName.En)
+	require.Equal(t, "Dara Sok", got.FullName)
+	require.Equal(t, apigen.FreeSignupSummaryStatus("REGISTERED"), got.Status)
+	require.False(t, got.RaceDate.IsZero())
+
+	rec = env.list(t, env.token(t, 8202))
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	require.Empty(t, eventsDecode[apigen.FreeSignupList](t, rec).Items)
+
+	rec = env.list(t, "")
+	require.Equal(t, http.StatusUnauthorized, rec.Code, rec.Body.String())
+}

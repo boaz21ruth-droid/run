@@ -117,3 +117,10 @@
   font-size: 20px;
   font-weight: 700;
 }
+
+.doneLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0;
+}

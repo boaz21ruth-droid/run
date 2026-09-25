@@ -408,6 +408,30 @@ func (e FreeSignupRequestGender) Valid() bool {
 	}
 }
 
+// Defines values for FreeSignupSummaryStatus.
+const (
+	FreeSignupSummaryStatusATTENDED   FreeSignupSummaryStatus = "ATTENDED"
+	FreeSignupSummaryStatusCANCELLED  FreeSignupSummaryStatus = "CANCELLED"
+	FreeSignupSummaryStatusNOSHOW     FreeSignupSummaryStatus = "NO_SHOW"
+	FreeSignupSummaryStatusREGISTERED FreeSignupSummaryStatus = "REGISTERED"
+)
+
+// Valid indicates whether the value is a known member of the FreeSignupSummaryStatus enum.
+func (e FreeSignupSummaryStatus) Valid() bool {
+	switch e {
+	case FreeSignupSummaryStatusATTENDED:
+		return true
+	case FreeSignupSummaryStatusCANCELLED:
+		return true
+	case FreeSignupSummaryStatusNOSHOW:
+		return true
+	case FreeSignupSummaryStatusREGISTERED:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for Gender.
 const (
 	GenderF Gender = "F"
@@ -1327,6 +1351,11 @@ type FreeSignupConsent struct {
 // FreeSignupConsentLang defines model for FreeSignupConsent.Lang.
 type FreeSignupConsentLang string
 
+// FreeSignupList defines model for FreeSignupList.
+type FreeSignupList struct {
+	Items []FreeSignupSummary `json:"items"`
+}
+
 // FreeSignupRequest defines model for FreeSignupRequest.
 type FreeSignupRequest struct {
 	// BirthDate 组别 minAge > 0 时必填
@@ -1344,6 +1373,21 @@ type FreeSignupRequest struct {
 
 // FreeSignupRequestGender defines model for FreeSignupRequest.Gender.
 type FreeSignupRequestGender string
+
+// FreeSignupSummary defines model for FreeSignupSummary.
+type FreeSignupSummary struct {
+	CategoryName LocalizedText           `json:"categoryName"`
+	CreatedAt    time.Time               `json:"createdAt"`
+	EventName    LocalizedText           `json:"eventName"`
+	EventSlug    string                  `json:"eventSlug"`
+	FullName     string                  `json:"fullName"`
+	RaceDate     openapi_types.Date      `json:"raceDate"`
+	SignupNo     string                  `json:"signupNo"`
+	Status       FreeSignupSummaryStatus `json:"status"`
+}
+
+// FreeSignupSummaryStatus defines model for FreeSignupSummary.Status.
+type FreeSignupSummaryStatus string
 
 // Gender defines model for Gender.
 type Gender string
@@ -2060,6 +2104,9 @@ type ServerInterface interface {
 	// AppQuote 报名算价预览（不占名额、不选识别分）
 	// (POST /app/events/{slug}/quote)
 	AppQuote(c *gin.Context, slug string)
+	// AppListFreeSignups 我的免费报名（最近 100 条，新的在前）
+	// (GET /app/free-signups)
+	AppListFreeSignups(c *gin.Context)
 	// AppGetMe 当前跑者
 	// (GET /app/me)
 	AppGetMe(c *gin.Context)
@@ -2798,6 +2845,19 @@ func (siw *ServerInterfaceWrapper) AppQuote(c *gin.Context) {
 	siw.Handler.AppQuote(c, slug)
 }
 
+// AppListFreeSignups operation middleware
+func (siw *ServerInterfaceWrapper) AppListFreeSignups(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppListFreeSignups(c)
+}
+
 // AppGetMe operation middleware
 func (siw *ServerInterfaceWrapper) AppGetMe(c *gin.Context) {
 
@@ -3182,6 +3242,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/app/consents", wrapper.AppGetConsent)
 	router.POST(options.BaseURL+"/app/events/:slug/quote", wrapper.AppQuote)
 	router.POST(options.BaseURL+"/app/events/:slug/free-signups", wrapper.AppCreateFreeSignup)
+	router.GET(options.BaseURL+"/app/free-signups", wrapper.AppListFreeSignups)
 	router.GET(options.BaseURL+"/app/orders", wrapper.AppListOrders)
 	router.POST(options.BaseURL+"/app/orders", wrapper.AppCreateOrder)
 	router.GET(options.BaseURL+"/app/orders/:orderNo", wrapper.AppGetOrder)
@@ -4404,6 +4465,44 @@ func (response AppQuotedefaultJSONResponse) VisitAppQuoteResponse(w http.Respons
 	return err
 }
 
+type AppListFreeSignupsRequestObject struct {
+}
+
+type AppListFreeSignupsResponseObject interface {
+	VisitAppListFreeSignupsResponse(w http.ResponseWriter) error
+}
+
+type AppListFreeSignups200JSONResponse FreeSignupList
+
+func (response AppListFreeSignups200JSONResponse) VisitAppListFreeSignupsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppListFreeSignupsdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppListFreeSignupsdefaultJSONResponse) VisitAppListFreeSignupsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AppGetMeRequestObject struct {
 }
 
@@ -5135,6 +5234,9 @@ type StrictServerInterface interface {
 	// AppQuote 报名算价预览（不占名额、不选识别分）
 	// (POST /app/events/{slug}/quote)
 	AppQuote(ctx context.Context, request AppQuoteRequestObject) (AppQuoteResponseObject, error)
+	// AppListFreeSignups 我的免费报名（最近 100 条，新的在前）
+	// (GET /app/free-signups)
+	AppListFreeSignups(ctx context.Context, request AppListFreeSignupsRequestObject) (AppListFreeSignupsResponseObject, error)
 	// AppGetMe 当前跑者
 	// (GET /app/me)
 	AppGetMe(ctx context.Context, request AppGetMeRequestObject) (AppGetMeResponseObject, error)
@@ -6129,6 +6231,30 @@ func (sh *strictHandler) AppQuote(ctx *gin.Context, slug string) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AppQuoteResponseObject); ok {
 		if err := validResponse.VisitAppQuoteResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppListFreeSignups operation middleware
+func (sh *strictHandler) AppListFreeSignups(ctx *gin.Context) {
+	var request AppListFreeSignupsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppListFreeSignups(ctx, request.(AppListFreeSignupsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppListFreeSignups")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppListFreeSignupsResponseObject); ok {
+		if err := validResponse.VisitAppListFreeSignupsResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

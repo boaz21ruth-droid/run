@@ -259,7 +259,7 @@
   "orders": {
     "nav": "My orders",
     "title": "My orders",
-    "empty": "You have no orders yet.",
+    "empty": "No orders or sign-ups yet.",
     "detailTitle": "Order {{orderNo}}",
     "participants": "Runners: {{n}}",
     "deadline": "Please pay before {{time}}",
@@ -317,6 +317,16 @@
       "WRONG_ACCOUNT": "Paid to the wrong account",
       "FRAUD": "Proof looks suspicious",
       "OTHER": "Other reason"
+    },
+    "paidSection": "Paid orders",
+    "freeSection": "Free sign-ups",
+    "freePrice": "Free",
+    "raceDate": "Race day {{date}}",
+    "freeStatus": {
+      "REGISTERED": "Registered",
+      "CANCELLED": "Cancelled",
+      "ATTENDED": "Checked in",
+      "NO_SHOW": "No-show"
     }
   },
   "free": {
@@ -350,7 +360,8 @@
     "closed": "Registration for this activity is not open",
     "doneTitle": "You are signed up",
     "doneBody": "Sign-up number: {{signupNo}}",
-    "doneBack": "Back to the activity"
+    "doneBack": "Back to the activity",
+    "doneOrders": "View my sign-ups"
   },
   "footer": {
     "tagline": "Running races in Cambodia, from registration to results.",

@@ -206,3 +206,15 @@
   border-radius: var(--r);
   background: var(--card);
 }
+
+.group {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 24px;
+}
+
+.badge[data-status="REGISTERED"],
+.badge[data-status="ATTENDED"] {
+  background: var(--leaf-tint);
+  color: var(--leaf);
+}

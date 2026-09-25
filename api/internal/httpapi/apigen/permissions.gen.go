@@ -53,6 +53,7 @@ var OperationAuths = map[string]OperationAuth{
 	"AppGetConsent":                {Kind: AuthApp},
 	"AppGetMe":                     {Kind: AuthApp},
 	"AppGetOrder":                  {Kind: AuthApp},
+	"AppListFreeSignups":           {Kind: AuthApp},
 	"AppListOrders":                {Kind: AuthApp},
 	"AppListProfiles":              {Kind: AuthApp},
 	"AppLoginTelegram":             {Kind: AuthNone},
