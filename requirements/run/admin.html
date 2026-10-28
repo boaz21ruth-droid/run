@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
 <title>RUN Admin · 运营后台交互 Demo（MOCK）</title>
 <!--
   ================================================================
@@ -101,8 +102,8 @@ select:focus,input[type=text]:focus{outline:2px solid var(--accent);outline-offs
   float:right;background:var(--bad);color:#fff;border-radius:99px;
   font-size:.65rem;padding:0 .38rem;line-height:1.5;
 }
-.side button.locked{color:#93a0b0;cursor:not-allowed}
-.side button.locked::after{content:"（无权访问）";font-size:.72rem;color:#93a0b0}
+.side button.locked{color:#6b7787;cursor:not-allowed}
+.side button.locked::after{content:"（无权访问）";font-size:.72rem;color:#6b7787}
 .main{flex:1;padding:1.1rem 1.3rem 4rem;min-width:0}
 
 /* ---------- 通用件 ---------- */
@@ -238,6 +239,20 @@ code{background:var(--panel2);border:1px solid var(--line);padding:.05rem .32rem
 .userview .cta.on{background:var(--accent);color:#fff}
 .userview .cta.off{background:#f1f3f7;color:#7a8595;border:1px dashed var(--line-strong)}
 
+/* 审核修复 · 平板 / 触屏：侧栏改成可横滑的顶部标签，顶栏控件允许换行，按钮加高 */
+@media(max-width:1024px){
+  .top-controls{flex-wrap:wrap}
+  .wrap{flex-direction:column}
+  .side{width:100%;flex:0 0 auto;position:static;display:flex;overflow-x:auto;padding:0 .4rem;border-right:0;border-bottom:1px solid var(--line);-webkit-overflow-scrolling:touch}
+  .side h6{display:none}
+  .side button{width:auto;white-space:nowrap;border-left:0;border-bottom:3px solid transparent;padding:.7rem .8rem;min-height:44px}
+  .side button.on{border-bottom-color:var(--accent)}
+  .side button .n{float:none;margin-left:.3rem}
+  .btn{min-height:44px;padding:.5rem .95rem}
+  .opi{min-width:44px;min-height:44px}
+  .drawer .x{min-width:44px;min-height:44px}
+  .toasts{left:1rem;right:1rem;max-width:none}
+}
 @media(max-width:760px){
   .wrap{flex-direction:column}
   .side{width:auto;flex:none;position:static;display:flex;flex-wrap:wrap;padding:.4rem}
@@ -1074,8 +1089,16 @@ var state = { role:"OPS", staff:"ops.chan", view:"overview", lang:localStorage.g
    4) 小工具
    ================================================================ */
 var $ = function(id){ return document.getElementById(id); };
-function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){
-  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+/* 审核修复 · 留痕 / toast 里混着后台自己写的 <b><code> 标记与用户输入的原因文本：
+   先全部转义，再只放行这几个无属性的排版标签，用户输入里的任何标签 / 属性都进不来。 */
+function safeHtml(s){
+  return esc(s)
+    .replace(/&lt;(\/?)(b|i|code|br|small)&gt;/g, "<$1$2>")
+    .replace(/&lt;span class=(?:&#39;|&quot;)(mut|tag t-[a-z]+|masked)(?:&#39;|&quot;)&gt;/g, "<span class='$1'>")
+    .replace(/&lt;\/span&gt;/g, "</span>");
+}
 function now(){
   var d = new Date();
   function p(n){ return (n<10?"0":"") + n; }
@@ -1084,8 +1107,10 @@ function now(){
 function toast(msg, kind){
   var t = document.createElement("div");
   t.className = "toast" + (kind ? " " + kind : "");
-  t.innerHTML = msg;
-  $("toasts").appendChild(t);
+  t.innerHTML = safeHtml(msg);
+  var box = $("toasts");
+  while(box.children.length >= 3) box.removeChild(box.firstChild);   /* 最多同屏 3 条，不再堆积 */
+  box.appendChild(t);
   setTimeout(function(){ t.style.opacity = "0"; t.style.transition = "opacity .3s";
     setTimeout(function(){ t.remove(); }, 320); }, 4200);
 }
@@ -1132,15 +1157,48 @@ function openModal(html){
     html = html.replace(/<button class="btn pri"([^>]*)>确认<\/button>/g, '<button class="btn pri"$1>' + confirmText + '</button>');
     html = html.replace(/<button class='btn pri'([^>]*)>确认<\/button>/g, '<button class=\'btn pri\'$1>' + confirmText + '</button>');
   }
-  $("modal").innerHTML = html;
+  var m = $("modal");
+  m.innerHTML = html;
+  m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true");
+  var h3 = m.querySelector("h3"); if(h3){ h3.id = h3.id || "modal-title"; m.setAttribute("aria-labelledby", h3.id); }
   $("mask").classList.add("on");
+  /* 审核修复 · 焦点进弹窗：第一个可输入控件，否则第一个按钮；关闭时焦点回到打开它的元素 */
+  modalOpener = document.activeElement;
+  var first = m.querySelector("input, select, textarea") || m.querySelector("button");
+  if(first) setTimeout(function(){ try{ first.focus(); }catch(e){} }, 0);
 }
+var modalOpener = null;
 function closeModal(){
   $("mask").classList.remove("on");
   $("modal").innerHTML = "";     /* 清空残留表单：否则下一个 handler 可能按 id 读到上一张表单的旧值 */
+  if(modalOpener && document.body.contains(modalOpener)){ try{ modalOpener.focus(); }catch(e){} }
+  modalOpener = null;
 }
-function openDrawer(html){ $("drawerbody").innerHTML = html; $("drawer").classList.add("on"); }
-function closeDrawer(){ $("drawer").classList.remove("on"); }
+var drawerOpener = null;
+function openDrawer(html){
+  $("drawerbody").innerHTML = html; $("drawer").classList.add("on");
+  drawerOpener = document.activeElement;
+  var x = $("drawerx"); if(x){ x.setAttribute("aria-label", "关闭"); setTimeout(function(){ try{ x.focus(); }catch(e){} }, 0); }
+}
+function closeDrawer(){
+  $("drawer").classList.remove("on");
+  if(drawerOpener && document.body.contains(drawerOpener)){ try{ drawerOpener.focus(); }catch(e){} }
+  drawerOpener = null;
+}
+document.addEventListener("keydown", function(e){
+  if(e.key !== "Escape") return;
+  if($("mask").classList.contains("on")){ closeModal(); e.preventDefault(); }
+  else if($("drawer").classList.contains("on")){ closeDrawer(); e.preventDefault(); }
+});
+/* Tab 不出弹窗（简单焦点圈） */
+document.addEventListener("keydown", function(e){
+  if(e.key !== "Tab" || !$("mask").classList.contains("on")) return;
+  var f = [].slice.call($("modal").querySelectorAll("input, select, textarea, button, [href]")).filter(function(el){ return !el.disabled && el.offsetParent !== null; });
+  if(!f.length) return;
+  var first = f[0], last = f[f.length - 1];
+  if(e.shiftKey && document.activeElement === first){ last.focus(); e.preventDefault(); }
+  else if(!e.shiftKey && document.activeElement === last){ first.focus(); e.preventDefault(); }
+});
 $("mask").addEventListener("click", function(e){ if(e.target === $("mask")) closeModal(); });
 $("drawerx").addEventListener("click", closeDrawer);
 
@@ -2649,6 +2707,26 @@ V.events = function(){
     "已付订单、已确认报名、已分配号码布全都悬空。<b>已发布的赛事永远不会被改回 DRAFT。</b><br>" +
     "要收，用下面两个开关；<b>取消赛事（含全额退款与通知流程）不在一期范围</b>，需要单独的 Scope Change。</div>";
 
+  /* D-130 · 免费活动登记：用户端写进共享域，这里按活动汇总（以前后台完全看不到） */
+  (function(){
+    var frs = (RD.state.freeRegs || []).slice();
+    var byEv = {};
+    frs.forEach(function(r){ (byEv[r.feId] = byEv[r.feId] || { title:r.title || r.feId, rows:[] }).rows.push(r); });
+    var keys = Object.keys(byEv);
+    h += '<div class="card"><h3>免费活动登记 <span class="tag t-info">来自用户端</span></h3>';
+    if(!keys.length){ h += "<p class='mut'>暂无免费活动登记。用户在免费活动页登记 / 候补 / 退出后会出现在这里。</p></div>"; return; }
+    h += "<div class='scroll'><table><thead><tr><th>活动</th><th>已登记</th><th>候补</th><th>已退出</th><th>最近登记</th></tr></thead><tbody>";
+    keys.forEach(function(k){
+      var g = byEv[k], reg = g.rows.filter(function(r){ return r.status === "REGISTERED"; }).length,
+          wl = g.rows.filter(function(r){ return r.status === "WAITLIST"; }).length,
+          cx = g.rows.filter(function(r){ return r.status === "CANCELLED"; }).length,
+          last = g.rows[g.rows.length - 1];
+      h += "<tr><td><b>" + esc(g.title) + "</b> <span class='mut'>" + esc(k) + "</span></td><td>" + reg + "</td><td>" + wl + "</td><td class='mut'>" + cx + "</td>" +
+        "<td class='mut'>" + (last ? pii(last.holder) + " · " + esc(last.at) + " · " + esc(last.channel || "web") : "—") + "</td></tr>";
+    });
+    h += "</tbody></table></div></div>";
+  })();
+
   DB.events.forEach(function(e){
     if(!canSeeEvent(e.id)) return;
     var gates = publishGates(e);
@@ -2809,7 +2887,9 @@ V.orders = function(){
   var h = "<h1>" + esc(t("nav_orders", "报名与订单")) + "</h1><p class='sub'>" + esc(sub) + "</p>";
   h += '<div class="card"><div class="row"><input type="text" id="q" placeholder="' + esc(ph) + '" value="' +
        esc(state.scan) + '" style="flex:1;min-width:220px"><button class="btn" id="qgo">' + btnSearch + '</button>' +
-       '<button class="btn" id="qclear">' + btnClear + '</button></div></div>';
+       '<button class="btn" id="qclear">' + btnClear + '</button>' +
+       (can("roster_export") ? '<button class="btn" data-h="rosterexport" style="margin-left:auto">导出参赛者名单 CSV</button>' : '') +
+       '</div></div>';
 
   var list = DB.orders.filter(function(o){
     if(!canSeeEvent(o.eventId)) return false;
@@ -3961,18 +4041,28 @@ V.system = function(){
   }
   h += '<div class="scroll"><table><thead><tr><th>时间</th><th>操作人 / 角色</th><th>动作</th><th>详情</th></tr></thead><tbody>';
   if(!rows.length) h += "<tr><td colspan='4' class='mut'>该范围内暂无记录。</td></tr>";
-  rows.forEach(function(a){
+  var auditLimit = state.auditLimit || 100;
+  rows.slice(0, auditLimit).forEach(function(a){
     h += "<tr><td class='mut' style='white-space:nowrap'>" + esc(a.at) + "</td>" +
       "<td><code>" + esc(a.who) + "</code><br><span class='tag'>" + esc(a.role) + "</span></td>" +
-      "<td>" + esc(a.what) + "</td><td class='mut'>" + esc(a.detail) + "</td></tr>";
+      "<td>" + esc(a.what) + "</td><td class='mut'>" + safeHtml(a.detail) + "</td></tr>";
   });
-  h += "</tbody></table></div><p class='mut' style='margin-top:.5rem'>本 Demo 里你做的每一个操作都会实时进这张表。它要回答的是：<b>运营能不能自己把事情办完，而不用找开发改数据库。</b></p></div>";
+  h += "</tbody></table></div>" +
+    (rows.length > auditLimit ? "<div class='row' style='margin-top:.6rem'><span class='mut'>显示前 " + auditLimit + " / " + rows.length + " 条</span>" +
+      "<button class='btn' data-h='auditmore' style='margin-left:.6rem'>加载更多</button></div>" : "") + "<p class='mut' style='margin-top:.5rem'>本 Demo 里你做的每一个操作都会实时进这张表。它要回答的是：<b>运营能不能自己把事情办完，而不用找开发改数据库。</b></p></div>";
   return h;
 };
 
 /* ================================================================
    7) 操作处理器 —— 真实改内存状态 + toast + audit + 重绘
    ================================================================ */
+/* 审核修复 · roster_export 以前只在矩阵里、没有任何入口：按当前角色的数据范围导出 CSV（脱敏角色只出遮蔽姓名、不出手机） */
+function csvCell(v){ var t = String(v == null ? "" : v); return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; }
+function downloadText(name, text){
+  var blob = new Blob(["\ufeff" + text], { type:"text/csv;charset=utf-8" });
+  var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
 function findOrder(id){ return DB.orders.filter(function(o){ return o.id === id; })[0]; }
 function findOP(opId){
   var r = null;
@@ -3980,21 +4070,29 @@ function findOP(opId){
   return r;
 }
 function recalcOrder(o){
-  /* Demo 版聚合：只统计「退赛退款」已结算金额；资金异常返还不参与 */
-  var sum = DB.refunds.filter(function(r){
-    return r.orderId === o.id && r.status === "SETTLED" && r.kind === "PARTICIPANT_CANCEL";
-  }).reduce(function(a,b){ return a + b.amount; }, 0);
-  /* P1-1 · D-031 R2 不变量：订单生命周期从未被恢复过的，退款聚合不得把它改写成
-     PAID / PARTIALLY_REFUNDED / REFUNDED。
-     EXPIRED 就是这种情况——LATE_ARRIVAL 拒绝所产生的那条退款结算时，
-     钱是真出账了（记在 Refund 那一行上，settled_amount 照常落库），
-     但这张订单的报名生命周期<b>没有被恢复过</b>，它必须停在 EXPIRED。
-     PENDING_PAYMENT / CANCELLED 同理：钱从来没收到过，聚合无从谈起。 */
-  if(o.status === "PENDING_PAYMENT" || o.status === "CANCELLED" || o.status === "EXPIRED") return;
-  o.status = sum === 0 ? "PAID" : (sum >= o.amount ? "REFUNDED" : "PARTIALLY_REFUNDED");
+  /* D-130 · 聚合口径只在共享域一处实现（PENDING / CANCELLED / EXPIRED 不被改写） */
+  RD.recalcOrderStatus(o);
 }
 
 var H = {};
+H.rosterexport = function(){
+  var full = seePII();
+  var rows = [["订单号","赛事","组别","参赛人","号码布","报名状态","参赛人状态","尺码","身份档"] .concat(full ? ["手机"] : [])];
+  DB.orders.forEach(function(o){
+    if(!canSeeEvent(o.eventId)) return;
+    var ev = findEvent(o.eventId);
+    (o.participants || []).forEach(function(p){
+      var nm = full ? (p.name || "") : (String(p.name || "").slice(0,1) + "***");
+      rows.push([o.orderNo || o.id, ev ? ev.name : o.eventId, p.catName || p.cat || "", nm, RD.currentBib(p) || p.bib || "",
+        p.regStatus || "", p.opStatus || "", (p.reg && p.reg.size) || "", p.audience || ""].concat(full ? [o.phone || ""] : []));
+    });
+  });
+  downloadText("werun-roster-" + now().replace(/[: ]/g, "-") + ".csv", rows.map(function(r){ return r.map(csvCell).join(","); }).join("\n"));
+  act("导出参赛者名单", (rows.length - 1) + " 行 · " + (full ? "含姓名与手机" : "脱敏：姓名遮蔽、不含手机") + " · 范围：当前角色可见赛事",
+      "已导出 " + (rows.length - 1) + " 名参赛者" + (full ? "" : "（脱敏）"));
+};
+/* 审核修复 · 审计日志分页：默认 100 条，按需加载 */
+H.auditmore = function(){ state.auditLimit = (state.auditLimit || 100) + 100; render(); };
 H.oplogic = showOpLogic;   /* ⓘ 操作逻辑抽屉（D-030）——只读，不做权限判定 */
 
 /* ================================================================
@@ -4074,8 +4172,8 @@ H.pubok = function(id){
   var e = findEvent(id);
   var gates = publishGates(e);
   if(!gatesPass(gates)){ closeModal(); toast("<b>接口拒绝</b>：发布前置校验未通过。", "bad"); return; }
-  e.status = "PUBLISHED";
-  e.publishedSnapshotAt = now();
+  var res = RD.publishEvent(id, domActor());
+  if(!res.ok){ closeModal(); toast("<b>接口拒绝</b>：" + esc(res.msg), "bad"); return; }
   closeModal();
   act("发布赛事", e.name + " · DRAFT → PUBLISHED · 已生成发布快照（" + e.publishedSnapshotAt + "） · 四项前置全部满足" +
       " · 报名开关=" + (e.registrationOpen ? "开放" : "暂停") + " · 公开展示=" + (e.publicVisible ? "显示" : "隐藏") + "（发布不改写这两个开关）",
@@ -4397,7 +4495,7 @@ H.rfnew = function(orderId, opId){
   var f = findOP(opId);
   openModal(
     "<h3>发起退款 · 退赛退款</h3>" +
-    "<p class='mut'>" + esc(f.o.id) + " / " + esc(f.p.name) + " · Bib " + esc(f.p.bib || "—") + " · 金额 " + money(f.p.paid) + "</p>" +
+    "<p class='mut'>" + esc(f.o.id) + " / " + pii(f.p.name) + " · Bib " + esc(f.p.bib || "—") + " · 金额 " + money(f.p.paid) + "</p>" +
     '<div class="note oknote"><b>这条路径会取消报名并释放名额。</b>如果只是要把多收的钱退回去、人照常参赛，请走 Payments &amp; Exceptions 的「返还多收款」。</div>' +
     (function(){
       /* D-092 · 用户在前台提交的退款协助请求（不是 Refund）：客服代客发起时把用户诉求原文带进来 */
@@ -4426,15 +4524,9 @@ H.rfnewok = function(orderId, opId){
     render();
     return;
   }
-  var f = gate.f;
-  var id = nextRefundId("RF-");
-  DB.refunds.push({ id:id, orderId:orderId, opId:opId, kind:"PARTICIPANT_CANCEL", type:"STANDARD",
-    requestedAmount:f.p.paid, amount:f.p.paid, status:"REQUESTED", by:state.staff,
-    initiatedBy:state.role, at:now(), reason:reason });
-  f.p.opStatus = "REFUND_PENDING";
-  /* D-092 · 用户的协助请求到此为止：它已经被转成一条真正的 Refund，由 FINANCE 继续处理 */
-  var sr0 = RD.openSupportRequest(opId);
-  if(sr0) RD.supportRequestClose(sr0.id, { who:state.staff, role:state.role }, id);
+  var res = RD.refundRequest(opId, domActor(), { reason: reason });
+  if(!res.ok){ closeModal(); toast("<b>已拒绝执行</b>：" + res.msg, "bad"); render(); return; }
+  var f = res.f, id = res.refund.id;
   closeModal();
   act("发起退款申请", f.o.id + " / " + f.p.name + " · " + money(f.p.paid) + " · " + reason +
       " · initiated_by=" + state.role + " · Registration 与名额此刻都不动",
@@ -4486,18 +4578,9 @@ H.rfapproveok = function(rfId){
     return;
   }
   var why = ($("apwhy") && $("apwhy").value.trim()) || "";
-  var diff = (amt !== reqAmt);
-  if(diff && !why){
-    toast("<b>拒绝审批</b>：批准金额 " + money(amt) + " 与申请金额 " + money(reqAmt) +
-          " 不一致，<b>必须写明原因</b>（docs/12 §9 留痕要求）。", "bad");
-    return;
-  }
-  r.requestedAmount = reqAmt;
-  r.approvedAmount = amt;
-  r.amount = amt;                    /* 后续「结算打款」以批准金额为默认值 */
-  r.approveDiffReason = diff ? why : null;
-  r.approvedBy = state.staff; r.approvedAt = now();
-  r.status = "APPROVED";
+  var res = RD.refundApprove(rfId, amt, domActor(), { reason: why });
+  if(!res.ok){ toast("<b>拒绝审批</b>：" + res.msg + "<br><span class='mut'>此刻未改动任何业务状态。</span>", "bad"); return; }
+  var diff = res.diff;
   closeModal();
   act("退款审批", rfId + " · REQUESTED → APPROVED · 申请 " + money(reqAmt) + " → 批准 " + money(amt) +
       (diff ? " · <b>金额不一致，原因：" + why + "</b>" : "（与申请额一致）") +
@@ -4557,31 +4640,9 @@ H.rfsettleok = function(rfId){
           "<br><span class='mut'>空值 / 0 / 负数 / 非数字 / NaN 一律拒绝，且<b>此刻没有改动任何业务状态</b>。</span>", "bad");
     return;
   }
-  var f = findOP(r.opId);
-  if(!f){ toast("<b>接口拒绝</b>：找不到该退款对应的参赛人。", "bad"); return; }
-  /* D-035 · 精确判定条件（不是「第几条 SETTLED」，而是看 Registration 当前状态）：
-       只有当 Registration 当前为 CONFIRMED 时，STANDARD 退款结算才执行
-         Registration: CONFIRMED → CANCELLED(REFUND_SETTLED)
-       并且只释放一次 Category capacity。
-     已经因别的合法原因 CANCELLED 的报名（例如 LATE_ARRIVAL 拒绝所对应的
-     CANCELLED(ORDER_EXPIRED)），不得再次承受这两个副作用；PriceRule quota 同样不再改动。
-     未新增任何业务状态。 */
-  var regIsConfirmed = f.p.regStatus === "CONFIRMED";
-  var regBefore = f.p.regStatus + "(" + (f.p.cancelReason || "-") + ")";
-  r.status = "SETTLED"; r.amount = amt; r.proof = proof; r.settledAt = now();
-  f.p.opStatus = "REFUNDED";
-  var ev = DB.events.filter(function(e){ return e.id === f.o.eventId; })[0];
-  var cat = ev && ev.categories.filter(function(c){ return c.id === f.p.cat; })[0];
-  var capBefore = cat ? cat.used : null;
-  if(regIsConfirmed){
-    f.p.regStatus = "CANCELLED"; f.p.cancelReason = "REFUND_SETTLED";
-    /* 名额释放走共享域的同一个实现（与下单时的占用一一对应）；价格档配额不恢复 */
-    RD.releaseCapacity(f.o.eventId, f.p.cat);
-    /* ⚖️ D-098 B5 · <b>不删</b>领物运营事实：名单是派生的，报名已 CANCELLED
-       自然就不可领物了；把历史删掉只会让「他到底领没领过」永远答不出来。 */
-  }
-  recalcOrder(f.o);
-  var capAfter = cat ? cat.used : null;
+  var res = RD.refundSettle(rfId, amt, proof, domActor());
+  if(!res.ok){ toast("<b>拒绝结算</b>：" + res.msg + "<br><span class='mut'>此刻未改动任何业务状态。</span>", "bad"); return; }
+  var f = res.f, regIsConfirmed = res.regIsConfirmed, regBefore = res.regBefore, capBefore = res.capBefore, capAfter = res.capAfter;
   closeModal();
   act("退款结算", r.orderId + " / " + f.p.name + " · " + money(amt) + " · 凭证 " + proof +
       (regIsConfirmed
@@ -4650,13 +4711,9 @@ H.rfrejectok = function(rfId){
     toast("<b>拒绝</b>：撤回必须记录<b>用户确认</b>（docs/12 §9「用户确认（撤回时）」）。", "bad");
     return;
   }
-  var f = findOP(r.opId);
-  var before = r.status;
-  r.status = kind; r.at = now();
-  r.rejectReason = rs; r.rejectedBy = state.staff; r.rejectedAt = now();
-  if(kind === "WITHDRAWN") r.userConfirmation = uc;
-  var stillSettled = DB.refunds.some(function(x){ return x.opId === r.opId && x.status === "SETTLED"; });
-  f.p.opStatus = stillSettled ? "REFUNDED" : "ACTIVE";
+  var res = RD.refundReject(rfId, kind, rs, domActor(), uc);
+  if(!res.ok){ closeModal(); toast("<b>接口拒绝</b>：" + res.msg, "bad"); return; }
+  var f = res.f, before = res.before;
   closeModal();
   act("退款拒绝 / 撤回", rfId + " · " + before + " → " + kind + " · 原因：" + rs +
       (kind === "WITHDRAWN" ? " · 用户确认：" + uc : "") +
@@ -4700,6 +4757,9 @@ H.retok = function(excId){
   }
   var e = DB.exceptions.filter(function(x){ return x.id === excId; })[0];
   if(!e || e.status !== "OPEN"){ toast("<b>接口拒绝</b>：该异常已不是 OPEN。", "bad"); return; }
+  if(typeof e.amount === "number" && amt > e.amount){
+    toast("<b>拒绝返还</b>：返还 " + money(amt) + " 超过该异常记录的多收金额 " + money(e.amount) + "。此刻未改动任何业务状态。", "bad"); return;
+  }
   var o = findOrder(e.orderId);
   var before = o.participants.map(function(p){ return p.name + "=" + p.regStatus; }).join(", ");
   e.status = "CLOSED";
@@ -4944,7 +5004,7 @@ H.verify = function(regId){
   if(!res.ok){ toast("<b>接口拒绝</b>：" + esc(res.why || "核验失败"), "bad"); return; }
   act("证件核验", res.row.name + " · Bib " + (res.row.bib || "待分配") +
       " · 本地价证件核验通过（只核验匹配与否，不留存证件号原值）· <b>现场工作台立即可见</b>",
-      "已核验：" + res.row.name);
+      "已核验：" + pii(res.row.name));
 };
 H.issue = function(regId){
   /* 硬拦截同样要写在处理器里，不能只靠视图不渲染按钮 —— 「接口也必须拒绝」（D-016）。
@@ -4963,7 +5023,7 @@ H.issue = function(regId){
   act("Race Pack 发包", res.row.name + " · Bib " + (res.row.bib || "待分配") +
       " · 写入 packet_picked_up_at=" + res.fact.pickedAt +
       " · 领物是独立时间戳字段，Registration 状态不变 · <b>现场工作台立即看到已领</b>",
-      "已发包：" + res.row.name + " · Bib " + (res.row.bib || "待分配"));
+      "已发包：" + pii(res.row.name) + " · Bib " + (res.row.bib || "待分配"));
 };
 H.undopack = function(regId){
   var r = packRow(regId);
@@ -4987,7 +5047,7 @@ H.undopackok = function(regId){
   if(!res.ok){ closeModal(); toast("<b>接口拒绝</b>：" + esc(res.why), "bad"); return; }
   closeModal();
   act("撤销领物", r.name + " · Bib " + packBib(r) + " · 原发出时间 " + was + " · 原因：" + reason +
-      " · 只清履约字段，Registration 状态未变", "已撤销 " + r.name + " 的领物记录", "warn");
+      " · 只清履约字段，Registration 状态未变", "已撤销 " + pii(r.name) + " 的领物记录", "warn");
 };
 
 /* --- D-031 R3 · 离线回传冲突裁决 --- */
@@ -5063,7 +5123,7 @@ H.bibswap = function(oldBib){
   var b = DB.bibs.filter(function(x){ return x.bib === oldBib; })[0];
   openModal(
     "<h3>现场换号</h3>" +
-    "<p class='mut'>原号 <code>" + esc(oldBib) + "</code> · " + esc(b.name || "—") + " · " + esc(b.regId || "—") + "</p>" +
+    "<p class='mut'>原号 <code>" + esc(oldBib) + "</code> · " + pii(b.name || "—") + " · " + esc(b.regId || "—") + "</p>" +
     "<p style='margin:.7rem 0 .25rem'>新号码</p><input type='text' id='nb' style='width:100%' placeholder='例：2101'>" +
     "<p style='margin:.7rem 0 .25rem'>换号原因（必填）</p><input type='text' id='rs' style='width:100%' placeholder='例：号码布破损 / 打印错误'>" +
     '<div class="note">换号 = <b>旧号置 SUPERSEDED + 新号新建一条 ASSIGNED</b>，绝不 UPDATE 原记录。原号<b>不可再用</b>。</div>' +
@@ -5080,21 +5140,15 @@ H.bibswapok = function(oldBib){
   /* ⚖️ D-097 F-008 补扫 · 换号也是在写一条 ASSIGNED 绑定，因此走<b>同一个</b>
      校验器：号段 / 预留段 / 历史号永不复用 / 组别 / 赛事归属 / 赛内唯一。
      换号唯一的差别只是「目标本来就该有一个当前号」。执行那一刻才校验。 */
-  var vs = RD.validateBibAssignment(old.regId, nb, { swap:true });
-  if(!vs.ok){
+  var res = RD.bibSwap(oldBib, nb, domActor(), rs);
+  if(!res.ok){
     closeModal();
-    toast("<b>接口拒绝</b>：" + vs.errs.map(esc).join("；") +
-          "<br><span class='mut'>此刻没有改动任何绑定：原号仍然有效，没有新建任何记录。</span>", "bad");
+    toast("<b>接口拒绝</b>：" + esc(res.msg) + "<br><span class='mut'>此刻没有改动任何绑定：原号仍然有效，没有新建任何记录。</span>", "bad");
     return;
   }
-  old.status = "SUPERSEDED"; old.note = rs; old.at = now(); old.by = state.staff;
-  DB.bibs.push({ bib:nb, eventId:old.eventId, regId:old.regId, name:old.name, status:"ASSIGNED",
-    at:now(), by:state.staff, note:"由 " + oldBib + " 换来" });
-  /* 同步领物名单与照片标注里的号 */
-  DB.orders.forEach(function(o){ o.participants.forEach(function(p){ if(p.regId === old.regId) p.bib = nb; }); });
   closeModal();
   act("Bib 换号", "原号 " + oldBib + " → 新号 " + nb + " · " + (old.name || "—") + " · 原因：" + rs +
-      " · 旧记录置 SUPERSEDED，新建一条 ASSIGNED，原号永不再用",
+      " · 旧记录置 SUPERSEDED，新建一条 ASSIGNED，原号永不再用 · 同步照片标注 " + res.retagged + " 条",
       "已换号：" + oldBib + " → " + nb);
 };
 H.bibvoid = function(bib){
@@ -5125,8 +5179,8 @@ H.bibvoidok = function(bib){
   var facts0 = bibResultFacts(bib);
   if(facts0.length){ closeModal(); toast("<b>接口拒绝</b>：该号已有成绩事实（" +
       facts0.map(function(x){ return x.id; }).join("、") + "）。", "bad"); return; }
-  var b = DB.bibs.filter(function(x){ return x.bib === bib; })[0];
-  b.status = "VOIDED"; b.note = rs; b.at = now(); b.by = state.staff;
+  var res = RD.bibVoid(bib, domActor(), rs);
+  if(!res.ok){ closeModal(); toast("<b>接口拒绝</b>：" + esc(res.msg), "bad"); return; }
   closeModal();
   act("Bib 作废", "号码 " + bib + " → VOIDED · 原因：" + rs + " · 该号永久不可再用",
       "已作废 Bib " + bib, "warn");
@@ -5284,6 +5338,7 @@ H.runpubok = function(id){
   if(!rs){ toast("撤回原因必填，无原因一律拒绝。", "bad"); return; }
   if(ra !== "CONFIRM"){ toast("二次身份确认未通过（请输入 CONFIRM）。", "bad"); return; }
   var b = DB.resultBatches.filter(function(x){ return x.id === id; })[0];
+  if(!b || b.status !== "PUBLISHED"){ closeModal(); toast("<b>接口拒绝</b>：只有 PUBLISHED 的批次可以撤回（当前 " + esc(b ? b.status : "不存在") + "）。", "bad"); return; }
   var ev = DB.events.filter(function(x){ return x.id === b.eventId; })[0];
   b.status = "UNPUBLISHED"; b.at = now();
   /* AR-F-012：真的产生一条告警，收件人是 ADMIN 与运营负责人（OPS），可在 Overview 看到 */
@@ -5327,6 +5382,7 @@ H.ccbindok = function(id){
   var rs = ($("rs") && $("rs").value.trim()) || "";
   if(!rs){ toast("裁决依据必填。", "bad"); return; }
   var c = DB.claimCases.filter(function(x){ return x.id === id; })[0];
+  if(!c || c.status === "BOUND"){ closeModal(); toast("<b>接口拒绝</b>：该认领已绑定过，不能重复绑定。", "bad"); return; }
   c.status = "BOUND";
   closeModal();
   act("历史成绩认领绑定", id + " · " + c.target + " · 原 runner_id=空 → " + c.runner +
@@ -5448,6 +5504,7 @@ H.prdownok = function(reqId){
   if(!rs){ toast("审批意见必填。", "bad"); return; }
   var r = DB.removalRequests.filter(function(x){ return x.id === reqId; })[0];
   var p = DB.photos.filter(function(x){ return x.id === r.photoId; })[0];
+  if(!r || !p || r.status !== "REQUESTED"){ closeModal(); toast("<b>接口拒绝</b>：只有 REQUESTED 的删除申请可以审批（当前 " + esc(r ? r.status : "不存在") + "）。", "bad"); return; }
   r.status = "TAKEN_DOWN"; r.decision = rs; r.reviewedBy = state.staff; r.reviewedAt = now();
   p.takenDown = true; p.takenDownAt = now(); p.takenDownBy = r.reviewedBy; p.removalRequestId = reqId;
   closeModal();
@@ -5467,6 +5524,7 @@ H.prrejok = function(reqId){
   var rs = ($("rs") && $("rs").value.trim()) || "";
   if(!rs){ toast("驳回理由必填。", "bad"); return; }
   var r = DB.removalRequests.filter(function(x){ return x.id === reqId; })[0];
+  if(!r || r.status !== "REQUESTED"){ closeModal(); toast("<b>接口拒绝</b>：只有 REQUESTED 的删除申请可以驳回（当前 " + esc(r ? r.status : "不存在") + "）。", "bad"); return; }
   r.status = "REJECTED"; r.decision = rs; r.reviewedBy = state.staff; r.reviewedAt = now();
   closeModal();
   act("驳回照片删除申请", reqId + " · " + r.photoId + " · 理由：" + rs + " · 已保留联系方式快照以便答复申请人",
@@ -5911,6 +5969,10 @@ H.supnewok = function(corrId){
   if(!rs){ toast("原因必填。", "bad"); return; }
   if(amt === null){ toast("补退金额必须是<b>有效的正数</b> —— 空值 / 0 / 负数 / 非数字一律拒绝，禁止负金额 Refund。", "bad"); return; }
   var c = DB.corrections.filter(function(x){ return x.id === corrId; })[0];
+  if(!c || c.status !== "OPEN" || c.supplementalRefundId){ closeModal(); toast("<b>接口拒绝</b>：该纠错单已不是 OPEN，或已创建过补退。", "bad"); return; }
+  if(typeof c.variance === "number" && amt > c.variance){
+    toast("<b>拒绝创建</b>：补退 " + money(amt) + " 超过纠错单差额 " + money(c.variance) + "。", "bad"); return;
+  }
   var id = nextRefundId("RF-S");
   DB.refunds.push({ id:id, orderId:c.orderId, opId:c.opId, kind:"PARTICIPANT_CANCEL", type:"SUPPLEMENTAL",
     correctionOf:c.sourceRefundId, amount:amt, status:"REQUESTED", by:state.staff, at:now(), reason:rs });
@@ -5993,9 +6055,14 @@ H.corrrec = function(corrId){
 };
 H.corrrecok = function(corrId){
   var ev = ($("rev") && $("rev").value.trim()) || "";
-  var amt = parseFloat(($("amt") && $("amt").value) || "0");
+  var amt = parseSettleAmount(($("amt") && $("amt").value));
   if(!ev){ toast("追回凭证 / 说明必填。", "bad"); return; }
+  if(amt === null){ toast("<b>拒绝登记</b>：追回金额必须是<b>有效的正数</b>（F-004）。此刻未改动任何业务状态。", "bad"); return; }
   var c = DB.corrections.filter(function(x){ return x.id === corrId; })[0];
+  if(!c || c.status !== "OPEN"){ closeModal(); toast("<b>接口拒绝</b>：该纠错单已不是 OPEN。", "bad"); return; }
+  if(typeof c.variance === "number" && amt > c.variance){
+    toast("<b>拒绝登记</b>：追回 " + money(amt) + " 超过纠错单差额 " + money(c.variance) + "。", "bad"); return;
+  }
   var o = findOrder(c.orderId);
   var before = o.status;
   c.status = "RESOLVED"; c.resolution = "RECOVERED_EXTERNALLY"; c.recoveredAmount = amt;
@@ -7124,6 +7191,7 @@ function merchHandoffScope(o){
   return canSeeEvent(o.eventId) && RD.handoffEligibility(o).ok;
 }
 function merchActor(){ return { who:state.staff, role:state.role, domain:"MERCH" }; }
+function domActor(){ return { who:state.staff, role:state.role }; }   /* D-130 · 报名侧共享域调用身份 */
 function mres(r, okMsg){
   if(!r.ok){ toast("<b>已拒绝</b>：" + r.msg, "bad"); render(); return false; }
   return true;
@@ -7283,7 +7351,7 @@ V.merch = function(){
       h += "<div class='scroll' style='margin-top:.6rem'><table><thead><tr><th>时间</th><th>操作人</th><th>动作</th><th>说明</th></tr></thead><tbody>";
       o.history.slice().reverse().forEach(function(x){
         h += "<tr><td class='mut'>" + esc(x.at) + "</td><td class='mut'>" + esc(x.by) + " · " + esc(x.role) + "</td>" +
-          "<td>" + esc(x.what) + "</td><td class='mut'>" + x.detail + "</td></tr>";
+          "<td>" + esc(x.what) + "</td><td class='mut'>" + safeHtml(x.detail) + "</td></tr>";
       });
       h += "</tbody></table></div>";
     }
@@ -7379,7 +7447,7 @@ V.merch = function(){
   if(!mAudit.length) h += "<tr><td colspan='4' class='mut'>暂无周边留痕。</td></tr>";
   mAudit.slice(0, 40).forEach(function(a){
     h += "<tr><td class='mut'>" + esc(a.at) + "</td><td class='mut'>" + esc(a.who) + " · " + esc(a.role) + "</td>" +
-      "<td>" + esc(a.what) + "</td><td class='mut'>" + a.detail + "</td></tr>";
+      "<td>" + esc(a.what) + "</td><td class='mut'>" + safeHtml(a.detail) + "</td></tr>";
   });
   h += "</tbody></table></div></div>";
 
@@ -8258,6 +8326,7 @@ window.addEventListener("focus", function(){ onDeadlineDue(); });
    权限矩阵在执行那一刻真正生效。
    ================================================================ */
 var OP_REQUIRED = {
+  rosterexport:"roster_export",
   /* 赛事 */
   pub:"event_publish", pubok:"event_publish",
   regstop:"event_publish", regstopok:"event_publish",
@@ -8345,7 +8414,7 @@ var OP_REQUIRED = {
   lateseed:"manual_confirm"
 };
 /* 只读处理器：不改任何业务状态，不需要执行期写权限闸门 */
-var READ_ONLY_HANDLERS = ["oplogic", "pbopen", "recpick", "alertread",
+var READ_ONLY_HANDLERS = ["oplogic", "pbopen", "recpick", "alertread", "auditmore",
   /* D-092 · 只读：参赛人详情抽屉、CSV 冲突预览，都不改任何业务状态 */
   "pdetail", "bibcsvprev",
   /* D-118 · 打开「编辑赛事配置」弹窗本身不改任何业务状态；
@@ -8626,6 +8695,7 @@ if($("admin-lang")){
   $("admin-lang").addEventListener("change", function(){
     state.lang = this.value;
     try { localStorage.setItem("run.admin.lang", this.value); } catch(e){}
+    document.documentElement.lang = this.value === "zh" ? "zh-CN" : this.value;
     var langNames = { zh: "中文 (ZH)", en: "English (EN)", km: "ភាសាខ្មែរ (KM)" };
     toast("Language: <b>" + (langNames[this.value] || this.value) + "</b>");
     render();

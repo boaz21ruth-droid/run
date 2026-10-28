@@ -1,0 +1,16 @@
+{
+  "name": "WeRun · 賽事 · 成績 · 照片",
+  "short_name": "WeRun",
+  "description": "柬埔寨跑步賽事報名、成績查詢與賽道照片",
+  "start_url": "./index.html#/home",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F6F8FA",
+  "theme_color": "#F6F8FA",
+  "lang": "zh-Hant",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "assets/icon-180.png", "sizes": "180x180", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

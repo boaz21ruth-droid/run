@@ -112,7 +112,7 @@ html{scroll-behavior:smooth;scroll-padding-top:70px}
 
 <div class="bar"><div class="wrap">
   <nav>
-    <a href="#summary">总览</a><a href="#top10">十大必修</a><a href="#site">官网 · H5 共用</a><a href="#h5">H5 移动端</a><a href="#mini">MiniApp</a><a href="#admin">后台</a><a href="#domain">共享业务域</a><a href="#roadmap">修复路线</a>
+    <a href="#summary">总览</a><a href="#fixed">修复记录</a><a href="#top10">十大必修</a><a href="#site">官网 · H5 共用</a><a href="#h5">H5 移动端</a><a href="#mini">MiniApp</a><a href="#admin">后台</a><a href="#domain">共享业务域</a><a href="#roadmap">修复路线</a>
   </nav>
   <div class="filters" role="group" aria-label="按严重度筛选"><span>筛选</span>
     <button class="fbtn" data-f="all" aria-pressed="true">全部</button><button class="fbtn" data-f="P0">P0</button><button class="fbtn" data-f="P1">P1</button><button class="fbtn" data-f="P2">P2</button>
@@ -125,6 +125,65 @@ html{scroll-behavior:smooth;scroll-padding-top:70px}
   <p class="sub">业务语义层、RBAC 闸门、报名主链路的状态机都比一般原型认真得多；拖后腿的是后期叠加进来的东西：三套设计系统互相覆盖、两条底栏同时渲染、Telegram 集成只有空壳、UGC 与后台各有一处存储型 XSS、退款金额没有上限。</p>
   <div class="score" id="score"></div>
   <div class="legend"><span class="pill P0">P0</span>上线前必须修（安全 / 主流程断裂 / 资金）<span class="pill P1">P1</span>影响核心体验或合规<span class="pill P2">P2</span>质量与一致性<span class="pill P3">P3</span>整洁度<span class="pill ok">已实测</span>浏览器中复现<span class="pill chk">待确认</span>静态推断，未闭环</div>
+</div></section>
+
+<section id="fixed"><div class="wrap">
+  <div class="eyebrow">Fix log · 2026-09-13</div>
+  <h2>修复记录</h2>
+  <p class="sub">以下条目已在仓库当前副本中修复（原文件备份在 <code>backup-before-fix/2026-09-13/</code>）。表格里对应的发现保留原文，以便对照。</p>
+  <div class="method" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+    <div><b>index.html · 官网 / H5</b>
+      · UGC 四个渲染函数全部改走 <code>h()</code> 转义（标题 / 地点 / 集合点 / 距离 / 作者 / 驳回与冻结原因）<br>
+      · <code>rules</code> 加入路由表，报名第 2 步的《参赛规章》链接可达；页头去掉指向空白 Moments 页的入口<br>
+      · 「一键重置」追加 <code>RUNDomain.reset()</code>，并清 <code>run-demo-domain-v1</code>、<code>werun_*</code><br>
+      · 切语言时同步 <code>&lt;html lang&gt;</code>，高棉文排版规则全站生效<br>
+      · 删除 2238 / 2663 / 2855 三个 <code>:root</code> 覆盖块与两组 <code>.btn</code> 覆盖，134 处 inline hex 回到 token；线上 <code>--brand</code> 恢复 #0F66AE<br>
+      · 删除 <code>.miniapp-bar</code>（CSS ×2 + 标记 + 死函数），只保留三语 <code>.mnav</code>，图标换成描边 SVG；toast / 弹窗不再被底栏压住<br>
+      · 首页只保留照片 hero，移除 00 · SKY BANNER 与重复的运动 pills<br>
+      · 页头改为中文 + <code>data-i18n</code>，主按钮不再折行；品牌标去掉绿色渐变<br>
+      · 字体改为 2 个可变字体文件（<code>*-var.woff2</code>，<code>font-weight: 100 900</code>），删除 5 个重复文件，preload 只保留一个
+    </div>
+    <div><b>admin.html · 运营后台</b>
+      · <code>esc()</code> 补转义单引号；新增 <code>safeHtml()</code> 用于 toast、订单历史与周边留痕的 detail（只放行无属性排版标签）<br>
+      · 退款审批 ≤ 申请额且 ≤ 实付；结算 ≤ 批准额且 ≤ 实付；资金返还 ≤ 异常金额；补退 / 追回 ≤ 纠错单差额，追回改用 <code>parseSettleAmount</code><br>
+      · 5 个过期弹窗处理器执行前复检状态（Bib 作废、成绩撤回、认领绑定、照片下架 / 驳回），补退创建复检纠错单状态<br>
+      · 6 处脱敏绕过改用 <code>pii()</code>（退款弹窗、换号弹窗、发包 / 核验 / 撤销 toast）<br>
+      · toast 同屏最多 3 条，不再堆积<br>
+      · 新增 ≤1024px 平板布局：侧栏改为可横滑标签、顶栏控件换行、按钮 ≥ 40px；锁定导航文字对比度提高<br>
+      · 语言切换同步 <code>&lt;html lang&gt;</code>；补 <code>noindex</code>（werun-mockup.html 同）
+    </div>
+  </div>
+  <div class="method" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:12px">
+    <div><b>Phase 2 · 2026-09-13 · index.html / app.js</b>
+      · Telegram Mini App 实装：加载官方 SDK；<code>TG</code> 模块做 ready / expand / 浅色 header 与背景 / 视口高度与安全区（含 Bot API 8.0 的 safeAreaInset）/ BackButton 映射 SPA 历史 / 赛事详情的 MainButton「立即报名」/ 报名与付款中的关闭确认 / 触觉反馈；<code>start_param</code>（race-e1 / photos-e1 / results …）与 <code>?startapp=</code> 深链；同意书 channel 按真实环境记录。initData 校验明确留给服务端<br>
+      · 免费活动登记 / 候补 / 退出同步写入共享域（<code>freeRegister</code> / <code>freeCancel</code>），运营后台「赛事管理」新增汇总卡<br>
+      · 527 KB 内联脚本拆成 <code>assets/app.js</code>（HTML 从 753 KB 降到 235 KB，脚本可单独缓存）；<code>paintAll</code> 只画当前屏并在换屏时补画，resize 去抖 150 ms；四张站内图片补 width / height<br>
+      · PWA：manifest、SVG + PNG 图标、theme-color、Service Worker（静态资源缓存优先、HTML 网络优先，只在 https 注册）；vercel.json 增加字体 / 图片长缓存头与 /admin 的 X-Robots-Tag
+    </div>
+    <div><b>Phase 2 · 2026-09-13 · run-domain.js / admin.html</b>
+      · 报名侧退款状态机收进共享域：<code>refundRequest</code> / <code>refundApprove</code> / <code>refundSettle</code> / <code>refundReject</code>，金额上限、状态守卫、名额释放、订单聚合（<code>recalcOrderStatus</code>）全部只在域内实现，结算写入 <code>settledAmount</code><br>
+      · <code>bibSwap</code> / <code>bibVoid</code> 进域：换号同步后台照片标注，作废清掉参赛人镜像；<code>publishEvent</code> 进域并保存发布快照<br>
+      · 赛事 id 映射改为数据（<code>state.eventMap</code>，<code>registerEventMap</code>；<code>createEvent</code> 传 <code>feId</code> 即登记）<br>
+      · 后台 9 个处理器改为调用域函数，只保留 UI、角色闸门与留痕文案<br>
+      · 弹窗 / 抽屉：<code>role=dialog</code>、焦点进入与归还、Esc 关闭、Tab 焦点圈；平板下 <code>.btn</code> / 图标按钮 / 抽屉关闭键 ≥ 44px
+    </div>
+  </div>
+  <div class="method" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:12px">
+    <div><b>Phase 3 · 2026-09-13 · 用户端</b>
+      · 站内文案简繁统一：index.html 与 app.js 全量转为繁体（OpenCC s2t），与 <code>&lt;html lang="zh-Hant"&gt;</code> 一致；后台保持 zh-CN<br>
+      · 上传只收 JPG / PNG / WebP / HEIC 且 ≤ 5 MB（自拍找照片、跑友活动图片）<br>
+      · 「保存二维码」由死控件改为画布导出下载；Telegram 内提示截图<br>
+      · 未包裹的表格在启动时自动套上横向滚动容器；底栏字号 10.9px → 11.5px
+    </div>
+    <div><b>Phase 3 · 2026-09-13 · 共享域 / 后台</b>
+      · 只有 PUBLISHED 的赛事能建单；同一付款人在同一赛事只允许一张未过期的待付款订单<br>
+      · 周边超时后到账：同一订单已有 OPEN 的 LATE_ARRIVAL 时不再重复登记，后续流水合并记录<br>
+      · 优惠码：内置码进入 <code>state.coupons</code>，付款成功时累计 <code>used</code>；校验 <code>validUntil</code><br>
+      · 本地数据与 schema 不兼容时先备份到 <code>run-demo-domain-v1.backup-*</code> 再回落种子，并在控制台警告<br>
+      · 后台新增「导出参赛者名单 CSV」（roster_export 终于有入口；脱敏角色只出遮蔽姓名、不含手机），审计日志默认 100 条 + 加载更多
+    </div>
+  </div>
+  <p class="sub" style="margin-top:14px"><b>仍未做</b>：388 个未翻译节点的英文 / 高棉文（需要文案团队与本地校对）、Telegram initData 服务端校验（需要后端）、真实 KHQR payload、成绩 / 照片批次的真实导入、跨标签页并发写入的合并策略。</p>
 </div></section>
 
 <section id="top10"><div class="wrap">
@@ -140,7 +199,7 @@ html{scroll-behavior:smooth;scroll-padding-top:70px}
     <article><div class="n">07</div><div><h3>语言切换只改首页：<code>lang</code> 属性只挂在 <code>#s-home</code>，其余 46 屏永远 zh-Hant</h3><p>高棉文的字号 / 行高 / 断词规则只在首页生效；标记里 459 个非 i18n 中文节点仅 15% 能被翻译表命中；页面自称繁体，实际约 90% 是简体。</p><span class="loc">index.html:6362 · 2 · 5732</span></div></article>
     <article><div class="n">08</div><div><h3>三套设计系统叠加：后加的 <code>:root</code> 覆盖 v6 Token 层 21 个变量，主按钮最终是黑色</h3><p><code>--brand</code> 从 5.94:1 的 #0F66AE 变成 4.10:1 的 #0284C7 跌破 AA；<code>.btn</code> 定义三次（蓝 → 绿蓝渐变 → 纯黑）；60 个选择器重复、64 个死类、20 个从未使用的变量。</p><span class="loc">index.html:2663 · 2681 · 304 / 2741 / 2990</span></div></article>
     <article><div class="n">09</div><div><h3>「一键重置」不清理含姓名 / 电话 / 证件号的共享 localStorage</h3><p>用户端 <code>resetDemo</code> 只删 <code>run-demo-v3</code>，不调用 <code>RD.reset()</code>；<code>run-demo-domain-v1</code> 里的 <code>idNo</code>、DOB、紧急联系人明文留在共享设备上。</p><span class="loc">index.html:7212-7218 · run-domain.js:29 · 97-113</span></div></article>
-    <article><div class="n">10</div><div><h3>7 个字体文件只有 2 份内容：Inter 四个字重、Khmer 三个字重分别是同一个文件</h3><p>MD5 完全一致。浏览器为 600/700/800 各下载一次同样字节（多下约 262 KB），preload 的 700 与 800 是同一文件下两次，正文用的 400 反而没预加载，粗体全是伪粗。</p><span class="loc">assets/fonts/* · index.html:19-61</span></div></article>
+    <article><div class="n">10</div><div><h3>7 个字体文件只有 2 份内容：同一份可变字体被按字重复制了 4 份 / 3 份</h3><p>MD5 与 Google Fonts 的 Inter / Noto Sans Khmer 可变字体完全一致（wght 100–900，一个文件就覆盖全部字重）。按 400/600/700/800 分别声明导致同样字节下载四遍（多下约 262 KB），preload 的 700 与 800 是同一文件下两次。</p><span class="loc">assets/fonts/* · index.html:19-61</span></div></article>
   </div>
 </div></section>
 
@@ -254,7 +313,7 @@ const F = [
 {s:"site",g:"无障碍",p:"P1",v:1,t:"go() 不做焦点管理、无 aria-live、无 <main>、无跳转链接；表单 58 个控件 47 个无标签，label[for] 为 0。",l:"index.html:7549-7642 · 3607-3730 · 11535"},
 {s:"site",g:"无障碍",p:"P2",v:1,t:"emoji 当图标：标记 91 个、JS 350 个；mnav 五个 tab 用 <i>🏁</i> 且无 aria-hidden，读屏会念「chequered flag 賽事」。首页可见 emoji 11 个。",l:"index.html:5073-5077"},
 {s:"site",g:"无障碍",p:"P2",v:0,t:"对比度：--brand #0284C7 白底 4.10:1 用于正文链接；#94A3B8 作文字 2.9:1；<12px 字号声明 51 处；.lang6 按钮约 22px 高、.btn.sm 32px、.tab 29px，均低于 44px。",l:"index.html:2681 · 245 · 332 · 918"},
-{s:"site",g:"性能",p:"P1",v:1,t:"字体文件冒充分包：Inter 400/600/700/800 四个文件 MD5 相同，Noto Khmer 400/600/700 三个 MD5 相同；preload 700 与 800 是同一文件下两次，正文 400 未预加载；粗体全是伪粗。",l:"assets/fonts/* · index.html:19-61"},
+{s:"site",g:"性能",p:"P1",v:1,t:"同一份可变字体被复制成多份：Inter 400/600/700/800 四个文件 MD5 相同，Noto Khmer 三个 MD5 相同（与 Google Fonts 的可变字体逐字节一致）；按字重分别声明导致同样字节下载四遍，preload 的 700 与 800 是同一文件下两次。",l:"assets/fonts/* · index.html:19-61"},
 {s:"site",g:"性能",p:"P2",v:1,t:"手机首屏同时下载 hero-mobile.webp（100 KB）与 hero-desktop.webp（91 KB，被 .werun-hero-sky::after 当装饰背景引用）；8 个 img 全部无 width/height。",l:"index.html:2255 · 3231-3234"},
 {s:"site",g:"性能",p:"P2",v:1,t:"单文件 753 KB（JS 527 KB）+ run-domain 174 KB 同步阻塞解析，47 个屏幕常驻 DOM；BUILD.commit 占位符未替换。冷加载原始约 1.23 MB。",l:"index.html:10 · 5172-5173 · 5215"},
 {s:"site",g:"性能",p:"P2",v:0,t:"TIMERS.t 只增不减，只有 resetDemo 清理；RD.watch 回调对任何域变更都 toast + 全量重渲染当前屏。",l:"index.html:5223 · 5232 · 13882"},
