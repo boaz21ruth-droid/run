@@ -338,6 +338,27 @@ func (q *Queries) ConfirmOrderRegistrations(ctx context.Context, arg ConfirmOrde
 	return result.RowsAffected(), nil
 }
 
+const countOpenOrdersForBuyer = `-- name: CountOpenOrdersForBuyer :one
+SELECT count(*)
+FROM reg_orders
+WHERE buyer_user_id = $1::bigint
+  AND status IN ('PENDING_PAYMENT', 'PROOF_SUBMITTED', 'PROOF_REJECTED')
+  AND (deadline_at IS NULL OR deadline_at > $2::timestamptz)
+`
+
+type CountOpenOrdersForBuyerParams struct {
+	BuyerUserID int64
+	Now         time.Time
+}
+
+// 跨全部赛事统计跑者仍占名额、尚未确认付款的订单；已过截止时间但超时任务还没扫到的不计。
+func (q *Queries) CountOpenOrdersForBuyer(ctx context.Context, arg CountOpenOrdersForBuyerParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countOpenOrdersForBuyer, arg.BuyerUserID, arg.Now)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const freeSignupGetCategory = `-- name: FreeSignupGetCategory :one
 SELECT id, min_age
 FROM event_categories
@@ -1105,6 +1126,16 @@ func (q *Queries) ListRegisteredIDNoHashes(ctx context.Context, arg ListRegister
 		return nil, err
 	}
 	return items, nil
+}
+
+const lockBuyerOpenOrders = `-- name: LockBuyerOpenOrders :exec
+SELECT pg_advisory_xact_lock(hashtextextended(format('%s', $1::bigint), 7303))
+`
+
+// 串行化同一跑者的并发下单，使未付款订单上限的计数与插入不被并发绕过。键为 hashtextextended('<userId>', 7303)。
+func (q *Queries) LockBuyerOpenOrders(ctx context.Context, buyerUserID int64) error {
+	_, err := q.db.Exec(ctx, lockBuyerOpenOrders, buyerUserID)
+	return err
 }
 
 const lockEventForOrder = `-- name: LockEventForOrder :one

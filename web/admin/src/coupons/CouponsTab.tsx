@@ -18,12 +18,13 @@ import {
   Typography,
   type TableProps,
 } from "antd";
-import dayjs from "dayjs";
 import { useState, type HTMLAttributes } from "react";
 import { useTranslation } from "react-i18next";
 import { PERM_COUPON_MANAGE, can } from "../auth/can";
 import { useMe } from "../auth/useMe";
 import { toNamePath } from "../events/eventForm";
+import { formatInTimezone } from "../time/eventTime";
+import { TimezoneHint } from "../time/TimezoneHint";
 import {
   emptyCoupon,
   formatDiscount,
@@ -37,10 +38,6 @@ import { useCoupons, useSaveCoupon } from "./queries";
 
 type AdminEvent = Schemas["AdminEvent"];
 type Coupon = Schemas["Coupon"];
-
-function formatTime(value: string | null): string {
-  return value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "—";
-}
 
 export function CouponsTab({ event }: { event: AdminEvent }) {
   const { t } = useTranslation("admin");
@@ -65,7 +62,7 @@ export function CouponsTab({ event }: { event: AdminEvent }) {
     {
       title: t("coupons.col.validity"),
       key: "validity",
-      render: (_, coupon) => `${formatTime(coupon.validFrom)} ~ ${formatTime(coupon.validUntil)}`,
+      render: (_, coupon) => `${formatInTimezone(coupon.validFrom, event.timezone)} ~ ${formatInTimezone(coupon.validUntil, event.timezone)}`,
     },
     {
       title: t("coupons.col.status"),
@@ -130,8 +127,8 @@ function CouponModal({ event, coupon, onClose }: CouponModalProps) {
 
   const onFinish = (values: CouponFormValues) => {
     const input = coupon
-      ? { id: coupon.id, body: toUpdateCouponRequest(values, coupon.eventId) }
-      : { id: undefined, body: toCreateCouponRequest(values, event.id) };
+      ? { id: coupon.id, body: toUpdateCouponRequest(values, coupon.eventId, event.timezone) }
+      : { id: undefined, body: toCreateCouponRequest(values, event.id, event.timezone) };
     save.mutate(input, {
       onSuccess: () => {
         void message.success(t(coupon ? "coupons.updated" : "coupons.created"));
@@ -158,7 +155,7 @@ function CouponModal({ event, coupon, onClose }: CouponModalProps) {
         layout="vertical"
         onFinish={onFinish}
         disabled={save.isPending}
-        initialValues={coupon ? fromCoupon(coupon) : emptyCoupon()}
+        initialValues={coupon ? fromCoupon(coupon, event.timezone) : emptyCoupon()}
       >
         <Row gutter={16}>
           <Col xs={24} md={12}>
@@ -229,12 +226,12 @@ function CouponModal({ event, coupon, onClose }: CouponModalProps) {
         </Row>
         <Row gutter={16}>
           <Col xs={24} md={12}>
-            <Form.Item name="validFrom" label={t("coupons.form.validFrom")}>
+            <Form.Item name="validFrom" label={t("coupons.form.validFrom")} extra={<TimezoneHint tz={event.timezone} />}>
               <DatePicker showTime={{ format: "HH:mm" }} format="YYYY-MM-DD HH:mm" style={{ width: "100%" }} />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item name="validUntil" label={t("coupons.form.validUntil")}>
+            <Form.Item name="validUntil" label={t("coupons.form.validUntil")} extra={<TimezoneHint tz={event.timezone} />}>
               <DatePicker showTime={{ format: "HH:mm" }} format="YYYY-MM-DD HH:mm" style={{ width: "100%" }} />
             </Form.Item>
           </Col>

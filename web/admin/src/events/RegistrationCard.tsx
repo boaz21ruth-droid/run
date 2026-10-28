@@ -1,14 +1,9 @@
 import { ApiError, type Schemas } from "@werun/api-client";
 import { App as AntdApp, Alert, Button, Card, Col, DatePicker, Form, Row, Switch } from "antd";
-import dayjs, { type Dayjs } from "dayjs";
 import { useTranslation } from "react-i18next";
+import { TimezoneHint } from "../time/TimezoneHint";
 import { useUpdateEventRegistration } from "./queries";
-
-interface RegistrationFormValues {
-  open: boolean;
-  opensAt?: Dayjs | null;
-  closesAt?: Dayjs | null;
-}
+import { fromEventRegistration, toRegistrationRequest, type RegistrationFormValues } from "./registrationForm";
 
 interface RegistrationCardProps {
   event: Schemas["AdminEvent"];
@@ -26,26 +21,19 @@ export function RegistrationCard({ event, canWrite }: RegistrationCardProps) {
   const otherError = update.error && !notReady && error?.code !== "VALIDATION_FAILED" ? update.error : null;
 
   const onFinish = (values: RegistrationFormValues) => {
-    update.mutate(
-      {
-        open: values.open,
-        opensAt: values.opensAt ? values.opensAt.toISOString() : null,
-        closesAt: values.closesAt ? values.closesAt.toISOString() : null,
+    update.mutate(toRegistrationRequest(values, event.timezone), {
+      onSuccess: () => void message.success(t("eventDetail.registration.saved")),
+      onError: (err) => {
+        if (err instanceof ApiError && err.code === "VALIDATION_FAILED") {
+          form.setFields(
+            Object.entries(err.fields).map(([name, text]) => ({
+              name: name as keyof RegistrationFormValues,
+              errors: [text],
+            })),
+          );
+        }
       },
-      {
-        onSuccess: () => void message.success(t("eventDetail.registration.saved")),
-        onError: (err) => {
-          if (err instanceof ApiError && err.code === "VALIDATION_FAILED") {
-            form.setFields(
-              Object.entries(err.fields).map(([name, text]) => ({
-                name: name as keyof RegistrationFormValues,
-                errors: [text],
-              })),
-            );
-          }
-        },
-      },
-    );
+    });
   };
 
   return (
@@ -73,23 +61,19 @@ export function RegistrationCard({ event, canWrite }: RegistrationCardProps) {
         layout="vertical"
         onFinish={onFinish}
         disabled={!canWrite || update.isPending}
-        initialValues={{
-          open: event.registrationOpen,
-          opensAt: event.registrationOpensAt ? dayjs(event.registrationOpensAt) : null,
-          closesAt: event.registrationClosesAt ? dayjs(event.registrationClosesAt) : null,
-        }}
+        initialValues={fromEventRegistration(event, event.timezone)}
       >
         <Form.Item name="open" label={t("eventDetail.registration.open")} valuePropName="checked">
           <Switch data-testid="event-registration-switch" />
         </Form.Item>
         <Row gutter={16}>
           <Col xs={24} md={12}>
-            <Form.Item name="opensAt" label={t("eventDetail.registration.opensAt")} extra={t("eventDetail.registration.timeHelp")}>
+            <Form.Item name="opensAt" label={t("eventDetail.registration.opensAt")} extra={<TimezoneHint tz={event.timezone} prefix={t("eventDetail.registration.timeHelp")} />}>
               <DatePicker showTime={{ format: "HH:mm" }} format="YYYY-MM-DD HH:mm" style={{ width: "100%" }} />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item name="closesAt" label={t("eventDetail.registration.closesAt")} extra={t("eventDetail.registration.timeHelp")}>
+            <Form.Item name="closesAt" label={t("eventDetail.registration.closesAt")} extra={<TimezoneHint tz={event.timezone} prefix={t("eventDetail.registration.timeHelp")} />}>
               <DatePicker showTime={{ format: "HH:mm" }} format="YYYY-MM-DD HH:mm" style={{ width: "100%" }} />
             </Form.Item>
           </Col>

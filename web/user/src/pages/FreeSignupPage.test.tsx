@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { jsonResponse } from "../test/fixtures";
@@ -148,5 +148,73 @@ describe("FreeSignupPage", () => {
     renderApp(PATH, handler({ ...freeActivity, registrationOpen: false }, () => jsonResponse(201, created)));
     expect(await screen.findByText("Registration for this activity is not open")).toBeInTheDocument();
     expect(screen.queryByTestId("free-submit")).not.toBeInTheDocument();
+  });
+
+  describe("切换语言", () => {
+    function localizedHandler(onPost: PostHandler, consentFor: (lang: string) => unknown = () => registrationConsent) {
+      const base = handler(freeActivity, onPost);
+      return async (request: Request) => {
+        const url = new URL(request.url);
+        if (url.pathname === `/api/events/${freeActivity.slug}`) {
+          const zh = request.headers.get("Accept-Language") === "zh";
+          return jsonResponse(200, zh ? { ...freeActivity, name: "河畔健步走" } : freeActivity);
+        }
+        if (url.pathname === "/api/app/consents") {
+          return jsonResponse(200, consentFor(url.searchParams.get("lang") ?? ""));
+        }
+        return base(request);
+      };
+    }
+
+    it("切换语言后表单不卸载，已填内容与同意勾选保留，可直接提交", async () => {
+      const user = userEvent.setup();
+      let sent: unknown = null;
+      renderApp(
+        PATH,
+        localizedHandler((body) => {
+          sent = body;
+          return jsonResponse(201, created);
+        }),
+      );
+
+      await fillRequired(user, "501");
+      await checkAllConsents(user);
+      await user.click(screen.getByTestId("lang-switch-zh"));
+
+      expect(await screen.findByText("河畔健步走")).toBeInTheDocument();
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("免费报名");
+      expect(screen.getByTestId("free-category")).toHaveValue("501");
+      expect(screen.getByTestId("free-fullName")).toHaveValue("Dara Sok");
+      expect(screen.getByTestId("free-emergencyPhone")).toHaveValue("+85598765432");
+      for (const item of registrationConsent.items) {
+        expect(await screen.findByTestId(`consent-item-${item.key}`)).toBeChecked();
+      }
+
+      await user.click(screen.getByTestId("free-submit"));
+      await screen.findByTestId("free-signup-done");
+      // 同意书没有中文版时服务端回退英文：原样提交返回的语言与版本
+      expect(sent).toMatchObject({ fullName: "Dara Sok", consents: { version: "REG-TEST-v1", lang: "en" } });
+    });
+
+    it("新语言的同意书版本不同时需要重新勾选，填写内容仍保留", async () => {
+      const user = userEvent.setup();
+      renderApp(
+        PATH,
+        localizedHandler(
+          () => jsonResponse(201, created),
+          (lang) => (lang === "zh" ? { ...registrationConsent, version: "REG-TEST-v2", lang: "zh" } : registrationConsent),
+        ),
+      );
+
+      await fillRequired(user, "501");
+      await checkAllConsents(user);
+      expect(screen.getByTestId("free-submit")).toBeEnabled();
+
+      await user.click(screen.getByTestId("lang-switch-zh"));
+
+      await waitFor(() => expect(screen.getByTestId("consent-item-rules")).not.toBeChecked());
+      expect(screen.getByTestId("free-submit")).toBeDisabled();
+      expect(screen.getByTestId("free-fullName")).toHaveValue("Dara Sok");
+    });
   });
 });

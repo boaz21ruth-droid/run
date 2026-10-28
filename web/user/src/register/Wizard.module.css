@@ -129,8 +129,13 @@
 
 .primary {
   border: 1px solid var(--brand);
-  background: var(--brand-fill);
+  background: var(--brand);
   color: #fff;
+}
+
+.primary:hover:not(:disabled) {
+  border-color: var(--brand-deep);
+  background: var(--brand-deep);
 }
 
 .primary:disabled {
@@ -151,7 +156,7 @@
 
 .couponOk {
   font-size: 13px;
-  color: var(--leaf);
+  color: var(--leaf-ink);
 }
 
 .amounts {
@@ -189,4 +194,26 @@
   background: var(--sunk);
   white-space: pre-wrap;
   font-size: 14px;
+}
+
+/* 离开报名页确认：固定在底部（标签栏之上），从哪里触发离开都看得见 */
+.leaveConfirm {
+  position: fixed;
+  left: var(--gutter, 16px);
+  right: var(--gutter, 16px);
+  bottom: calc(var(--tabbar-h, 0px) + env(safe-area-inset-bottom) + 16px);
+  z-index: 20;
+  display: grid;
+  gap: 8px;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--card);
+  box-shadow: var(--shadow-lift);
+}
+
+.leaveTitle {
+  font-weight: 700;
 }

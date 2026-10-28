@@ -27,11 +27,12 @@ type Service struct {
 	prices   *pricing.Service
 	notifier *notify.Service
 	now      func() time.Time
+	quotes   *quoteLimiter
 }
 
 // NewService 创建报名订单服务。
 func NewService(pool *pgxpool.Pool, runners *runner.Service, prices *pricing.Service, notifier *notify.Service, now func() time.Time) *Service {
-	return &Service{pool: pool, runners: runners, prices: prices, notifier: notifier, now: now}
+	return &Service{pool: pool, runners: runners, prices: prices, notifier: notifier, now: now, quotes: newQuoteLimiter(now)}
 }
 
 // fieldErrors 收集字段错误，一次返回。

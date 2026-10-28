@@ -36,6 +36,18 @@ WHERE slug = @slug;
 -- 键为 hashtextextended('<eventId>:<hex(hash)>', 7302)。
 SELECT pg_advisory_xact_lock(hashtextextended(format('%s:%s', @event_id::bigint, encode(@id_no_hash::bytea, 'hex')), 7302));
 
+-- name: LockBuyerOpenOrders :exec
+-- 串行化同一跑者的并发下单，使未付款订单上限的计数与插入不被并发绕过。键为 hashtextextended('<userId>', 7303)。
+SELECT pg_advisory_xact_lock(hashtextextended(format('%s', @buyer_user_id::bigint), 7303));
+
+-- name: CountOpenOrdersForBuyer :one
+-- 跨全部赛事统计跑者仍占名额、尚未确认付款的订单；已过截止时间但超时任务还没扫到的不计。
+SELECT count(*)
+FROM reg_orders
+WHERE buyer_user_id = @buyer_user_id::bigint
+  AND status IN ('PENDING_PAYMENT', 'PROOF_SUBMITTED', 'PROOF_REJECTED')
+  AND (deadline_at IS NULL OR deadline_at > @now::timestamptz);
+
 -- name: ListRegisteredIDNoHashes :many
 SELECT id_no_hash
 FROM registrations

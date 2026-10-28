@@ -1,8 +1,9 @@
-import { Navigate, type RouteObject } from "react-router";
+import type { RouteObject } from "react-router";
 import { PERM_EVENT_CONFIG, PERM_ORDER_VIEW, PERM_PAYMENT_ACCOUNT_MANAGE, PERM_PROOF_REVIEW } from "./auth/can";
 import { RequireAuth } from "./auth/RequireAuth";
 import { RequirePermission } from "./auth/RequirePermission";
 import { AppLayout } from "./layout/AppLayout";
+import { RoleLanding } from "./layout/RoleLanding";
 import { EventCreatePage } from "./pages/EventCreatePage";
 import { EventDetailPage } from "./pages/EventDetailPage";
 import { EventsPage } from "./pages/EventsPage";
@@ -21,7 +22,7 @@ export const routes: RouteObject[] = [
       {
         element: <AppLayout />,
         children: [
-          { index: true, element: <Navigate to="/events" replace /> },
+          { index: true, element: <RoleLanding /> },
           {
             path: "events",
             element: (
@@ -86,7 +87,7 @@ export const routes: RouteObject[] = [
               </RequirePermission>
             ),
           },
-          { path: "*", element: <Navigate to="/events" replace /> },
+          { path: "*", element: <RoleLanding /> },
         ],
       },
     ],

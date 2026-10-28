@@ -10,12 +10,18 @@ async function fetchRegistrationConsent(api: ApiClient, lang: Lang) {
 
 export type RegistrationConsent = Awaited<ReturnType<typeof fetchRegistrationConsent>>;
 
-export function useRegistrationConsent() {
+export interface RegistrationConsentOptions {
+  /** 切换语言时先沿用上一种语言的同意书，避免 QueryState 显示加载而卸载表单（已填内容会丢） */
+  keepDataOnLanguageChange?: boolean;
+}
+
+export function useRegistrationConsent(options: RegistrationConsentOptions = {}) {
   const api = useApi();
   const lang = useLang();
   return useQuery({
     queryKey: ["consent", "REGISTRATION", lang],
     queryFn: () => fetchRegistrationConsent(api, lang),
+    placeholderData: options.keepDataOnLanguageChange ? (previous) => previous : undefined,
   });
 }
 

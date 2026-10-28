@@ -17,7 +17,31 @@
 	file_server
 }
 
+# 两个站点共用的安全响应头（不含帧保护与 CSP，二者各站点不同）
+(security_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+	# 删除字段会让整个 header 块变成延迟执行，所以单独写，避免上面的头在错误响应里丢失
+	header -Server
+}
+
 {$WERUN_USER_HOST} {
+	import security_headers
+	# 用户站是 Telegram Mini App，必须允许被 Telegram Web 内嵌：
+	# 只用 CSP frame-ancestors 控制，不设 X-Frame-Options（它不支持白名单）。
+	# Telegram SDK 从 https://telegram.org 加载（web/user/src/telegram/telegram.ts）；
+	# 图片均为同源 /api/files/*、/hero.webp 或 data:（票据二维码）。
+	header Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' https://telegram.org; connect-src 'self'; font-src 'self' data:; frame-ancestors 'self' https://web.telegram.org https://*.telegram.org; base-uri 'self'; form-action 'self'"
+
+	# 员工 API 只走管理后台域名，用户域名上直接 404
+	handle /api/admin/* {
+		respond 404
+	}
+
 	handle /api/* {
 		reverse_proxy api:8080
 	}
@@ -34,6 +58,13 @@
 }
 
 {$WERUN_ADMIN_HOST} {
+	import security_headers
+	header {
+		X-Frame-Options "DENY"
+		# antd 运行时注入内联样式，style-src 需要 'unsafe-inline'
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; font-src 'self' data:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+	}
+
 	handle /api/* {
 		reverse_proxy api:8080
 	}

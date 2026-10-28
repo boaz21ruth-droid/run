@@ -3,6 +3,8 @@ package registration
 import (
 	"context"
 	"net/http"
+	"strconv"
+	"time"
 
 	"werun/api/internal/httpapi/apigen"
 	"werun/api/internal/platform/apperr"
@@ -35,6 +37,10 @@ func (h *Handlers) AppQuote(ctx context.Context, req apigen.AppQuoteRequestObjec
 	u, err := currentRunner(ctx)
 	if err != nil {
 		return nil, err
+	}
+	if wait, ok := h.svc.quotes.Allow(u.ID, httpx.MetaOf(ctx).IP); !ok {
+		return nil, apperr.New(http.StatusTooManyRequests, apperr.CodeRateLimited).
+			WithField("retryAfterSeconds", strconv.Itoa(int(wait/time.Second)), nil)
 	}
 	if req.Body == nil {
 		return nil, apperr.New(http.StatusBadRequest, apperr.CodeBadRequest)

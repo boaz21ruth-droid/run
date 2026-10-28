@@ -10,16 +10,19 @@ import {
   type PriceRuleFormValues,
 } from "./priceRuleForm";
 
+/** 赛事时区；DatePicker 的值是该时区的墙上时间（见 time/eventTime.ts） */
+const TZ = "Asia/Phnom_Penh";
+
 describe("toPriceRuleInput", () => {
   it("美元字符串转分、去掉名称首尾空格、空值转 null", () => {
     const values: PriceRuleFormValues = {
       ...emptyPriceRule([11, 12]),
       name: { zh: " 早鸟价 ", en: "Early bird", km: "តម្លៃទិញមុន" },
       priceUsd: "25.5",
-      saleStartsAt: dayjs("2026-09-20T01:00:00Z"),
+      saleStartsAt: dayjs("2026-09-20 08:00", "YYYY-MM-DD HH:mm"),
     };
 
-    expect(toPriceRuleInput(values)).toEqual({
+    expect(toPriceRuleInput(values, TZ)).toEqual({
       name: { zh: "早鸟价", en: "Early bird", km: "តម្លៃទិញមុន" },
       audience: "ALL",
       priceCents: 2550,
@@ -32,20 +35,21 @@ describe("toPriceRuleInput", () => {
   });
 
   it("价格无法解析时抛错（表单校验保证不会走到这里）", () => {
-    expect(() => toPriceRuleInput({ ...emptyPriceRule([11]), priceUsd: "25.505" })).toThrow("invalid price");
+    expect(() => toPriceRuleInput({ ...emptyPriceRule([11]), priceUsd: "25.505" }, TZ)).toThrow("invalid price");
   });
 });
 
 describe("fromPriceRule", () => {
   it("回填编辑表单", () => {
-    const values = fromPriceRule(earlyBirdRule);
+    const values = fromPriceRule(earlyBirdRule, TZ);
 
     expect(values.priceUsd).toBe("25.00");
     expect(values.quota).toBe(100);
-    expect(values.saleStartsAt?.toISOString()).toBe("2026-09-20T01:00:00.000Z");
+    expect(values.saleStartsAt?.format("YYYY-MM-DD HH:mm")).toBe("2026-09-20 08:00");
     expect(values.saleEndsAt).toBeNull();
     expect(values.categoryIds).toEqual([11]);
-    expect(toPriceRuleInput(values).priceCents).toBe(2500);
+    expect(toPriceRuleInput(values, TZ).saleStartsAt).toBe("2026-09-20T01:00:00.000Z");
+    expect(toPriceRuleInput(values, TZ).priceCents).toBe(2500);
   });
 });
 

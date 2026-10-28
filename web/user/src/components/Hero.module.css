@@ -118,7 +118,8 @@
   min-height: 46px;
   padding: 0 22px;
   border-radius: 100px;
-  background: var(--brand-fill);
+  /* 白字按钮用 --brand（AA）；--brand-fill 只给非文字图形 */
+  background: var(--brand);
   color: #fff;
   font-weight: 700;
   box-shadow: 0 8px 20px rgba(8, 119, 255, 0.35);
@@ -126,7 +127,7 @@
 
 .primary:hover {
   color: #fff;
-  background: var(--brand);
+  background: var(--brand-deep);
 }
 
 .ghost {

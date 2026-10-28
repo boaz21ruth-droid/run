@@ -3,7 +3,26 @@
 	auto_https off
 }
 
+# 与生产 Caddyfile 对齐的安全头，但本地开发：
+# - 不发 HSTS（http://*.localhost，发了会让浏览器记住强制 HTTPS）
+# - 不发完整 CSP（Vite dev server 依赖内联脚本与 HMR WebSocket），只保留帧保护
+(security_headers) {
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+	header -Server
+}
+
 http://werun.localhost {
+	import security_headers
+	header Content-Security-Policy "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org"
+
+	# 员工 API 只走管理后台域名
+	handle /api/admin/* {
+		respond 404
+	}
 	handle /api/* {
 		reverse_proxy host.docker.internal:8080
 	}
@@ -13,6 +32,12 @@ http://werun.localhost {
 }
 
 http://admin.werun.localhost {
+	import security_headers
+	header {
+		X-Frame-Options "DENY"
+		Content-Security-Policy "frame-ancestors 'none'"
+	}
+
 	handle /api/* {
 		reverse_proxy host.docker.internal:8080
 	}

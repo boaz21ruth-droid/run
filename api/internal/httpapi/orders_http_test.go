@@ -76,3 +76,21 @@ func TestPhotographerCannotViewOrders(t *testing.T) {
 	rec := env.adminRequest(t, http.MethodGet, "/api/admin/orders", nil, nil)
 	require.Equal(t, http.StatusUnauthorized, rec.Code, rec.Body.String())
 }
+
+// 赛事范围校验（auth.go 的 TODO(spec §5.1 step 7)）补齐前，RACE_SUPERVISOR / RACE_STAFF 不能看任何赛事的订单，
+// 否则会读到未被指派赛事的跑者个人信息。
+func TestRaceRolesCannotViewOrders(t *testing.T) {
+	env := newPaymentHTTPEnv(t)
+	fx := paytest.SeedEvent(t, env.Pool)
+	u := paytest.SeedUser(t, env.Pool, 7303, "Sokha Chan")
+	order := paytest.SeedOrder(t, env.Env, fx, u, paytest.OrderSpec{})
+
+	for role, username := range map[iam.Role]string{iam.RoleRaceSupervisor: "race.supervisor", iam.RoleRaceStaff: "race.staff"} {
+		cookie := env.staffCookie(t, role, username)
+		for _, path := range []string{"/api/admin/orders", fmt.Sprintf("/api/admin/orders/%d", order.ID)} {
+			rec := env.adminRequest(t, http.MethodGet, path, nil, cookie)
+			require.Equal(t, http.StatusForbidden, rec.Code, "%s %s: %s", role, path, rec.Body.String())
+			require.Equal(t, apperr.CodeForbidden, paymentDecode[httpx.ErrorBody](t, rec).Error.Code)
+		}
+	}
+}

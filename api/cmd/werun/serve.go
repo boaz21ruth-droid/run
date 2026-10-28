@@ -65,6 +65,10 @@ func runServe(ctx context.Context, args []string, stderr io.Writer) int {
 		app.Log.Info("river worker started")
 	}
 
+	if usesFixedOTPInProd(app.Cfg) {
+		go repeatFixedOTPAlarm(ctx, app.Log, fixedOTPAlarmInterval)
+	}
+
 	if app.Cfg.IsProd() {
 		gin.SetMode(gin.ReleaseMode)
 	}

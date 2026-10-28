@@ -33,7 +33,7 @@ export function AntdProvider({ children }: { children: ReactNode }) {
         },
       }}
     >
-      <AntdApp>{children}</AntdApp>
+      <AntdApp message={{ maxCount: 3 }}>{children}</AntdApp>
     </ConfigProvider>
   );
 }

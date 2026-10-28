@@ -1,10 +1,10 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError, type Schemas } from "@werun/api-client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router";
+import { useBlocker, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import { QueryState } from "../components/QueryState";
-import type { ProfileFormValues } from "../profiles/validate";
+import { emptyProfileForm, type ProfileFormValues } from "../profiles/validate";
 import { useProfiles, usePublicEvent } from "../queries";
 import { QUOTE_KEY } from "../register/api";
 import { newParticipant, registrationAvailable, type ParticipantDraft, type PublicEvent, type RunnerProfile } from "../register/model";
@@ -20,6 +20,36 @@ import styles from "./Page.module.css";
 const STEP_KEYS = ["participants", "details", "confirm"] as const;
 type Step = 0 | 1 | 2;
 const PARTICIPANT_FIELD = /^participants\[(\d+)\]\.(\w+)$/;
+
+/** 步骤放在 ?step=1..3（第 1 步不带参数），浏览器后退在步骤间移动 */
+function parseStep(params: URLSearchParams): Step {
+  const n = Number(params.get("step"));
+  return n === 2 ? 1 : n === 3 ? 2 : 0;
+}
+
+/** 本向导推入的历史记录带的 state：wizard 区分是不是这次挂载的向导，from 是推入前所在的步骤 */
+interface WizardHistoryState {
+  wizard: string;
+  from: Step;
+}
+
+function wizardState(value: unknown): WizardHistoryState | null {
+  return value !== null && typeof value === "object" && "wizard" in value && "from" in value ? (value as WizardHistoryState) : null;
+}
+
+/** 有没有填过参赛人数据：用于离开报名页前确认 */
+export function hasDraftData(participants: ParticipantDraft[]): boolean {
+  if (participants.length > 1) {
+    return true;
+  }
+  return participants.some(
+    (p) =>
+      p.categoryId !== null ||
+      p.profileId !== null ||
+      p.saveAsProfile ||
+      (Object.keys(emptyProfileForm) as (keyof ProfileFormValues)[]).some((field) => p.form[field] !== emptyProfileForm[field]),
+  );
+}
 
 export function RegisterPage() {
   const { slug = "" } = useParams();
@@ -58,7 +88,13 @@ function RegisterWizard({ event, profiles }: { event: PublicEvent; profiles: Run
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [submissionKey] = useState(() => new SubmissionKey());
-  const [step, setStep] = useState<Step>(0);
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [wizardId] = useState(() => crypto.randomUUID());
+  const historyState = wizardState(location.state);
+  // 刷新或从外部带 ?step= 打开时草稿不在了：只认本次向导自己推入的步骤，否则从第 1 步开始
+  const ownsEntry = historyState?.wizard === wizardId;
+  const step: Step = ownsEntry ? parseStep(searchParams) : 0;
   const [participants, setParticipants] = useState<ParticipantDraft[]>(() => [newParticipant()]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -71,11 +107,49 @@ function RegisterWizard({ event, profiles }: { event: PublicEvent; profiles: Run
     setParticipants((prev) => prev.map((p, i) => (i === index ? { ...p, form: { ...p.form, ...patch } } : p)));
   }
 
+  // 地址带了不属于本向导的 step 参数时去掉它，地址与界面一致
+  useEffect(() => {
+    if (!ownsEntry && searchParams.has("step")) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("step");
+      setSearchParams(next, { replace: true });
+    }
+  }, [ownsEntry, searchParams, setSearchParams]);
+
+  /**
+   * 切换步骤：前进推入一条历史；后退到上一条历史正好是的那一步时直接 history.back，
+   * 否则（如售罄从确认页跳回第 1 步）替换当前记录，避免历史里出现重复步骤。
+   */
+  function setStep(next: Step) {
+    if (next === step) {
+      return;
+    }
+    if (next < step && ownsEntry && historyState?.from === next) {
+      navigate(-1);
+      return;
+    }
+    const params = new URLSearchParams(searchParams);
+    if (next === 0) {
+      params.delete("step");
+    } else {
+      params.set("step", String(next + 1));
+    }
+    const state: WizardHistoryState = { wizard: wizardId, from: next > step ? step : (historyState?.from ?? 0) };
+    setSearchParams(params, { replace: next < step, state });
+  }
+
   function goTo(next: Step) {
     setFieldErrors({});
     setFormError(null);
     setStep(next);
   }
+
+  // 填过参赛人资料后离开报名页（换到别的路径）先确认；同页换步骤不拦截，下单成功跳转也不拦截
+  const leaving = useRef(false);
+  const dirty = hasDraftData(participants);
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) => dirty && !leaving.current && currentLocation.pathname !== nextLocation.pathname,
+  );
 
   function finishStep(issues: WizardIssues, next: Step) {
     const messages: Record<string, string> = {};
@@ -135,7 +209,7 @@ function RegisterWizard({ event, profiles }: { event: PublicEvent; profiles: Run
   }
 
   function handleDone(order: Schemas["OrderDetail"]) {
-    // 付款页在 Task 18 加入
+    leaving.current = true;
     navigate(order.status === "PENDING_PAYMENT" ? `/orders/${order.orderNo}/pay` : `/orders/${order.orderNo}`);
   }
 
@@ -149,6 +223,22 @@ function RegisterWizard({ event, profiles }: { event: PublicEvent; profiles: Run
           </li>
         ))}
       </ol>
+      {blocker.state === "blocked" ? (
+        <div className={wizard.leaveConfirm} role="alertdialog" aria-labelledby="register-leave-title" aria-describedby="register-leave-body" data-testid="leave-confirm">
+          <p id="register-leave-title" className={wizard.leaveTitle}>
+            {t("registerLeave.title")}
+          </p>
+          <p id="register-leave-body">{t("registerLeave.body")}</p>
+          <div className={wizard.actions}>
+            <button type="button" className={wizard.secondary} data-testid="leave-stay" autoFocus onClick={() => blocker.reset()}>
+              {t("registerLeave.stay")}
+            </button>
+            <button type="button" className={wizard.primary} data-testid="leave-confirm-leave" onClick={() => blocker.proceed()}>
+              {t("registerLeave.leave")}
+            </button>
+          </div>
+        </div>
+      ) : null}
       {formError && step !== 2 ? (
         <p className={wizard.formError} role="alert" data-testid="form-error">
           {formError}

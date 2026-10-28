@@ -367,5 +367,31 @@
     "tagline": "柬埔寨的跑步赛事，报名到成绩一站完成。",
     "bot": "Telegram 机器人",
     "language": "语言"
+  },
+  "nav": {
+    "label": "主导航",
+    "tabs": {
+      "home": "首页",
+      "events": "赛事",
+      "orders": "订单",
+      "profiles": "参赛人"
+    }
+  },
+  "titles": {
+    "eventDetail": "赛事详情",
+    "register": "报名",
+    "orderDetail": "订单详情"
+  },
+  "routeError": {
+    "title": "页面出错了",
+    "body": "页面遇到了意外错误。可以重新加载再试，或回到首页。",
+    "reload": "重新加载",
+    "home": "回到首页"
+  },
+  "registerLeave": {
+    "title": "离开报名页？",
+    "body": "本页已填写的参赛人资料将会丢失。",
+    "stay": "继续填写",
+    "leave": "离开"
   }
 }

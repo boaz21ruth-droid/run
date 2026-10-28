@@ -10,7 +10,8 @@ export function LoginPage() {
   const login = useLogin();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from ?? "/events";
+  // 没有来源页时回到首页，由 RoleLanding 按角色跳到第一个可访问的菜单页
+  const from = (location.state as { from?: string } | null)?.from ?? "/";
   const required = [{ required: true, message: t("form.required") }];
 
   const onFinish = (values: Schemas["LoginRequest"]) => {

@@ -149,7 +149,7 @@ interface PaymentAccountModalProps {
 function PaymentAccountModal({ account, events, onClose }: PaymentAccountModalProps) {
   const { t } = useTranslation("admin");
   const lang = useLang();
-  const { message } = AntdApp.useApp();
+  const { message, modal } = AntdApp.useApp();
   const [form] = Form.useForm<PaymentAccountFormValues>();
   const save = useSavePaymentAccount();
   const [qrFile, setQrFile] = useState<File | null>(null);
@@ -161,11 +161,7 @@ function PaymentAccountModal({ account, events, onClose }: PaymentAccountModalPr
   const bannerError = save.error && !hasFieldErrors ? save.error : null;
   const qrServerError = apiError?.fields.qr;
 
-  const onFinish = (values: PaymentAccountFormValues) => {
-    if (!account && !qrFile) {
-      setQrMissing(true);
-      return;
-    }
+  const submit = (values: PaymentAccountFormValues) => {
     save.mutate(
       { id: account?.id, form: toAccountFormData(values, qrFile) },
       {
@@ -188,6 +184,38 @@ function PaymentAccountModal({ account, events, onClose }: PaymentAccountModalPr
         },
       },
     );
+  };
+
+  const onFinish = (values: PaymentAccountFormValues) => {
+    if (!account && !qrFile) {
+      setQrMissing(true);
+      return;
+    }
+    // 更换二维码立即影响所有未付款订单的付款页；停用账户影响新订单分配。两者都先确认后果
+    const replacingQr = account !== undefined && qrFile !== null;
+    const deactivating = account !== undefined && account.active && !values.active;
+    if (!replacingQr && !deactivating) {
+      submit(values);
+      return;
+    }
+    const bodies = [
+      ...(replacingQr ? [t("paymentAccounts.confirm.qrBody")] : []),
+      ...(deactivating ? [t("paymentAccounts.confirm.disableBody")] : []),
+    ];
+    void modal.confirm({
+      title: t(replacingQr ? "paymentAccounts.confirm.qrTitle" : "paymentAccounts.confirm.disableTitle"),
+      content: (
+        <div data-testid="payment-account-confirm">
+          {bodies.map((body) => (
+            <p key={body}>{body}</p>
+          ))}
+        </div>
+      ),
+      okText: t("paymentAccounts.confirm.ok"),
+      cancelText: t("paymentAccounts.confirm.cancel"),
+      okButtonProps: { danger: deactivating },
+      onOk: () => submit(values),
+    });
   };
 
   const fileList: UploadFile[] = qrFile ? [{ uid: "qr", name: qrFile.name, status: "done" }] : [];

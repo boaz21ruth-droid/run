@@ -65,7 +65,7 @@
 }
 
 .status {
-  color: var(--leaf);
+  color: var(--leaf-ink);
 }
 
 .error {

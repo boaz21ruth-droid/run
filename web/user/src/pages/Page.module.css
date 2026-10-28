@@ -104,13 +104,14 @@
   margin-bottom: 20px;
   padding: 0 24px;
   border-radius: 100px;
-  background: var(--brand-fill);
+  background: var(--brand);
   color: #fff;
   font-weight: 700;
 }
 
 .cta:hover {
   color: #fff;
+  background: var(--brand-deep);
 }
 
 .badge {
@@ -165,4 +166,39 @@
   font-weight: 700;
   font-size: 18px;
   color: var(--ink-mute);
+}
+
+/* 根路由出错页（RouteErrorPage） */
+.errorPage {
+  max-width: var(--shell-max);
+  margin: 0 auto;
+  padding: 48px var(--gutter);
+}
+
+.errorActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin-top: 20px;
+}
+
+.errorActions .more {
+  margin-top: 0;
+}
+
+.reload {
+  min-height: 44px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 100px;
+  background: var(--brand);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reload:hover {
+  background: var(--brand-deep);
 }

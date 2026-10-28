@@ -66,3 +66,27 @@ describe("订单", () => {
     expect(screen.queryByRole("menuitem", { name: /Orders/ })).not.toBeInTheDocument();
   });
 });
+
+describe("订单：时区与键盘", () => {
+  it("列表与详情按赛事时区显示时间，详情标出赛事时区", async () => {
+    const { router } = renderAdminApp("/orders", {
+      "GET /api/admin/me": () => jsonResponse(200, reviewerMe),
+      "GET /api/admin/events": () => jsonResponse(200, { items: [draftEvent] }),
+      "GET /api/admin/orders": () => jsonResponse(200, { items: [orderSummary], total: 1 }),
+      "GET /api/admin/orders/501": () => jsonResponse(200, orderDetail),
+    });
+
+    // createdAt 2026-09-14T02:40:00Z = 金边 09:40
+    const row = await screen.findByTestId(`order-row-${ORDER_NO}`);
+    expect(row).toHaveTextContent("2026-09-14 09:40");
+
+    // 行可聚焦，Enter 打开详情
+    expect(row).toHaveAttribute("tabindex", "0");
+    row.focus();
+    await setupFormUser().keyboard("{Enter}");
+    await waitFor(() => expect(router.state.location.pathname).toBe("/orders/501"));
+
+    expect(await screen.findByText("Asia/Phnom_Penh (UTC+7)")).toBeInTheDocument();
+    expect(screen.getAllByText("2026-09-14 09:40").length).toBeGreaterThan(0);
+  });
+});

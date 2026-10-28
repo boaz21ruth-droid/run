@@ -1,5 +1,6 @@
 import type { Schemas } from "@werun/api-client";
 import type { Dayjs } from "dayjs";
+import { DEFAULT_TIMEZONE, fromEventWallClockOrNull } from "../time/eventTime";
 
 export interface LocalizedValues {
   zh: string;
@@ -34,7 +35,11 @@ function trimText(text: LocalizedValues): LocalizedValues {
   return { zh: text.zh.trim(), en: text.en.trim(), km: text.km.trim() };
 }
 
-export function toCreateEventRequest(values: EventFormValues): Schemas["CreateEventRequest"] {
+/**
+ * 组别开跑 / 关门时间按赛事时区解释。新建接口还不接受 timezone，服务端按默认时区（Asia/Phnom_Penh）建赛事，
+ * 所以这里默认用 DEFAULT_TIMEZONE。
+ */
+export function toCreateEventRequest(values: EventFormValues, tz: string = DEFAULT_TIMEZONE): Schemas["CreateEventRequest"] {
   return {
     slug: values.slug.trim(),
     eventType: values.eventType,
@@ -47,8 +52,8 @@ export function toCreateEventRequest(values: EventFormValues): Schemas["CreateEv
       name: trimText(category.name),
       distanceM: category.distanceM,
       capacity: category.capacity,
-      startAt: category.startAt ? category.startAt.toISOString() : null,
-      cutoffAt: category.cutoffAt ? category.cutoffAt.toISOString() : null,
+      startAt: fromEventWallClockOrNull(category.startAt, tz),
+      cutoffAt: fromEventWallClockOrNull(category.cutoffAt, tz),
     })),
   };
 }

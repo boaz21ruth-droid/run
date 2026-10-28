@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { unwrap } from "@werun/api-client";
+import { unwrap, type Schemas } from "@werun/api-client";
 import { useApi } from "../api";
 
 export const ORDERS_KEY = ["orders"] as const;
@@ -16,11 +16,19 @@ export function useMyOrders() {
   });
 }
 
+/** 凭证审核中的订单每 15 秒刷新一次，财务一审完页面就跟着变；其他状态不轮询 */
+export const REVIEW_POLL_MS = 15_000;
+
+export function orderRefetchInterval(status: Schemas["OrderDetail"]["status"] | undefined): number | false {
+  return status === "PROOF_SUBMITTED" ? REVIEW_POLL_MS : false;
+}
+
 export function useMyOrder(orderNo: string) {
   const api = useApi();
   return useQuery({
     queryKey: orderKey(orderNo),
     queryFn: async () => unwrap(await api.GET("/app/orders/{orderNo}", { params: { path: { orderNo } } })),
+    refetchInterval: (query) => orderRefetchInterval(query.state.data?.status),
   });
 }
 

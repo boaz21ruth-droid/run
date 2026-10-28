@@ -367,5 +367,31 @@
     "tagline": "Running races in Cambodia, from registration to results.",
     "bot": "Telegram bot",
     "language": "Language"
+  },
+  "nav": {
+    "label": "Main navigation",
+    "tabs": {
+      "home": "Home",
+      "events": "Events",
+      "orders": "Orders",
+      "profiles": "Runners"
+    }
+  },
+  "titles": {
+    "eventDetail": "Event details",
+    "register": "Registration",
+    "orderDetail": "Order details"
+  },
+  "routeError": {
+    "title": "Something went wrong",
+    "body": "This page hit an unexpected error. Reload to try again, or go back to the home page.",
+    "reload": "Reload",
+    "home": "Back to home"
+  },
+  "registerLeave": {
+    "title": "Leave registration?",
+    "body": "The runner details you've entered on this page will be lost.",
+    "stay": "Keep editing",
+    "leave": "Leave"
   }
 }

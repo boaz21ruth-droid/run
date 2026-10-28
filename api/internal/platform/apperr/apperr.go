@@ -38,6 +38,7 @@ const (
 	CodePriceTierSoldOut          = "PRICE_TIER_SOLD_OUT"
 	CodeRegistrationClosed        = "REGISTRATION_CLOSED"
 	CodeAlreadyRegistered         = "ALREADY_REGISTERED"
+	CodeTooManyUnpaidOrders       = "TOO_MANY_UNPAID_ORDERS"
 	CodePaymentAccountUnavailable = "PAYMENT_ACCOUNT_UNAVAILABLE"
 	CodeIdempotencyKeyReused      = "IDEMPOTENCY_KEY_REUSED"
 	CodeOrderStateConflict        = "ORDER_STATE_CONFLICT"
@@ -84,6 +85,7 @@ var AllCodes = []string{
 	CodePriceTierSoldOut,
 	CodeRegistrationClosed,
 	CodeAlreadyRegistered,
+	CodeTooManyUnpaidOrders,
 	CodePaymentAccountUnavailable,
 	CodeIdempotencyKeyReused,
 	CodeOrderStateConflict,

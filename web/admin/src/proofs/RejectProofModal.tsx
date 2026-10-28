@@ -1,7 +1,7 @@
 import { ApiError, type Schemas } from "@werun/api-client";
 import { App as AntdApp, Button, Form, Input, Modal, Select, Space } from "antd";
 import { useTranslation } from "react-i18next";
-import { useRejectProof } from "./queries";
+import { isReviewConflict, useRefreshAfterConflict, useRejectProof } from "./queries";
 
 type RejectCode = Schemas["RejectProofRequest"]["rejectCode"];
 
@@ -25,6 +25,7 @@ export function RejectProofModal({ proofId, onClose }: { proofId: number; onClos
   const { message } = AntdApp.useApp();
   const [form] = Form.useForm<RejectValues>();
   const reject = useRejectProof(proofId);
+  const refreshAfterConflict = useRefreshAfterConflict();
 
   const onFinish = (values: RejectValues) => {
     const reason = values.rejectReason?.trim();
@@ -36,6 +37,12 @@ export function RejectProofModal({ proofId, onClose }: { proofId: number; onClos
           onClose();
         },
         onError: (error) => {
+          if (isReviewConflict(error)) {
+            void message.warning(t("proofs.conflict"));
+            refreshAfterConflict();
+            onClose();
+            return;
+          }
           if (error instanceof ApiError) {
             const fields = (["rejectCode", "rejectReason"] as const).flatMap((name) => {
               const text = error.fields[name];

@@ -113,12 +113,38 @@ func newOTPSender(cfg config.Config, log *slog.Logger) runner.OTPSender {
 		return runner.LogOTPSender{Log: log}
 	case "fixed":
 		if cfg.IsProd() {
-			log.Warn("OTP sender is FIXED in prod: anyone knowing WERUN_OTP_FIXED_CODE can log in as any phone number; switch to telegram before real users arrive")
+			log.Error(fixedOTPProdAlarm)
 		}
 		return runner.FixedOTPSender{Code: cfg.OTPFixedCode}
 	default:
 		// config.Load 已校验取值，这里不可达；真走到说明配置校验与本函数脱节了。
 		panic(fmt.Sprintf("unknown OTP sender %q", cfg.OTPSenderKind()))
+	}
+}
+
+// fixedOTPProdAlarm 是 prod 使用固定验证码（commit 56957fb 的过渡方案）时的告警。故意用 Error 级别并定时重复，
+// 让它在日志告警里一直可见，直到切回 telegram。
+const fixedOTPProdAlarm = "SECURITY: OTP sender is FIXED in prod: every phone number can be logged into with the single code WERUN_OTP_FIXED_CODE; switch WERUN_OTP_SENDER to telegram before real users arrive"
+
+// fixedOTPAlarmInterval 是 serve 进程运行期间重复 fixedOTPProdAlarm 的间隔。
+const fixedOTPAlarmInterval = time.Hour
+
+// usesFixedOTPInProd 表示 prod 是否正在使用固定验证码。
+func usesFixedOTPInProd(cfg config.Config) bool {
+	return cfg.IsProd() && cfg.OTPSenderKind() == "fixed"
+}
+
+// repeatFixedOTPAlarm 每隔 interval 以 Error 级别重复一次 fixedOTPProdAlarm，直到 ctx 取消。
+func repeatFixedOTPAlarm(ctx context.Context, log *slog.Logger, interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			log.ErrorContext(ctx, fixedOTPProdAlarm)
+		}
 	}
 }
 

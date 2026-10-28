@@ -7,6 +7,7 @@ import { PERM_PROOF_REVIEW, can } from "../auth/can";
 import { useMe } from "../auth/useMe";
 import { pickText } from "../events/localize";
 import { ProofStatusTag } from "../proofs/ProofStatusTag";
+import { timezoneLabel } from "../time/eventTime";
 import { formatDateTime } from "./format";
 
 type OrderDetail = Schemas["AdminOrderDetail"];
@@ -34,9 +35,10 @@ export function OrderOverviewCard({ order }: { order: OrderDetail }) {
     { key: "event", label: t("orders.detail.event"), children: pickText(order.eventName, lang) },
     { key: "buyer", label: t("orders.detail.buyer"), children: order.buyerName },
     { key: "phone", label: t("orders.detail.phone"), children: order.buyerPhone },
-    { key: "createdAt", label: t("orders.detail.createdAt"), children: formatDateTime(order.createdAt) },
-    { key: "deadlineAt", label: t("orders.detail.deadlineAt"), children: formatDateTime(order.deadlineAt) },
-    { key: "paidAt", label: t("orders.detail.paidAt"), children: formatDateTime(order.paidAt) },
+    { key: "createdAt", label: t("orders.detail.createdAt"), children: formatDateTime(order.createdAt, order.eventTimezone) },
+    { key: "deadlineAt", label: t("orders.detail.deadlineAt"), children: formatDateTime(order.deadlineAt, order.eventTimezone) },
+    { key: "paidAt", label: t("orders.detail.paidAt"), children: formatDateTime(order.paidAt, order.eventTimezone) },
+    { key: "timezone", label: t("time.eventTimezone"), children: timezoneLabel(order.eventTimezone) },
     {
       key: "paymentAccount",
       label: t("orders.detail.paymentAccount"),
@@ -144,8 +146,8 @@ export function OrderProofsCard({ order, currentProofId }: { order: OrderDetail;
       key: "rejectCode",
       render: (_, p) => (p.rejectCode ? t(`proofs.rejectCode.${p.rejectCode}`) : "—"),
     },
-    { title: t("proofs.detail.submittedAt"), key: "createdAt", render: (_, p) => formatDateTime(p.createdAt) },
-    { title: t("proofs.detail.reviewedAt"), key: "reviewedAt", render: (_, p) => formatDateTime(p.reviewedAt) },
+    { title: t("proofs.detail.submittedAt"), key: "createdAt", render: (_, p) => formatDateTime(p.createdAt, order.eventTimezone) },
+    { title: t("proofs.detail.reviewedAt"), key: "reviewedAt", render: (_, p) => formatDateTime(p.reviewedAt, order.eventTimezone) },
   ];
   return (
     <Card title={t("orders.detail.proofs")}>
@@ -167,7 +169,7 @@ export function OrderReceiptsCard({ order }: { order: OrderDetail }) {
   const columns: TableProps<Receipt>["columns"] = [
     { title: t("orders.receipt.txnRef"), dataIndex: "txnRef", key: "txnRef" },
     { title: t("orders.receipt.amount"), key: "amount", align: "right", render: (_, r) => formatUsd(r.amountCents) },
-    { title: t("orders.receipt.receivedAt"), key: "receivedAt", render: (_, r) => formatDateTime(r.receivedAt) },
+    { title: t("orders.receipt.receivedAt"), key: "receivedAt", render: (_, r) => formatDateTime(r.receivedAt, order.eventTimezone) },
     {
       title: t("orders.receipt.match"),
       key: "match",

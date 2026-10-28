@@ -11,11 +11,14 @@
     "PHOTOGRAPHER": "Photographer"
   },
   "forbidden": { "title": "You don't have access", "body": "Your role can't view this page. Ask an administrator for access." },
+  "landing": { "noPagesTitle": "No pages for your role", "noPagesBody": "You are signed in as {{role}}, but this role has no admin pages yet. Contact a system administrator to get access." },
+  "time": { "zone": "Time zone: {{zone}}", "eventTimezone": "Event time zone" },
   "events": {
     "title": "Events",
     "create": "New event",
     "publish": "Publish",
     "publishedToast": "Event published",
+    "publishConfirm": { "title": "Publish “{{name}}”?", "body": "The event will immediately appear in the public list for runners, who can view its details and order once registration opens. A published event cannot be reverted to draft.", "ok": "Publish", "cancel": "Cancel" },
     "empty": "No events yet",
     "col": { "name": "Event", "date": "Race day", "city": "City", "status": "Status", "actions": "Actions" }
   },
@@ -161,6 +164,7 @@
     "active": "Active",
     "inactive": "Inactive",
     "currencyNote": "Payments are collected in US dollars (USD). Orders use an active account bound to the event first, then an account shared by all events.",
+    "confirm": { "qrTitle": "Replace the payment QR code?", "qrBody": "This takes effect immediately: every unpaid order using this account, including orders already placed, will show the new QR code on its payment page. Make sure the new QR code can receive payments.", "disableTitle": "Deactivate this payment account?", "disableBody": "New orders will no longer be assigned to this account. If the event has no other active account, runners will not be able to pay. Orders already assigned to this account are not affected.", "ok": "Save", "cancel": "Cancel" },
     "col": {
       "qr": "QR code",
       "name": "Name",
@@ -208,6 +212,7 @@
     },
     "dupTag": "Duplicate screenshot",
     "overSla": "Overdue",
+    "conflict": "Another staff member has already handled this proof. Showing the latest status.",
     "waitingMinutes": "{{minutes}} min",
     "waitingHours": "{{hours}} h {{minutes}} min",
     "empty": "No proofs",
@@ -233,6 +238,7 @@
       "submit": "Approve payment",
       "tooLow": "The received amount is below the amount due ({{amount}}). Reject it as an amount mismatch instead.",
       "overpaid": "Overpaid by {{amount}}. Approving records an overpayment exception.",
+      "confirmOverpay": "I confirm the overpayment of {{amount}} and approve with the amount actually received",
       "invalidAmount": "Enter a valid USD amount with at most two decimals",
       "success": "Approved — the order is confirmed"
     },

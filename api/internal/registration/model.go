@@ -25,6 +25,10 @@ const (
 	MinParticipants = 1
 	MaxParticipants = 10
 
+	// MaxOpenOrdersPerBuyer 是同一跑者跨全部赛事同时持有的待付款订单（PENDING_PAYMENT / PROOF_SUBMITTED /
+	// PROOF_REJECTED）上限，达到后 CreateOrder 返回 TOO_MANY_UNPAID_ORDERS。
+	MaxOpenOrdersPerBuyer = 3
+
 	idempotencyScope = "reg_order.create"
 	idempotencyTTL   = 24 * time.Hour
 )

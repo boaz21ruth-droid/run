@@ -1,5 +1,4 @@
 import { screen, waitFor, within } from "@testing-library/react";
-import dayjs from "dayjs";
 import { beforeEach, describe, expect, it } from "vitest";
 import { adminMe, draftEvent, jsonResponse, opsMe, publishedEvent } from "../test/fixtures";
 import { fillDateField, setupFormUser } from "../test/form";
@@ -81,7 +80,7 @@ describe("赛事详情", () => {
     expect(screen.queryByTestId("event-registration-not-ready")).not.toBeInTheDocument();
     expect(await patchRequest(requests)?.clone().json()).toEqual({
       open: true,
-      opensAt: dayjs("2026-09-20 08:00", "YYYY-MM-DD HH:mm").toISOString(),
+      opensAt: "2026-09-20T01:00:00.000Z", // Asia/Phnom_Penh 08:00
       closesAt: null,
     });
     await waitFor(() => {

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { toCreateEventRequest, toNamePath } from "./eventForm";
 
 describe("toCreateEventRequest", () => {
-  it("去除首尾空格，日期转为 YYYY-MM-DD，时间转为 ISO，未填时间为 null", () => {
+  it("去除首尾空格，日期转为 YYYY-MM-DD，时间按赛事时区（默认 Asia/Phnom_Penh）转为 ISO，未填时间为 null", () => {
     const request = toCreateEventRequest({
       slug: " phnom-penh-half-2026 ",
       eventType: "RACE",
@@ -17,7 +17,7 @@ describe("toCreateEventRequest", () => {
           name: { zh: "半程", en: "Half marathon", km: "ពាក់កណ្ដាល" },
           distanceM: 21097,
           capacity: 800,
-          startAt: dayjs("2026-11-14T23:00:00Z"),
+          startAt: dayjs("2026-11-15 06:00", "YYYY-MM-DD HH:mm"),
           cutoffAt: null,
         },
       ],

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { ADMIN, ADMIN_URL, OPS, USER_URL } from "./env";
-import { fillDate, loginAdmin, presetLanguage, RACE_DATE, raceDateTime } from "./helpers";
+import { confirmPublish, fillDate, loginAdmin, presetLanguage, RACE_DATE, raceDateTime } from "./helpers";
 
 const runId = Date.now().toString(36);
 const slug = `e2e-${runId}`;
@@ -45,6 +45,7 @@ test("OPS 新建并发布赛事", async ({ browser }) => {
   const publish = page.getByTestId(`event-publish-${slug}`);
   await expect(publish).toBeVisible();
   await publish.click();
+  await confirmPublish(page);
   await expect(publish).toBeHidden();
 
   await context.close();

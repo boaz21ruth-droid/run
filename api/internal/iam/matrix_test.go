@@ -16,6 +16,8 @@ func TestMatrixCellsMatchDemo(t *testing.T) {
 		{PermRefundSettle, map[Role]Access{RoleOps: AccessRead, RoleFinance: AccessWrite, RoleSupport: AccessRead}},
 		{PermRacepackIssue, map[Role]Access{RoleOps: AccessRead, RoleSupport: AccessRead, RoleRaceSupervisor: AccessWrite, RoleRaceStaff: AccessWrite}},
 		{PermPhotoUpload, map[Role]Access{RoleAdmin: AccessRead, RoleOps: AccessWrite, RolePhotographer: AccessWrite}},
+		// 赛事范围校验补齐前，RACE_SUPERVISOR / RACE_STAFF 不能看订单（偏离 Demo，见 matrix.go 注释）
+		{PermOrderView, map[Role]Access{RoleAdmin: AccessRead, RoleOps: AccessRead, RoleFinance: AccessRead, RoleSupport: AccessRead}},
 		{PermAccessManage, map[Role]Access{RoleAdmin: AccessWrite}},
 		{PermAuditView, map[Role]Access{RoleAdmin: AccessWrite, RoleOps: AccessRead, RoleFinance: AccessRead}},
 		// 报名与收款凭证迭代（spec §8）

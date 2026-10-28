@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import { isFileField, readMultipartFields } from "@werun/api-client/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
@@ -18,6 +18,17 @@ beforeEach(() => {
 
 function findRequest(requests: Request[], method: string, pathname: string): Request | undefined {
   return requests.find((request) => request.method === method && new URL(request.url).pathname === pathname);
+}
+
+/**
+ * 编辑弹窗之上再弹的确认框。测试环境里 antd 给所有弹窗标题同一个 id，
+ * 按无障碍名称会解析到编辑弹窗的标题，所以按确认框内容定位。
+ */
+async function findConfirmDialog(title: string): Promise<HTMLElement> {
+  const content = await screen.findByTestId("payment-account-confirm");
+  const dialog = content.closest<HTMLElement>('[role="dialog"]')!;
+  expect(within(dialog).getAllByText(title).length).toBeGreaterThan(0);
+  return dialog;
 }
 
 function qrFile(): File {
@@ -125,6 +136,57 @@ describe("收款账户页", () => {
     const fields = await readMultipartFields(findRequest(requests, "PUT", "/api/admin/payment-accounts/5")!);
     expect(fields.name).toBe("ABA USD 备用");
     expect(fields.qr).toBeUndefined();
+  });
+
+  it("编辑时更换二维码：先确认后果，取消不提交，确认后带 qr 提交", async () => {
+    const { requests } = renderAdminApp("/payment-accounts", {
+      "GET /api/admin/me": () => jsonResponse(200, financeMe),
+      "GET /api/admin/events": () => jsonResponse(200, { items: [publishedEvent] }),
+      "GET /api/admin/payment-accounts": () => jsonResponse(200, { items: [abaAccount] }),
+      "PUT /api/admin/payment-accounts/5": () => jsonResponse(200, abaAccount),
+    });
+    const user = setupFormUser();
+
+    await user.click(await screen.findByTestId("payment-account-edit-5"));
+    await user.upload(screen.getByTestId("payment-account-qr-input"), qrFile());
+    await user.click(screen.getByTestId("payment-account-submit"));
+
+    const dialog = await findConfirmDialog("Replace the payment QR code?");
+    expect(within(dialog).getByTestId("payment-account-confirm")).toHaveTextContent("every unpaid order using this account");
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(screen.queryByTestId("payment-account-confirm")).not.toBeInTheDocument());
+    expect(findRequest(requests, "PUT", "/api/admin/payment-accounts/5")).toBeUndefined();
+
+    await user.click(screen.getByTestId("payment-account-submit"));
+    const again = await findConfirmDialog("Replace the payment QR code?");
+    await user.click(within(again).getByRole("button", { name: "Save" }));
+
+    expect(await screen.findByText("Payment account saved")).toBeInTheDocument();
+    const fields = await readMultipartFields(findRequest(requests, "PUT", "/api/admin/payment-accounts/5")!);
+    expect(isFileField(fields.qr)).toBe(true);
+  });
+
+  it("停用启用中的账户：先确认对新订单的影响", async () => {
+    const { requests } = renderAdminApp("/payment-accounts", {
+      "GET /api/admin/me": () => jsonResponse(200, financeMe),
+      "GET /api/admin/events": () => jsonResponse(200, { items: [publishedEvent] }),
+      "GET /api/admin/payment-accounts": () => jsonResponse(200, { items: [abaAccount] }),
+      "PUT /api/admin/payment-accounts/5": () => jsonResponse(200, { ...abaAccount, active: false }),
+    });
+    const user = setupFormUser();
+
+    await user.click(await screen.findByTestId("payment-account-edit-5"));
+    await user.click(document.querySelector<HTMLElement>("#paymentAccount_active")!);
+    await user.click(screen.getByTestId("payment-account-submit"));
+
+    const dialog = await findConfirmDialog("Deactivate this payment account?");
+    expect(within(dialog).getByTestId("payment-account-confirm")).toHaveTextContent("runners will not be able to pay");
+    expect(findRequest(requests, "PUT", "/api/admin/payment-accounts/5")).toBeUndefined();
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    expect(await screen.findByText("Payment account saved")).toBeInTheDocument();
+    const fields = await readMultipartFields(findRequest(requests, "PUT", "/api/admin/payment-accounts/5")!);
+    expect(fields.active).toBe("false");
   });
 
   it("OPS 只读：能看列表与二维码，没有新建与编辑按钮", async () => {
