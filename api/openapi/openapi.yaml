@@ -1389,7 +1389,7 @@ components:
           description: max(capacity - used_count - reserved_count, 0)
     PublicEvent:
       type: object
-      required: [id, slug, eventType, name, city, raceDate, registrationOpen, registrationOpensAt, registrationClosesAt, categories, fromPriceCents, coverUrl]
+      required: [id, slug, eventType, name, city, raceDate, registrationOpen, registrationOpensAt, registrationClosesAt, categories, fromPriceCents, coverUrl, priceTiers, registeredCount]
       properties:
         id:
           type: integer
@@ -1429,6 +1429,54 @@ components:
           type: string
           nullable: true
           description: 封面图公开访问地址（/api/files/{id}）；未设置封面时为空
+        priceTiers:
+          type: array
+          description: 价格档时间线（按后台排序），含已售罄、未开始与已结束的档位
+          items:
+            $ref: '#/components/schemas/PublicPriceTier'
+        registeredCount:
+          type: integer
+          format: int32
+          description: 已确认的报名人数（各组别 used_count 之和，不含待付款）
+    PublicPriceTier:
+      type: object
+      required: [id, name, audience, priceCents, currency, quota, remaining, saleStartsAt, saleEndsAt, state]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        audience:
+          type: string
+          enum: [ALL, LOCAL]
+        priceCents:
+          type: integer
+          format: int64
+        currency:
+          type: string
+        quota:
+          type: integer
+          format: int32
+          nullable: true
+          description: 配额；为空表示不限
+        remaining:
+          type: integer
+          format: int32
+          nullable: true
+          description: 配额剩余（quota - used - reserved，下限 0）；不限时为空
+        saleStartsAt:
+          type: string
+          format: date-time
+          nullable: true
+        saleEndsAt:
+          type: string
+          format: date-time
+          nullable: true
+        state:
+          type: string
+          enum: [UPCOMING, ON_SALE, SOLD_OUT, ENDED]
+          description: 配额用尽为 SOLD_OUT；否则按销售窗口判定
     PublicEventList:
       type: object
       required: [items]

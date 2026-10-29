@@ -141,7 +141,37 @@ func toPublicEvent(e Event, lang i18n.Lang) apigen.PublicEvent {
 		Categories:           cats,
 		FromPriceCents:       e.FromPriceCents,
 		CoverUrl:             coverURLOf(e.CoverFileID),
+		PriceTiers:           toPublicPriceTiers(e.PriceTiers, lang),
+		RegisteredCount:      registeredOf(e.Categories),
 	}
+}
+
+func toPublicPriceTiers(tiers []PriceTier, lang i18n.Lang) []apigen.PublicPriceTier {
+	out := make([]apigen.PublicPriceTier, 0, len(tiers))
+	for _, t := range tiers {
+		out = append(out, apigen.PublicPriceTier{
+			Id:           t.ID,
+			Name:         t.Name.In(lang),
+			Audience:     apigen.PublicPriceTierAudience(t.Audience),
+			PriceCents:   t.PriceCents,
+			Currency:     t.Currency,
+			Quota:        t.Quota,
+			Remaining:    t.Remaining,
+			SaleStartsAt: t.SaleStartsAt,
+			SaleEndsAt:   t.SaleEndsAt,
+			State:        apigen.PublicPriceTierState(t.State),
+		})
+	}
+	return out
+}
+
+// registeredOf 返回已确认报名人数：各组别 used_count 之和（待付款占用的 reserved_count 不计）。
+func registeredOf(cats []Category) int32 {
+	var n int32
+	for _, c := range cats {
+		n += c.UsedCount
+	}
+	return n
 }
 
 // remainingOf 返回组别剩余名额：capacity - used_count - reserved_count，下限为 0。

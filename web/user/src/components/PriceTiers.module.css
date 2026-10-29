@@ -1,0 +1,110 @@
+.section {
+  margin-top: 32px;
+}
+
+.title {
+  margin: 0 0 14px;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.list {
+  margin: 0;
+  padding: 4px 16px;
+  list-style: none;
+  border-radius: var(--r);
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.left,
+.right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.left {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+
+.right {
+  flex: none;
+}
+
+.name {
+  padding: 2px 10px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.6;
+  white-space: nowrap;
+  background: var(--sunk);
+  color: var(--ink-mid);
+}
+
+.row[data-state="ON_SALE"] .name {
+  background: var(--lime);
+  color: var(--ink);
+}
+
+.local {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--leaf-ink);
+}
+
+.window {
+  font-size: 13px;
+  color: var(--ink-mid);
+}
+
+.state {
+  font-size: 12px;
+  color: var(--ink-mute);
+  white-space: nowrap;
+}
+
+.price {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.row[data-state="SOLD_OUT"] .price,
+.row[data-state="ENDED"] .price {
+  color: var(--ink-mute);
+  text-decoration: line-through;
+}
+
+.row[data-state="UPCOMING"] .price {
+  color: var(--ink-mute);
+}
+
+.note {
+  margin: 10px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--brand-tint);
+  color: var(--brand-deep);
+  font-size: 13px;
+  line-height: 1.6;
+}

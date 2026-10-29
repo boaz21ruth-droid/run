@@ -56,7 +56,12 @@
     "freeEntry": "免费参加",
     "spotsLeft": "剩余名额",
     "spotsOf": "{{remaining}} / {{capacity}}",
-    "coverAlt": "{{name}} 封面"
+    "coverAlt": "{{name}} 封面",
+    "registered_one": "{{n}} 人已报名",
+    "registered_other": "{{n}} 人已报名",
+    "share": "分享",
+    "share_copied": "链接已复制",
+    "share_failed": "复制失败，请手动复制地址栏"
   },
   "notFound": {
     "title": "页面不存在",
@@ -254,11 +259,12 @@
       "loading": "正在加载同意书…"
     },
     "submit": "提交订单",
-    "submitting": "正在提交…"
+    "submitting": "正在提交…",
+    "ctaTier": "立即报名 · {{name}} {{price}}"
   },
   "orders": {
-    "nav": "我的订单",
-    "title": "我的订单",
+    "nav": "我的赛事",
+    "title": "我的赛事",
     "empty": "还没有订单或报名。",
     "detailTitle": "订单 {{orderNo}}",
     "participants": "参赛人数：{{n}}",
@@ -373,7 +379,7 @@
     "tabs": {
       "home": "首页",
       "events": "赛事",
-      "orders": "订单",
+      "orders": "我的赛事",
       "profiles": "参赛人"
     }
   },
@@ -393,5 +399,21 @@
     "body": "本页已填写的参赛人资料将会丢失。",
     "stay": "继续填写",
     "leave": "离开"
+  },
+  "tiers": {
+    "title": "报名档位",
+    "window": "{{from}} – {{to}}",
+    "until": "至 {{date}}",
+    "since": "{{date}} 起",
+    "left": "剩余 {{n}} / {{quota}}",
+    "local": "柬籍本地价",
+    "state": {
+      "ON_SALE": "在售",
+      "UPCOMING": "未开始",
+      "SOLD_OUT": "售罄",
+      "ENDED": "已结束"
+    },
+    "deadline_one": "{{name}}还剩 {{count}} 天，之后涨到 {{price}}。",
+    "deadline_other": "{{name}}还剩 {{count}} 天，之后涨到 {{price}}。"
   }
 }

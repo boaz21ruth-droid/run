@@ -56,7 +56,12 @@
     "freeEntry": "Free entry",
     "spotsLeft": "Spots left",
     "spotsOf": "{{remaining}} / {{capacity}}",
-    "coverAlt": "Cover of {{name}}"
+    "coverAlt": "Cover of {{name}}",
+    "registered_one": "{{n}} runner registered",
+    "registered_other": "{{n}} runners registered",
+    "share": "Share",
+    "share_copied": "Link copied",
+    "share_failed": "Couldn't copy — copy the address bar instead"
   },
   "notFound": {
     "title": "Page not found",
@@ -254,11 +259,12 @@
       "loading": "Loading waiver…"
     },
     "submit": "Place order",
-    "submitting": "Placing order…"
+    "submitting": "Placing order…",
+    "ctaTier": "Register · {{name}} {{price}}"
   },
   "orders": {
-    "nav": "My orders",
-    "title": "My orders",
+    "nav": "My events",
+    "title": "My events",
     "empty": "No orders or sign-ups yet.",
     "detailTitle": "Order {{orderNo}}",
     "participants": "Runners: {{n}}",
@@ -373,7 +379,7 @@
     "tabs": {
       "home": "Home",
       "events": "Events",
-      "orders": "Orders",
+      "orders": "My events",
       "profiles": "Runners"
     }
   },
@@ -393,5 +399,21 @@
     "body": "The runner details you've entered on this page will be lost.",
     "stay": "Keep editing",
     "leave": "Leave"
+  },
+  "tiers": {
+    "title": "Price tiers",
+    "window": "{{from}} – {{to}}",
+    "until": "until {{date}}",
+    "since": "from {{date}}",
+    "left": "{{n}} / {{quota}} left",
+    "local": "Cambodian rate",
+    "state": {
+      "ON_SALE": "On sale",
+      "UPCOMING": "Not yet",
+      "SOLD_OUT": "Sold out",
+      "ENDED": "Ended"
+    },
+    "deadline_one": "{{name}} ends in {{count}} day, then {{price}}.",
+    "deadline_other": "{{name}} ends in {{count}} days, then {{price}}."
   }
 }

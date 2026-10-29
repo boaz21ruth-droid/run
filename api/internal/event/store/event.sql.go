@@ -422,6 +422,62 @@ func (q *Queries) ListPublicEvents(ctx context.Context) ([]Event, error) {
 	return items, nil
 }
 
+const listPublicPriceTiersByEvents = `-- name: ListPublicPriceTiersByEvents :many
+SELECT id, event_id, name, audience, price_cents, currency, quota, used_count, reserved_count,
+       sale_starts_at, sale_ends_at
+FROM price_rules
+WHERE event_id = ANY($1::bigint[])
+ORDER BY event_id, sort_order, id
+`
+
+type ListPublicPriceTiersByEventsRow struct {
+	ID            int64
+	EventID       int64
+	Name          []byte
+	Audience      string
+	PriceCents    int64
+	Currency      string
+	Quota         *int32
+	UsedCount     int32
+	ReservedCount int32
+	SaleStartsAt  *time.Time
+	SaleEndsAt    *time.Time
+}
+
+// 公开赛事页展示的价格档时间线（早鸟 / 标准 / 最后一轮……），按 sort_order 排序。
+// 只给展示用：是否在售由调用方按销售窗口与配额判定，口径同 MinAvailablePriceCentsByEvents。
+func (q *Queries) ListPublicPriceTiersByEvents(ctx context.Context, eventIds []int64) ([]ListPublicPriceTiersByEventsRow, error) {
+	rows, err := q.db.Query(ctx, listPublicPriceTiersByEvents, eventIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListPublicPriceTiersByEventsRow
+	for rows.Next() {
+		var i ListPublicPriceTiersByEventsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.EventID,
+			&i.Name,
+			&i.Audience,
+			&i.PriceCents,
+			&i.Currency,
+			&i.Quota,
+			&i.UsedCount,
+			&i.ReservedCount,
+			&i.SaleStartsAt,
+			&i.SaleEndsAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const minAvailablePriceCentsByEvents = `-- name: MinAvailablePriceCentsByEvents :many
 SELECT event_id, min(price_cents)::bigint AS min_price_cents
 FROM price_rules

@@ -288,6 +288,9 @@ func (s *Service) ListPublic(ctx context.Context) ([]Event, error) {
 	if err := s.loadFromPrice(ctx, q, events); err != nil {
 		return nil, err
 	}
+	if err := s.loadPriceTiers(ctx, q, events); err != nil {
+		return nil, err
+	}
 	return events, nil
 }
 
@@ -306,6 +309,9 @@ func (s *Service) GetPublic(ctx context.Context, slug string) (Event, error) {
 		return Event{}, err
 	}
 	if err := s.loadFromPrice(ctx, q, events); err != nil {
+		return Event{}, err
+	}
+	if err := s.loadPriceTiers(ctx, q, events); err != nil {
 		return Event{}, err
 	}
 	return events[0], nil
@@ -339,6 +345,63 @@ func (s *Service) loadFromPrice(ctx context.Context, q *store.Queries, events []
 		}
 	}
 	return nil
+}
+
+// loadPriceTiers 批量填充公开赛事的价格档时间线，并按当前时间判定每档状态：
+// 配额用尽为 SOLD_OUT（优先于时间判定），否则按销售窗口判为 UPCOMING / ENDED / ON_SALE。
+func (s *Service) loadPriceTiers(ctx context.Context, q *store.Queries, events []Event) error {
+	if len(events) == 0 {
+		return nil
+	}
+	ids := make([]int64, 0, len(events))
+	for _, e := range events {
+		ids = append(ids, e.ID)
+	}
+	rows, err := q.ListPublicPriceTiersByEvents(ctx, ids)
+	if err != nil {
+		return fmt.Errorf("list price tiers of events: %w", err)
+	}
+	now := s.now().UTC()
+	byEvent := make(map[int64][]PriceTier, len(events))
+	for _, r := range rows {
+		var name i18n.Text
+		if err := json.Unmarshal(r.Name, &name); err != nil {
+			return fmt.Errorf("decode name of price rule %d: %w", r.ID, err)
+		}
+		t := PriceTier{
+			ID:           r.ID,
+			Name:         name,
+			Audience:     r.Audience,
+			PriceCents:   r.PriceCents,
+			Currency:     r.Currency,
+			Quota:        r.Quota,
+			SaleStartsAt: r.SaleStartsAt,
+			SaleEndsAt:   r.SaleEndsAt,
+		}
+		if r.Quota != nil {
+			left := max(*r.Quota-r.UsedCount-r.ReservedCount, 0)
+			t.Remaining = &left
+		}
+		t.State = tierState(t, now)
+		byEvent[r.EventID] = append(byEvent[r.EventID], t)
+	}
+	for i := range events {
+		events[i].PriceTiers = byEvent[events[i].ID]
+	}
+	return nil
+}
+
+func tierState(t PriceTier, now time.Time) string {
+	switch {
+	case t.Remaining != nil && *t.Remaining == 0:
+		return TierSoldOut
+	case t.SaleStartsAt != nil && t.SaleStartsAt.After(now):
+		return TierUpcoming
+	case t.SaleEndsAt != nil && !t.SaleEndsAt.After(now):
+		return TierEnded
+	default:
+		return TierOnSale
+	}
 }
 
 func withCategories(ctx context.Context, q *store.Queries, rows []store.Event) ([]Event, error) {

@@ -17,6 +17,8 @@ export interface TelegramWebApp {
   /** Bot API 6.1+；旧客户端可能没有或不支持十六进制色值 */
   setHeaderColor?(color: string): void;
   setBackgroundColor?(color: string): void;
+  /** 在 Telegram 内打开 t.me 链接（如分享面板），不跳出小程序 */
+  openTelegramLink?(url: string): void;
   BackButton: {
     show(): void;
     hide(): void;
