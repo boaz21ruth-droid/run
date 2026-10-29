@@ -1279,8 +1279,437 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /admin/racepack/events:
+    get:
+      operationId: adminListRacepackEvents
+      summary: 领物核销站可操作的赛事（现场角色只返回被指派且在有效期内的）
+      x-permission: racepack_issue
+      x-access: read
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RacepackEventList'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/racepack/events/{id}:
+    get:
+      operationId: adminGetRacepackStation
+      summary: 领物进度、最近发放与搜索结果（q 为空时不返回搜索结果）
+      x-permission: racepack_issue
+      x-access: read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RacepackStation'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/racepack/registrations/{id}/issue:
+    post:
+      operationId: adminIssueRacepack
+      summary: 发放领物（本人或代领）；按 clientEventId 幂等
+      x-permission: racepack_issue
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RacepackIssueRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RacepackActionResult'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/racepack/registrations/{id}/undo:
+    post:
+      operationId: adminUndoRacepack
+      summary: 撤销一次发放（需写原因）
+      x-permission: racepack_undo
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RacepackUndoRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RacepackActionResult'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/staff:
+    get:
+      operationId: adminListStaff
+      summary: 员工列表（指派现场角色用）
+      x-permission: access_manage
+      x-access: read
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffList'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/events/{id}/staff-assignments:
+    get:
+      operationId: adminListEventAssignments
+      summary: 赛事的现场人员指派
+      x-permission: access_manage
+      x-access: read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventAssignmentList'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/events/{id}/staff-assignments/{staffId}:
+    put:
+      operationId: adminPutEventAssignment
+      summary: 新增或修改一名员工对该赛事的指派（有效期、启用）
+      x-permission: access_manage
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventAssignmentRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventAssignmentList'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
+    RacepackEvent:
+      type: object
+      required: [id, name, city, raceDate, timezone]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          $ref: '#/components/schemas/LocalizedText'
+        city:
+          type: string
+        raceDate:
+          type: string
+          format: date
+        timezone:
+          type: string
+    RacepackEventList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RacepackEvent'
+    RacepackEntry:
+      type: object
+      required: [registrationId, regNo, orderNo, status, orderStatus, fullName, tshirtSize, phoneLast4, audience, categoryCode, categoryName, bib, picked, pickedAt, pickedByName, proxyName, idVerified, blockReason]
+      properties:
+        registrationId:
+          type: integer
+          format: int64
+        regNo:
+          type: string
+        orderNo:
+          type: string
+          description: 订单参考码（跑者在付款页、我的赛事看到的那个）
+        status:
+          type: string
+          enum: [PENDING, CONFIRMED, CANCELLED]
+        orderStatus:
+          type: string
+        fullName:
+          type: string
+        tshirtSize:
+          type: string
+          nullable: true
+        phoneLast4:
+          type: string
+          nullable: true
+          description: 只给手机号后四位，用于现场核对
+        audience:
+          type: string
+          enum: [ALL, LOCAL]
+        categoryCode:
+          type: string
+        categoryName:
+          $ref: '#/components/schemas/LocalizedText'
+        bib:
+          type: string
+          nullable: true
+          description: 已分配的号码布（按号段补零）；未分配为空
+        picked:
+          type: boolean
+        pickedAt:
+          type: string
+          format: date-time
+          nullable: true
+        pickedByName:
+          type: string
+          nullable: true
+        proxyName:
+          type: string
+          nullable: true
+        idVerified:
+          type: boolean
+        blockReason:
+          type: string
+          nullable: true
+          enum: [NOT_PAID, CANCELLED]
+          description: 不能发放的原因；为空表示可以发放（或已发放）
+    RacepackRecent:
+      type: object
+      required: [registrationId, fullName, bib, proxyName, staffName, occurredAt]
+      properties:
+        registrationId:
+          type: integer
+          format: int64
+        fullName:
+          type: string
+        bib:
+          type: string
+          nullable: true
+        proxyName:
+          type: string
+          nullable: true
+        staffName:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
+    RacepackStation:
+      type: object
+      required: [event, confirmed, picked, recent, results]
+      properties:
+        event:
+          $ref: '#/components/schemas/RacepackEvent'
+        confirmed:
+          type: integer
+          format: int32
+          description: 已确认的报名数
+        picked:
+          type: integer
+          format: int32
+          description: 其中已领取
+        recent:
+          type: array
+          items:
+            $ref: '#/components/schemas/RacepackRecent'
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RacepackEntry'
+    RacepackIssueRequest:
+      type: object
+      required: [clientEventId, deviceId]
+      properties:
+        clientEventId:
+          type: string
+          format: uuid
+          description: 设备生成；网络重试沿用同一个值
+        deviceId:
+          type: string
+          minLength: 1
+          maxLength: 64
+        proxyName:
+          type: string
+          maxLength: 80
+          description: 代领人姓名；本人领取不传
+        idVerified:
+          type: boolean
+          description: 已当面核验证件（本地价参赛人领物前必须核验）
+    RacepackUndoRequest:
+      type: object
+      required: [clientEventId, deviceId, reason]
+      properties:
+        clientEventId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          minLength: 1
+          maxLength: 64
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 200
+    RacepackActionResult:
+      type: object
+      required: [outcome, entry]
+      properties:
+        outcome:
+          type: string
+          enum: [APPLIED, ALREADY]
+          description: ALREADY 表示此前已领取（或同一 clientEventId 的重试），没有再次发放
+        entry:
+          $ref: '#/components/schemas/RacepackEntry'
+    StaffMember:
+      type: object
+      required: [id, username, fullName, role, status]
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        fullName:
+          type: string
+        role:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, DISABLED]
+    StaffList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffMember'
+    EventAssignment:
+      type: object
+      required: [staffId, username, fullName, role, validFrom, validUntil, enabled]
+      properties:
+        staffId:
+          type: integer
+          format: int64
+        username:
+          type: string
+        fullName:
+          type: string
+        role:
+          type: string
+        validFrom:
+          type: string
+          format: date-time
+        validUntil:
+          type: string
+          format: date-time
+        enabled:
+          type: boolean
+    EventAssignmentList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventAssignment'
+    EventAssignmentRequest:
+      type: object
+      required: [validFrom, validUntil, enabled]
+      properties:
+        validFrom:
+          type: string
+          format: date-time
+        validUntil:
+          type: string
+          format: date-time
+        enabled:
+          type: boolean
     ErrorResponse:
       type: object
       required: [error]

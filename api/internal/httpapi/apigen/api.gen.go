@@ -807,6 +807,81 @@ func (e QuoteParticipantAudience) Valid() bool {
 	}
 }
 
+// Defines values for RacepackActionResultOutcome.
+const (
+	RacepackActionResultOutcomeALREADY RacepackActionResultOutcome = "ALREADY"
+	RacepackActionResultOutcomeAPPLIED RacepackActionResultOutcome = "APPLIED"
+)
+
+// Valid indicates whether the value is a known member of the RacepackActionResultOutcome enum.
+func (e RacepackActionResultOutcome) Valid() bool {
+	switch e {
+	case RacepackActionResultOutcomeALREADY:
+		return true
+	case RacepackActionResultOutcomeAPPLIED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RacepackEntryAudience.
+const (
+	RacepackEntryAudienceALL   RacepackEntryAudience = "ALL"
+	RacepackEntryAudienceLOCAL RacepackEntryAudience = "LOCAL"
+)
+
+// Valid indicates whether the value is a known member of the RacepackEntryAudience enum.
+func (e RacepackEntryAudience) Valid() bool {
+	switch e {
+	case RacepackEntryAudienceALL:
+		return true
+	case RacepackEntryAudienceLOCAL:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RacepackEntryBlockReason.
+const (
+	RacepackEntryBlockReasonCANCELLED RacepackEntryBlockReason = "CANCELLED"
+	RacepackEntryBlockReasonNOTPAID   RacepackEntryBlockReason = "NOT_PAID"
+)
+
+// Valid indicates whether the value is a known member of the RacepackEntryBlockReason enum.
+func (e RacepackEntryBlockReason) Valid() bool {
+	switch e {
+	case RacepackEntryBlockReasonCANCELLED:
+		return true
+	case RacepackEntryBlockReasonNOTPAID:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RacepackEntryStatus.
+const (
+	RacepackEntryStatusCANCELLED RacepackEntryStatus = "CANCELLED"
+	RacepackEntryStatusCONFIRMED RacepackEntryStatus = "CONFIRMED"
+	RacepackEntryStatusPENDING   RacepackEntryStatus = "PENDING"
+)
+
+// Valid indicates whether the value is a known member of the RacepackEntryStatus enum.
+func (e RacepackEntryStatus) Valid() bool {
+	switch e {
+	case RacepackEntryStatusCANCELLED:
+		return true
+	case RacepackEntryStatusCONFIRMED:
+		return true
+	case RacepackEntryStatusPENDING:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RejectProofRequestRejectCode.
 const (
 	RejectProofRequestRejectCodeAMOUNTMISMATCH RejectProofRequestRejectCode = "AMOUNT_MISMATCH"
@@ -867,6 +942,24 @@ func (e Role) Valid() bool {
 	case RoleRACESUPERVISOR:
 		return true
 	case RoleSUPPORT:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for StaffMemberStatus.
+const (
+	StaffMemberStatusACTIVE   StaffMemberStatus = "ACTIVE"
+	StaffMemberStatusDISABLED StaffMemberStatus = "DISABLED"
+)
+
+// Valid indicates whether the value is a known member of the StaffMemberStatus enum.
+func (e StaffMemberStatus) Valid() bool {
+	switch e {
+	case StaffMemberStatusACTIVE:
+		return true
+	case StaffMemberStatusDISABLED:
 		return true
 	default:
 		return false
@@ -1372,6 +1465,29 @@ type ErrorResponse struct {
 	} `json:"error"`
 }
 
+// EventAssignment defines model for EventAssignment.
+type EventAssignment struct {
+	Enabled    bool      `json:"enabled"`
+	FullName   string    `json:"fullName"`
+	Role       string    `json:"role"`
+	StaffId    int64     `json:"staffId"`
+	Username   string    `json:"username"`
+	ValidFrom  time.Time `json:"validFrom"`
+	ValidUntil time.Time `json:"validUntil"`
+}
+
+// EventAssignmentList defines model for EventAssignmentList.
+type EventAssignmentList struct {
+	Items []EventAssignment `json:"items"`
+}
+
+// EventAssignmentRequest defines model for EventAssignmentRequest.
+type EventAssignmentRequest struct {
+	Enabled    bool      `json:"enabled"`
+	ValidFrom  time.Time `json:"validFrom"`
+	ValidUntil time.Time `json:"validUntil"`
+}
+
 // FreeSignup defines model for FreeSignup.
 type FreeSignup struct {
 	CategoryId int64     `json:"categoryId"`
@@ -1849,6 +1965,112 @@ type QuoteRequest struct {
 	Participants []QuoteParticipantInput `json:"participants"`
 }
 
+// RacepackActionResult defines model for RacepackActionResult.
+type RacepackActionResult struct {
+	Entry RacepackEntry `json:"entry"`
+
+	// Outcome ALREADY 表示此前已领取（或同一 clientEventId 的重试），没有再次发放
+	Outcome RacepackActionResultOutcome `json:"outcome"`
+}
+
+// RacepackActionResultOutcome ALREADY 表示此前已领取（或同一 clientEventId 的重试），没有再次发放
+type RacepackActionResultOutcome string
+
+// RacepackEntry defines model for RacepackEntry.
+type RacepackEntry struct {
+	Audience RacepackEntryAudience `json:"audience"`
+
+	// Bib 已分配的号码布（按号段补零）；未分配为空
+	Bib *string `json:"bib"`
+
+	// BlockReason 不能发放的原因；为空表示可以发放（或已发放）
+	BlockReason  *RacepackEntryBlockReason `json:"blockReason"`
+	CategoryCode string                    `json:"categoryCode"`
+	CategoryName LocalizedText             `json:"categoryName"`
+	FullName     string                    `json:"fullName"`
+	IdVerified   bool                      `json:"idVerified"`
+
+	// OrderNo 订单参考码（跑者在付款页、我的赛事看到的那个）
+	OrderNo     string `json:"orderNo"`
+	OrderStatus string `json:"orderStatus"`
+
+	// PhoneLast4 只给手机号后四位，用于现场核对
+	PhoneLast4     *string             `json:"phoneLast4"`
+	Picked         bool                `json:"picked"`
+	PickedAt       *time.Time          `json:"pickedAt"`
+	PickedByName   *string             `json:"pickedByName"`
+	ProxyName      *string             `json:"proxyName"`
+	RegNo          string              `json:"regNo"`
+	RegistrationId int64               `json:"registrationId"`
+	Status         RacepackEntryStatus `json:"status"`
+	TshirtSize     *string             `json:"tshirtSize"`
+}
+
+// RacepackEntryAudience defines model for RacepackEntry.Audience.
+type RacepackEntryAudience string
+
+// RacepackEntryBlockReason 不能发放的原因；为空表示可以发放（或已发放）
+type RacepackEntryBlockReason string
+
+// RacepackEntryStatus defines model for RacepackEntry.Status.
+type RacepackEntryStatus string
+
+// RacepackEvent defines model for RacepackEvent.
+type RacepackEvent struct {
+	City     string             `json:"city"`
+	Id       int64              `json:"id"`
+	Name     LocalizedText      `json:"name"`
+	RaceDate openapi_types.Date `json:"raceDate"`
+	Timezone string             `json:"timezone"`
+}
+
+// RacepackEventList defines model for RacepackEventList.
+type RacepackEventList struct {
+	Items []RacepackEvent `json:"items"`
+}
+
+// RacepackIssueRequest defines model for RacepackIssueRequest.
+type RacepackIssueRequest struct {
+	// ClientEventId 设备生成；网络重试沿用同一个值
+	ClientEventId openapi_types.UUID `json:"clientEventId"`
+	DeviceId      string             `json:"deviceId"`
+
+	// IdVerified 已当面核验证件（本地价参赛人领物前必须核验）
+	IdVerified *bool `json:"idVerified,omitempty"`
+
+	// ProxyName 代领人姓名；本人领取不传
+	ProxyName *string `json:"proxyName,omitempty"`
+}
+
+// RacepackRecent defines model for RacepackRecent.
+type RacepackRecent struct {
+	Bib            *string   `json:"bib"`
+	FullName       string    `json:"fullName"`
+	OccurredAt     time.Time `json:"occurredAt"`
+	ProxyName      *string   `json:"proxyName"`
+	RegistrationId int64     `json:"registrationId"`
+	StaffName      string    `json:"staffName"`
+}
+
+// RacepackStation defines model for RacepackStation.
+type RacepackStation struct {
+	// Confirmed 已确认的报名数
+	Confirmed int32         `json:"confirmed"`
+	Event     RacepackEvent `json:"event"`
+
+	// Picked 其中已领取
+	Picked  int32            `json:"picked"`
+	Recent  []RacepackRecent `json:"recent"`
+	Results []RacepackEntry  `json:"results"`
+}
+
+// RacepackUndoRequest defines model for RacepackUndoRequest.
+type RacepackUndoRequest struct {
+	ClientEventId openapi_types.UUID `json:"clientEventId"`
+	DeviceId      string             `json:"deviceId"`
+	Reason        string             `json:"reason"`
+}
+
 // RejectProofRequest defines model for RejectProofRequest.
 type RejectProofRequest struct {
 	RejectCode   RejectProofRequestRejectCode `json:"rejectCode"`
@@ -1894,6 +2116,23 @@ type Staff struct {
 	Role     Role   `json:"role"`
 	Username string `json:"username"`
 }
+
+// StaffList defines model for StaffList.
+type StaffList struct {
+	Items []StaffMember `json:"items"`
+}
+
+// StaffMember defines model for StaffMember.
+type StaffMember struct {
+	FullName string            `json:"fullName"`
+	Id       int64             `json:"id"`
+	Role     string            `json:"role"`
+	Status   StaffMemberStatus `json:"status"`
+	Username string            `json:"username"`
+}
+
+// StaffMemberStatus defines model for StaffMember.Status.
+type StaffMemberStatus string
 
 // SubmitProofForm defines model for SubmitProofForm.
 type SubmitProofForm struct {
@@ -2002,6 +2241,11 @@ type AdminListProofsParams struct {
 // AdminListProofsParamsStatus defines parameters for AdminListProofs.
 type AdminListProofsParamsStatus string
 
+// AdminGetRacepackStationParams defines parameters for AdminGetRacepackStation.
+type AdminGetRacepackStationParams struct {
+	Q *string `form:"q,omitempty" json:"q,omitempty"`
+}
+
 // AppGetConsentParams defines parameters for AppGetConsent.
 type AppGetConsentParams struct {
 	Purpose AppGetConsentParamsPurpose `form:"purpose" json:"purpose"`
@@ -2038,6 +2282,9 @@ type AdminCreatePriceRuleJSONRequestBody = PriceRuleInput
 // AdminUpdateEventRegistrationJSONRequestBody defines body for AdminUpdateEventRegistration for application/json ContentType.
 type AdminUpdateEventRegistrationJSONRequestBody = UpdateEventRegistrationRequest
 
+// AdminPutEventAssignmentJSONRequestBody defines body for AdminPutEventAssignment for application/json ContentType.
+type AdminPutEventAssignmentJSONRequestBody = EventAssignmentRequest
+
 // AdminCreatePaymentAccountMultipartRequestBody defines body for AdminCreatePaymentAccount for multipart/form-data ContentType.
 type AdminCreatePaymentAccountMultipartRequestBody AdminCreatePaymentAccountMultipartBody
 
@@ -2052,6 +2299,12 @@ type AdminApproveProofJSONRequestBody = ApproveProofRequest
 
 // AdminRejectProofJSONRequestBody defines body for AdminRejectProof for application/json ContentType.
 type AdminRejectProofJSONRequestBody = RejectProofRequest
+
+// AdminIssueRacepackJSONRequestBody defines body for AdminIssueRacepack for application/json ContentType.
+type AdminIssueRacepackJSONRequestBody = RacepackIssueRequest
+
+// AdminUndoRacepackJSONRequestBody defines body for AdminUndoRacepack for application/json ContentType.
+type AdminUndoRacepackJSONRequestBody = RacepackUndoRequest
 
 // AppRequestPhoneCodeJSONRequestBody defines body for AppRequestPhoneCode for application/json ContentType.
 type AppRequestPhoneCodeJSONRequestBody = PhoneCodeRequest
@@ -2121,6 +2374,12 @@ type ServerInterface interface {
 	// AdminUpdateEventRegistration 修改报名开关与报名时间（开放前校验发布状态、价格档与收款账户）
 	// (PATCH /admin/events/{id}/registration)
 	AdminUpdateEventRegistration(c *gin.Context, id int64)
+	// AdminListEventAssignments 赛事的现场人员指派
+	// (GET /admin/events/{id}/staff-assignments)
+	AdminListEventAssignments(c *gin.Context, id int64)
+	// AdminPutEventAssignment 新增或修改一名员工对该赛事的指派（有效期、启用）
+	// (PUT /admin/events/{id}/staff-assignments/{staffId})
+	AdminPutEventAssignment(c *gin.Context, id int64, staffId int64)
 	// AdminGetFile 凭证截图原图（仅被凭证引用的 PAYMENT_PROOF 私有文件；Cache-Control private, no-store）
 	// (GET /admin/files/{id})
 	AdminGetFile(c *gin.Context, id int64)
@@ -2157,6 +2416,21 @@ type ServerInterface interface {
 	// AdminRejectProof 驳回凭证（订单进入重传期）
 	// (POST /admin/proofs/{id}/reject)
 	AdminRejectProof(c *gin.Context, id int64)
+	// AdminListRacepackEvents 领物核销站可操作的赛事（现场角色只返回被指派且在有效期内的）
+	// (GET /admin/racepack/events)
+	AdminListRacepackEvents(c *gin.Context)
+	// AdminGetRacepackStation 领物进度、最近发放与搜索结果（q 为空时不返回搜索结果）
+	// (GET /admin/racepack/events/{id})
+	AdminGetRacepackStation(c *gin.Context, id int64, params AdminGetRacepackStationParams)
+	// AdminIssueRacepack 发放领物（本人或代领）；按 clientEventId 幂等
+	// (POST /admin/racepack/registrations/{id}/issue)
+	AdminIssueRacepack(c *gin.Context, id int64)
+	// AdminUndoRacepack 撤销一次发放（需写原因）
+	// (POST /admin/racepack/registrations/{id}/undo)
+	AdminUndoRacepack(c *gin.Context, id int64)
+	// AdminListStaff 员工列表（指派现场角色用）
+	// (GET /admin/staff)
+	AdminListStaff(c *gin.Context)
 	// AppLogout 吊销当前跑者令牌
 	// (POST /app/auth/logout)
 	AppLogout(c *gin.Context)
@@ -2482,6 +2756,65 @@ func (siw *ServerInterfaceWrapper) AdminUpdateEventRegistration(c *gin.Context) 
 	siw.Handler.AdminUpdateEventRegistration(c, id)
 }
 
+// AdminListEventAssignments operation middleware
+func (siw *ServerInterfaceWrapper) AdminListEventAssignments(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminListEventAssignments(c, id)
+}
+
+// AdminPutEventAssignment operation middleware
+func (siw *ServerInterfaceWrapper) AdminPutEventAssignment(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "staffId" -------------
+	var staffId int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "staffId", c.Param("staffId"), &staffId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter staffId: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminPutEventAssignment(c, id, staffId)
+}
+
 // AdminGetFile operation middleware
 func (siw *ServerInterfaceWrapper) AdminGetFile(c *gin.Context) {
 
@@ -2780,6 +3113,118 @@ func (siw *ServerInterfaceWrapper) AdminRejectProof(c *gin.Context) {
 	}
 
 	siw.Handler.AdminRejectProof(c, id)
+}
+
+// AdminListRacepackEvents operation middleware
+func (siw *ServerInterfaceWrapper) AdminListRacepackEvents(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminListRacepackEvents(c)
+}
+
+// AdminGetRacepackStation operation middleware
+func (siw *ServerInterfaceWrapper) AdminGetRacepackStation(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params AdminGetRacepackStationParams
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "q", c.Request.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminGetRacepackStation(c, id, params)
+}
+
+// AdminIssueRacepack operation middleware
+func (siw *ServerInterfaceWrapper) AdminIssueRacepack(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminIssueRacepack(c, id)
+}
+
+// AdminUndoRacepack operation middleware
+func (siw *ServerInterfaceWrapper) AdminUndoRacepack(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminUndoRacepack(c, id)
+}
+
+// AdminListStaff operation middleware
+func (siw *ServerInterfaceWrapper) AdminListStaff(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminListStaff(c)
 }
 
 // AppLogout operation middleware
@@ -3329,6 +3774,13 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/admin/proofs/:id/approve", wrapper.AdminApproveProof)
 	router.POST(options.BaseURL+"/admin/proofs/:id/reject", wrapper.AdminRejectProof)
 	router.GET(options.BaseURL+"/admin/files/:id", wrapper.AdminGetFile)
+	router.GET(options.BaseURL+"/admin/racepack/events", wrapper.AdminListRacepackEvents)
+	router.GET(options.BaseURL+"/admin/racepack/events/:id", wrapper.AdminGetRacepackStation)
+	router.POST(options.BaseURL+"/admin/racepack/registrations/:id/issue", wrapper.AdminIssueRacepack)
+	router.POST(options.BaseURL+"/admin/racepack/registrations/:id/undo", wrapper.AdminUndoRacepack)
+	router.GET(options.BaseURL+"/admin/staff", wrapper.AdminListStaff)
+	router.GET(options.BaseURL+"/admin/events/:id/staff-assignments", wrapper.AdminListEventAssignments)
+	router.PUT(options.BaseURL+"/admin/events/:id/staff-assignments/:staffId", wrapper.AdminPutEventAssignment)
 }
 
 type AdminLoginRequestObject struct {
@@ -3783,6 +4235,86 @@ type AdminUpdateEventRegistrationdefaultJSONResponse struct {
 }
 
 func (response AdminUpdateEventRegistrationdefaultJSONResponse) VisitAdminUpdateEventRegistrationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListEventAssignmentsRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminListEventAssignmentsResponseObject interface {
+	VisitAdminListEventAssignmentsResponse(w http.ResponseWriter) error
+}
+
+type AdminListEventAssignments200JSONResponse EventAssignmentList
+
+func (response AdminListEventAssignments200JSONResponse) VisitAdminListEventAssignmentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListEventAssignmentsdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminListEventAssignmentsdefaultJSONResponse) VisitAdminListEventAssignmentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminPutEventAssignmentRequestObject struct {
+	Id      int64 `json:"id"`
+	StaffId int64 `json:"staffId"`
+	Body    *AdminPutEventAssignmentJSONRequestBody
+}
+
+type AdminPutEventAssignmentResponseObject interface {
+	VisitAdminPutEventAssignmentResponse(w http.ResponseWriter) error
+}
+
+type AdminPutEventAssignment200JSONResponse EventAssignmentList
+
+func (response AdminPutEventAssignment200JSONResponse) VisitAdminPutEventAssignmentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminPutEventAssignmentdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminPutEventAssignmentdefaultJSONResponse) VisitAdminPutEventAssignmentResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -4260,6 +4792,202 @@ type AdminRejectProofdefaultJSONResponse struct {
 }
 
 func (response AdminRejectProofdefaultJSONResponse) VisitAdminRejectProofResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListRacepackEventsRequestObject struct {
+}
+
+type AdminListRacepackEventsResponseObject interface {
+	VisitAdminListRacepackEventsResponse(w http.ResponseWriter) error
+}
+
+type AdminListRacepackEvents200JSONResponse RacepackEventList
+
+func (response AdminListRacepackEvents200JSONResponse) VisitAdminListRacepackEventsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListRacepackEventsdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminListRacepackEventsdefaultJSONResponse) VisitAdminListRacepackEventsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminGetRacepackStationRequestObject struct {
+	Id     int64 `json:"id"`
+	Params AdminGetRacepackStationParams
+}
+
+type AdminGetRacepackStationResponseObject interface {
+	VisitAdminGetRacepackStationResponse(w http.ResponseWriter) error
+}
+
+type AdminGetRacepackStation200JSONResponse RacepackStation
+
+func (response AdminGetRacepackStation200JSONResponse) VisitAdminGetRacepackStationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminGetRacepackStationdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminGetRacepackStationdefaultJSONResponse) VisitAdminGetRacepackStationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminIssueRacepackRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminIssueRacepackJSONRequestBody
+}
+
+type AdminIssueRacepackResponseObject interface {
+	VisitAdminIssueRacepackResponse(w http.ResponseWriter) error
+}
+
+type AdminIssueRacepack200JSONResponse RacepackActionResult
+
+func (response AdminIssueRacepack200JSONResponse) VisitAdminIssueRacepackResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminIssueRacepackdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminIssueRacepackdefaultJSONResponse) VisitAdminIssueRacepackResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUndoRacepackRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminUndoRacepackJSONRequestBody
+}
+
+type AdminUndoRacepackResponseObject interface {
+	VisitAdminUndoRacepackResponse(w http.ResponseWriter) error
+}
+
+type AdminUndoRacepack200JSONResponse RacepackActionResult
+
+func (response AdminUndoRacepack200JSONResponse) VisitAdminUndoRacepackResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUndoRacepackdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminUndoRacepackdefaultJSONResponse) VisitAdminUndoRacepackResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListStaffRequestObject struct {
+}
+
+type AdminListStaffResponseObject interface {
+	VisitAdminListStaffResponse(w http.ResponseWriter) error
+}
+
+type AdminListStaff200JSONResponse StaffList
+
+func (response AdminListStaff200JSONResponse) VisitAdminListStaffResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListStaffdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminListStaffdefaultJSONResponse) VisitAdminListStaffResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -5251,6 +5979,12 @@ type StrictServerInterface interface {
 	// AdminUpdateEventRegistration 修改报名开关与报名时间（开放前校验发布状态、价格档与收款账户）
 	// (PATCH /admin/events/{id}/registration)
 	AdminUpdateEventRegistration(ctx context.Context, request AdminUpdateEventRegistrationRequestObject) (AdminUpdateEventRegistrationResponseObject, error)
+	// AdminListEventAssignments 赛事的现场人员指派
+	// (GET /admin/events/{id}/staff-assignments)
+	AdminListEventAssignments(ctx context.Context, request AdminListEventAssignmentsRequestObject) (AdminListEventAssignmentsResponseObject, error)
+	// AdminPutEventAssignment 新增或修改一名员工对该赛事的指派（有效期、启用）
+	// (PUT /admin/events/{id}/staff-assignments/{staffId})
+	AdminPutEventAssignment(ctx context.Context, request AdminPutEventAssignmentRequestObject) (AdminPutEventAssignmentResponseObject, error)
 	// AdminGetFile 凭证截图原图（仅被凭证引用的 PAYMENT_PROOF 私有文件；Cache-Control private, no-store）
 	// (GET /admin/files/{id})
 	AdminGetFile(ctx context.Context, request AdminGetFileRequestObject) (AdminGetFileResponseObject, error)
@@ -5287,6 +6021,21 @@ type StrictServerInterface interface {
 	// AdminRejectProof 驳回凭证（订单进入重传期）
 	// (POST /admin/proofs/{id}/reject)
 	AdminRejectProof(ctx context.Context, request AdminRejectProofRequestObject) (AdminRejectProofResponseObject, error)
+	// AdminListRacepackEvents 领物核销站可操作的赛事（现场角色只返回被指派且在有效期内的）
+	// (GET /admin/racepack/events)
+	AdminListRacepackEvents(ctx context.Context, request AdminListRacepackEventsRequestObject) (AdminListRacepackEventsResponseObject, error)
+	// AdminGetRacepackStation 领物进度、最近发放与搜索结果（q 为空时不返回搜索结果）
+	// (GET /admin/racepack/events/{id})
+	AdminGetRacepackStation(ctx context.Context, request AdminGetRacepackStationRequestObject) (AdminGetRacepackStationResponseObject, error)
+	// AdminIssueRacepack 发放领物（本人或代领）；按 clientEventId 幂等
+	// (POST /admin/racepack/registrations/{id}/issue)
+	AdminIssueRacepack(ctx context.Context, request AdminIssueRacepackRequestObject) (AdminIssueRacepackResponseObject, error)
+	// AdminUndoRacepack 撤销一次发放（需写原因）
+	// (POST /admin/racepack/registrations/{id}/undo)
+	AdminUndoRacepack(ctx context.Context, request AdminUndoRacepackRequestObject) (AdminUndoRacepackResponseObject, error)
+	// AdminListStaff 员工列表（指派现场角色用）
+	// (GET /admin/staff)
+	AdminListStaff(ctx context.Context, request AdminListStaffRequestObject) (AdminListStaffResponseObject, error)
 	// AppLogout 吊销当前跑者令牌
 	// (POST /app/auth/logout)
 	AppLogout(ctx context.Context, request AppLogoutRequestObject) (AppLogoutResponseObject, error)
@@ -5762,6 +6511,66 @@ func (sh *strictHandler) AdminUpdateEventRegistration(ctx *gin.Context, id int64
 	}
 }
 
+// AdminListEventAssignments operation middleware
+func (sh *strictHandler) AdminListEventAssignments(ctx *gin.Context, id int64) {
+	var request AdminListEventAssignmentsRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminListEventAssignments(ctx, request.(AdminListEventAssignmentsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminListEventAssignments")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminListEventAssignmentsResponseObject); ok {
+		if err := validResponse.VisitAdminListEventAssignmentsResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminPutEventAssignment operation middleware
+func (sh *strictHandler) AdminPutEventAssignment(ctx *gin.Context, id int64, staffId int64) {
+	var request AdminPutEventAssignmentRequestObject
+
+	request.Id = id
+	request.StaffId = staffId
+
+	var body AdminPutEventAssignmentJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminPutEventAssignment(ctx, request.(AdminPutEventAssignmentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminPutEventAssignment")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminPutEventAssignmentResponseObject); ok {
+		if err := validResponse.VisitAdminPutEventAssignmentResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // AdminGetFile operation middleware
 func (sh *strictHandler) AdminGetFile(ctx *gin.Context, id int64) {
 	var request AdminGetFileRequestObject
@@ -6096,6 +6905,147 @@ func (sh *strictHandler) AdminRejectProof(ctx *gin.Context, id int64) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AdminRejectProofResponseObject); ok {
 		if err := validResponse.VisitAdminRejectProofResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminListRacepackEvents operation middleware
+func (sh *strictHandler) AdminListRacepackEvents(ctx *gin.Context) {
+	var request AdminListRacepackEventsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminListRacepackEvents(ctx, request.(AdminListRacepackEventsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminListRacepackEvents")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminListRacepackEventsResponseObject); ok {
+		if err := validResponse.VisitAdminListRacepackEventsResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminGetRacepackStation operation middleware
+func (sh *strictHandler) AdminGetRacepackStation(ctx *gin.Context, id int64, params AdminGetRacepackStationParams) {
+	var request AdminGetRacepackStationRequestObject
+
+	request.Id = id
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminGetRacepackStation(ctx, request.(AdminGetRacepackStationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminGetRacepackStation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminGetRacepackStationResponseObject); ok {
+		if err := validResponse.VisitAdminGetRacepackStationResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminIssueRacepack operation middleware
+func (sh *strictHandler) AdminIssueRacepack(ctx *gin.Context, id int64) {
+	var request AdminIssueRacepackRequestObject
+
+	request.Id = id
+
+	var body AdminIssueRacepackJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminIssueRacepack(ctx, request.(AdminIssueRacepackRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminIssueRacepack")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminIssueRacepackResponseObject); ok {
+		if err := validResponse.VisitAdminIssueRacepackResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminUndoRacepack operation middleware
+func (sh *strictHandler) AdminUndoRacepack(ctx *gin.Context, id int64) {
+	var request AdminUndoRacepackRequestObject
+
+	request.Id = id
+
+	var body AdminUndoRacepackJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminUndoRacepack(ctx, request.(AdminUndoRacepackRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminUndoRacepack")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminUndoRacepackResponseObject); ok {
+		if err := validResponse.VisitAdminUndoRacepackResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminListStaff operation middleware
+func (sh *strictHandler) AdminListStaff(ctx *gin.Context) {
+	var request AdminListStaffRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminListStaff(ctx, request.(AdminListStaffRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminListStaff")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminListStaffResponseObject); ok {
+		if err := validResponse.VisitAdminListStaffResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

@@ -97,4 +97,47 @@ describe("赛事详情", () => {
     expect(await screen.findByTestId("event-registration-switch")).toBeDisabled();
     expect(screen.queryByTestId("event-registration-save")).not.toBeInTheDocument();
   });
+
+  it("管理员在「现场人员」页看到指派并可停用", async () => {
+    const assignment = {
+      staffId: 5,
+      username: "staff.sokha",
+      fullName: "Sokha Ly",
+      role: "RACE_STAFF",
+      validFrom: "2026-11-13T17:00:00Z",
+      validUntil: "2026-11-15T17:00:00Z",
+      enabled: true,
+    };
+    const { requests } = renderAdminApp("/events/7", {
+      "GET /api/admin/me": () => jsonResponse(200, adminMe),
+      "GET /api/admin/events/7": () => jsonResponse(200, publishedEvent),
+      "GET /api/admin/events/7/staff-assignments": () => jsonResponse(200, { items: [assignment] }),
+      "GET /api/admin/staff": () => jsonResponse(200, { items: [{ id: 5, username: "staff.sokha", fullName: "Sokha Ly", role: "RACE_STAFF", status: "ACTIVE" }] }),
+      "PUT /api/admin/events/7/staff-assignments/5": () => jsonResponse(200, { items: [{ ...assignment, enabled: false }] }),
+    });
+    const user = setupFormUser();
+
+    await user.click(await screen.findByTestId("event-tab-staff"));
+    expect(await screen.findByText("Sokha Ly (staff.sokha)")).toBeInTheDocument();
+    expect(screen.getByText("2026-11-14 00:00 – 2026-11-16 00:00")).toBeInTheDocument();
+    await user.click(screen.getByTestId("assignment-enabled-5"));
+
+    await waitFor(() => expect(requests.some((r) => r.method === "PUT")).toBe(true));
+    const put = requests.find((r) => r.method === "PUT")!;
+    expect(await put.clone().json()).toEqual({
+      validFrom: assignment.validFrom,
+      validUntil: assignment.validUntil,
+      enabled: false,
+    });
+  });
+
+  it("运营看不到「现场人员」页", async () => {
+    renderAdminApp("/events/7", {
+      "GET /api/admin/me": () => jsonResponse(200, opsMe),
+      "GET /api/admin/events/7": () => jsonResponse(200, publishedEvent),
+    });
+    expect(await screen.findByTestId("event-tab-basic")).toBeInTheDocument();
+    expect(screen.queryByTestId("event-tab-staff")).not.toBeInTheDocument();
+  });
 });
+

@@ -692,10 +692,257 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/racepack/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 领物核销站可操作的赛事（现场角色只返回被指派且在有效期内的） */
+        get: operations["adminListRacepackEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/racepack/events/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 领物进度、最近发放与搜索结果（q 为空时不返回搜索结果） */
+        get: operations["adminGetRacepackStation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/racepack/registrations/{id}/issue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发放领物（本人或代领）；按 clientEventId 幂等 */
+        post: operations["adminIssueRacepack"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/racepack/registrations/{id}/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 撤销一次发放（需写原因） */
+        post: operations["adminUndoRacepack"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 员工列表（指派现场角色用） */
+        get: operations["adminListStaff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/{id}/staff-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 赛事的现场人员指派 */
+        get: operations["adminListEventAssignments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/{id}/staff-assignments/{staffId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 新增或修改一名员工对该赛事的指派（有效期、启用） */
+        put: operations["adminPutEventAssignment"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        RacepackEvent: {
+            /** Format: int64 */
+            id: number;
+            name: components["schemas"]["LocalizedText"];
+            city: string;
+            /** Format: date */
+            raceDate: string;
+            timezone: string;
+        };
+        RacepackEventList: {
+            items: components["schemas"]["RacepackEvent"][];
+        };
+        RacepackEntry: {
+            /** Format: int64 */
+            registrationId: number;
+            regNo: string;
+            /** @description 订单参考码（跑者在付款页、我的赛事看到的那个） */
+            orderNo: string;
+            /** @enum {string} */
+            status: "PENDING" | "CONFIRMED" | "CANCELLED";
+            orderStatus: string;
+            fullName: string;
+            tshirtSize: string | null;
+            /** @description 只给手机号后四位，用于现场核对 */
+            phoneLast4: string | null;
+            /** @enum {string} */
+            audience: "ALL" | "LOCAL";
+            categoryCode: string;
+            categoryName: components["schemas"]["LocalizedText"];
+            /** @description 已分配的号码布（按号段补零）；未分配为空 */
+            bib: string | null;
+            picked: boolean;
+            /** Format: date-time */
+            pickedAt: string | null;
+            pickedByName: string | null;
+            proxyName: string | null;
+            idVerified: boolean;
+            /**
+             * @description 不能发放的原因；为空表示可以发放（或已发放）
+             * @enum {string|null}
+             */
+            blockReason: "NOT_PAID" | "CANCELLED" | null;
+        };
+        RacepackRecent: {
+            /** Format: int64 */
+            registrationId: number;
+            fullName: string;
+            bib: string | null;
+            proxyName: string | null;
+            staffName: string;
+            /** Format: date-time */
+            occurredAt: string;
+        };
+        RacepackStation: {
+            event: components["schemas"]["RacepackEvent"];
+            /**
+             * Format: int32
+             * @description 已确认的报名数
+             */
+            confirmed: number;
+            /**
+             * Format: int32
+             * @description 其中已领取
+             */
+            picked: number;
+            recent: components["schemas"]["RacepackRecent"][];
+            results: components["schemas"]["RacepackEntry"][];
+        };
+        RacepackIssueRequest: {
+            /**
+             * Format: uuid
+             * @description 设备生成；网络重试沿用同一个值
+             */
+            clientEventId: string;
+            deviceId: string;
+            /** @description 代领人姓名；本人领取不传 */
+            proxyName?: string;
+            /** @description 已当面核验证件（本地价参赛人领物前必须核验） */
+            idVerified?: boolean;
+        };
+        RacepackUndoRequest: {
+            /** Format: uuid */
+            clientEventId: string;
+            deviceId: string;
+            reason: string;
+        };
+        RacepackActionResult: {
+            /**
+             * @description ALREADY 表示此前已领取（或同一 clientEventId 的重试），没有再次发放
+             * @enum {string}
+             */
+            outcome: "APPLIED" | "ALREADY";
+            entry: components["schemas"]["RacepackEntry"];
+        };
+        StaffMember: {
+            /** Format: int64 */
+            id: number;
+            username: string;
+            fullName: string;
+            role: string;
+            /** @enum {string} */
+            status: "ACTIVE" | "DISABLED";
+        };
+        StaffList: {
+            items: components["schemas"]["StaffMember"][];
+        };
+        EventAssignment: {
+            /** Format: int64 */
+            staffId: number;
+            username: string;
+            fullName: string;
+            role: string;
+            /** Format: date-time */
+            validFrom: string;
+            /** Format: date-time */
+            validUntil: string;
+            enabled: boolean;
+        };
+        EventAssignmentList: {
+            items: components["schemas"]["EventAssignment"][];
+        };
+        EventAssignmentRequest: {
+            /** Format: date-time */
+            validFrom: string;
+            /** Format: date-time */
+            validUntil: string;
+            enabled: boolean;
+        };
         ErrorResponse: {
             error: {
                 code: string;
@@ -3113,6 +3360,234 @@ export interface operations {
                 };
                 content: {
                     "image/*": string;
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminListRacepackEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RacepackEventList"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminGetRacepackStation: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RacepackStation"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminIssueRacepack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RacepackIssueRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RacepackActionResult"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminUndoRacepack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RacepackUndoRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RacepackActionResult"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminListStaff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffList"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminListEventAssignments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventAssignmentList"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminPutEventAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                staffId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventAssignmentRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventAssignmentList"];
                 };
             };
             /** @description 错误 */

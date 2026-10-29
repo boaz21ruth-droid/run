@@ -1,6 +1,13 @@
 {
-  "login": { "title": "登录 WeRun 后台", "username": "用户名", "password": "密码", "submit": "登录" },
-  "layout": { "logout": "退出登录" },
+  "login": {
+    "title": "登录 WeRun 后台",
+    "username": "用户名",
+    "password": "密码",
+    "submit": "登录"
+  },
+  "layout": {
+    "logout": "退出登录"
+  },
   "role": {
     "ADMIN": "系统管理员",
     "OPS": "运营",
@@ -10,19 +17,42 @@
     "RACE_STAFF": "现场工作人员",
     "PHOTOGRAPHER": "摄影师"
   },
-  "forbidden": { "title": "没有访问权限", "body": "当前角色不能查看这个页面。如需开通，请联系系统管理员。" },
-  "landing": { "noPagesTitle": "当前角色没有可访问的页面", "noPagesBody": "你已登录为「{{role}}」，但这个角色还没有开通任何后台页面。如需开通，请联系系统管理员。" },
-  "time": { "zone": "时区：{{zone}}", "eventTimezone": "赛事时区" },
+  "forbidden": {
+    "title": "没有访问权限",
+    "body": "当前角色不能查看这个页面。如需开通，请联系系统管理员。"
+  },
+  "landing": {
+    "noPagesTitle": "当前角色没有可访问的页面",
+    "noPagesBody": "你已登录为「{{role}}」，但这个角色还没有开通任何后台页面。如需开通，请联系系统管理员。"
+  },
+  "time": {
+    "zone": "时区：{{zone}}",
+    "eventTimezone": "赛事时区"
+  },
   "events": {
     "title": "赛事管理",
     "create": "新建赛事",
     "publish": "发布",
     "publishedToast": "赛事已发布",
-    "publishConfirm": { "title": "发布「{{name}}」？", "body": "发布后赛事会立即出现在跑者端的公开列表中，跑者可以查看详情；开放报名后即可下单。发布后不能撤回为草稿。", "ok": "确认发布", "cancel": "取消" },
+    "publishConfirm": {
+      "title": "发布「{{name}}」？",
+      "body": "发布后赛事会立即出现在跑者端的公开列表中，跑者可以查看详情；开放报名后即可下单。发布后不能撤回为草稿。",
+      "ok": "确认发布",
+      "cancel": "取消"
+    },
     "empty": "还没有赛事",
-    "col": { "name": "赛事名称", "date": "比赛日期", "city": "城市", "status": "状态", "actions": "操作" }
+    "col": {
+      "name": "赛事名称",
+      "date": "比赛日期",
+      "city": "城市",
+      "status": "状态",
+      "actions": "操作"
+    }
   },
-  "status": { "DRAFT": "草稿", "PUBLISHED": "已发布" },
+  "status": {
+    "DRAFT": "草稿",
+    "PUBLISHED": "已发布"
+  },
   "form": {
     "title": "新建赛事",
     "slug": "链接标识",
@@ -48,8 +78,14 @@
     "submit": "保存草稿",
     "created": "赛事已保存为草稿"
   },
-  "eventType": { "RACE": "付费赛事", "FREE_ACTIVITY": "免费活动" },
-  "organizerType": { "OFFICIAL": "官方主办", "PARTNER": "合作主办" },
+  "eventType": {
+    "RACE": "付费赛事",
+    "FREE_ACTIVITY": "免费活动"
+  },
+  "organizerType": {
+    "OFFICIAL": "官方主办",
+    "PARTNER": "合作主办"
+  },
   "eventDetail": {
     "back": "返回赛事列表",
     "tabBasic": "基本信息",
@@ -64,7 +100,13 @@
       "city": "城市",
       "timezone": "时区"
     },
-    "categories": { "title": "组别", "code": "代码", "name": "名称", "distanceM": "距离（米）", "capacity": "名额" },
+    "categories": {
+      "title": "组别",
+      "code": "代码",
+      "name": "名称",
+      "distanceM": "距离（米）",
+      "capacity": "名额"
+    },
     "registration": {
       "title": "报名设置",
       "open": "开放报名",
@@ -73,7 +115,8 @@
       "timeHelp": "留空表示不限",
       "save": "保存报名设置",
       "saved": "报名设置已保存"
-    }
+    },
+    "tabStaff": "现场人员"
   },
   "pricing": {
     "hint": "同一组别有多个可用价格档时，跑者自动获得最低价。",
@@ -98,7 +141,10 @@
       "sortOrder": "排序",
       "actions": "操作"
     },
-    "audience": { "ALL": "所有人", "LOCAL": "柬埔寨国籍" },
+    "audience": {
+      "ALL": "所有人",
+      "LOCAL": "柬埔寨国籍"
+    },
     "form": {
       "name": "名称",
       "audience": "适用人群",
@@ -132,8 +178,15 @@
       "status": "状态",
       "actions": "操作"
     },
-    "discountType": { "PERCENT": "按百分比", "AMOUNT": "固定金额", "WAIVER": "免单" },
-    "status": { "ACTIVE": "启用", "DISABLED": "停用" },
+    "discountType": {
+      "PERCENT": "按百分比",
+      "AMOUNT": "固定金额",
+      "WAIVER": "免单"
+    },
+    "status": {
+      "ACTIVE": "启用",
+      "DISABLED": "停用"
+    },
     "form": {
       "code": "优惠码",
       "codeHelp": "3–32 位字母、数字、下划线或连字符，自动转为大写，保存后不能修改",
@@ -164,7 +217,14 @@
     "active": "启用",
     "inactive": "停用",
     "currencyNote": "收款币种固定为美元（USD）。跑者下单时优先使用绑定该赛事的启用账户，其次使用所有赛事通用的账户。",
-    "confirm": { "qrTitle": "更换收款二维码？", "qrBody": "保存后立即生效：所有使用这个账户、尚未付款的订单（包括已经下单的）付款页都会改为显示新二维码。请先确认新二维码能正常收款。", "disableTitle": "停用这个收款账户？", "disableBody": "停用后新订单不会再分配到这个账户；如果对应赛事没有其他启用的账户，跑者将无法下单付款。已分配到这个账户的订单不受影响。", "ok": "确认保存", "cancel": "取消" },
+    "confirm": {
+      "qrTitle": "更换收款二维码？",
+      "qrBody": "保存后立即生效：所有使用这个账户、尚未付款的订单（包括已经下单的）付款页都会改为显示新二维码。请先确认新二维码能正常收款。",
+      "disableTitle": "停用这个收款账户？",
+      "disableBody": "停用后新订单不会再分配到这个账户；如果对应赛事没有其他启用的账户，跑者将无法下单付款。已分配到这个账户的订单不受影响。",
+      "ok": "确认保存",
+      "cancel": "取消"
+    },
     "col": {
       "qr": "二维码",
       "name": "名称",
@@ -176,8 +236,18 @@
       "status": "状态",
       "actions": "操作"
     },
-    "provider": { "ABA": "ABA", "ACLEDA": "ACLEDA", "WING": "Wing", "BAKONG": "Bakong", "OTHER": "其他" },
-    "scope": { "REGISTRATION": "报名", "MERCH": "周边", "ALL": "报名与周边" },
+    "provider": {
+      "ABA": "ABA",
+      "ACLEDA": "ACLEDA",
+      "WING": "Wing",
+      "BAKONG": "Bakong",
+      "OTHER": "其他"
+    },
+    "scope": {
+      "REGISTRATION": "报名",
+      "MERCH": "周边",
+      "ALL": "报名与周边"
+    },
     "form": {
       "name": "名称",
       "nameHelp": "只在后台显示，例如 ABA USD 主收款户",
@@ -199,7 +269,12 @@
   "proofs": {
     "title": "凭证审核",
     "required": "必填",
-    "status": { "SUBMITTED": "待审核", "APPROVED": "已通过", "REJECTED": "已驳回", "WITHDRAWN": "已撤回" },
+    "status": {
+      "SUBMITTED": "待审核",
+      "APPROVED": "已通过",
+      "REJECTED": "已驳回",
+      "WITHDRAWN": "已撤回"
+    },
     "col": {
       "proofNo": "凭证号",
       "orderNo": "订单号",
@@ -264,7 +339,13 @@
   },
   "orders": {
     "title": "订单",
-    "filter": { "event": "赛事", "status": "状态", "q": "订单号、手机号或姓名", "submit": "查询", "reset": "重置" },
+    "filter": {
+      "event": "赛事",
+      "status": "状态",
+      "q": "订单号、手机号或姓名",
+      "submit": "查询",
+      "reset": "重置"
+    },
     "status": {
       "PENDING_PAYMENT": "待付款",
       "PROOF_SUBMITTED": "凭证审核中",
@@ -316,9 +397,78 @@
       "paid": "分摊实付",
       "status": "报名状态"
     },
-    "registrationStatus": { "PENDING": "待确认", "CONFIRMED": "已确认", "CANCELLED": "已取消" },
-    "receipt": { "txnRef": "交易号", "amount": "到账金额", "receivedAt": "到账时间", "match": "匹配结果" },
-    "matchStatus": { "APPLIED": "已入账", "EXCEPTION": "异常", "UNMATCHED": "未匹配" },
-    "couponState": { "RESERVED": "已占用", "CONSUMED": "已核销", "RELEASED": "已释放" }
+    "registrationStatus": {
+      "PENDING": "待确认",
+      "CONFIRMED": "已确认",
+      "CANCELLED": "已取消"
+    },
+    "receipt": {
+      "txnRef": "交易号",
+      "amount": "到账金额",
+      "receivedAt": "到账时间",
+      "match": "匹配结果"
+    },
+    "matchStatus": {
+      "APPLIED": "已入账",
+      "EXCEPTION": "异常",
+      "UNMATCHED": "未匹配"
+    },
+    "couponState": {
+      "RESERVED": "已占用",
+      "CONSUMED": "已核销",
+      "RELEASED": "已释放"
+    }
+  },
+  "racepack": {
+    "title": "领物核销",
+    "noEvents": "你还没有被指派到正在进行的赛事。请联系管理员。",
+    "chooseEvent": "选择赛事",
+    "progress": "已发 {{picked}} / {{confirmed}}",
+    "searchPlaceholder": "号码布 / 参考码 / 姓名 / 手机尾号",
+    "searchHint": "扫跑者的凭证二维码，或输入号码布、参考码、姓名。",
+    "scan": "扫凭证二维码",
+    "noResults": "没有找到「{{q}}」",
+    "recent": "最近发放",
+    "reference": "参考码",
+    "tshirt": "T 恤 {{size}}",
+    "phone": "手机尾号 {{last4}}",
+    "paid": "付款已确认",
+    "noBib": "未分配号码布",
+    "idVerified": "证件已核验",
+    "localNeedsId": "本地价 · 需柬籍证件",
+    "idCheck": "我已当面核验柬籍证件",
+    "issueSelf": "本人领取",
+    "issueProxy": "他人代领",
+    "proxyTitle": "代领登记",
+    "proxyName": "代领人姓名",
+    "proxyCheck": "代领人出示了跑者的参考码或凭证",
+    "proxyConfirm": "确认代领发放",
+    "issued": "已发放给 {{name}}",
+    "alreadyPicked": "{{name}} 之前已经领过了",
+    "picked": "已领取",
+    "bySelf": "本人",
+    "byProxy": "代领：{{name}}",
+    "block": {
+      "NOT_PAID": "付款未核验",
+      "CANCELLED": "报名已取消"
+    },
+    "blockHint": "不要发放。请跑者联系客服或财务处理。",
+    "undo": "撤销",
+    "undoTitle": "撤销 {{name}} 的领取记录",
+    "undoReason": "撤销原因（如：发错人）",
+    "undoConfirm": "确认撤销",
+    "undone": "已撤销"
+  },
+  "assignments": {
+    "intro": "现场主管、现场工作人员和摄影师只能操作被指派、且在有效期内的赛事。领物核销站按这里放行。",
+    "chooseStaff": "选择现场人员",
+    "add": "指派",
+    "saved": "已保存指派",
+    "col": {
+      "staff": "人员",
+      "role": "角色",
+      "window": "有效期",
+      "enabled": "启用"
+    }
   }
 }

@@ -52,6 +52,9 @@ const (
 	CodeOTPInvalid                = "OTP_INVALID"
 	CodeOTPExpired                = "OTP_EXPIRED"
 	CodeOTPAttemptsExceeded       = "OTP_ATTEMPTS_EXCEEDED"
+	CodeRacepackNotPaid           = "RACEPACK_NOT_PAID"
+	CodeRacepackIDRequired        = "RACEPACK_ID_REQUIRED"
+	CodeRacepackNotPicked         = "RACEPACK_NOT_PICKED"
 )
 
 // AllCodes 列出全部错误码，供文案完整性测试使用。新增错误码时必须同时加到这里。
@@ -99,6 +102,9 @@ var AllCodes = []string{
 	CodeOTPInvalid,
 	CodeOTPExpired,
 	CodeOTPAttemptsExceeded,
+	CodeRacepackNotPaid,
+	CodeRacepackIDRequired,
+	CodeRacepackNotPicked,
 }
 
 // FieldError 描述某个字段的错误：文案 key 与参数。

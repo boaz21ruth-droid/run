@@ -23,7 +23,14 @@ export function AppLayout() {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Layout.Sider breakpoint="lg" collapsedWidth={0} theme="light" width={220}>
+      <Layout.Sider
+        breakpoint="lg"
+        collapsedWidth={0}
+        theme="light"
+        width={220}
+        // 手机上菜单收起：把展开按钮放进顶栏那一行，不压住内容
+        zeroWidthTriggerStyle={{ top: 12 }}
+      >
         <div style={{ padding: "16px 20px", fontWeight: 800, fontSize: 18 }}>{t("common:brand.name")}</div>
         <Menu
           mode="inline"
@@ -39,8 +46,13 @@ export function AppLayout() {
             alignItems: "center",
             justifyContent: "flex-end",
             flexWrap: "wrap",
-            gap: 16,
-            paddingInline: 24,
+            gap: "8px 16px",
+            // 手机上顶栏会折行：高度随内容，不用 antd 默认的固定 64px
+            height: "auto",
+            minHeight: 64,
+            lineHeight: "normal",
+            paddingBlock: 12,
+            paddingInline: "56px 24px",
             background: "var(--card)",
             borderBottom: "1px solid var(--line)",
           }}
@@ -60,7 +72,7 @@ export function AppLayout() {
             {t("layout.logout")}
           </Button>
         </Layout.Header>
-        <Layout.Content style={{ padding: 24 }}>
+        <Layout.Content style={{ padding: "24px clamp(12px, 4vw, 24px)" }}>
           <Outlet />
         </Layout.Content>
       </Layout>
