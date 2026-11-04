@@ -9,6 +9,7 @@ import { ShareButton } from "../components/ShareButton";
 import { eventStatus, totalRemaining } from "../events/status";
 import { currentTier } from "../events/tiers";
 import { formatKm, formatNumber, formatRaceDate, formatTime, raceDayParts } from "../format";
+import { loadReferral, offerText } from "../promo/referral";
 import { usePublicEvent } from "../queries";
 import { registrationAvailable } from "../register/model";
 import styles from "./EventDetail.module.css";
@@ -33,6 +34,9 @@ export function EventDetailPage() {
         const allSoldOut = registrationAvailable(data) && !data.categories.some((c) => !c.soldOut);
         const freeOpen = data.eventType === "FREE_ACTIVITY" && data.registrationOpen;
         const tier = currentTier(data.priceTiers);
+        const referral = data.eventType === "RACE" ? loadReferral(data.slug) : null;
+        // 推荐码是每人固定价时，按钮直接报推荐价（比当前档位便宜才显示，和后端「不加价」一致）
+        const referralPrice = referral?.couponCode && referral.offer?.discountType === "PRICE" ? referral.offer.discountValue : null;
 
         // 桌面端按钮在横幅里，手机端固定在底部；同一动作渲染两份，测试 id 只挂在横幅那一份上
         const renderAction = (primary: boolean) =>
@@ -42,7 +46,11 @@ export function EventDetailPage() {
               className={styles.cta}
               data-testid={primary ? "register-button" : undefined}
             >
-              {tier ? t("register.ctaTier", { name: tier.name, price: formatUsd(tier.priceCents) }) : t("register.cta")}
+              {referralPrice !== null && (!tier || referralPrice < tier.priceCents)
+                ? t("register.ctaTier", { name: t("referral.ctaName"), price: formatUsd(referralPrice) })
+                : tier
+                  ? t("register.ctaTier", { name: tier.name, price: formatUsd(tier.priceCents) })
+                  : t("register.cta")}
             </Link>
           ) : freeOpen ? (
             <Link
@@ -98,6 +106,18 @@ export function EventDetailPage() {
               </div>
             </header>
 
+            {referral ? (
+              <p className={styles.referral} data-testid="referral-banner">
+                <span>{t("referral.via", { label: referral.label })}</span>
+                {referral.couponCode ? (
+                  <span>
+                    {t("referral.code")} <b className={styles.referralCode}>{referral.couponCode}</b>
+                    {referral.offer ? ` · ${offerText(t, referral.offer)}` : null}
+                  </span>
+                ) : null}
+              </p>
+            ) : null}
+
             <PriceTiers tiers={data.priceTiers} />
 
             <section className={styles.section} aria-labelledby="categories-title">
@@ -143,6 +163,16 @@ export function EventDetailPage() {
                 })}
               </ul>
             </section>
+
+            {data.compOpen ? (
+              <Link to={`/events/${data.slug}/comp`} className={styles.compLink} data-testid="comp-link">
+                <span>
+                  <b>{t("comp.entryTitle")}</b>
+                  <span>{t("comp.entryHint")}</span>
+                </span>
+                <span aria-hidden="true">→</span>
+              </Link>
+            ) : null}
 
             {action ? <div className={styles.stickyBar}>{renderAction(false)}</div> : null}
           </article>

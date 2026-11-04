@@ -103,7 +103,7 @@ ORDER BY cpr.category_id, pr.id;
 
 -- name: QuoteGetCouponByCode :one
 SELECT id, event_id, discount_type, discount_value, quota, used_count, reserved_count,
-       min_runners, valid_from, valid_until, status
+       min_runners, max_runners, owner_user_id, valid_from, valid_until, status
 FROM coupons
 WHERE code = @code;
 

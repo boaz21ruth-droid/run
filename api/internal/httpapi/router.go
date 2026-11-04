@@ -18,6 +18,7 @@ import (
 	"werun/api/internal/platform/httpx"
 	"werun/api/internal/platform/i18n"
 	"werun/api/internal/pricing"
+	"werun/api/internal/promo"
 	"werun/api/internal/racepack"
 	"werun/api/internal/registration"
 	"werun/api/internal/runner"
@@ -64,6 +65,7 @@ type RouterDeps struct {
 	Registration *registration.Service // 跑者算价与下单
 	Payment      *payment.Service
 	Racepack     *racepack.Service // v8 领物核销站与现场人员指派
+	Promo        *promo.Service    // v8 推荐链接与免费入场
 	Notify       *notify.Service   // Task 20：推送登记（后续 HTTP 路径直接触发推送时使用）
 	Server       *Server           // 为 nil 时由 NewServer 构造
 	Env          string            // "dev" | "prod"

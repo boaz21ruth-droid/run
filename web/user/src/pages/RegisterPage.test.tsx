@@ -6,6 +6,7 @@ import { consentEn, inTelegram, orderDetail, quoteFor, runnerRoutes } from "../t
 import { newParticipant } from "../register/model";
 import { renderApp } from "../test/renderApp";
 import { pasteInto } from "../test/userInput";
+import { saveReferral } from "../promo/referral";
 import { hasDraftData } from "./RegisterPage";
 
 const PATH = "/events/phnom-penh-half-2026/register";
@@ -297,6 +298,39 @@ describe("RegisterPage", () => {
       participants: [{ categoryId: 11, profileId: 7 }],
     });
     expect(bodies[1]).toEqual(bodies[0]);
+  });
+
+  it("从推荐链接进来：确认页自动用上推荐码，下单带上推荐来源", async () => {
+    saveReferral(
+      { eventSlug: "phnom-penh-half-2026", label: "BKK Runners", kind: "CLUB", couponCode: "NEAK-BKK", offer: { discountType: "PRICE", discountValue: 1800 } },
+      "bkk",
+    );
+    const user = userEvent.setup();
+    const quoted: unknown[] = [];
+    const bodies: unknown[] = [];
+    renderApp(
+      PATH,
+      routes({
+        "POST /api/app/events/phnom-penh-half-2026/quote": async (request) => {
+          const body = (await request.json()) as { couponCode?: string };
+          quoted.push(body.couponCode ?? null);
+          return jsonResponse(200, quoteFor(1, body.couponCode ? 700 : 0));
+        },
+        "POST /api/app/orders": async (request) => {
+          bodies.push(await request.json());
+          return jsonResponse(201, orderDetail());
+        },
+      }),
+      inTelegram,
+    );
+    await reachConfirmWithSavedProfile(user);
+    await waitFor(() => expect(screen.getByTestId("coupon-result")).toHaveAttribute("data-kind", "ok"));
+    expect(screen.getByTestId("coupon-input")).toHaveValue("NEAK-BKK");
+    expect(quoted).toContain("NEAK-BKK");
+    await checkAllConsents(user);
+    await user.click(screen.getByTestId("order-submit"));
+    await waitFor(() => expect(bodies).toHaveLength(1));
+    expect(bodies[0]).toMatchObject({ couponCode: "NEAK-BKK", referral: "bkk" });
   });
 
   it("失败后修改了订单（应用优惠码）再提交时换新的 Idempotency-Key", async () => {

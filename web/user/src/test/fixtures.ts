@@ -14,6 +14,7 @@ export const halfMarathon: Schemas["PublicEvent"] = {
   coverUrl: null,
   priceTiers: [],
   registeredCount: 0,
+  compOpen: false,
   categories: [
     {
       id: 11,

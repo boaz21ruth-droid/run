@@ -24,6 +24,9 @@ describe("parseDiscountValue", () => {
     ["AMOUNT", "5.25", 525],
     ["AMOUNT", "0", null],
     ["AMOUNT", "abc", null],
+    ["PRICE", "18", 1800],
+    ["PRICE", "0", 0],
+    ["PRICE", "-1", null],
     ["WAIVER", undefined, 0],
     ["WAIVER", "99", 0],
   ] as const)("%s %j → %j", (type, input, expected) => {
@@ -78,5 +81,6 @@ describe("请求体转换", () => {
     expect(formatDiscount(earlyCoupon, "Free")).toBe("20%");
     expect(formatDiscount({ discountType: "AMOUNT", discountValue: 250 }, "Free")).toBe("$2.50");
     expect(formatDiscount({ discountType: "WAIVER", discountValue: 0 }, "Free")).toBe("Free");
+    expect(formatDiscount({ discountType: "PRICE", discountValue: 1800 }, "Free", (p) => `${p} each`)).toBe("$18.00 each");
   });
 });

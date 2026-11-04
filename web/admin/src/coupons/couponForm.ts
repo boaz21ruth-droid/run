@@ -28,7 +28,10 @@ export function emptyCoupon(): CouponFormValues {
   };
 }
 
-/** 表单折扣值 → 接口值：PERCENT 为 1–100 的整数；AMOUNT 为美元字符串转分且大于 0；WAIVER 恒为 0。非法返回 null */
+/**
+ * 表单折扣值 → 接口值：PERCENT 为 1–100 的整数；AMOUNT 为美元字符串转分且大于 0；
+ * PRICE（每人固定价）为美元字符串转分，可以为 0（免费）；WAIVER 恒为 0。非法返回 null
+ */
 export function parseDiscountValue(type: DiscountType, input: string | undefined): number | null {
   if (type === "WAIVER") {
     return 0;
@@ -42,6 +45,9 @@ export function parseDiscountValue(type: DiscountType, input: string | undefined
     return percent >= 1 && percent <= 100 ? percent : null;
   }
   const cents = parseUsdToCents(text);
+  if (type === "PRICE") {
+    return cents !== null && cents >= 0 ? cents : null;
+  }
   return cents !== null && cents > 0 ? cents : null;
 }
 
@@ -50,7 +56,7 @@ export function fromCoupon(coupon: Schemas["Coupon"], tz: string): CouponFormVal
   let discountValue = "";
   if (coupon.discountType === "PERCENT") {
     discountValue = String(coupon.discountValue);
-  } else if (coupon.discountType === "AMOUNT") {
+  } else if (coupon.discountType === "AMOUNT" || coupon.discountType === "PRICE") {
     discountValue = formatUsd(coupon.discountValue).slice(1);
   }
   return {
@@ -93,15 +99,19 @@ export function toUpdateCouponRequest(
   return { eventId, ...commonFields(values, tz) };
 }
 
+/** priceLabel 把每人固定价（已格式化的金额）包成「$18 / 人」之类的文案 */
 export function formatDiscount(
   coupon: Pick<Schemas["Coupon"], "discountType" | "discountValue">,
   waiverLabel: string,
+  priceLabel: (price: string) => string = (price) => price,
 ): string {
   switch (coupon.discountType) {
     case "PERCENT":
       return `${coupon.discountValue}%`;
     case "AMOUNT":
       return formatUsd(coupon.discountValue);
+    case "PRICE":
+      return priceLabel(formatUsd(coupon.discountValue));
     default:
       return waiverLabel;
   }

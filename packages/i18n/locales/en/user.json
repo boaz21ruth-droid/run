@@ -415,5 +415,56 @@
     },
     "deadline_one": "{{name}} ends in {{count}} day, then {{price}}.",
     "deadline_other": "{{name}} ends in {{count}} days, then {{price}}."
+  },
+  "referral": {
+    "title": "Referral link",
+    "opening": "Opening referral link…",
+    "invalidTitle": "Referral link not valid",
+    "invalid": "This referral link is disabled or doesn't exist. You can still register directly.",
+    "browse": "Browse all events",
+    "via": "Referred by {{label}}",
+    "code": "Referral code",
+    "offer": {
+      "price": "Referral price {{price}} per runner, locked in",
+      "amount": "{{amount}} off",
+      "percent": "{{n}}% off",
+      "free": "Free entry"
+    },
+    "ctaName": "Referral price"
+  },
+  "comp": {
+    "title": "Request complimentary entry",
+    "entryTitle": "KOL, run club captain, sponsor or media?",
+    "entryHint": "Request complimentary entry. Once approved you get a personal free registration code.",
+    "intro": "The organizer looks at your profile or club and usually replies within 48 hours. Once approved, your free code appears here. It is for you only, 1 runner.",
+    "kind": "I am a",
+    "kinds": {
+      "KOL": "KOL / creator",
+      "CLUB": "Run club captain",
+      "SPONSOR": "Sponsor",
+      "MEDIA": "Media"
+    },
+    "name": "Name or handle",
+    "nameRequired": "Enter your name or handle.",
+    "profileUrl": "Profile or work link",
+    "profileUrlHint": "Instagram, TikTok, Facebook or your club's Telegram group",
+    "audience": "Reach (optional)",
+    "audiencePlaceholder": "e.g. 48k Instagram followers / 120-member club",
+    "note": "Anything for the organizer (optional)",
+    "submit": "Send request",
+    "submitting": "Sending…",
+    "closed": "This event isn't accepting complimentary entry requests.",
+    "status": {
+      "PENDING": "In review",
+      "APPROVED": "Approved",
+      "REJECTED": "Not approved"
+    },
+    "pending": "We've received {{name}}'s request.",
+    "pendingHint": "The result will show here once the organizer reviews it.",
+    "approved": "Approved. Here is your free registration code:",
+    "approvedHint": "For you only, 1 runner per order. It is filled in automatically when you register.",
+    "register": "Register with free code",
+    "rejected": "This request wasn't approved.",
+    "reapply": "Apply again"
   }
 }

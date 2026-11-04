@@ -12,6 +12,7 @@ import { AssignmentsTab } from "../racepack/AssignmentsTab";
 import { pickText } from "../events/localize";
 import { useAdminEvent } from "../events/queries";
 import { PricingTab } from "../pricing/PricingTab";
+import { PromoTab } from "../promo/PromoTab";
 
 type AdminCategory = Schemas["AdminCategory"];
 
@@ -113,6 +114,13 @@ export function EventDetailPage() {
       key: "coupons",
       label: <span data-testid="event-tab-coupons">{t("eventDetail.tabCoupons")}</span>,
       children: <CouponsTab event={event} />,
+    });
+  }
+  if (event.eventType === "RACE" && can(me?.permissions, PERM_COUPON_MANAGE, "read")) {
+    items.push({
+      key: "promo",
+      label: <span data-testid="event-tab-promo">{t("eventDetail.tabPromo")}</span>,
+      children: <PromoTab event={event} />,
     });
   }
 

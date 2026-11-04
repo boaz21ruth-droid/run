@@ -143,6 +143,7 @@ func toPublicEvent(e Event, lang i18n.Lang) apigen.PublicEvent {
 		CoverUrl:             coverURLOf(e.CoverFileID),
 		PriceTiers:           toPublicPriceTiers(e.PriceTiers, lang),
 		RegisteredCount:      registeredOf(e.Categories),
+		CompOpen:             e.CompOpen,
 	}
 }
 

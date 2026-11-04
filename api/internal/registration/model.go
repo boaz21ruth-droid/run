@@ -45,6 +45,7 @@ type OrderParticipantInput struct {
 type CreateOrderInput struct {
 	EventSlug      string
 	CouponCode     string
+	Referral       string `json:",omitempty"` // 推荐链接 slug（/r/<slug>）；不参与价格，只用于渠道归因
 	Consent        runner.ConsentAcceptance
 	Participants   []OrderParticipantInput
 	IdempotencyKey string

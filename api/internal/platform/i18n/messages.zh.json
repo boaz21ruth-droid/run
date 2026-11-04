@@ -77,5 +77,11 @@
   "OTP_ATTEMPTS_EXCEEDED": "错误次数过多，请重新获取验证码。",
   "RACEPACK_NOT_PAID": "付款还没有核验，不能发放领物。请让跑者联系客服或到付款处核对。",
   "RACEPACK_ID_REQUIRED": "本地价参赛人领物前需要当面核验证件。",
-  "RACEPACK_NOT_PICKED": "这份领物还没有发放，无需撤销。"
+  "RACEPACK_NOT_PICKED": "这份领物还没有发放，无需撤销。",
+  "REFERRAL_SLUG_TAKEN": "这个推荐链接地址已经被用了，换一个。",
+  "COMP_CLOSED": "这场赛事暂不接受免费入场申请。",
+  "COMP_REQUEST_EXISTS": "你已经提交过申请，请等待主办方审核。",
+  "COMP_REQUEST_REVIEWED": "这条申请已经处理过了。",
+  "COMP_QUOTA_FULL": "免费入场名额已满，请先调高名额。",
+  "field.url_format": "请填写以 https:// 或 http:// 开头的链接。"
 }

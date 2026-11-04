@@ -383,3 +383,108 @@ test("现场工作人员在核销站搜索、本人领取与代领，重复扫�
   await context.close();
 });
 
+
+// v8 推荐渠道与免费入场：推荐链接带每人固定价 $18 的推荐码（档位此时是标准 $30），免费入场名额 1
+const referralSlug = `bkk-${runId}`;
+const referralCode = `BKK${RUN}`;
+const runnerC = runnerUser("Chenda", "zh");
+const kol = runnerUser("Sreyleak", "zh");
+
+test("OPS 在推广页新建推荐链接（每人固定价 $18），开放 1 个免费入场名额", async ({ browser }) => {
+  const { context, page } = await adminSession(browser, OPS.username, OPS.password);
+  await page.goto(`${ADMIN_URL}/events/${shared.eventId}`);
+  await page.getByTestId("event-tab-promo").click();
+
+  await page.getByTestId("referral-create").click();
+  await page.locator("#referral_label").fill(`BKK Runners ${runId}`);
+  await page.locator("#referral_slug").fill(referralSlug);
+  await page.locator("#referral_code").fill(referralCode);
+  await page.locator("#referral_discountValue").fill("18");
+  await page.getByTestId("referral-submit").click();
+  await expect(page.getByTestId(`referral-url-${referralSlug}`)).toBeVisible();
+
+  await page.getByTestId("comp-open").click();
+  await fillControl(page.getByTestId("comp-quota"), "1");
+  await page.getByTestId("comp-quota-save").click();
+  await expect(page.getByTestId("comp-summary")).toHaveText("已批准 0 / 名额 1 · 待审批 0");
+  await context.close();
+});
+
+test("跑者从推荐链接进来：赛事页显示推荐码，确认页自动用上按 $18 算价，订单归因到链接", async ({ browser }) => {
+  test.setTimeout(120_000);
+  const { context, page } = await runnerPage(browser, runnerC, `/r/${referralSlug}`);
+  await expect(page).toHaveURL(new RegExp(`/events/${slug}$`));
+  await expect(page.getByTestId("referral-banner")).toContainText(referralCode);
+  await expect(page.getByTestId("referral-banner")).toContainText("推荐价 $18.00 / 人");
+
+  await page.getByTestId("register-button").click();
+  await ensureParticipants(page, 1);
+  await fillControl(page.getByTestId("participant-0-category"), String(shared.categoryId));
+  await page.getByTestId("wizard-next").click();
+  await fillParticipant(page, 0, { fullName: "Chenda Ros", gender: "F", birthDate: "1993-07-02", idNo: `P${RUN}05`, phone: "+85512345681" });
+  await page.getByTestId("wizard-next").click();
+
+  await expect(page.getByTestId("coupon-input")).toHaveValue(referralCode);
+  await expect(page.getByTestId("coupon-result")).toHaveAttribute("data-kind", "ok");
+  await expect(page.getByTestId("quote-amount")).toHaveText("$18.00");
+  await checkConsents(page);
+  await page.getByTestId("order-submit").click();
+  await page.waitForURL(/\/orders\/WR[0-9A-Z]{8}(\/pay)?$/);
+  await context.close();
+
+  const ops = await adminSession(browser, OPS.username, OPS.password);
+  const links = await adminFetch<{ items: { slug: string; clickCount: number; orders: number }[] }>(
+    ops.page,
+    "GET",
+    `/admin/events/${shared.eventId}/referral-links`,
+  );
+  const link = links.json.items.find((l) => l.slug === referralSlug);
+  expect(link).toMatchObject({ clickCount: 1, orders: 1 });
+  await ops.context.close();
+});
+
+test("KOL 申请免费入场，OPS 批准，KOL 用专属码免费报名并直接确认", async ({ browser }) => {
+  test.setTimeout(150_000);
+  const { context, page } = await runnerPage(browser, kol, `/events/${slug}`);
+  await page.getByTestId("comp-link").click();
+  await expect(page).toHaveURL(new RegExp(`/events/${slug}/comp$`));
+  await page.getByTestId("comp-name").fill("Sreyleak K.");
+  await page.getByTestId("comp-url").fill("https://instagram.com/sreyleak");
+  await page.getByTestId("comp-submit").click();
+  await expect(page.getByTestId("comp-pending")).toBeVisible();
+
+  const ops = await adminSession(browser, OPS.username, OPS.password);
+  await ops.page.goto(`${ADMIN_URL}/events/${shared.eventId}`);
+  await ops.page.getByTestId("event-tab-promo").click();
+  const list = await adminFetch<{ items: { id: number; applicantName: string }[] }>(
+    ops.page,
+    "GET",
+    `/admin/events/${shared.eventId}/comp-requests`,
+  );
+  const requestId = list.json.items.find((r) => r.applicantName === "Sreyleak K.")?.id;
+  expect(requestId).toBeDefined();
+  await ops.page.getByTestId(`comp-approve-${requestId}`).click();
+  await expect(ops.page.getByTestId("comp-summary")).toHaveText("已批准 1 / 名额 1 · 待审批 0");
+  await ops.context.close();
+
+  await page.reload();
+  const code = (await page.getByTestId("comp-code").innerText()).trim();
+  expect(code).toMatch(/^COMP-[0-9A-Z]{8}$/);
+  await page.getByTestId("comp-register").click();
+  await ensureParticipants(page, 1);
+  await fillControl(page.getByTestId("participant-0-category"), String(shared.categoryId));
+  await page.getByTestId("wizard-next").click();
+  await fillParticipant(page, 0, { fullName: "Sreyleak Kim", gender: "F", birthDate: "1997-01-09", idNo: `P${RUN}06`, phone: "+85512345682" });
+  await page.getByTestId("wizard-next").click();
+
+  await expect(page.getByTestId("coupon-input")).toHaveValue(code);
+  await expect(page.getByTestId("coupon-result")).toHaveAttribute("data-kind", "ok");
+  await expect(page.getByTestId("quote-amount")).toHaveText("$0.00");
+  await checkConsents(page);
+  await page.getByTestId("order-submit").click();
+  await page.waitForURL(/\/orders\/WR[0-9A-Z]{8}(\/pay)?$/);
+  const orderNo = /\/orders\/(WR[0-9A-Z]{8})/.exec(new URL(page.url()).pathname)![1]!;
+  await openAsRunner(page, kol, `/orders/${orderNo}`);
+  await expect(page.getByTestId("order-status")).toHaveAttribute("data-status", "PAID");
+  await context.close();
+});

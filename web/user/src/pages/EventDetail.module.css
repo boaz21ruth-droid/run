@@ -180,6 +180,50 @@
   margin-top: 32px;
 }
 
+.referral {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 20px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--brand-tint);
+  color: var(--ink-mid);
+  font-size: 14px;
+}
+
+.referralCode {
+  font-family: var(--display);
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  color: var(--brand);
+}
+
+.compLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 32px;
+  padding: 14px 16px;
+  border: 1px dashed var(--line-hard);
+  border-radius: var(--r);
+  background: var(--card);
+  color: var(--ink-mid);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.compLink > span:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.compLink b {
+  color: var(--ink);
+  font-size: 15px;
+}
+
 .sectionTitle {
   margin: 0 0 14px;
   font-size: 20px;

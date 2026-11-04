@@ -116,7 +116,8 @@
       "save": "保存报名设置",
       "saved": "报名设置已保存"
     },
-    "tabStaff": "现场人员"
+    "tabStaff": "现场人员",
+    "tabPromo": "推广"
   },
   "pricing": {
     "hint": "同一组别有多个可用价格档时，跑者自动获得最低价。",
@@ -181,7 +182,8 @@
     "discountType": {
       "PERCENT": "按百分比",
       "AMOUNT": "固定金额",
-      "WAIVER": "免单"
+      "WAIVER": "免单",
+      "PRICE": "每人固定价"
     },
     "status": {
       "ACTIVE": "启用",
@@ -199,8 +201,10 @@
       "minRunnersHelp": "留空表示不限",
       "validFrom": "生效时间",
       "validUntil": "失效时间",
-      "status": "状态"
-    }
+      "status": "状态",
+      "priceInvalid": "请输入 0 或以上的金额，例如 18；0 表示免费"
+    },
+    "priceEach": "{{price}} / 人"
   },
   "paymentAccounts": {
     "title": "收款账户",
@@ -469,6 +473,82 @@
       "role": "角色",
       "window": "有效期",
       "enabled": "启用"
+    }
+  },
+  "promo": {
+    "kind": {
+      "CLUB": "跑团",
+      "KOL": "KOL",
+      "SPONSOR": "赞助商",
+      "CHANNEL": "频道",
+      "OTHER": "其他"
+    },
+    "compKind": {
+      "KOL": "KOL / 博主",
+      "CLUB": "跑团团长",
+      "SPONSOR": "赞助商",
+      "MEDIA": "媒体"
+    },
+    "links": {
+      "title": "渠道归因",
+      "intro": "每条推荐链接对应一个渠道。跑者打开链接计一次点击；用了链接自带的推荐码，或从链接进来后报名，订单都记到这条链接。",
+      "create": "新建推荐链接",
+      "createTitle": "新建推荐链接",
+      "created": "推荐链接已创建",
+      "saved": "已保存",
+      "empty": "还没有推荐链接",
+      "direct": "直接 / 其他",
+      "startapp": "Telegram 启动参数 {{param}}",
+      "toggle": "启用或停用 {{label}}",
+      "col": {
+        "source": "来源",
+        "link": "链接",
+        "coupon": "推荐码",
+        "clicks": "点击",
+        "orders": "报名",
+        "paid": "已付",
+        "conversion": "转化",
+        "status": "启用"
+      },
+      "form": {
+        "label": "渠道名称",
+        "labelPlaceholder": "例如 BKK Runners（跑团）",
+        "kind": "渠道类型",
+        "slug": "链接地址",
+        "slugHelp": "小写字母、数字和连字符，2–32 位，创建后不能修改",
+        "slugInvalid": "只能用小写字母、数字和连字符，2–32 位",
+        "withOffer": "带推荐码",
+        "priceHelp": "每位参赛人按这个价格付，不随档位上涨；原价更低的人不加价"
+      }
+    },
+    "comp": {
+      "title": "免费入场审批",
+      "intro": "KOL、跑团团长、赞助商和媒体在赛事页提交申请。批准后系统发一个只限本人、一单 1 人的免费报名码，申请人在「申请免费入场」页看到。",
+      "summary": "已批准 {{approved}} / 名额 {{quota}} · 待审批 {{pending}}",
+      "open": "接受申请",
+      "quota": "名额",
+      "saveQuota": "保存名额",
+      "quotaSaved": "名额已保存",
+      "empty": "还没有申请",
+      "approve": "批准",
+      "reject": "拒绝",
+      "approved": "已批准，免费报名码已发给申请人",
+      "rejected": "已拒绝",
+      "used": "已报名",
+      "rejectTitle": "拒绝 {{name}} 的申请",
+      "rejectHelp": "原因会显示给申请人（选填）。被拒后可以重新申请。",
+      "status": {
+        "PENDING": "待审批",
+        "APPROVED": "已批准",
+        "REJECTED": "已拒绝"
+      },
+      "col": {
+        "applicant": "申请人",
+        "profile": "主页 / 影响力",
+        "submitted": "提交时间",
+        "status": "状态 / 免费码",
+        "actions": "操作"
+      }
     }
   }
 }

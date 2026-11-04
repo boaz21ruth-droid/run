@@ -68,6 +68,10 @@ func validateCoupon(in CouponInput, withCode bool) error {
 		if in.DiscountValue != 0 {
 			add("discountValue", "field.invalid", nil)
 		}
+	case DiscountPrice:
+		if in.DiscountValue < 0 {
+			add("discountValue", "field.invalid", nil)
+		}
 	default:
 		add("discountType", "field.invalid", nil)
 	}

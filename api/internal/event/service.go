@@ -465,6 +465,7 @@ func eventFromRow(r store.Event) (Event, error) {
 		RegistrationOpensAt:  r.RegistrationOpensAt,
 		RegistrationClosesAt: r.RegistrationClosesAt,
 		CoverFileID:          r.CoverFileID,
+		CompOpen:             r.CompQuota != nil,
 	}, nil
 }
 

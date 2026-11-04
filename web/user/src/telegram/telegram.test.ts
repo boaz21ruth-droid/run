@@ -155,7 +155,8 @@ describe("start_param 深链", () => {
   it("event-<slug> 与 order-<orderNo> 映射到详情页，其他值忽略", () => {
     expect(startParamTarget("event-phnom-penh-half-2026")).toBe("/events/phnom-penh-half-2026");
     expect(startParamTarget("order-WR7K2M9QXA")).toBe("/orders/WR7K2M9QXA");
-    for (const bad of [null, undefined, "", "event-", "order-", "order-WR7K-2M", "promo-123", "event-../me", "event-a b", `event-${"x".repeat(80)}`]) {
+    expect(startParamTarget("ref-bkk-runners")).toBe("/r/bkk-runners");
+    for (const bad of [null, undefined, "", "event-", "order-", "order-WR7K-2M", "promo-123", "event-../me", "event-a b", `event-${"x".repeat(80)}`, "ref-BKK", "ref-x", "ref-a_b"]) {
       expect(startParamTarget(bad)).toBeNull();
     }
   });

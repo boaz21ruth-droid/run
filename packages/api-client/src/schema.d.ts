@@ -811,10 +811,290 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/referrals/{slug}/visit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 打开推荐链接：计一次点击，返回赛事与推荐码（公开） */
+        post: operations["visitReferral"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/app/events/{slug}/comp-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 本人在该赛事的免费入场申请（open=false 表示不开放申请） */
+        get: operations["appGetCompRequest"];
+        put?: never;
+        /** 提交免费入场申请（KOL / 跑团团长 / 赞助商 / 媒体） */
+        post: operations["appCreateCompRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/{id}/referral-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 赛事的推荐链接与渠道归因统计 */
+        get: operations["adminListReferralLinks"];
+        put?: never;
+        /** 新建推荐链接，可同时建一个只限本赛事的优惠码 */
+        post: operations["adminCreateReferralLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/referral-links/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 修改推荐链接名称、启用状态（停用同时停用它的优惠码） */
+        put: operations["adminUpdateReferralLink"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/{id}/comp-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 免费入场申请与名额 */
+        get: operations["adminListCompRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/{id}/comp-quota": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 设置免费入场名额（null 关闭申请） */
+        put: operations["adminUpdateCompQuota"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/comp-requests/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批准免费入场：发一个本人专用、限 1 人的免费报名码 */
+        post: operations["adminApproveCompRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/comp-requests/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 拒绝免费入场申请 */
+        post: operations["adminRejectCompRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @enum {string} */
+        ReferralKind: "CLUB" | "KOL" | "SPONSOR" | "CHANNEL" | "OTHER";
+        /** @enum {string} */
+        CompKind: "KOL" | "CLUB" | "SPONSOR" | "MEDIA";
+        /** @enum {string} */
+        CompStatus: "PENDING" | "APPROVED" | "REJECTED";
+        CouponOffer: {
+            discountType: components["schemas"]["DiscountType"];
+            /** Format: int64 */
+            discountValue: number;
+        };
+        ReferralVisit: {
+            eventSlug: string;
+            label: string;
+            kind: components["schemas"]["ReferralKind"];
+            couponCode: string | null;
+            offer: components["schemas"]["CouponOffer"] | null;
+        };
+        CompRequest: {
+            /** Format: int64 */
+            id: number;
+            status: components["schemas"]["CompStatus"];
+            kind: components["schemas"]["CompKind"];
+            applicantName: string;
+            profileUrl: string | null;
+            audience: string | null;
+            note: string | null;
+            /** @description 批准后发的免费报名码（本人专用、限 1 人） */
+            couponCode: string | null;
+            reviewNote: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AppCompStatus: {
+            /** @description 赛事是否接受免费入场申请 */
+            open: boolean;
+            request: components["schemas"]["CompRequest"] | null;
+        };
+        CreateCompRequest: {
+            applicantName: string;
+            kind: components["schemas"]["CompKind"];
+            profileUrl?: string;
+            /** @description 例如「Instagram 4.8 万粉丝」「跑团 120 人」 */
+            audience?: string;
+            note?: string;
+        };
+        AdminCompRequest: components["schemas"]["CompRequest"] & {
+            /** Format: int64 */
+            userId: number;
+            telegramUsername: string | null;
+            /** @description 免费报名码是否已用于报名 */
+            couponUsed: boolean;
+            /** Format: date-time */
+            reviewedAt: string | null;
+        };
+        CompRequestList: {
+            /**
+             * Format: int32
+             * @description 免费入场名额；null 表示不开放申请
+             */
+            quota: number | null;
+            /** Format: int32 */
+            approved: number;
+            /** Format: int32 */
+            pending: number;
+            items: components["schemas"]["AdminCompRequest"][];
+        };
+        UpdateCompQuotaRequest: {
+            /** Format: int32 */
+            quota: number | null;
+        };
+        RejectCompRequest: {
+            note?: string;
+        };
+        ReferralCoupon: {
+            /** Format: int64 */
+            id: number;
+            code: string;
+            discountType: components["schemas"]["DiscountType"];
+            /** Format: int64 */
+            discountValue: number;
+            /** Format: int32 */
+            quota: number;
+            /** Format: int32 */
+            usedCount: number;
+            /** Format: int32 */
+            reservedCount: number;
+            status: components["schemas"]["CouponStatus"];
+        };
+        ReferralLink: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            eventId: number;
+            slug: string;
+            label: string;
+            kind: components["schemas"]["ReferralKind"];
+            status: components["schemas"]["CouponStatus"];
+            /** Format: int64 */
+            clickCount: number;
+            /**
+             * Format: int32
+             * @description 归因到这条链接的订单数（含未付款、已取消）
+             */
+            orders: number;
+            /**
+             * Format: int32
+             * @description 其中已付款的订单数
+             */
+            paidOrders: number;
+            coupon: components["schemas"]["ReferralCoupon"] | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        ReferralLinkList: {
+            items: components["schemas"]["ReferralLink"][];
+            /**
+             * Format: int32
+             * @description 没有归因到任何推荐链接的订单数
+             */
+            directOrders: number;
+            /** Format: int32 */
+            directPaidOrders: number;
+        };
+        ReferralOfferInput: {
+            code: string;
+            discountType: components["schemas"]["DiscountType"];
+            /** Format: int64 */
+            discountValue: number;
+            /** Format: int32 */
+            quota: number;
+        };
+        CreateReferralLinkRequest: {
+            slug: string;
+            label: string;
+            kind: components["schemas"]["ReferralKind"];
+            offer?: components["schemas"]["ReferralOfferInput"];
+        };
+        UpdateReferralLinkRequest: {
+            label: string;
+            status: components["schemas"]["CouponStatus"];
+        };
         RacepackEvent: {
             /** Format: int64 */
             id: number;
@@ -1005,6 +1285,8 @@ export interface components {
             remaining: number;
         };
         PublicEvent: {
+            /** @description 是否接受免费入场申请（KOL / 跑团团长 / 赞助商 / 媒体） */
+            compOpen: boolean;
             /** Format: int64 */
             id: number;
             slug: string;
@@ -1184,8 +1466,11 @@ export interface components {
         PriceRuleList: {
             items: components["schemas"]["PriceRule"][];
         };
-        /** @enum {string} */
-        DiscountType: "PERCENT" | "AMOUNT" | "WAIVER";
+        /**
+         * @description PRICE = 每位参赛人按固定价（discountValue 为每人价格，单位分）
+         * @enum {string}
+         */
+        DiscountType: "PERCENT" | "AMOUNT" | "WAIVER" | "PRICE";
         /** @enum {string} */
         CouponStatus: "ACTIVE" | "DISABLED";
         UpdateCouponRequest: {
@@ -1506,6 +1791,8 @@ export interface components {
         CreateOrderRequest: {
             eventSlug: string;
             couponCode?: string;
+            /** @description 推荐链接 slug（来自 /r/<slug>），只用于渠道归因 */
+            referral?: string;
             consent: components["schemas"]["OrderConsentInput"];
             participants: components["schemas"]["OrderParticipantInput"][];
         };
@@ -3591,6 +3878,336 @@ export interface operations {
                 };
             };
             /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    visitReferral: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReferralVisit"];
+                };
+            };
+            /** @description 错误（NOT_FOUND） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appGetCompRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppCompStatus"];
+                };
+            };
+            /** @description 错误（EVENT_NOT_FOUND） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appCreateCompRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCompRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompRequest"];
+                };
+            };
+            /** @description 错误（COMP_CLOSED、COMP_REQUEST_EXISTS、VALIDATION_FAILED、EVENT_NOT_FOUND） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminListReferralLinks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReferralLinkList"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminCreateReferralLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateReferralLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReferralLink"];
+                };
+            };
+            /** @description 错误（REFERRAL_SLUG_TAKEN、COUPON_CODE_TAKEN、VALIDATION_FAILED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminUpdateReferralLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateReferralLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReferralLink"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminListCompRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompRequestList"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminUpdateCompQuota: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCompQuotaRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompRequestList"];
+                };
+            };
+            /** @description 错误（VALIDATION_FAILED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminApproveCompRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCompRequest"];
+                };
+            };
+            /** @description 错误（COMP_REQUEST_REVIEWED、COMP_QUOTA_FULL） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminRejectCompRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectCompRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCompRequest"];
+                };
+            };
+            /** @description 错误（COMP_REQUEST_REVIEWED） */
             default: {
                 headers: {
                     [name: string]: unknown;
