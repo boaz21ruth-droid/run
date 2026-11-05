@@ -8,6 +8,9 @@ import { useApi } from "../api";
 import { ORDERS_KEY, orderKey } from "../orders/api";
 import { loadReferral } from "../promo/referral";
 import { PROFILES_KEY } from "../queries";
+import { checkedKeys, requiredChecked } from "../rules/consent";
+import { RefundPolicyCard } from "../rules/RefundPolicyCard";
+import rules from "../rules/Rules.module.css";
 import { createOrder, fetchQuote, quoteQueryKey, useRegistrationConsent } from "./api";
 import { participantName, toOrderParticipant, toQuoteParticipant, type ParticipantDraft, type PublicEvent, type RunnerProfile } from "./model";
 import type { SubmissionKey } from "./submissionKey";
@@ -63,7 +66,8 @@ export function StepConfirm({ event, participants, profiles, submissionKey, onSe
   const consentItems = consent.data?.items ?? [];
   // 勾选按「版本:条目」记录：换语言后同一版本同一条目的勾选保留；版本不同是另一份同意书，需要重新勾选
   const checkKey = (itemKey: string) => `${consent.data?.version ?? ""}:${itemKey}`;
-  const allChecked = consentItems.length > 0 && consentItems.every((item) => checked[checkKey(item.key)]);
+  const isChecked = (itemKey: string) => checked[checkKey(itemKey)] ?? false;
+  const allChecked = requiredChecked(consentItems, isChecked);
 
   // 带着推荐码进来时自动核一次，用不了就照常显示原因
   const autoApplied = useRef(false);
@@ -108,9 +112,9 @@ export function StepConfirm({ event, participants, profiles, submissionKey, onSe
       consent: {
         version: consent.data.version,
         lang: consent.data.lang as Schemas["OrderConsentInput"]["lang"],
-        checkedItems: consent.data.items.map((item) => item.key),
+        checkedItems: checkedKeys(consent.data.items, isChecked),
       },
-      participants: participants.map(toOrderParticipant),
+      participants: participants.map((p) => toOrderParticipant(p, event)),
     };
     // 同一份请求体（网络失败后重试）沿用同一个键；订单内容变了才换新键
     const key = submissionKey.keyFor(JSON.stringify(payload));
@@ -211,6 +215,8 @@ export function StepConfirm({ event, participants, profiles, submissionKey, onSe
         </div>
       </section>
 
+      {event.refundPolicy ? <RefundPolicyCard policy={event.refundPolicy} /> : null}
+
       <section className={styles.card}>
         <h2 className={styles.cardTitle}>{t("register.consent.title")}</h2>
         {consent.isPending ? (
@@ -234,7 +240,10 @@ export function StepConfirm({ event, participants, profiles, submissionKey, onSe
                   onChange={(e) => setChecked((prev) => ({ ...prev, [checkKey(item.key)]: e.target.checked }))}
                 />
                 <span>
-                  <strong>{item.title}</strong>
+                  <strong>
+                    {item.title}
+                    {item.optional ? <span className={rules.optional}>{t("rules.optional")}</span> : null}
+                  </strong>
                   {item.description ? <span className={styles.hint}>{item.description}</span> : null}
                 </span>
               </label>

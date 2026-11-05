@@ -294,23 +294,28 @@ type Event struct {
 	CreatedAt               time.Time
 	UpdatedAt               time.Time
 	CompQuota               *int32
+	RefundPolicy            []byte
 }
 
 type EventCategory struct {
-	ID            int64
-	EventID       int64
-	Code          string
-	Name          []byte
-	DistanceM     int32
-	Capacity      int32
-	UsedCount     int32
-	ReservedCount int32
-	StartAt       *time.Time
-	CutoffAt      *time.Time
-	MinAge        int16
-	SortOrder     int16
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	ID                 int64
+	EventID            int64
+	Code               string
+	Name               []byte
+	DistanceM          int32
+	Capacity           int32
+	UsedCount          int32
+	ReservedCount      int32
+	StartAt            *time.Time
+	CutoffAt           *time.Time
+	MinAge             int16
+	SortOrder          int16
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+	QualifyRequired    bool
+	QualifyRule        []byte
+	QualifyMaxMs       *int32
+	FallbackCategoryID *int64
 }
 
 type EventComment struct {
@@ -711,6 +716,23 @@ type PriceRule struct {
 	SortOrder     int16
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
+}
+
+type QualificationProof struct {
+	ID                int64
+	RegistrationID    int64
+	EventID           int64
+	CategoryID        int64
+	BestTimeMs        int32
+	Source            string
+	ProofUrl          string
+	Status            string
+	ReviewNote        *string
+	MovedToCategoryID *int64
+	ReviewedBy        *int64
+	ReviewedAt        *time.Time
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }
 
 type RacePackConflict struct {

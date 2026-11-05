@@ -205,6 +205,8 @@ export interface NewEvent {
   name: { zh: string; en: string; km: string };
   eventType: "RACE" | "FREE_ACTIVITY";
   capacity: number;
+  /** 再加一个 5KE 组别（精英组测试用），排在 5K 之后 */
+  eliteCategory?: boolean;
 }
 
 /** OPS 已登录：新建赛事（一个组别）并发布 */
@@ -231,6 +233,17 @@ export async function createAndPublishEvent(page: Page, ev: NewEvent): Promise<v
   await page.locator("#event_categories_0_capacity").fill(String(ev.capacity));
   await fillDate(page, "#event_categories_0_startAt", raceDateTime("06:00"));
   await fillDate(page, "#event_categories_0_cutoffAt", raceDateTime("08:00"));
+  if (ev.eliteCategory) {
+    await page.getByTestId("event-category-add").click();
+    await page.locator("#event_categories_1_code").fill("5KE");
+    await page.locator("#event_categories_1_name_zh").fill("5K 精英组");
+    await page.locator("#event_categories_1_name_en").fill("5K Elite");
+    await page.locator("#event_categories_1_name_km").fill("5K ឥស្សរជន");
+    await page.locator("#event_categories_1_distanceM").fill("5000");
+    await page.locator("#event_categories_1_capacity").fill("20");
+    await fillDate(page, "#event_categories_1_startAt", raceDateTime("05:45"));
+    await fillDate(page, "#event_categories_1_cutoffAt", raceDateTime("07:30"));
+  }
 
   await page.getByTestId("event-form-submit").click();
   await expect(page).toHaveURL(`${ADMIN_URL}/events`);
@@ -242,8 +255,8 @@ export async function createAndPublishEvent(page: Page, ev: NewEvent): Promise<v
   await expect(publish).toBeHidden();
 }
 
-/** 从赛事列表进入详情，返回赛事 id 与第一个组别 id */
-export async function openEventDetail(page: Page, slug: string): Promise<{ id: number; categoryId: number }> {
+/** 从赛事列表进入详情，返回赛事 id、第一个组别 id 与全部组别 id（按排序） */
+export async function openEventDetail(page: Page, slug: string): Promise<{ id: number; categoryId: number; categoryIds: number[] }> {
   await page.goto(`${ADMIN_URL}/events`);
   await page.getByTestId(`event-open-${slug}`).click();
   await expect(page).toHaveURL(/\/events\/\d+$/);
@@ -258,7 +271,7 @@ export async function openEventDetail(page: Page, slug: string): Promise<{ id: n
   if (!category) {
     throw new Error(`赛事 ${slug} 没有组别`);
   }
-  return { id, categoryId: category.id };
+  return { id, categoryId: category.id, categoryIds: detail.json.categories.map((c) => c.id) };
 }
 
 /** OPS 已登录：打开报名开关并保存，刷新后确认已持久化 */

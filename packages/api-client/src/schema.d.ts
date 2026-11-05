@@ -949,6 +949,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/events/{id}/refund-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 设置退改政策（报名确认页与赛事页展示；null 表示不展示） */
+        put: operations["adminUpdateRefundPolicy"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/categories/{id}/qualification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 设置精英组资格要求（null 表示不需要资格证明） */
+        put: operations["adminUpdateCategoryQualification"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/{id}/qualification-proofs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 精英组资格证明列表（待核验在前） */
+        get: operations["adminListQualificationProofs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/qualification-proofs/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 资格核验通过 */
+        post: operations["adminApproveQualificationProof"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/qualification-proofs/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 资格核验不通过：报名转到该组设置的公开组，名额随之转移 */
+        post: operations["adminRejectQualificationProof"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1023,6 +1108,103 @@ export interface components {
         UpdateCompQuotaRequest: {
             /** Format: int32 */
             quota: number | null;
+        };
+        RefundTier: {
+            /**
+             * Format: int32
+             * @description 开赛前至少多少天申请
+             */
+            days: number;
+            /** Format: int32 */
+            percent: number;
+        };
+        /** @description 退改政策。tiers 按 days 从大到小；不在任何一档的申请不退款。退款仍由财务按退款流程办理 */
+        RefundPolicy: {
+            tiers: components["schemas"]["RefundTier"][];
+            /**
+             * Format: int32
+             * @description 开赛前至少多少天可转让给他人；为空表示不接受转让
+             */
+            transferDays: number | null;
+        };
+        UpdateRefundPolicyRequest: {
+            policy: components["schemas"]["RefundPolicy"] | null;
+        };
+        PublicQualification: {
+            /** @description 资格说明，如「需近两年 21K 1:45 以内的官方成绩」 */
+            rule: string;
+            /**
+             * Format: int32
+             * @description 自报成绩上限（毫秒）；为空表示不限，只看证明
+             */
+            maxTimeMs: number | null;
+            /**
+             * Format: int64
+             * @description 核验不通过时转入的组别
+             */
+            fallbackCategoryId: number;
+        };
+        AdminQualification: {
+            rule: components["schemas"]["LocalizedText"];
+            /** Format: int32 */
+            maxTimeMs: number | null;
+            /** Format: int64 */
+            fallbackCategoryId: number;
+        };
+        UpdateCategoryQualificationRequest: {
+            qualification: components["schemas"]["AdminQualification"] | null;
+        };
+        /** @description 报精英组时必填：自报最好成绩与证明链接 */
+        QualificationInput: {
+            /** Format: int32 */
+            bestTimeMs: number;
+            /** @description 成绩来源（哪场比赛） */
+            source: string;
+            /** @description 官方成绩页或证书链接，http(s) */
+            proofUrl: string;
+        };
+        /** @enum {string} */
+        QualificationStatus: "PENDING" | "APPROVED" | "REJECTED";
+        ParticipantQualification: {
+            status: components["schemas"]["QualificationStatus"];
+            appliedCategoryName: components["schemas"]["LocalizedText"];
+            reviewNote: string | null;
+        };
+        AdminQualificationProof: {
+            /** Format: int64 */
+            id: number;
+            status: components["schemas"]["QualificationStatus"];
+            /** Format: int64 */
+            registrationId: number;
+            regNo: string;
+            fullName: string;
+            /**
+             * @description 报名确认（已付款）后才能核验
+             * @enum {string}
+             */
+            registrationStatus: "PENDING" | "CONFIRMED" | "CANCELLED";
+            /** Format: int64 */
+            categoryId: number;
+            categoryCode: string;
+            fallbackCategoryCode: string | null;
+            /** Format: int32 */
+            bestTimeMs: number;
+            /** Format: int32 */
+            maxTimeMs: number | null;
+            source: string;
+            proofUrl: string;
+            reviewNote: string | null;
+            movedToCategoryCode: string | null;
+            /** Format: date-time */
+            reviewedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        QualificationProofList: {
+            items: components["schemas"]["AdminQualificationProof"][];
+        };
+        RejectQualificationProofRequest: {
+            note?: string;
         };
         RejectCompRequest: {
             note?: string;
@@ -1283,8 +1465,12 @@ export interface components {
              * @description max(capacity - used_count - reserved_count, 0)
              */
             remaining: number;
+            /** @description 精英组的资格要求；普通组为空 */
+            qualification: components["schemas"]["PublicQualification"] | null;
         };
         PublicEvent: {
+            /** @description 主办方设置的退改政策；未设置时为空 */
+            refundPolicy: components["schemas"]["RefundPolicy"] | null;
             /** @description 是否接受免费入场申请（KOL / 跑团团长 / 赞助商 / 媒体） */
             compOpen: boolean;
             /** Format: int64 */
@@ -1350,6 +1536,7 @@ export interface components {
             items: components["schemas"]["PublicEvent"][];
         };
         AdminCategory: {
+            qualification: components["schemas"]["AdminQualification"] | null;
             /** Format: int64 */
             id: number;
             code: string;
@@ -1364,6 +1551,7 @@ export interface components {
             cutoffAt: string | null;
         };
         AdminEvent: {
+            refundPolicy: components["schemas"]["RefundPolicy"] | null;
             /** Format: int64 */
             id: number;
             slug: string;
@@ -1657,6 +1845,8 @@ export interface components {
             title: string;
             /** @description 没有说明时为空串 */
             description: string;
+            /** @description 可选条目，跑者可以不勾；其余条目全部勾选才能提交。checkedItems 只提交勾了的 key */
+            optional: boolean;
         };
         ConsentVersion: {
             version: string;
@@ -1781,6 +1971,7 @@ export interface components {
             profileId?: number;
             profile?: components["schemas"]["OrderProfileInput"];
             saveAsProfile?: boolean;
+            qualification?: components["schemas"]["QualificationInput"];
         };
         OrderConsentInput: {
             version: string;
@@ -1800,7 +1991,10 @@ export interface components {
         OrderStatus: "PENDING_PAYMENT" | "PROOF_SUBMITTED" | "PROOF_REJECTED" | "PAID" | "PARTIALLY_REFUNDED" | "REFUNDED" | "EXPIRED" | "CANCELLED";
         OrderParticipant: {
             regNo: string;
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description 报名当前所在组别（精英组核验不通过会转组；价格仍按下单时的组别）
+             */
             categoryId: number;
             categoryName: components["schemas"]["LocalizedText"];
             fullName: string;
@@ -1814,6 +2008,7 @@ export interface components {
             registrationStatus: "PENDING" | "CONFIRMED" | "CANCELLED";
             /** @description 仅 CONFIRMED 时返回 */
             ticketCode?: string;
+            qualification?: components["schemas"]["ParticipantQualification"];
         };
         OrderPaymentAccount: {
             /** Format: int64 */
@@ -4208,6 +4403,173 @@ export interface operations {
                 };
             };
             /** @description 错误（COMP_REQUEST_REVIEWED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminUpdateRefundPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRefundPolicyRequest"];
+            };
+        };
+        responses: {
+            /** @description 已保存 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminEvent"];
+                };
+            };
+            /** @description 错误（VALIDATION_FAILED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminUpdateCategoryQualification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCategoryQualificationRequest"];
+            };
+        };
+        responses: {
+            /** @description 已保存，返回所属赛事 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminEvent"];
+                };
+            };
+            /** @description 错误（VALIDATION_FAILED / NOT_FOUND） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminListQualificationProofs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationProofList"];
+                };
+            };
+            /** @description 错误 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminApproveQualificationProof: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 已通过 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminQualificationProof"];
+                };
+            };
+            /** @description 错误（QUALIFY_REVIEWED / QUALIFY_NOT_CONFIRMED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminRejectQualificationProof: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectQualificationProofRequest"];
+            };
+        };
+        responses: {
+            /** @description 已转组 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminQualificationProof"];
+                };
+            };
+            /** @description 错误（QUALIFY_REVIEWED / QUALIFY_NOT_CONFIRMED / QUALIFY_FALLBACK_FULL / QUALIFY_BIB_ASSIGNED） */
             default: {
                 headers: {
                     [name: string]: unknown;

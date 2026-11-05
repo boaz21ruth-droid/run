@@ -215,6 +215,13 @@ func (s *Service) loadDetail(ctx context.Context, q *store.Queries, orderID int6
 			code := p.TicketCode
 			op.TicketCode = &code
 		}
+		if p.QualifyStatus != nil {
+			applied, err := decodeText(p.QualifyCategoryName, "qualify category name")
+			if err != nil {
+				return OrderDetail{}, err
+			}
+			op.Qualification = &ParticipantQualification{Status: *p.QualifyStatus, AppliedCategoryName: applied, ReviewNote: p.QualifyReviewNote}
+		}
 		d.Participants = append(d.Participants, op)
 	}
 

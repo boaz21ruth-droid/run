@@ -1,4 +1,5 @@
 import { PROFILE_FIELDS, normalizeIdNo, validateProfileForm, type ProfileField } from "../profiles/validate";
+import { formatDuration, parseDuration } from "../rules/duration";
 import { ageOn, type ParticipantDraft, type PublicEvent, type RunnerProfile } from "./model";
 
 /** i18n key（user 命名空间）与插值参数 */
@@ -40,6 +41,8 @@ export function validateParticipantsStep(
       issues[participantField(i, "categoryId")] = { key: "profiles.errors.required" };
     } else if (category.soldOut) {
       issues[participantField(i, "categoryId")] = { key: "register.errors.soldOut" };
+    } else if (category.qualification) {
+      Object.assign(issues, qualificationIssues(draft, category.qualification.maxTimeMs, i));
     }
     if (draft.profileId === null) {
       return;
@@ -87,5 +90,30 @@ export function validateDetailsStep(participants: readonly ParticipantDraft[], e
       idNos.add(idNo);
     }
   });
+  return issues;
+}
+
+const PROOF_URL = /^https?:\/\/\S+$/;
+
+/** 精英组的成绩证明：成绩格式与上限、来源、证明链接；字段路径与服务端一致 */
+function qualificationIssues(draft: ParticipantDraft, maxTimeMs: number | null, i: number): WizardIssues {
+  const issues: WizardIssues = {};
+  const q = draft.qualification;
+  const ms = parseDuration(q.time);
+  if (q.time.trim() === "") {
+    issues[participantField(i, "bestTimeMs")] = { key: "profiles.errors.required" };
+  } else if (ms === null) {
+    issues[participantField(i, "bestTimeMs")] = { key: "register.errors.timeFormat" };
+  } else if (maxTimeMs !== null && ms > maxTimeMs) {
+    issues[participantField(i, "bestTimeMs")] = { key: "register.errors.tooSlow", params: { max: formatDuration(maxTimeMs) } };
+  }
+  if (q.source.trim() === "") {
+    issues[participantField(i, "proofSource")] = { key: "profiles.errors.required" };
+  }
+  if (q.proofUrl.trim() === "") {
+    issues[participantField(i, "proofUrl")] = { key: "profiles.errors.required" };
+  } else if (!PROOF_URL.test(q.proofUrl.trim())) {
+    issues[participantField(i, "proofUrl")] = { key: "register.errors.urlFormat" };
+  }
   return issues;
 }

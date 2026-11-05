@@ -39,6 +39,28 @@ type OrderParticipantInput struct {
 	ProfileID     *int64
 	Profile       *runner.ProfileData
 	SaveAsProfile bool
+	Qualification *QualificationInput `json:",omitempty"` // 报精英组时必填；其他组别忽略
+}
+
+// QualificationInput 是报精英组时自报的最好成绩与证明链接。
+type QualificationInput struct {
+	BestTimeMs int32
+	Source     string
+	ProofURL   string
+}
+
+// 精英组资格证明状态。
+const (
+	QualifyPending  = "PENDING"
+	QualifyApproved = "APPROVED"
+	QualifyRejected = "REJECTED"
+)
+
+// ParticipantQualification 是订单里一位参赛人的精英组核验进度。
+type ParticipantQualification struct {
+	Status              string // QualifyPending | QualifyApproved | QualifyRejected
+	AppliedCategoryName i18n.Text
+	ReviewNote          *string
 }
 
 // CreateOrderInput 是下单输入。
@@ -86,6 +108,7 @@ type OrderParticipant struct {
 	PaidCents          int64
 	RegistrationStatus string  // PENDING | CONFIRMED | CANCELLED
 	TicketCode         *string // 仅 CONFIRMED 时非空
+	Qualification      *ParticipantQualification
 }
 
 // PaymentAccountView 是订单页展示的收款账户。

@@ -1758,6 +1758,144 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /admin/events/{id}/refund-policy:
+    put:
+      operationId: adminUpdateRefundPolicy
+      summary: 设置退改政策（报名确认页与赛事页展示；null 表示不展示）
+      x-permission: event_config
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRefundPolicyRequest'
+      responses:
+        '200':
+          description: 已保存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminEvent'
+        default:
+          description: 错误（VALIDATION_FAILED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/categories/{id}/qualification:
+    put:
+      operationId: adminUpdateCategoryQualification
+      summary: 设置精英组资格要求（null 表示不需要资格证明）
+      x-permission: event_config
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCategoryQualificationRequest'
+      responses:
+        '200':
+          description: 已保存，返回所属赛事
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminEvent'
+        default:
+          description: 错误（VALIDATION_FAILED / NOT_FOUND）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/events/{id}/qualification-proofs:
+    get:
+      operationId: adminListQualificationProofs
+      summary: 精英组资格证明列表（待核验在前）
+      x-permission: event_config
+      x-access: read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QualificationProofList'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/qualification-proofs/{id}/approve:
+    post:
+      operationId: adminApproveQualificationProof
+      summary: 资格核验通过
+      x-permission: event_config
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: 已通过
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminQualificationProof'
+        default:
+          description: 错误（QUALIFY_REVIEWED / QUALIFY_NOT_CONFIRMED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/qualification-proofs/{id}/reject:
+    post:
+      operationId: adminRejectQualificationProof
+      summary: 资格核验不通过：报名转到该组设置的公开组，名额随之转移
+      x-permission: event_config
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectQualificationProofRequest'
+      responses:
+        '200':
+          description: 已转组
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminQualificationProof'
+        default:
+          description: 错误（QUALIFY_REVIEWED / QUALIFY_NOT_CONFIRMED / QUALIFY_FALLBACK_FULL / QUALIFY_BIB_ASSIGNED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     ReferralKind:
@@ -1867,6 +2005,164 @@ components:
           format: int32
           nullable: true
           minimum: 0
+    RefundTier:
+      type: object
+      required: [days, percent]
+      properties:
+        days:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 365
+          description: 开赛前至少多少天申请
+        percent:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+    RefundPolicy:
+      type: object
+      required: [tiers, transferDays]
+      description: 退改政策。tiers 按 days 从大到小；不在任何一档的申请不退款。退款仍由财务按退款流程办理
+      properties:
+        tiers:
+          type: array
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/RefundTier'
+        transferDays:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 365
+          nullable: true
+          description: 开赛前至少多少天可转让给他人；为空表示不接受转让
+    UpdateRefundPolicyRequest:
+      type: object
+      required: [policy]
+      properties:
+        policy:
+          allOf:
+            - $ref: '#/components/schemas/RefundPolicy'
+          nullable: true
+    PublicQualification:
+      type: object
+      required: [rule, maxTimeMs, fallbackCategoryId]
+      properties:
+        rule:
+          type: string
+          description: 资格说明，如「需近两年 21K 1:45 以内的官方成绩」
+        maxTimeMs:
+          type: integer
+          format: int32
+          nullable: true
+          description: 自报成绩上限（毫秒）；为空表示不限，只看证明
+        fallbackCategoryId:
+          type: integer
+          format: int64
+          description: 核验不通过时转入的组别
+    AdminQualification:
+      type: object
+      required: [rule, maxTimeMs, fallbackCategoryId]
+      properties:
+        rule:
+          $ref: '#/components/schemas/LocalizedText'
+        maxTimeMs:
+          type: integer
+          format: int32
+          minimum: 1
+          nullable: true
+        fallbackCategoryId:
+          type: integer
+          format: int64
+    UpdateCategoryQualificationRequest:
+      type: object
+      required: [qualification]
+      properties:
+        qualification:
+          allOf:
+            - $ref: '#/components/schemas/AdminQualification'
+          nullable: true
+    QualificationInput:
+      type: object
+      required: [bestTimeMs, source, proofUrl]
+      description: 报精英组时必填：自报最好成绩与证明链接
+      properties:
+        bestTimeMs:
+          type: integer
+          format: int32
+          minimum: 1
+        source:
+          type: string
+          maxLength: 100
+          description: 成绩来源（哪场比赛）
+        proofUrl:
+          type: string
+          maxLength: 300
+          description: 官方成绩页或证书链接，http(s)
+    QualificationStatus:
+      type: string
+      enum: [PENDING, APPROVED, REJECTED]
+    ParticipantQualification:
+      type: object
+      required: [status, appliedCategoryName, reviewNote]
+      properties:
+        status:
+          $ref: '#/components/schemas/QualificationStatus'
+        appliedCategoryName:
+          $ref: '#/components/schemas/LocalizedText'
+        reviewNote:
+          type: string
+          nullable: true
+    AdminQualificationProof:
+      type: object
+      required: [id, status, registrationId, regNo, fullName, registrationStatus, categoryId, categoryCode, fallbackCategoryCode, bestTimeMs, maxTimeMs, source, proofUrl, reviewNote, movedToCategoryCode, reviewedAt, createdAt]
+      properties:
+        id: { type: integer, format: int64 }
+        status:
+          $ref: '#/components/schemas/QualificationStatus'
+        registrationId: { type: integer, format: int64 }
+        regNo: { type: string }
+        fullName: { type: string }
+        registrationStatus:
+          type: string
+          enum: [PENDING, CONFIRMED, CANCELLED]
+          description: 报名确认（已付款）后才能核验
+        categoryId: { type: integer, format: int64 }
+        categoryCode: { type: string }
+        fallbackCategoryCode:
+          type: string
+          nullable: true
+        bestTimeMs: { type: integer, format: int32 }
+        maxTimeMs:
+          type: integer
+          format: int32
+          nullable: true
+        source: { type: string }
+        proofUrl: { type: string }
+        reviewNote:
+          type: string
+          nullable: true
+        movedToCategoryCode:
+          type: string
+          nullable: true
+        reviewedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt: { type: string, format: date-time }
+    QualificationProofList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminQualificationProof'
+    RejectQualificationProofRequest:
+      type: object
+      properties:
+        note: { type: string, maxLength: 200 }
     RejectCompRequest:
       type: object
       properties:
@@ -2256,7 +2552,7 @@ components:
           type: string
     PublicCategory:
       type: object
-      required: [id, code, name, distanceM, capacity, startAt, cutoffAt, minAge, soldOut, remaining]
+      required: [id, code, name, distanceM, capacity, startAt, cutoffAt, minAge, soldOut, remaining, qualification]
       properties:
         id:
           type: integer
@@ -2287,10 +2583,20 @@ components:
           type: integer
           format: int32
           description: max(capacity - used_count - reserved_count, 0)
+        qualification:
+          allOf:
+            - $ref: '#/components/schemas/PublicQualification'
+          nullable: true
+          description: 精英组的资格要求；普通组为空
     PublicEvent:
       type: object
-      required: [id, slug, eventType, name, city, raceDate, registrationOpen, registrationOpensAt, registrationClosesAt, categories, fromPriceCents, coverUrl, priceTiers, registeredCount, compOpen]
+      required: [id, slug, eventType, name, city, raceDate, registrationOpen, registrationOpensAt, registrationClosesAt, categories, fromPriceCents, coverUrl, priceTiers, registeredCount, compOpen, refundPolicy]
       properties:
+        refundPolicy:
+          allOf:
+            - $ref: '#/components/schemas/RefundPolicy'
+          nullable: true
+          description: 主办方设置的退改政策；未设置时为空
         compOpen:
           type: boolean
           description: 是否接受免费入场申请（KOL / 跑团团长 / 赞助商 / 媒体）
@@ -2390,8 +2696,12 @@ components:
             $ref: '#/components/schemas/PublicEvent'
     AdminCategory:
       type: object
-      required: [id, code, name, distanceM, capacity, startAt, cutoffAt]
+      required: [id, code, name, distanceM, capacity, startAt, cutoffAt, qualification]
       properties:
+        qualification:
+          allOf:
+            - $ref: '#/components/schemas/AdminQualification'
+          nullable: true
         id:
           type: integer
           format: int64
@@ -2415,8 +2725,12 @@ components:
           nullable: true
     AdminEvent:
       type: object
-      required: [id, slug, eventType, organizerType, name, city, raceDate, timezone, status, publicVisible, publishedAt, registrationOpen, registrationOpensAt, registrationClosesAt, categories]
+      required: [id, slug, eventType, organizerType, name, city, raceDate, timezone, status, publicVisible, publishedAt, registrationOpen, registrationOpensAt, registrationClosesAt, categories, refundPolicy]
       properties:
+        refundPolicy:
+          allOf:
+            - $ref: '#/components/schemas/RefundPolicy'
+          nullable: true
         id:
           type: integer
           format: int64
@@ -2955,7 +3269,7 @@ components:
             $ref: '#/components/schemas/RunnerProfile'
     ConsentItem:
       type: object
-      required: [key, title, description]
+      required: [key, title, description, optional]
       properties:
         key:
           type: string
@@ -2964,6 +3278,9 @@ components:
         description:
           type: string
           description: 没有说明时为空串
+        optional:
+          type: boolean
+          description: 可选条目，跑者可以不勾；其余条目全部勾选才能提交。checkedItems 只提交勾了的 key
     ConsentVersion:
       type: object
       required: [version, lang, effectiveDate, fullText, items]
@@ -3196,6 +3513,8 @@ components:
           $ref: '#/components/schemas/OrderProfileInput'
         saveAsProfile:
           type: boolean
+        qualification:
+          $ref: '#/components/schemas/QualificationInput'
     OrderConsentInput:
       type: object
       required: [version, lang, checkedItems]
@@ -3242,6 +3561,7 @@ components:
         categoryId:
           type: integer
           format: int64
+          description: 报名当前所在组别（精英组核验不通过会转组；价格仍按下单时的组别）
         categoryName:
           $ref: '#/components/schemas/LocalizedText'
         fullName:
@@ -3261,6 +3581,8 @@ components:
         ticketCode:
           type: string
           description: 仅 CONFIRMED 时返回
+        qualification:
+          $ref: '#/components/schemas/ParticipantQualification'
     OrderPaymentAccount:
       type: object
       required: [id, name, provider, accountName, accountNoMasked, qrFileId]

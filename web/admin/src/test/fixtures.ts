@@ -65,8 +65,10 @@ export const draftEvent: Schemas["AdminEvent"] = {
       capacity: 800,
       startAt: "2026-11-14T23:00:00Z",
       cutoffAt: "2026-11-15T02:30:00Z",
+      qualification: null,
     },
   ],
+  refundPolicy: null,
 };
 
 export const publishedEvent: Schemas["AdminEvent"] = {

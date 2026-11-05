@@ -13,6 +13,7 @@ import { pickText } from "../events/localize";
 import { useAdminEvent } from "../events/queries";
 import { PricingTab } from "../pricing/PricingTab";
 import { PromoTab } from "../promo/PromoTab";
+import { RulesTab } from "../rules/RulesTab";
 
 type AdminCategory = Schemas["AdminCategory"];
 
@@ -114,6 +115,13 @@ export function EventDetailPage() {
       key: "coupons",
       label: <span data-testid="event-tab-coupons">{t("eventDetail.tabCoupons")}</span>,
       children: <CouponsTab event={event} />,
+    });
+  }
+  if (event.eventType === "RACE" && can(me?.permissions, PERM_EVENT_CONFIG, "read")) {
+    items.push({
+      key: "rules",
+      label: <span data-testid="event-tab-rules">{t("eventDetail.tabRules")}</span>,
+      children: <RulesTab event={event} />,
     });
   }
   if (event.eventType === "RACE" && can(me?.permissions, PERM_COUPON_MANAGE, "read")) {

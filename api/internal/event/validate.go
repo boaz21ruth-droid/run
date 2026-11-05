@@ -163,3 +163,77 @@ func CheckRegistrationReady(e Event, categoriesWithoutPriceRule []string, usable
 	}
 	return notReady.WithParams(map[string]any{"missing": missing, "categories": categories})
 }
+
+const (
+	maxRefundTiers    = 5
+	maxPolicyDays     = 365
+	maxQualifyRuleLen = 200
+	maxQualifyMs      = 24 * 60 * 60 * 1000
+)
+
+// ValidateRefundPolicy 校验退改政策：最多 5 档，天数 0–365 且严格从大到小，比例 0–100 且越临近开赛不能越高。
+func ValidateRefundPolicy(p RefundPolicy) error {
+	verr := apperr.New(http.StatusUnprocessableEntity, apperr.CodeValidation)
+	failed := false
+	add := func(field, key string) {
+		verr = verr.WithField(field, key, nil)
+		failed = true
+	}
+	if len(p.Tiers) > maxRefundTiers {
+		add("tiers", "field.invalid")
+	}
+	for i, t := range p.Tiers {
+		prefix := fmt.Sprintf("tiers[%d].", i)
+		if t.Days < 0 || t.Days > maxPolicyDays {
+			add(prefix+"days", "field.invalid")
+		}
+		if t.Percent < 0 || t.Percent > 100 {
+			add(prefix+"percent", "field.invalid")
+		}
+		if i > 0 {
+			prev := p.Tiers[i-1]
+			if t.Days >= prev.Days {
+				add(prefix+"days", "field.refund_tier_order")
+			}
+			if t.Percent > prev.Percent {
+				add(prefix+"percent", "field.refund_tier_order")
+			}
+		}
+	}
+	if p.TransferDays != nil && (*p.TransferDays < 0 || *p.TransferDays > maxPolicyDays) {
+		add("transferDays", "field.invalid")
+	}
+	if failed {
+		return verr
+	}
+	return nil
+}
+
+// ValidateQualification 校验资格要求本身（三语说明、成绩上限）；组别之间的关系由 Service 查库校验。
+func ValidateQualification(q Qualification) error {
+	verr := apperr.New(http.StatusUnprocessableEntity, apperr.CodeValidation)
+	failed := false
+	for _, l := range requiredLangs {
+		rule := strings.TrimSpace(q.Rule[l])
+		switch {
+		case rule == "":
+			verr = verr.WithField("rule."+string(l), "field.required", nil)
+			failed = true
+		case len([]rune(rule)) > maxQualifyRuleLen:
+			verr = verr.WithField("rule."+string(l), "field.too_long", map[string]any{"max": maxQualifyRuleLen})
+			failed = true
+		}
+	}
+	if q.MaxMs != nil && (*q.MaxMs <= 0 || *q.MaxMs > maxQualifyMs) {
+		verr = verr.WithField("maxTimeMs", "field.invalid", nil)
+		failed = true
+	}
+	if q.FallbackCategoryID <= 0 {
+		verr = verr.WithField("fallbackCategoryId", "field.required", nil)
+		failed = true
+	}
+	if failed {
+		return verr
+	}
+	return nil
+}

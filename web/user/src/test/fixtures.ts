@@ -15,6 +15,7 @@ export const halfMarathon: Schemas["PublicEvent"] = {
   priceTiers: [],
   registeredCount: 0,
   compOpen: false,
+  refundPolicy: null,
   categories: [
     {
       id: 11,
@@ -27,6 +28,7 @@ export const halfMarathon: Schemas["PublicEvent"] = {
       minAge: 16,
       soldOut: false,
       remaining: 800,
+      qualification: null,
     },
     {
       id: 12,
@@ -39,6 +41,7 @@ export const halfMarathon: Schemas["PublicEvent"] = {
       minAge: 0,
       soldOut: false,
       remaining: 1200,
+      qualification: null,
     },
   ],
 };

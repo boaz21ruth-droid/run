@@ -320,3 +320,45 @@ func TestSignConsentRequiresExactlyOneLink(t *testing.T) {
 	require.ErrorAs(t, err, &pgErr)
 	assert.Equal(t, "23514", pgErr.Code, "check_violation")
 }
+
+func TestOptionalConsentItems(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	in := registrationConsent("REG-v2", "en", day(2026, 9, 1))
+	in.Items = append(in.Items, runner.ConsentItem{Key: "results_public", Title: "Show my name and time on the results", Optional: true})
+	require.NoError(t, f.svc.PublishConsent(ctx, in))
+
+	current, err := f.svc.CurrentConsent(ctx, runner.PurposeRegistration, i18n.EN)
+	require.NoError(t, err)
+	require.Len(t, current.Items, 4)
+	assert.False(t, current.Items[0].Optional)
+	assert.True(t, current.Items[3].Optional, "可选标记随版本存取")
+
+	u := f.login(t, runner.TelegramUser{ID: 10001, FirstName: "Dara"}).User
+	signupID := insertFreeSignup(t, f.pool, u.ID)
+	sign := func(items ...string) error {
+		return db.InTx(ctx, f.pool, func(tx pgx.Tx) error {
+			return f.svc.SignConsent(ctx, tx, u, runner.ConsentAcceptance{Version: "REG-v2", Lang: "en", CheckedItems: items},
+				testMeta, runner.ConsentLink{FreeSignupID: &signupID})
+		})
+	}
+	require.NoError(t, sign("terms", "rules", "health"), "可选条目可以不勾")
+	require.NoError(t, sign("results_public", "health", "rules", "terms"))
+	requireAppError(t, sign("rules", "health", "results_public"), http.StatusUnprocessableEntity, apperr.CodeConsentInvalid)
+
+	rows, err := f.pool.Query(ctx, `SELECT checked_items::text FROM disclaimer_signatures WHERE user_id = $1 ORDER BY id`, u.ID)
+	require.NoError(t, err)
+	got, err := pgx.CollectRows(rows, pgx.RowTo[string])
+	require.NoError(t, err)
+	require.Len(t, got, 2)
+	assert.JSONEq(t, `["rules","health","terms"]`, got[0], "没勾的可选条目不记入")
+	assert.JSONEq(t, `["rules","health","terms","results_public"]`, got[1])
+
+	allOptional := registrationConsent("REG-v3", "en", day(2026, 9, 1))
+	for i := range allOptional.Items {
+		allOptional.Items[i].Optional = true
+	}
+	err = f.svc.PublishConsent(ctx, allOptional)
+	requireAppError(t, err, http.StatusUnprocessableEntity, apperr.CodeValidation)
+	assert.Equal(t, map[string]string{"items": "field.invalid"}, fieldKeys(t, err), "至少一条必勾")
+}

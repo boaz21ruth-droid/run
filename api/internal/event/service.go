@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -449,7 +450,15 @@ func eventFromRow(r store.Event) (Event, error) {
 	if err := json.Unmarshal(r.Name, &name); err != nil {
 		return Event{}, fmt.Errorf("decode name of event %d: %w", r.ID, err)
 	}
+	var policy *RefundPolicy
+	if len(r.RefundPolicy) > 0 {
+		policy = &RefundPolicy{}
+		if err := json.Unmarshal(r.RefundPolicy, policy); err != nil {
+			return Event{}, fmt.Errorf("decode refund policy of event %d: %w", r.ID, err)
+		}
+	}
 	return Event{
+		RefundPolicy:         policy,
 		ID:                   r.ID,
 		Slug:                 r.Slug,
 		EventType:            r.EventType,
@@ -474,7 +483,16 @@ func categoryFromRow(r store.EventCategory) (Category, error) {
 	if err := json.Unmarshal(r.Name, &name); err != nil {
 		return Category{}, fmt.Errorf("decode name of category %d: %w", r.ID, err)
 	}
+	var qualification *Qualification
+	if r.QualifyRequired && r.FallbackCategoryID != nil {
+		var rule i18n.Text
+		if err := json.Unmarshal(r.QualifyRule, &rule); err != nil {
+			return Category{}, fmt.Errorf("decode qualify rule of category %d: %w", r.ID, err)
+		}
+		qualification = &Qualification{Rule: rule, MaxMs: r.QualifyMaxMs, FallbackCategoryID: *r.FallbackCategoryID}
+	}
 	return Category{
+		Qualification: qualification,
 		ID:            r.ID,
 		Code:          r.Code,
 		Name:          name,
@@ -513,4 +531,148 @@ func staffAudit(ctx context.Context, actor iam.Staff, action string, ev Event, s
 		},
 		Meta: httpx.MetaOf(ctx),
 	}
+}
+
+// UpdateRefundPolicy 保存退改政策（nil 清除），写审计 event.refund_policy_update。
+func (s *Service) UpdateRefundPolicy(ctx context.Context, actor iam.Staff, id int64, policy *RefundPolicy) (Event, error) {
+	var raw []byte
+	if policy != nil {
+		if err := ValidateRefundPolicy(*policy); err != nil {
+			return Event{}, err
+		}
+		if policy.Tiers == nil {
+			policy.Tiers = []RefundTier{}
+		}
+		encoded, err := json.Marshal(policy)
+		if err != nil {
+			return Event{}, fmt.Errorf("encode refund policy: %w", err)
+		}
+		raw = encoded
+	}
+	var out Event
+	err := db.InTx(ctx, s.pool, func(tx pgx.Tx) error {
+		q := store.New(tx)
+		row, err := q.GetEventForUpdate(ctx, id)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return apperr.New(http.StatusNotFound, apperr.CodeEventNotFound)
+		}
+		if err != nil {
+			return fmt.Errorf("lock event %d: %w", id, err)
+		}
+		before, err := eventFromRow(row)
+		if err != nil {
+			return err
+		}
+		updated, err := q.UpdateEventRefundPolicy(ctx, store.UpdateEventRefundPolicyParams{RefundPolicy: raw, ID: id})
+		if err != nil {
+			return fmt.Errorf("update refund policy of event %d: %w", id, err)
+		}
+		events, err := withCategories(ctx, q, []store.Event{updated})
+		if err != nil {
+			return err
+		}
+		out = events[0]
+		entry := staffAudit(ctx, actor, "event.refund_policy_update", out, fmt.Sprintf("修改赛事 %s 退改政策", out.Slug))
+		entry.Before = map[string]any{"refundPolicy": before.RefundPolicy}
+		entry.After = map[string]any{"refundPolicy": out.RefundPolicy}
+		return audit.Record(ctx, tx, entry)
+	})
+	if err != nil {
+		return Event{}, err
+	}
+	return out, nil
+}
+
+// UpdateQualification 设置组别的精英组资格要求（nil 取消），返回所属赛事，写审计 event.category_qualification_update。
+// 不通过时转入的组别须是同一赛事的另一个组别，且自己不要求资格；被别的精英组当作去处的组别不能再设为精英组。
+func (s *Service) UpdateQualification(ctx context.Context, actor iam.Staff, categoryID int64, qual *Qualification) (Event, error) {
+	if qual != nil {
+		if err := ValidateQualification(*qual); err != nil {
+			return Event{}, err
+		}
+	}
+	var out Event
+	err := db.InTx(ctx, s.pool, func(tx pgx.Tx) error {
+		q := store.New(tx)
+		cat, err := q.GetCategoryForUpdate(ctx, categoryID)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return apperr.New(http.StatusNotFound, apperr.CodeNotFound)
+		}
+		if err != nil {
+			return fmt.Errorf("lock category %d: %w", categoryID, err)
+		}
+		params := store.UpdateCategoryQualificationParams{ID: cat.ID}
+		if qual != nil {
+			if err := checkFallback(ctx, q, cat, qual.FallbackCategoryID); err != nil {
+				return err
+			}
+			rule, err := json.Marshal(trimText(qual.Rule))
+			if err != nil {
+				return fmt.Errorf("encode qualify rule: %w", err)
+			}
+			fallback := qual.FallbackCategoryID
+			params.QualifyRequired = true
+			params.QualifyRule = rule
+			params.QualifyMaxMs = qual.MaxMs
+			params.FallbackCategoryID = &fallback
+		}
+		if _, err := q.UpdateCategoryQualification(ctx, params); err != nil {
+			return fmt.Errorf("update qualification of category %d: %w", categoryID, err)
+		}
+		row, err := q.GetEventByID(ctx, cat.EventID)
+		if err != nil {
+			return fmt.Errorf("get event %d: %w", cat.EventID, err)
+		}
+		events, err := withCategories(ctx, q, []store.Event{row})
+		if err != nil {
+			return err
+		}
+		out = events[0]
+		entry := staffAudit(ctx, actor, "event.category_qualification_update", out,
+			fmt.Sprintf("修改组别 %s 资格要求（需要证明：%t）", cat.Code, qual != nil))
+		after := map[string]any{"category": cat.Code, "qualifyRequired": qual != nil}
+		if qual != nil {
+			after["maxTimeMs"] = qual.MaxMs
+			after["fallbackCategoryId"] = qual.FallbackCategoryID
+		}
+		entry.After = after
+		return audit.Record(ctx, tx, entry)
+	})
+	if err != nil {
+		return Event{}, err
+	}
+	return out, nil
+}
+
+func checkFallback(ctx context.Context, q *store.Queries, cat store.EventCategory, fallbackID int64) error {
+	chain := apperr.New(http.StatusUnprocessableEntity, apperr.CodeValidation)
+	if fallbackID == cat.ID {
+		return chain.WithField("fallbackCategoryId", "field.invalid", nil)
+	}
+	fallback, err := q.GetCategoryForUpdate(ctx, fallbackID)
+	if errors.Is(err, pgx.ErrNoRows) || (err == nil && fallback.EventID != cat.EventID) {
+		return chain.WithField("fallbackCategoryId", "field.invalid", nil)
+	}
+	if err != nil {
+		return fmt.Errorf("lock fallback category %d: %w", fallbackID, err)
+	}
+	if fallback.QualifyRequired {
+		return chain.WithField("fallbackCategoryId", "field.fallback_chain", nil)
+	}
+	n, err := q.CountQualifyingFallbacksTo(ctx, cat.ID)
+	if err != nil {
+		return fmt.Errorf("count fallbacks to category %d: %w", cat.ID, err)
+	}
+	if n > 0 {
+		return chain.WithField("fallbackCategoryId", "field.fallback_chain", nil)
+	}
+	return nil
+}
+
+func trimText(t i18n.Text) i18n.Text {
+	out := make(i18n.Text, len(t))
+	for l, v := range t {
+		out[l] = strings.TrimSpace(v)
+	}
+	return out
 }

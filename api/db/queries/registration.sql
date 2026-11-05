@@ -130,11 +130,15 @@ JOIN events e ON e.id = o.event_id
 WHERE o.id = @id;
 
 -- name: ListOrderParticipantDetails :many
-SELECT r.id AS registration_id, r.reg_no, op.category_id, ec.name AS category_name, r.full_name,
-       op.price_rule_id, op.list_price_cents, op.paid_cents, r.status AS registration_status, r.ticket_code
+-- 组别取报名当前所在组（精英组核验不通过会转组）；财务快照仍是 order_participants
+SELECT r.id AS registration_id, r.reg_no, r.category_id, ec.name AS category_name, r.full_name,
+       op.price_rule_id, op.list_price_cents, op.paid_cents, r.status AS registration_status, r.ticket_code,
+       qp.status AS qualify_status, qc.name AS qualify_category_name, qp.review_note AS qualify_review_note
 FROM order_participants op
 JOIN registrations r ON r.order_participant_id = op.id
-JOIN event_categories ec ON ec.id = op.category_id
+JOIN event_categories ec ON ec.id = r.category_id
+LEFT JOIN qualification_proofs qp ON qp.registration_id = r.id
+LEFT JOIN event_categories qc ON qc.id = qp.category_id
 WHERE op.order_id = @order_id
 ORDER BY op.id;
 
@@ -362,3 +366,85 @@ JOIN event_categories ec ON ec.id = fs.category_id
 WHERE fs.user_id = @user_id::bigint
 ORDER BY fs.created_at DESC, fs.id DESC
 LIMIT 100;
+
+-- name: ListCategoryQualifications :many
+SELECT id, qualify_required, qualify_max_ms
+FROM event_categories
+WHERE event_id = @event_id;
+
+-- name: InsertQualificationProof :exec
+INSERT INTO qualification_proofs (registration_id, event_id, category_id, best_time_ms, source, proof_url)
+VALUES (@registration_id, @event_id, @category_id, @best_time_ms, @source, @proof_url);
+
+-- name: ListQualificationProofs :many
+-- 待核验在前，其余按提交时间倒序
+SELECT qp.id, qp.status, qp.registration_id, r.reg_no, r.full_name, r.status AS registration_status,
+       qp.category_id, c.code AS category_code, fb.code AS fallback_category_code, c.qualify_max_ms,
+       qp.best_time_ms, qp.source, qp.proof_url, qp.review_note, mv.code AS moved_to_category_code,
+       qp.reviewed_at, qp.created_at
+FROM qualification_proofs qp
+JOIN registrations r ON r.id = qp.registration_id
+JOIN event_categories c ON c.id = qp.category_id
+LEFT JOIN event_categories fb ON fb.id = c.fallback_category_id
+LEFT JOIN event_categories mv ON mv.id = qp.moved_to_category_id
+WHERE qp.event_id = @event_id
+ORDER BY (qp.status = 'PENDING') DESC, qp.created_at DESC, qp.id DESC
+LIMIT 500;
+
+-- name: GetQualificationProof :one
+SELECT qp.id, qp.status, qp.registration_id, r.reg_no, r.full_name, r.status AS registration_status,
+       qp.category_id, c.code AS category_code, fb.code AS fallback_category_code, c.qualify_max_ms,
+       qp.best_time_ms, qp.source, qp.proof_url, qp.review_note, mv.code AS moved_to_category_code,
+       qp.reviewed_at, qp.created_at
+FROM qualification_proofs qp
+JOIN registrations r ON r.id = qp.registration_id
+JOIN event_categories c ON c.id = qp.category_id
+LEFT JOIN event_categories fb ON fb.id = c.fallback_category_id
+LEFT JOIN event_categories mv ON mv.id = qp.moved_to_category_id
+WHERE qp.id = @id;
+
+-- name: LockQualificationProof :one
+SELECT qp.id, qp.status, qp.event_id, qp.registration_id, qp.category_id,
+       r.status AS registration_status, r.category_id AS current_category_id, c.fallback_category_id
+FROM qualification_proofs qp
+JOIN registrations r ON r.id = qp.registration_id
+JOIN event_categories c ON c.id = qp.category_id
+WHERE qp.id = @id
+FOR UPDATE OF qp, r;
+
+-- name: ApproveQualificationProof :exec
+UPDATE qualification_proofs
+SET status = 'APPROVED', reviewed_by = @reviewed_by, reviewed_at = @reviewed_at
+WHERE id = @id AND status = 'PENDING';
+
+-- name: RejectQualificationProof :exec
+UPDATE qualification_proofs
+SET status = 'REJECTED', review_note = sqlc.narg(review_note), moved_to_category_id = @moved_to_category_id,
+    reviewed_by = @reviewed_by, reviewed_at = @reviewed_at
+WHERE id = @id AND status = 'PENDING';
+
+-- name: CountAssignedBibs :one
+SELECT count(*) FROM bib_assignments
+WHERE registration_id = @registration_id AND status = 'ASSIGNED';
+
+-- name: LockCategoryPair :exec
+-- 转组前按 id 升序锁住两个组别，避免与其他转组或下单交叉死锁
+SELECT id FROM event_categories
+WHERE id = ANY(ARRAY[@from_id::bigint, @to_id::bigint])
+ORDER BY id
+FOR NO KEY UPDATE;
+
+-- name: ReleaseUsedSeat :execrows
+UPDATE event_categories
+SET used_count = used_count - 1
+WHERE id = @id AND used_count >= 1;
+
+-- name: TakeUsedSeat :execrows
+UPDATE event_categories
+SET used_count = used_count + 1
+WHERE id = @id AND used_count + reserved_count + 1 <= capacity;
+
+-- name: MoveRegistrationCategory :exec
+UPDATE registrations
+SET category_id = @category_id, version = version + 1
+WHERE id = @id;

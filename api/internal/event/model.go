@@ -30,6 +30,27 @@ type Category struct {
 	MinAge        int16
 	UsedCount     int32
 	ReservedCount int32
+	Qualification *Qualification // 精英组资格要求；普通组为 nil
+}
+
+// Qualification 是精英组的资格要求：报名自报最好成绩并附证明，核验不通过转到 FallbackCategoryID。
+type Qualification struct {
+	Rule               i18n.Text
+	MaxMs              *int32 // 自报成绩上限；nil 表示不限，只看证明
+	FallbackCategoryID int64
+}
+
+// RefundTier 是退改政策的一档：开赛前至少 Days 天申请退 Percent%。
+type RefundTier struct {
+	Days    int32 `json:"days"`
+	Percent int32 `json:"percent"`
+}
+
+// RefundPolicy 是主办方设置的退改政策，存在 events.refund_policy。Tiers 按 Days 从大到小；
+// TransferDays 为 nil 表示不接受转让。只用于展示，退款仍由财务按退款流程办理。
+type RefundPolicy struct {
+	Tiers        []RefundTier `json:"tiers"`
+	TransferDays *int32       `json:"transferDays"`
 }
 
 // Event 是赛事及其组别。
@@ -50,6 +71,7 @@ type Event struct {
 	RegistrationClosesAt *time.Time
 	CoverFileID          *int64
 	CompOpen             bool // 接受免费入场申请（comp_quota 非空）
+	RefundPolicy         *RefundPolicy
 	Categories           []Category
 	// FromPriceCents 是当前在售价格档中的最低价（分）；仅公开列表/详情会填充，nil 表示没有在售价格档。
 	FromPriceCents *int64

@@ -258,6 +258,23 @@ func (q *Queries) AdminListRegOrders(ctx context.Context, arg AdminListRegOrders
 	return items, nil
 }
 
+const approveQualificationProof = `-- name: ApproveQualificationProof :exec
+UPDATE qualification_proofs
+SET status = 'APPROVED', reviewed_by = $1, reviewed_at = $2
+WHERE id = $3 AND status = 'PENDING'
+`
+
+type ApproveQualificationProofParams struct {
+	ReviewedBy *int64
+	ReviewedAt *time.Time
+	ID         int64
+}
+
+func (q *Queries) ApproveQualificationProof(ctx context.Context, arg ApproveQualificationProofParams) error {
+	_, err := q.db.Exec(ctx, approveQualificationProof, arg.ReviewedBy, arg.ReviewedAt, arg.ID)
+	return err
+}
+
 const cancelOrderRegistrations = `-- name: CancelOrderRegistrations :execrows
 UPDATE registrations r
 SET status = 'CANCELLED', cancel_reason = $1::text, version = r.version + 1
@@ -337,6 +354,18 @@ func (q *Queries) ConfirmOrderRegistrations(ctx context.Context, arg ConfirmOrde
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const countAssignedBibs = `-- name: CountAssignedBibs :one
+SELECT count(*) FROM bib_assignments
+WHERE registration_id = $1 AND status = 'ASSIGNED'
+`
+
+func (q *Queries) CountAssignedBibs(ctx context.Context, registrationID *int64) (int64, error) {
+	row := q.db.QueryRow(ctx, countAssignedBibs, registrationID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
 const countOpenOrdersForBuyer = `-- name: CountOpenOrdersForBuyer :one
@@ -631,6 +660,64 @@ func (q *Queries) GetOrderPaymentAccount(ctx context.Context, id int64) (GetOrde
 	return i, err
 }
 
+const getQualificationProof = `-- name: GetQualificationProof :one
+SELECT qp.id, qp.status, qp.registration_id, r.reg_no, r.full_name, r.status AS registration_status,
+       qp.category_id, c.code AS category_code, fb.code AS fallback_category_code, c.qualify_max_ms,
+       qp.best_time_ms, qp.source, qp.proof_url, qp.review_note, mv.code AS moved_to_category_code,
+       qp.reviewed_at, qp.created_at
+FROM qualification_proofs qp
+JOIN registrations r ON r.id = qp.registration_id
+JOIN event_categories c ON c.id = qp.category_id
+LEFT JOIN event_categories fb ON fb.id = c.fallback_category_id
+LEFT JOIN event_categories mv ON mv.id = qp.moved_to_category_id
+WHERE qp.id = $1
+`
+
+type GetQualificationProofRow struct {
+	ID                   int64
+	Status               string
+	RegistrationID       int64
+	RegNo                string
+	FullName             string
+	RegistrationStatus   string
+	CategoryID           int64
+	CategoryCode         string
+	FallbackCategoryCode *string
+	QualifyMaxMs         *int32
+	BestTimeMs           int32
+	Source               string
+	ProofUrl             string
+	ReviewNote           *string
+	MovedToCategoryCode  *string
+	ReviewedAt           *time.Time
+	CreatedAt            time.Time
+}
+
+func (q *Queries) GetQualificationProof(ctx context.Context, id int64) (GetQualificationProofRow, error) {
+	row := q.db.QueryRow(ctx, getQualificationProof, id)
+	var i GetQualificationProofRow
+	err := row.Scan(
+		&i.ID,
+		&i.Status,
+		&i.RegistrationID,
+		&i.RegNo,
+		&i.FullName,
+		&i.RegistrationStatus,
+		&i.CategoryID,
+		&i.CategoryCode,
+		&i.FallbackCategoryCode,
+		&i.QualifyMaxMs,
+		&i.BestTimeMs,
+		&i.Source,
+		&i.ProofUrl,
+		&i.ReviewNote,
+		&i.MovedToCategoryCode,
+		&i.ReviewedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const insertFreeSignup = `-- name: InsertFreeSignup :one
 INSERT INTO free_signups (
   signup_no, event_id, category_id, user_id, full_name, phone_e164,
@@ -715,6 +802,32 @@ func (q *Queries) InsertOrderParticipant(ctx context.Context, arg InsertOrderPar
 	var id int64
 	err := row.Scan(&id)
 	return id, err
+}
+
+const insertQualificationProof = `-- name: InsertQualificationProof :exec
+INSERT INTO qualification_proofs (registration_id, event_id, category_id, best_time_ms, source, proof_url)
+VALUES ($1, $2, $3, $4, $5, $6)
+`
+
+type InsertQualificationProofParams struct {
+	RegistrationID int64
+	EventID        int64
+	CategoryID     int64
+	BestTimeMs     int32
+	Source         string
+	ProofUrl       string
+}
+
+func (q *Queries) InsertQualificationProof(ctx context.Context, arg InsertQualificationProofParams) error {
+	_, err := q.db.Exec(ctx, insertQualificationProof,
+		arg.RegistrationID,
+		arg.EventID,
+		arg.CategoryID,
+		arg.BestTimeMs,
+		arg.Source,
+		arg.ProofUrl,
+	)
+	return err
 }
 
 const insertRegOrder = `-- name: InsertRegOrder :one
@@ -829,6 +942,38 @@ func (q *Queries) InsertRegistration(ctx context.Context, arg InsertRegistration
 	return id, err
 }
 
+const listCategoryQualifications = `-- name: ListCategoryQualifications :many
+SELECT id, qualify_required, qualify_max_ms
+FROM event_categories
+WHERE event_id = $1
+`
+
+type ListCategoryQualificationsRow struct {
+	ID              int64
+	QualifyRequired bool
+	QualifyMaxMs    *int32
+}
+
+func (q *Queries) ListCategoryQualifications(ctx context.Context, eventID int64) ([]ListCategoryQualificationsRow, error) {
+	rows, err := q.db.Query(ctx, listCategoryQualifications, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListCategoryQualificationsRow
+	for rows.Next() {
+		var i ListCategoryQualificationsRow
+		if err := rows.Scan(&i.ID, &i.QualifyRequired, &i.QualifyMaxMs); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listDueOrderIDsForExpiry = `-- name: ListDueOrderIDsForExpiry :many
 SELECT id
 FROM reg_orders
@@ -917,28 +1062,35 @@ func (q *Queries) ListFreeSignupsForUser(ctx context.Context, userID int64) ([]L
 }
 
 const listOrderParticipantDetails = `-- name: ListOrderParticipantDetails :many
-SELECT r.id AS registration_id, r.reg_no, op.category_id, ec.name AS category_name, r.full_name,
-       op.price_rule_id, op.list_price_cents, op.paid_cents, r.status AS registration_status, r.ticket_code
+SELECT r.id AS registration_id, r.reg_no, r.category_id, ec.name AS category_name, r.full_name,
+       op.price_rule_id, op.list_price_cents, op.paid_cents, r.status AS registration_status, r.ticket_code,
+       qp.status AS qualify_status, qc.name AS qualify_category_name, qp.review_note AS qualify_review_note
 FROM order_participants op
 JOIN registrations r ON r.order_participant_id = op.id
-JOIN event_categories ec ON ec.id = op.category_id
+JOIN event_categories ec ON ec.id = r.category_id
+LEFT JOIN qualification_proofs qp ON qp.registration_id = r.id
+LEFT JOIN event_categories qc ON qc.id = qp.category_id
 WHERE op.order_id = $1
 ORDER BY op.id
 `
 
 type ListOrderParticipantDetailsRow struct {
-	RegistrationID     int64
-	RegNo              string
-	CategoryID         int64
-	CategoryName       []byte
-	FullName           string
-	PriceRuleID        int64
-	ListPriceCents     int64
-	PaidCents          int64
-	RegistrationStatus string
-	TicketCode         string
+	RegistrationID      int64
+	RegNo               string
+	CategoryID          int64
+	CategoryName        []byte
+	FullName            string
+	PriceRuleID         int64
+	ListPriceCents      int64
+	PaidCents           int64
+	RegistrationStatus  string
+	TicketCode          string
+	QualifyStatus       *string
+	QualifyCategoryName []byte
+	QualifyReviewNote   *string
 }
 
+// 组别取报名当前所在组（精英组核验不通过会转组）；财务快照仍是 order_participants
 func (q *Queries) ListOrderParticipantDetails(ctx context.Context, orderID int64) ([]ListOrderParticipantDetailsRow, error) {
 	rows, err := q.db.Query(ctx, listOrderParticipantDetails, orderID)
 	if err != nil {
@@ -959,6 +1111,9 @@ func (q *Queries) ListOrderParticipantDetails(ctx context.Context, orderID int64
 			&i.PaidCents,
 			&i.RegistrationStatus,
 			&i.TicketCode,
+			&i.QualifyStatus,
+			&i.QualifyCategoryName,
+			&i.QualifyReviewNote,
 		); err != nil {
 			return nil, err
 		}
@@ -1098,6 +1253,80 @@ func (q *Queries) ListOrdersForBuyer(ctx context.Context, buyerUserID int64) ([]
 	return items, nil
 }
 
+const listQualificationProofs = `-- name: ListQualificationProofs :many
+SELECT qp.id, qp.status, qp.registration_id, r.reg_no, r.full_name, r.status AS registration_status,
+       qp.category_id, c.code AS category_code, fb.code AS fallback_category_code, c.qualify_max_ms,
+       qp.best_time_ms, qp.source, qp.proof_url, qp.review_note, mv.code AS moved_to_category_code,
+       qp.reviewed_at, qp.created_at
+FROM qualification_proofs qp
+JOIN registrations r ON r.id = qp.registration_id
+JOIN event_categories c ON c.id = qp.category_id
+LEFT JOIN event_categories fb ON fb.id = c.fallback_category_id
+LEFT JOIN event_categories mv ON mv.id = qp.moved_to_category_id
+WHERE qp.event_id = $1
+ORDER BY (qp.status = 'PENDING') DESC, qp.created_at DESC, qp.id DESC
+LIMIT 500
+`
+
+type ListQualificationProofsRow struct {
+	ID                   int64
+	Status               string
+	RegistrationID       int64
+	RegNo                string
+	FullName             string
+	RegistrationStatus   string
+	CategoryID           int64
+	CategoryCode         string
+	FallbackCategoryCode *string
+	QualifyMaxMs         *int32
+	BestTimeMs           int32
+	Source               string
+	ProofUrl             string
+	ReviewNote           *string
+	MovedToCategoryCode  *string
+	ReviewedAt           *time.Time
+	CreatedAt            time.Time
+}
+
+// 待核验在前，其余按提交时间倒序
+func (q *Queries) ListQualificationProofs(ctx context.Context, eventID int64) ([]ListQualificationProofsRow, error) {
+	rows, err := q.db.Query(ctx, listQualificationProofs, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListQualificationProofsRow
+	for rows.Next() {
+		var i ListQualificationProofsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Status,
+			&i.RegistrationID,
+			&i.RegNo,
+			&i.FullName,
+			&i.RegistrationStatus,
+			&i.CategoryID,
+			&i.CategoryCode,
+			&i.FallbackCategoryCode,
+			&i.QualifyMaxMs,
+			&i.BestTimeMs,
+			&i.Source,
+			&i.ProofUrl,
+			&i.ReviewNote,
+			&i.MovedToCategoryCode,
+			&i.ReviewedAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listRegisteredIDNoHashes = `-- name: ListRegisteredIDNoHashes :many
 SELECT id_no_hash
 FROM registrations
@@ -1138,6 +1367,24 @@ SELECT pg_advisory_xact_lock(hashtextextended(format('%s', $1::bigint), 7303))
 // 串行化同一跑者的并发下单，使未付款订单上限的计数与插入不被并发绕过。键为 hashtextextended('<userId>', 7303)。
 func (q *Queries) LockBuyerOpenOrders(ctx context.Context, buyerUserID int64) error {
 	_, err := q.db.Exec(ctx, lockBuyerOpenOrders, buyerUserID)
+	return err
+}
+
+const lockCategoryPair = `-- name: LockCategoryPair :exec
+SELECT id FROM event_categories
+WHERE id = ANY(ARRAY[$1::bigint, $2::bigint])
+ORDER BY id
+FOR NO KEY UPDATE
+`
+
+type LockCategoryPairParams struct {
+	FromID int64
+	ToID   int64
+}
+
+// 转组前按 id 升序锁住两个组别，避免与其他转组或下单交叉死锁
+func (q *Queries) LockCategoryPair(ctx context.Context, arg LockCategoryPairParams) error {
+	_, err := q.db.Exec(ctx, lockCategoryPair, arg.FromID, arg.ToID)
 	return err
 }
 
@@ -1212,6 +1459,43 @@ func (q *Queries) LockOrderForBuyer(ctx context.Context, arg LockOrderForBuyerPa
 	row := q.db.QueryRow(ctx, lockOrderForBuyer, arg.OrderNo, arg.BuyerUserID)
 	var i LockOrderForBuyerRow
 	err := row.Scan(&i.ID, &i.EventID, &i.Status)
+	return i, err
+}
+
+const lockQualificationProof = `-- name: LockQualificationProof :one
+SELECT qp.id, qp.status, qp.event_id, qp.registration_id, qp.category_id,
+       r.status AS registration_status, r.category_id AS current_category_id, c.fallback_category_id
+FROM qualification_proofs qp
+JOIN registrations r ON r.id = qp.registration_id
+JOIN event_categories c ON c.id = qp.category_id
+WHERE qp.id = $1
+FOR UPDATE OF qp, r
+`
+
+type LockQualificationProofRow struct {
+	ID                 int64
+	Status             string
+	EventID            int64
+	RegistrationID     int64
+	CategoryID         int64
+	RegistrationStatus string
+	CurrentCategoryID  int64
+	FallbackCategoryID *int64
+}
+
+func (q *Queries) LockQualificationProof(ctx context.Context, id int64) (LockQualificationProofRow, error) {
+	row := q.db.QueryRow(ctx, lockQualificationProof, id)
+	var i LockQualificationProofRow
+	err := row.Scan(
+		&i.ID,
+		&i.Status,
+		&i.EventID,
+		&i.RegistrationID,
+		&i.CategoryID,
+		&i.RegistrationStatus,
+		&i.CurrentCategoryID,
+		&i.FallbackCategoryID,
+	)
 	return i, err
 }
 
@@ -1325,6 +1609,22 @@ func (q *Queries) MarkOrderPaid(ctx context.Context, arg MarkOrderPaidParams) (i
 	return result.RowsAffected(), nil
 }
 
+const moveRegistrationCategory = `-- name: MoveRegistrationCategory :exec
+UPDATE registrations
+SET category_id = $1, version = version + 1
+WHERE id = $2
+`
+
+type MoveRegistrationCategoryParams struct {
+	CategoryID int64
+	ID         int64
+}
+
+func (q *Queries) MoveRegistrationCategory(ctx context.Context, arg MoveRegistrationCategoryParams) error {
+	_, err := q.db.Exec(ctx, moveRegistrationCategory, arg.CategoryID, arg.ID)
+	return err
+}
+
 const purgeExpiredIdempotencyKeys = `-- name: PurgeExpiredIdempotencyKeys :execrows
 DELETE FROM idempotency_keys k
 USING (
@@ -1384,6 +1684,32 @@ func (q *Queries) ReferralLinkBySlug(ctx context.Context, arg ReferralLinkBySlug
 	return id, err
 }
 
+const rejectQualificationProof = `-- name: RejectQualificationProof :exec
+UPDATE qualification_proofs
+SET status = 'REJECTED', review_note = $1, moved_to_category_id = $2,
+    reviewed_by = $3, reviewed_at = $4
+WHERE id = $5 AND status = 'PENDING'
+`
+
+type RejectQualificationProofParams struct {
+	ReviewNote        *string
+	MovedToCategoryID *int64
+	ReviewedBy        *int64
+	ReviewedAt        *time.Time
+	ID                int64
+}
+
+func (q *Queries) RejectQualificationProof(ctx context.Context, arg RejectQualificationProofParams) error {
+	_, err := q.db.Exec(ctx, rejectQualificationProof,
+		arg.ReviewNote,
+		arg.MovedToCategoryID,
+		arg.ReviewedBy,
+		arg.ReviewedAt,
+		arg.ID,
+	)
+	return err
+}
+
 const releaseOrderCancelled = `-- name: ReleaseOrderCancelled :execrows
 UPDATE reg_orders
 SET status = 'CANCELLED',
@@ -1430,6 +1756,20 @@ type ReleaseOrderExpiredParams struct {
 
 func (q *Queries) ReleaseOrderExpired(ctx context.Context, arg ReleaseOrderExpiredParams) (int64, error) {
 	result, err := q.db.Exec(ctx, releaseOrderExpired, arg.At, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const releaseUsedSeat = `-- name: ReleaseUsedSeat :execrows
+UPDATE event_categories
+SET used_count = used_count - 1
+WHERE id = $1 AND used_count >= 1
+`
+
+func (q *Queries) ReleaseUsedSeat(ctx context.Context, id int64) (int64, error) {
+	result, err := q.db.Exec(ctx, releaseUsedSeat, id)
 	if err != nil {
 		return 0, err
 	}
@@ -1515,6 +1855,20 @@ WHERE id = $1
 
 func (q *Queries) SetOrderProofSubmitted(ctx context.Context, id int64) (int64, error) {
 	result, err := q.db.Exec(ctx, setOrderProofSubmitted, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const takeUsedSeat = `-- name: TakeUsedSeat :execrows
+UPDATE event_categories
+SET used_count = used_count + 1
+WHERE id = $1 AND used_count + reserved_count + 1 <= capacity
+`
+
+func (q *Queries) TakeUsedSeat(ctx context.Context, id int64) (int64, error) {
+	result, err := q.db.Exec(ctx, takeUsedSeat, id)
 	if err != nil {
 		return 0, err
 	}

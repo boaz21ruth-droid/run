@@ -66,6 +66,11 @@ func normalizeCreateInput(in CreateOrderInput) (CreateOrderInput, error) {
 		if p.CategoryID <= 0 {
 			fe.add(prefix+"categoryId", "field.required", nil)
 		}
+		if p.Qualification != nil {
+			qi := normalizeQualification(*p.Qualification)
+			validateQualification(fe, qi, prefix)
+			np.Qualification = &qi
+		}
 		switch {
 		case p.ProfileID != nil && p.Profile != nil:
 			fe.add(prefix+"profileId", "field.invalid", nil)
@@ -267,6 +272,11 @@ func (s *Service) createOrderTx(ctx context.Context, tx pgx.Tx, q *store.Queries
 	if err := checkAlreadyRegistered(ctx, q, ev.ID, parts); err != nil {
 		return OrderDetail{}, err
 	}
+	// 3b. 精英组必须附成绩证明；普通组带了也不保存
+	proofs, err := checkQualifications(ctx, q, ev.ID, in.Participants)
+	if err != nil {
+		return OrderDetail{}, err
+	}
 
 	// 4. 收款账户
 	accountID, err := q.SelectRegistrationPaymentAccount(ctx, ev.ID)
@@ -349,7 +359,7 @@ func (s *Service) createOrderTx(ctx context.Context, tx pgx.Tx, q *store.Queries
 		if err != nil {
 			return OrderDetail{}, fmt.Errorf("encrypt id number: %w", err)
 		}
-		if err := insertRegistration(ctx, tx, store.InsertRegistrationParams{
+		regID, err := insertRegistration(ctx, tx, store.InsertRegistrationParams{
 			OrderParticipantID: opID,
 			EventID:            ev.ID,
 			CategoryID:         pq.CategoryID,
@@ -366,8 +376,21 @@ func (s *Service) createOrderTx(ctx context.Context, tx pgx.Tx, q *store.Queries
 			EmergencyName:      optString(p.profile.EmergencyName),
 			EmergencyPhone:     optString(p.profile.EmergencyPhone),
 			TshirtSize:         optString(p.profile.TShirtSize),
-		}); err != nil {
+		})
+		if err != nil {
 			return OrderDetail{}, err
+		}
+		if proof := proofs[i]; proof != nil {
+			if err := q.InsertQualificationProof(ctx, store.InsertQualificationProofParams{
+				RegistrationID: regID,
+				EventID:        ev.ID,
+				CategoryID:     pq.CategoryID,
+				BestTimeMs:     proof.BestTimeMs,
+				Source:         proof.Source,
+				ProofUrl:       proof.ProofURL,
+			}); err != nil {
+				return OrderDetail{}, fmt.Errorf("insert qualification proof: %w", err)
+			}
 		}
 		if p.input.SaveAsProfile && p.input.Profile != nil {
 			if _, err := s.runners.CreateProfileTx(ctx, tx, u, p.profile); err != nil {
@@ -506,22 +529,24 @@ func checkAlreadyRegistered(ctx context.Context, q *store.Queries, eventID int64
 	return aerr
 }
 
-// insertRegistration 在保存点里插入报名，reg_no 或 ticket_code 冲突时重新生成（各最多 3 次）。
-func insertRegistration(ctx context.Context, tx pgx.Tx, params store.InsertRegistrationParams) error {
+// insertRegistration 在保存点里插入报名，reg_no 或 ticket_code 冲突时重新生成（各最多 3 次），返回报名 id。
+func insertRegistration(ctx context.Context, tx pgx.Tx, params store.InsertRegistrationParams) (int64, error) {
+	var id int64
 	err := idgen.Retry("registrations_reg_no_key", func() error {
 		return idgen.Retry("registrations_ticket_code_key", func() error {
 			return withSavepoint(ctx, tx, func(sp pgx.Tx) error {
 				params.RegNo = idgen.Code(idgen.PrefixRegistration)
 				params.TicketCode = idgen.TicketCode()
-				_, err := store.New(sp).InsertRegistration(ctx, params)
+				inserted, err := store.New(sp).InsertRegistration(ctx, params)
+				id = inserted
 				return err
 			})
 		})
 	})
 	if err != nil {
-		return fmt.Errorf("insert registration: %w", err)
+		return 0, fmt.Errorf("insert registration: %w", err)
 	}
-	return nil
+	return id, nil
 }
 
 // ConfirmPaid 把订单改为 PAID 并消耗预留。只在调用方事务内使用，依次：

@@ -10,6 +10,7 @@ import { eventStatus, totalRemaining } from "../events/status";
 import { currentTier } from "../events/tiers";
 import { formatKm, formatNumber, formatRaceDate, formatTime, raceDayParts } from "../format";
 import { loadReferral, offerText } from "../promo/referral";
+import { RefundPolicyCard } from "../rules/RefundPolicyCard";
 import { usePublicEvent } from "../queries";
 import { registrationAvailable } from "../register/model";
 import styles from "./EventDetail.module.css";
@@ -136,6 +137,11 @@ export function EventDetailPage() {
                         {category.soldOut ? <span className={styles.badge}>{t("register.soldOut")}</span> : null}
                       </div>
                       <h3 className={styles.categoryName}>{category.name}</h3>
+                      {category.qualification ? (
+                        <p className={styles.qualifyNote} data-testid={`category-${category.code}-qualify`}>
+                          <b>{t("event.elite")}</b> {category.qualification.rule}
+                        </p>
+                      ) : null}
                       <dl className={styles.times}>
                         <div>
                           <dt>{t("event.start")}</dt>
@@ -163,6 +169,12 @@ export function EventDetailPage() {
                 })}
               </ul>
             </section>
+
+            {data.refundPolicy ? (
+              <div className={styles.section}>
+                <RefundPolicyCard policy={data.refundPolicy} />
+              </div>
+            ) : null}
 
             {data.compOpen ? (
               <Link to={`/events/${data.slug}/comp`} className={styles.compLink} data-testid="comp-link">

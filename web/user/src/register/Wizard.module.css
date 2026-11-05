@@ -154,6 +154,17 @@
   gap: 8px;
 }
 
+.couponRow input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 手机宽度下「应用」不折成两行 */
+.couponRow button {
+  flex: none;
+  white-space: nowrap;
+}
+
 .couponOk {
   font-size: 13px;
   color: var(--leaf-ink);

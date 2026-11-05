@@ -17,9 +17,9 @@ export const consentEn: Schemas["ConsentVersion"] = {
   effectiveDate: "2026-01-01",
   fullText: "By registering you agree to the race rules.",
   items: [
-    { key: "rules", title: "Race rules", description: "I will follow the race rules." },
-    { key: "health", title: "Health", description: "I am fit to take part." },
-    { key: "terms", title: "Terms", description: "I accept the registration terms." },
+    { key: "rules", title: "Race rules", description: "I will follow the race rules.", optional: false },
+    { key: "health", title: "Health", description: "I am fit to take part.", optional: false },
+    { key: "terms", title: "Terms", description: "I accept the registration terms.", optional: false },
   ],
 };
 

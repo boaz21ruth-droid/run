@@ -249,6 +249,27 @@ func (e AdminProofHistoryItemStatus) Valid() bool {
 	}
 }
 
+// Defines values for AdminQualificationProofRegistrationStatus.
+const (
+	AdminQualificationProofRegistrationStatusCANCELLED AdminQualificationProofRegistrationStatus = "CANCELLED"
+	AdminQualificationProofRegistrationStatusCONFIRMED AdminQualificationProofRegistrationStatus = "CONFIRMED"
+	AdminQualificationProofRegistrationStatusPENDING   AdminQualificationProofRegistrationStatus = "PENDING"
+)
+
+// Valid indicates whether the value is a known member of the AdminQualificationProofRegistrationStatus enum.
+func (e AdminQualificationProofRegistrationStatus) Valid() bool {
+	switch e {
+	case AdminQualificationProofRegistrationStatusCANCELLED:
+		return true
+	case AdminQualificationProofRegistrationStatusCONFIRMED:
+		return true
+	case AdminQualificationProofRegistrationStatusPENDING:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for AdminReceiptItemMatchStatus.
 const (
 	AdminReceiptItemMatchStatusAPPLIED   AdminReceiptItemMatchStatus = "APPLIED"
@@ -837,6 +858,27 @@ func (e PublicPriceTierState) Valid() bool {
 	}
 }
 
+// Defines values for QualificationStatus.
+const (
+	QualificationStatusAPPROVED QualificationStatus = "APPROVED"
+	QualificationStatusPENDING  QualificationStatus = "PENDING"
+	QualificationStatusREJECTED QualificationStatus = "REJECTED"
+)
+
+// Valid indicates whether the value is a known member of the QualificationStatus enum.
+func (e QualificationStatus) Valid() bool {
+	switch e {
+	case QualificationStatusAPPROVED:
+		return true
+	case QualificationStatusPENDING:
+		return true
+	case QualificationStatusREJECTED:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for QuoteParticipantAudience.
 const (
 	QuoteParticipantAudienceALL   QuoteParticipantAudience = "ALL"
@@ -1236,13 +1278,14 @@ type AdminAppliedCouponState string
 
 // AdminCategory defines model for AdminCategory.
 type AdminCategory struct {
-	Capacity  int32         `json:"capacity"`
-	Code      string        `json:"code"`
-	CutoffAt  *time.Time    `json:"cutoffAt"`
-	DistanceM int32         `json:"distanceM"`
-	Id        int64         `json:"id"`
-	Name      LocalizedText `json:"name"`
-	StartAt   *time.Time    `json:"startAt"`
+	Capacity      int32               `json:"capacity"`
+	Code          string              `json:"code"`
+	CutoffAt      *time.Time          `json:"cutoffAt"`
+	DistanceM     int32               `json:"distanceM"`
+	Id            int64               `json:"id"`
+	Name          LocalizedText       `json:"name"`
+	Qualification *AdminQualification `json:"qualification"`
+	StartAt       *time.Time          `json:"startAt"`
 }
 
 // AdminCompRequest defines model for AdminCompRequest.
@@ -1278,6 +1321,7 @@ type AdminEvent struct {
 	PublicVisible        bool                    `json:"publicVisible"`
 	PublishedAt          *time.Time              `json:"publishedAt"`
 	RaceDate             openapi_types.Date      `json:"raceDate"`
+	RefundPolicy         *RefundPolicy           `json:"refundPolicy"`
 	RegistrationClosesAt *time.Time              `json:"registrationClosesAt"`
 	RegistrationOpen     bool                    `json:"registrationOpen"`
 	RegistrationOpensAt  *time.Time              `json:"registrationOpensAt"`
@@ -1411,6 +1455,39 @@ type AdminProofHistoryItem struct {
 // AdminProofHistoryItemStatus defines model for AdminProofHistoryItem.Status.
 type AdminProofHistoryItemStatus string
 
+// AdminQualification defines model for AdminQualification.
+type AdminQualification struct {
+	FallbackCategoryId int64         `json:"fallbackCategoryId"`
+	MaxTimeMs          *int32        `json:"maxTimeMs"`
+	Rule               LocalizedText `json:"rule"`
+}
+
+// AdminQualificationProof defines model for AdminQualificationProof.
+type AdminQualificationProof struct {
+	BestTimeMs           int32     `json:"bestTimeMs"`
+	CategoryCode         string    `json:"categoryCode"`
+	CategoryId           int64     `json:"categoryId"`
+	CreatedAt            time.Time `json:"createdAt"`
+	FallbackCategoryCode *string   `json:"fallbackCategoryCode"`
+	FullName             string    `json:"fullName"`
+	Id                   int64     `json:"id"`
+	MaxTimeMs            *int32    `json:"maxTimeMs"`
+	MovedToCategoryCode  *string   `json:"movedToCategoryCode"`
+	ProofUrl             string    `json:"proofUrl"`
+	RegNo                string    `json:"regNo"`
+	RegistrationId       int64     `json:"registrationId"`
+
+	// RegistrationStatus 报名确认（已付款）后才能核验
+	RegistrationStatus AdminQualificationProofRegistrationStatus `json:"registrationStatus"`
+	ReviewNote         *string                                   `json:"reviewNote"`
+	ReviewedAt         *time.Time                                `json:"reviewedAt"`
+	Source             string                                    `json:"source"`
+	Status             QualificationStatus                       `json:"status"`
+}
+
+// AdminQualificationProofRegistrationStatus 报名确认（已付款）后才能核验
+type AdminQualificationProofRegistrationStatus string
+
 // AdminReceiptItem defines model for AdminReceiptItem.
 type AdminReceiptItem struct {
 	AmountCents int64                       `json:"amountCents"`
@@ -1501,7 +1578,10 @@ type ConsentItem struct {
 	// Description 没有说明时为空串
 	Description string `json:"description"`
 	Key         string `json:"key"`
-	Title       string `json:"title"`
+
+	// Optional 可选条目，跑者可以不勾；其余条目全部勾选才能提交。checkedItems 只提交勾了的 key
+	Optional bool   `json:"optional"`
+	Title    string `json:"title"`
 }
 
 // ConsentVersion defines model for ConsentVersion.
@@ -1785,12 +1865,14 @@ type OrderList struct {
 
 // OrderParticipant defines model for OrderParticipant.
 type OrderParticipant struct {
+	// CategoryId 报名当前所在组别（精英组核验不通过会转组；价格仍按下单时的组别）
 	CategoryId         int64                              `json:"categoryId"`
 	CategoryName       LocalizedText                      `json:"categoryName"`
 	FullName           string                             `json:"fullName"`
 	ListPriceCents     int64                              `json:"listPriceCents"`
 	PaidCents          int64                              `json:"paidCents"`
 	PriceRuleId        int64                              `json:"priceRuleId"`
+	Qualification      *ParticipantQualification          `json:"qualification,omitempty"`
 	RegNo              string                             `json:"regNo"`
 	RegistrationStatus OrderParticipantRegistrationStatus `json:"registrationStatus"`
 
@@ -1803,10 +1885,13 @@ type OrderParticipantRegistrationStatus string
 
 // OrderParticipantInput profileId 与 profile 二选一
 type OrderParticipantInput struct {
-	CategoryId    int64              `json:"categoryId"`
-	Profile       *OrderProfileInput `json:"profile,omitempty"`
-	ProfileId     *int64             `json:"profileId,omitempty"`
-	SaveAsProfile *bool              `json:"saveAsProfile,omitempty"`
+	CategoryId int64              `json:"categoryId"`
+	Profile    *OrderProfileInput `json:"profile,omitempty"`
+	ProfileId  *int64             `json:"profileId,omitempty"`
+
+	// Qualification 报精英组时必填：自报最好成绩与证明链接
+	Qualification *QualificationInput `json:"qualification,omitempty"`
+	SaveAsProfile *bool               `json:"saveAsProfile,omitempty"`
 }
 
 // OrderPaymentAccount defines model for OrderPaymentAccount.
@@ -1864,6 +1949,13 @@ type OrderSummary struct {
 	OrderNo          string        `json:"orderNo"`
 	ParticipantCount int32         `json:"participantCount"`
 	Status           OrderStatus   `json:"status"`
+}
+
+// ParticipantQualification defines model for ParticipantQualification.
+type ParticipantQualification struct {
+	AppliedCategoryName LocalizedText       `json:"appliedCategoryName"`
+	ReviewNote          *string             `json:"reviewNote"`
+	Status              QualificationStatus `json:"status"`
 }
 
 // PaymentAccount defines model for PaymentAccount.
@@ -2029,6 +2121,9 @@ type PublicCategory struct {
 	MinAge    int32     `json:"minAge"`
 	Name      string    `json:"name"`
 
+	// Qualification 精英组的资格要求；普通组为空
+	Qualification *PublicQualification `json:"qualification"`
+
 	// Remaining max(capacity - used_count - reserved_count, 0)
 	Remaining int32 `json:"remaining"`
 
@@ -2057,6 +2152,9 @@ type PublicEvent struct {
 	// PriceTiers 价格档时间线（按后台排序），含已售罄、未开始与已结束的档位
 	PriceTiers []PublicPriceTier  `json:"priceTiers"`
 	RaceDate   openapi_types.Date `json:"raceDate"`
+
+	// RefundPolicy 主办方设置的退改政策；未设置时为空
+	RefundPolicy *RefundPolicy `json:"refundPolicy"`
 
 	// RegisteredCount 已确认的报名人数（各组别 used_count 之和，不含待付款）
 	RegisteredCount      int32      `json:"registeredCount"`
@@ -2099,6 +2197,37 @@ type PublicPriceTierAudience string
 
 // PublicPriceTierState 配额用尽为 SOLD_OUT；否则按销售窗口判定
 type PublicPriceTierState string
+
+// PublicQualification defines model for PublicQualification.
+type PublicQualification struct {
+	// FallbackCategoryId 核验不通过时转入的组别
+	FallbackCategoryId int64 `json:"fallbackCategoryId"`
+
+	// MaxTimeMs 自报成绩上限（毫秒）；为空表示不限，只看证明
+	MaxTimeMs *int32 `json:"maxTimeMs"`
+
+	// Rule 资格说明，如「需近两年 21K 1:45 以内的官方成绩」
+	Rule string `json:"rule"`
+}
+
+// QualificationInput 报精英组时必填：自报最好成绩与证明链接
+type QualificationInput struct {
+	BestTimeMs int32 `json:"bestTimeMs"`
+
+	// ProofUrl 官方成绩页或证书链接，http(s)
+	ProofUrl string `json:"proofUrl"`
+
+	// Source 成绩来源（哪场比赛）
+	Source string `json:"source"`
+}
+
+// QualificationProofList defines model for QualificationProofList.
+type QualificationProofList struct {
+	Items []AdminQualificationProof `json:"items"`
+}
+
+// QualificationStatus defines model for QualificationStatus.
+type QualificationStatus string
 
 // Quote defines model for Quote.
 type Quote struct {
@@ -2306,6 +2435,21 @@ type ReferralVisit struct {
 	Offer      *CouponOffer `json:"offer"`
 }
 
+// RefundPolicy 退改政策。tiers 按 days 从大到小；不在任何一档的申请不退款。退款仍由财务按退款流程办理
+type RefundPolicy struct {
+	Tiers []RefundTier `json:"tiers"`
+
+	// TransferDays 开赛前至少多少天可转让给他人；为空表示不接受转让
+	TransferDays *int32 `json:"transferDays"`
+}
+
+// RefundTier defines model for RefundTier.
+type RefundTier struct {
+	// Days 开赛前至少多少天申请
+	Days    int32 `json:"days"`
+	Percent int32 `json:"percent"`
+}
+
 // RejectCompRequest defines model for RejectCompRequest.
 type RejectCompRequest struct {
 	Note *string `json:"note,omitempty"`
@@ -2319,6 +2463,11 @@ type RejectProofRequest struct {
 
 // RejectProofRequestRejectCode defines model for RejectProofRequest.RejectCode.
 type RejectProofRequestRejectCode string
+
+// RejectQualificationProofRequest defines model for RejectQualificationProofRequest.
+type RejectQualificationProofRequest struct {
+	Note *string `json:"note,omitempty"`
+}
 
 // Role defines model for Role.
 type Role string
@@ -2389,6 +2538,11 @@ type SubmitProofForm struct {
 // TShirtSize defines model for TShirtSize.
 type TShirtSize string
 
+// UpdateCategoryQualificationRequest defines model for UpdateCategoryQualificationRequest.
+type UpdateCategoryQualificationRequest struct {
+	Qualification *AdminQualification `json:"qualification"`
+}
+
 // UpdateCompQuotaRequest defines model for UpdateCompQuotaRequest.
 type UpdateCompQuotaRequest struct {
 	Quota *int32 `json:"quota"`
@@ -2431,6 +2585,11 @@ type UpdateMeRequestLocale string
 type UpdateReferralLinkRequest struct {
 	Label  string       `json:"label"`
 	Status CouponStatus `json:"status"`
+}
+
+// UpdateRefundPolicyRequest defines model for UpdateRefundPolicyRequest.
+type UpdateRefundPolicyRequest struct {
+	Policy *RefundPolicy `json:"policy"`
 }
 
 // AdminListCouponsParams defines parameters for AdminListCoupons.
@@ -2520,6 +2679,9 @@ type AppCreateOrderParams struct {
 // AdminLoginJSONRequestBody defines body for AdminLogin for application/json ContentType.
 type AdminLoginJSONRequestBody = LoginRequest
 
+// AdminUpdateCategoryQualificationJSONRequestBody defines body for AdminUpdateCategoryQualification for application/json ContentType.
+type AdminUpdateCategoryQualificationJSONRequestBody = UpdateCategoryQualificationRequest
+
 // AdminRejectCompRequestJSONRequestBody defines body for AdminRejectCompRequest for application/json ContentType.
 type AdminRejectCompRequestJSONRequestBody = RejectCompRequest
 
@@ -2541,6 +2703,9 @@ type AdminCreatePriceRuleJSONRequestBody = PriceRuleInput
 // AdminCreateReferralLinkJSONRequestBody defines body for AdminCreateReferralLink for application/json ContentType.
 type AdminCreateReferralLinkJSONRequestBody = CreateReferralLinkRequest
 
+// AdminUpdateRefundPolicyJSONRequestBody defines body for AdminUpdateRefundPolicy for application/json ContentType.
+type AdminUpdateRefundPolicyJSONRequestBody = UpdateRefundPolicyRequest
+
 // AdminUpdateEventRegistrationJSONRequestBody defines body for AdminUpdateEventRegistration for application/json ContentType.
 type AdminUpdateEventRegistrationJSONRequestBody = UpdateEventRegistrationRequest
 
@@ -2561,6 +2726,9 @@ type AdminApproveProofJSONRequestBody = ApproveProofRequest
 
 // AdminRejectProofJSONRequestBody defines body for AdminRejectProof for application/json ContentType.
 type AdminRejectProofJSONRequestBody = RejectProofRequest
+
+// AdminRejectQualificationProofJSONRequestBody defines body for AdminRejectQualificationProof for application/json ContentType.
+type AdminRejectQualificationProofJSONRequestBody = RejectQualificationProofRequest
 
 // AdminIssueRacepackJSONRequestBody defines body for AdminIssueRacepack for application/json ContentType.
 type AdminIssueRacepackJSONRequestBody = RacepackIssueRequest
@@ -2612,6 +2780,9 @@ type ServerInterface interface {
 	// AdminLogout 退出登录
 	// (POST /admin/auth/logout)
 	AdminLogout(c *gin.Context)
+	// AdminUpdateCategoryQualification 设置精英组资格要求（null 表示不需要资格证明）
+	// (PUT /admin/categories/{id}/qualification)
+	AdminUpdateCategoryQualification(c *gin.Context, id int64)
 	// AdminApproveCompRequest 批准免费入场：发一个本人专用、限 1 人的免费报名码
 	// (POST /admin/comp-requests/{id}/approve)
 	AdminApproveCompRequest(c *gin.Context, id int64)
@@ -2651,12 +2822,18 @@ type ServerInterface interface {
 	// AdminPublishEvent 发布赛事（发布前校验）
 	// (POST /admin/events/{id}/publish)
 	AdminPublishEvent(c *gin.Context, id int64)
+	// AdminListQualificationProofs 精英组资格证明列表（待核验在前）
+	// (GET /admin/events/{id}/qualification-proofs)
+	AdminListQualificationProofs(c *gin.Context, id int64)
 	// AdminListReferralLinks 赛事的推荐链接与渠道归因统计
 	// (GET /admin/events/{id}/referral-links)
 	AdminListReferralLinks(c *gin.Context, id int64)
 	// AdminCreateReferralLink 新建推荐链接，可同时建一个只限本赛事的优惠码
 	// (POST /admin/events/{id}/referral-links)
 	AdminCreateReferralLink(c *gin.Context, id int64)
+	// AdminUpdateRefundPolicy 设置退改政策（报名确认页与赛事页展示；null 表示不展示）
+	// (PUT /admin/events/{id}/refund-policy)
+	AdminUpdateRefundPolicy(c *gin.Context, id int64)
 	// AdminUpdateEventRegistration 修改报名开关与报名时间（开放前校验发布状态、价格档与收款账户）
 	// (PATCH /admin/events/{id}/registration)
 	AdminUpdateEventRegistration(c *gin.Context, id int64)
@@ -2702,6 +2879,12 @@ type ServerInterface interface {
 	// AdminRejectProof 驳回凭证（订单进入重传期）
 	// (POST /admin/proofs/{id}/reject)
 	AdminRejectProof(c *gin.Context, id int64)
+	// AdminApproveQualificationProof 资格核验通过
+	// (POST /admin/qualification-proofs/{id}/approve)
+	AdminApproveQualificationProof(c *gin.Context, id int64)
+	// AdminRejectQualificationProof 资格核验不通过：报名转到该组设置的公开组，名额随之转移
+	// (POST /admin/qualification-proofs/{id}/reject)
+	AdminRejectQualificationProof(c *gin.Context, id int64)
 	// AdminListRacepackEvents 领物核销站可操作的赛事（现场角色只返回被指派且在有效期内的）
 	// (GET /admin/racepack/events)
 	AdminListRacepackEvents(c *gin.Context)
@@ -2836,6 +3019,31 @@ func (siw *ServerInterfaceWrapper) AdminLogout(c *gin.Context) {
 	}
 
 	siw.Handler.AdminLogout(c)
+}
+
+// AdminUpdateCategoryQualification operation middleware
+func (siw *ServerInterfaceWrapper) AdminUpdateCategoryQualification(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminUpdateCategoryQualification(c, id)
 }
 
 // AdminApproveCompRequest operation middleware
@@ -3129,6 +3337,31 @@ func (siw *ServerInterfaceWrapper) AdminPublishEvent(c *gin.Context) {
 	siw.Handler.AdminPublishEvent(c, id)
 }
 
+// AdminListQualificationProofs operation middleware
+func (siw *ServerInterfaceWrapper) AdminListQualificationProofs(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminListQualificationProofs(c, id)
+}
+
 // AdminListReferralLinks operation middleware
 func (siw *ServerInterfaceWrapper) AdminListReferralLinks(c *gin.Context) {
 
@@ -3177,6 +3410,31 @@ func (siw *ServerInterfaceWrapper) AdminCreateReferralLink(c *gin.Context) {
 	}
 
 	siw.Handler.AdminCreateReferralLink(c, id)
+}
+
+// AdminUpdateRefundPolicy operation middleware
+func (siw *ServerInterfaceWrapper) AdminUpdateRefundPolicy(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminUpdateRefundPolicy(c, id)
 }
 
 // AdminUpdateEventRegistration operation middleware
@@ -3561,6 +3819,56 @@ func (siw *ServerInterfaceWrapper) AdminRejectProof(c *gin.Context) {
 	}
 
 	siw.Handler.AdminRejectProof(c, id)
+}
+
+// AdminApproveQualificationProof operation middleware
+func (siw *ServerInterfaceWrapper) AdminApproveQualificationProof(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminApproveQualificationProof(c, id)
+}
+
+// AdminRejectQualificationProof operation middleware
+func (siw *ServerInterfaceWrapper) AdminRejectQualificationProof(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminRejectQualificationProof(c, id)
 }
 
 // AdminListRacepackEvents operation middleware
@@ -4339,6 +4647,11 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.PUT(options.BaseURL+"/admin/events/:id/comp-quota", wrapper.AdminUpdateCompQuota)
 	router.POST(options.BaseURL+"/admin/comp-requests/:id/approve", wrapper.AdminApproveCompRequest)
 	router.POST(options.BaseURL+"/admin/comp-requests/:id/reject", wrapper.AdminRejectCompRequest)
+	router.PUT(options.BaseURL+"/admin/events/:id/refund-policy", wrapper.AdminUpdateRefundPolicy)
+	router.PUT(options.BaseURL+"/admin/categories/:id/qualification", wrapper.AdminUpdateCategoryQualification)
+	router.GET(options.BaseURL+"/admin/events/:id/qualification-proofs", wrapper.AdminListQualificationProofs)
+	router.POST(options.BaseURL+"/admin/qualification-proofs/:id/approve", wrapper.AdminApproveQualificationProof)
+	router.POST(options.BaseURL+"/admin/qualification-proofs/:id/reject", wrapper.AdminRejectQualificationProof)
 }
 
 type AdminLoginRequestObject struct {
@@ -4401,6 +4714,46 @@ type AdminLogoutdefaultJSONResponse struct {
 }
 
 func (response AdminLogoutdefaultJSONResponse) VisitAdminLogoutResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdateCategoryQualificationRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminUpdateCategoryQualificationJSONRequestBody
+}
+
+type AdminUpdateCategoryQualificationResponseObject interface {
+	VisitAdminUpdateCategoryQualificationResponse(w http.ResponseWriter) error
+}
+
+type AdminUpdateCategoryQualification200JSONResponse AdminEvent
+
+func (response AdminUpdateCategoryQualification200JSONResponse) VisitAdminUpdateCategoryQualificationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdateCategoryQualificationdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminUpdateCategoryQualificationdefaultJSONResponse) VisitAdminUpdateCategoryQualificationResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -4922,6 +5275,45 @@ func (response AdminPublishEventdefaultJSONResponse) VisitAdminPublishEventRespo
 	return err
 }
 
+type AdminListQualificationProofsRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminListQualificationProofsResponseObject interface {
+	VisitAdminListQualificationProofsResponse(w http.ResponseWriter) error
+}
+
+type AdminListQualificationProofs200JSONResponse QualificationProofList
+
+func (response AdminListQualificationProofs200JSONResponse) VisitAdminListQualificationProofsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListQualificationProofsdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminListQualificationProofsdefaultJSONResponse) VisitAdminListQualificationProofsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AdminListReferralLinksRequestObject struct {
 	Id int64 `json:"id"`
 }
@@ -4990,6 +5382,46 @@ type AdminCreateReferralLinkdefaultJSONResponse struct {
 }
 
 func (response AdminCreateReferralLinkdefaultJSONResponse) VisitAdminCreateReferralLinkResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdateRefundPolicyRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminUpdateRefundPolicyJSONRequestBody
+}
+
+type AdminUpdateRefundPolicyResponseObject interface {
+	VisitAdminUpdateRefundPolicyResponse(w http.ResponseWriter) error
+}
+
+type AdminUpdateRefundPolicy200JSONResponse AdminEvent
+
+func (response AdminUpdateRefundPolicy200JSONResponse) VisitAdminUpdateRefundPolicyResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdateRefundPolicydefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminUpdateRefundPolicydefaultJSONResponse) VisitAdminUpdateRefundPolicyResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -5587,6 +6019,85 @@ type AdminRejectProofdefaultJSONResponse struct {
 }
 
 func (response AdminRejectProofdefaultJSONResponse) VisitAdminRejectProofResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminApproveQualificationProofRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminApproveQualificationProofResponseObject interface {
+	VisitAdminApproveQualificationProofResponse(w http.ResponseWriter) error
+}
+
+type AdminApproveQualificationProof200JSONResponse AdminQualificationProof
+
+func (response AdminApproveQualificationProof200JSONResponse) VisitAdminApproveQualificationProofResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminApproveQualificationProofdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminApproveQualificationProofdefaultJSONResponse) VisitAdminApproveQualificationProofResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminRejectQualificationProofRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminRejectQualificationProofJSONRequestBody
+}
+
+type AdminRejectQualificationProofResponseObject interface {
+	VisitAdminRejectQualificationProofResponse(w http.ResponseWriter) error
+}
+
+type AdminRejectQualificationProof200JSONResponse AdminQualificationProof
+
+func (response AdminRejectQualificationProof200JSONResponse) VisitAdminRejectQualificationProofResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminRejectQualificationProofdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminRejectQualificationProofdefaultJSONResponse) VisitAdminRejectQualificationProofResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -6902,6 +7413,9 @@ type StrictServerInterface interface {
 	// AdminLogout 退出登录
 	// (POST /admin/auth/logout)
 	AdminLogout(ctx context.Context, request AdminLogoutRequestObject) (AdminLogoutResponseObject, error)
+	// AdminUpdateCategoryQualification 设置精英组资格要求（null 表示不需要资格证明）
+	// (PUT /admin/categories/{id}/qualification)
+	AdminUpdateCategoryQualification(ctx context.Context, request AdminUpdateCategoryQualificationRequestObject) (AdminUpdateCategoryQualificationResponseObject, error)
 	// AdminApproveCompRequest 批准免费入场：发一个本人专用、限 1 人的免费报名码
 	// (POST /admin/comp-requests/{id}/approve)
 	AdminApproveCompRequest(ctx context.Context, request AdminApproveCompRequestRequestObject) (AdminApproveCompRequestResponseObject, error)
@@ -6941,12 +7455,18 @@ type StrictServerInterface interface {
 	// AdminPublishEvent 发布赛事（发布前校验）
 	// (POST /admin/events/{id}/publish)
 	AdminPublishEvent(ctx context.Context, request AdminPublishEventRequestObject) (AdminPublishEventResponseObject, error)
+	// AdminListQualificationProofs 精英组资格证明列表（待核验在前）
+	// (GET /admin/events/{id}/qualification-proofs)
+	AdminListQualificationProofs(ctx context.Context, request AdminListQualificationProofsRequestObject) (AdminListQualificationProofsResponseObject, error)
 	// AdminListReferralLinks 赛事的推荐链接与渠道归因统计
 	// (GET /admin/events/{id}/referral-links)
 	AdminListReferralLinks(ctx context.Context, request AdminListReferralLinksRequestObject) (AdminListReferralLinksResponseObject, error)
 	// AdminCreateReferralLink 新建推荐链接，可同时建一个只限本赛事的优惠码
 	// (POST /admin/events/{id}/referral-links)
 	AdminCreateReferralLink(ctx context.Context, request AdminCreateReferralLinkRequestObject) (AdminCreateReferralLinkResponseObject, error)
+	// AdminUpdateRefundPolicy 设置退改政策（报名确认页与赛事页展示；null 表示不展示）
+	// (PUT /admin/events/{id}/refund-policy)
+	AdminUpdateRefundPolicy(ctx context.Context, request AdminUpdateRefundPolicyRequestObject) (AdminUpdateRefundPolicyResponseObject, error)
 	// AdminUpdateEventRegistration 修改报名开关与报名时间（开放前校验发布状态、价格档与收款账户）
 	// (PATCH /admin/events/{id}/registration)
 	AdminUpdateEventRegistration(ctx context.Context, request AdminUpdateEventRegistrationRequestObject) (AdminUpdateEventRegistrationResponseObject, error)
@@ -6992,6 +7512,12 @@ type StrictServerInterface interface {
 	// AdminRejectProof 驳回凭证（订单进入重传期）
 	// (POST /admin/proofs/{id}/reject)
 	AdminRejectProof(ctx context.Context, request AdminRejectProofRequestObject) (AdminRejectProofResponseObject, error)
+	// AdminApproveQualificationProof 资格核验通过
+	// (POST /admin/qualification-proofs/{id}/approve)
+	AdminApproveQualificationProof(ctx context.Context, request AdminApproveQualificationProofRequestObject) (AdminApproveQualificationProofResponseObject, error)
+	// AdminRejectQualificationProof 资格核验不通过：报名转到该组设置的公开组，名额随之转移
+	// (POST /admin/qualification-proofs/{id}/reject)
+	AdminRejectQualificationProof(ctx context.Context, request AdminRejectQualificationProofRequestObject) (AdminRejectQualificationProofResponseObject, error)
 	// AdminListRacepackEvents 领物核销站可操作的赛事（现场角色只返回被指派且在有效期内的）
 	// (GET /admin/racepack/events)
 	AdminListRacepackEvents(ctx context.Context, request AdminListRacepackEventsRequestObject) (AdminListRacepackEventsResponseObject, error)
@@ -7198,6 +7724,39 @@ func (sh *strictHandler) AdminLogout(ctx *gin.Context) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AdminLogoutResponseObject); ok {
 		if err := validResponse.VisitAdminLogoutResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminUpdateCategoryQualification operation middleware
+func (sh *strictHandler) AdminUpdateCategoryQualification(ctx *gin.Context, id int64) {
+	var request AdminUpdateCategoryQualificationRequestObject
+
+	request.Id = id
+
+	var body AdminUpdateCategoryQualificationJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminUpdateCategoryQualification(ctx, request.(AdminUpdateCategoryQualificationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminUpdateCategoryQualification")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminUpdateCategoryQualificationResponseObject); ok {
+		if err := validResponse.VisitAdminUpdateCategoryQualificationResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {
@@ -7579,6 +8138,32 @@ func (sh *strictHandler) AdminPublishEvent(ctx *gin.Context, id int64) {
 	}
 }
 
+// AdminListQualificationProofs operation middleware
+func (sh *strictHandler) AdminListQualificationProofs(ctx *gin.Context, id int64) {
+	var request AdminListQualificationProofsRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminListQualificationProofs(ctx, request.(AdminListQualificationProofsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminListQualificationProofs")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminListQualificationProofsResponseObject); ok {
+		if err := validResponse.VisitAdminListQualificationProofsResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // AdminListReferralLinks operation middleware
 func (sh *strictHandler) AdminListReferralLinks(ctx *gin.Context, id int64) {
 	var request AdminListReferralLinksRequestObject
@@ -7631,6 +8216,39 @@ func (sh *strictHandler) AdminCreateReferralLink(ctx *gin.Context, id int64) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AdminCreateReferralLinkResponseObject); ok {
 		if err := validResponse.VisitAdminCreateReferralLinkResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminUpdateRefundPolicy operation middleware
+func (sh *strictHandler) AdminUpdateRefundPolicy(ctx *gin.Context, id int64) {
+	var request AdminUpdateRefundPolicyRequestObject
+
+	request.Id = id
+
+	var body AdminUpdateRefundPolicyJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminUpdateRefundPolicy(ctx, request.(AdminUpdateRefundPolicyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminUpdateRefundPolicy")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminUpdateRefundPolicyResponseObject); ok {
+		if err := validResponse.VisitAdminUpdateRefundPolicyResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {
@@ -8065,6 +8683,65 @@ func (sh *strictHandler) AdminRejectProof(ctx *gin.Context, id int64) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AdminRejectProofResponseObject); ok {
 		if err := validResponse.VisitAdminRejectProofResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminApproveQualificationProof operation middleware
+func (sh *strictHandler) AdminApproveQualificationProof(ctx *gin.Context, id int64) {
+	var request AdminApproveQualificationProofRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminApproveQualificationProof(ctx, request.(AdminApproveQualificationProofRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminApproveQualificationProof")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminApproveQualificationProofResponseObject); ok {
+		if err := validResponse.VisitAdminApproveQualificationProofResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminRejectQualificationProof operation middleware
+func (sh *strictHandler) AdminRejectQualificationProof(ctx *gin.Context, id int64) {
+	var request AdminRejectQualificationProofRequestObject
+
+	request.Id = id
+
+	var body AdminRejectQualificationProofJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminRejectQualificationProof(ctx, request.(AdminRejectQualificationProofRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminRejectQualificationProof")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminRejectQualificationProofResponseObject); ok {
+		if err := validResponse.VisitAdminRejectQualificationProofResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

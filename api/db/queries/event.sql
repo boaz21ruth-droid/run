@@ -89,3 +89,29 @@ SELECT id, event_id, name, audience, price_cents, currency, quota, used_count, r
 FROM price_rules
 WHERE event_id = ANY(@event_ids::bigint[])
 ORDER BY event_id, sort_order, id;
+
+-- name: UpdateEventRefundPolicy :one
+UPDATE events
+SET refund_policy = @refund_policy,
+    version = version + 1
+WHERE id = @id
+RETURNING *;
+
+-- name: GetCategoryForUpdate :one
+SELECT * FROM event_categories
+WHERE id = @id
+FOR UPDATE;
+
+-- name: UpdateCategoryQualification :one
+UPDATE event_categories
+SET qualify_required = @qualify_required,
+    qualify_rule = @qualify_rule,
+    qualify_max_ms = sqlc.narg(qualify_max_ms),
+    fallback_category_id = sqlc.narg(fallback_category_id)
+WHERE id = @id
+RETURNING *;
+
+-- name: CountQualifyingFallbacksTo :one
+-- 有多少精英组把这个组别设为不通过时的去处：被引用的组别自己不能再要求资格（不能链式转组）
+SELECT count(*) FROM event_categories
+WHERE fallback_category_id = @id::bigint AND qualify_required;

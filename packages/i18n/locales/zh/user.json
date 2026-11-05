@@ -61,7 +61,8 @@
     "registered_other": "{{n}} 人已报名",
     "share": "分享",
     "share_copied": "链接已复制",
-    "share_failed": "复制失败，请手动复制地址栏"
+    "share_failed": "复制失败，请手动复制地址栏",
+    "elite": "精英组"
   },
   "notFound": {
     "title": "页面不存在",
@@ -238,7 +239,10 @@
       "soldOut": "该组别名额已满。",
       "duplicateProfile": "同一位参赛人不能重复添加。",
       "duplicateIdNo": "同一订单内证件号不能重复。",
-      "network": "网络不稳定，请检查网络后重试。"
+      "network": "网络不稳定，请检查网络后重试。",
+      "timeFormat": "请按 1:41:20 的格式填写（时:分:秒）。",
+      "tooSlow": "成绩须在 {{max}} 以内才能报这个组别。",
+      "urlFormat": "请填写以 https:// 或 http:// 开头的链接。"
     },
     "quote": {
       "title": "费用预估",
@@ -260,7 +264,15 @@
     },
     "submit": "提交订单",
     "submitting": "正在提交…",
-    "ctaTier": "立即报名 · {{name}} {{price}}"
+    "ctaTier": "立即报名 · {{name}} {{price}}",
+    "qualify": {
+      "time": "最好成绩",
+      "source": "成绩来源",
+      "sourcePlaceholder": "如：湄公河夜跑 2025",
+      "proofUrl": "成绩证明链接",
+      "proofHint": "官方成绩页或证书链接，主办方会在付款后核验。",
+      "fallback": "核验不通过将自动转到「{{category}}」，报名仍然有效。"
+    }
   },
   "orders": {
     "nav": "我的赛事",
@@ -466,5 +478,27 @@
     "register": "用免费码报名",
     "rejected": "这次申请没有通过。",
     "reapply": "重新申请"
+  },
+  "rules": {
+    "optional": "可选",
+    "refund": {
+      "title": "退改政策",
+      "byOrganizer": "主办方设置",
+      "before": "开赛 {{days}} 天前",
+      "between": "开赛 {{from}}–{{to}} 天",
+      "within": "开赛 {{days}} 天内",
+      "any": "任何时候",
+      "percent": "退 {{percent}}%",
+      "none": "不退款",
+      "transfer": "转让",
+      "noTransfer": "不接受转让",
+      "transferUntil": "开赛 {{days}} 天前可转给他人",
+      "howTo": "需要退款或转让，请在订单页联系客服，按申请日期适用以上比例。"
+    },
+    "qualify": {
+      "PENDING": "精英组资格核验中",
+      "APPROVED": "精英组资格已通过",
+      "REJECTED": "资格未通过，已从「{{category}}」转组"
+    }
   }
 }
