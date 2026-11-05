@@ -91,5 +91,10 @@
   "QUALIFY_NO_FALLBACK": "该组已取消资格要求，没有可转入的组别；只能核验通过。",
   "field.qualify_too_slow": "成绩须在 {max} 以内才能报这个组别。",
   "field.refund_tier_order": "各档天数须从大到小，退款比例不能越临近开赛越高。",
-  "field.fallback_chain": "转入的组别不能也要求资格证明，被转入的组别也不能设为精英组。"
+  "field.fallback_chain": "转入的组别不能也要求资格证明，被转入的组别也不能设为精英组。",
+  "VOLUNTEER_CLOSED": "这场赛事目前不招志愿者。",
+  "VOLUNTEER_APPLIED": "你已经提交过志愿者申请，请等待主办方安排。",
+  "VOLUNTEER_ROLE_FULL": "这个岗位的席位已满，请先调高席位或选别的岗位。",
+  "VOLUNTEER_STATE_CONFLICT": "这份申请的状态已经变了，请刷新后再操作。",
+  "field.volunteer_roles_max": "最多选 {max} 个岗位。"
 }

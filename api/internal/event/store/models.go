@@ -295,6 +295,9 @@ type Event struct {
 	UpdatedAt               time.Time
 	CompQuota               *int32
 	RefundPolicy            []byte
+	VolunteerOpen           bool
+	VolunteerDates          []time.Time
+	VolunteerNote           []byte
 }
 
 type EventCategory struct {
@@ -1141,6 +1144,40 @@ type User struct {
 	LastLoginAt      *time.Time
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
+}
+
+type VolunteerApplication struct {
+	ID               int64
+	EventID          int64
+	UserID           int64
+	FullName         string
+	PhoneE164        string
+	FullAvailability bool
+	Dates            []time.Time
+	RoleIds          []int64
+	TshirtSize       *string
+	Note             *string
+	MediaConsent     bool
+	Status           string
+	AssignedRoleID   *int64
+	ReviewNote       *string
+	ReviewedBy       *int64
+	ReviewedAt       *time.Time
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+}
+
+type VolunteerRole struct {
+	ID            int64
+	EventID       int64
+	Name          []byte
+	Schedule      []byte
+	Capacity      int32
+	AssignedCount int32
+	SortOrder     int16
+	Active        bool
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 type WaitlistEntry struct {

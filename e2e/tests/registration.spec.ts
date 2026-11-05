@@ -13,6 +13,7 @@ import {
   parseUsdCents,
   pickerNow,
   presetLanguage,
+  RACE_DATE,
   selectAntdOption,
 } from "./helpers";
 import { openAsRunner, runnerUser, type TelegramUser } from "./runner";
@@ -577,5 +578,65 @@ test("OPS 核验不通过：报名转到 5K，跑者订单显示已转组和原�
   await expect(status).toContainText("资格未通过");
   await expect(status).toContainText(eliteNote);
   await expect(page.getByRole("row", { name: /Bopha Chea/ })).toContainText("欢乐 5K");
+  await context.close();
+});
+
+const volunteer = runnerUser("Rotha", "zh");
+const volunteerRole = { zh: `检录台 ${runId}`, en: `Check-in ${runId}`, km: `ចុះឈ្មោះ ${runId}` };
+
+test("OPS 开放志愿者招募（比赛日）并新建检录台岗位（2 席）", async ({ browser }) => {
+  const { context, page } = await adminSession(browser, OPS.username, OPS.password);
+  await page.goto(`${ADMIN_URL}/events/${shared.eventId}`);
+  const settings = await adminFetch(page, "PUT", `/admin/events/${shared.eventId}/volunteer-settings`, {
+    open: true,
+    dates: [RACE_DATE],
+    note: { zh: "需柬英双语 · 提供 T 恤与餐食", en: "Khmer and English · T-shirt and meals", km: "ខ្មែរ និងអង់គ្លេស" },
+  });
+  expect(settings.status).toBe(200);
+
+  await page.getByTestId("event-tab-volunteers").click();
+  await page.getByTestId("volunteer-role-create").click();
+  await page.locator("#volunteerRole_name_zh").fill(volunteerRole.zh);
+  await page.locator("#volunteerRole_name_en").fill(volunteerRole.en);
+  await page.locator("#volunteerRole_name_km").fill(volunteerRole.km);
+  await page.locator("#volunteerRole_schedule_zh").fill("16:00 起 · 核对参考码与证件");
+  await fillControl(page.locator("#volunteerRole_capacity"), "2");
+  await page.getByTestId("volunteer-role-submit").click();
+  await expect(page.getByText(volunteerRole.zh, { exact: true })).toBeVisible();
+  await context.close();
+});
+
+test("跑者申请志愿者，OPS 分配到检录台，跑者看到自己的岗位", async ({ browser }) => {
+  test.setTimeout(120_000);
+  const { context, page } = await runnerPage(browser, volunteer, `/events/${slug}`);
+  await page.getByTestId("volunteer-link").click();
+  await expect(page).toHaveURL(new RegExp(`/events/${slug}/volunteer$`));
+  await expect(page.getByText("需柬英双语 · 提供 T 恤与餐食")).toBeVisible();
+  const role = page.locator('[data-testid^="volunteer-role-"]').filter({ hasText: volunteerRole.zh });
+  await expect(role).toContainText("2");
+  await role.getByRole("checkbox").check();
+  await page.getByTestId("volunteer-name").fill("Rotha Chan");
+  await page.getByTestId("volunteer-phone").fill("+855 12 555 777");
+  await page.getByTestId("volunteer-agree-conduct").check();
+  await page.getByTestId("volunteer-agree-seats").check();
+  await page.getByTestId("volunteer-submit").click();
+  await expect(page.getByTestId("volunteer-status")).toHaveAttribute("data-status", "PENDING");
+
+  const ops = await adminSession(browser, OPS.username, OPS.password);
+  await ops.page.goto(`${ADMIN_URL}/events/${shared.eventId}`);
+  await ops.page.getByTestId("event-tab-volunteers").click();
+  const boardData = await adminFetch<{ applications: { id: number; fullName: string }[] }>(
+    ops.page,
+    "GET",
+    `/admin/events/${shared.eventId}/volunteers`,
+  );
+  const appId = boardData.json.applications.find((a) => a.fullName === "Rotha Chan")?.id;
+  expect(appId).toBeDefined();
+  await ops.page.getByTestId(`volunteer-assign-${appId}`).click();
+  await expect(ops.page.getByTestId("volunteer-summary")).toContainText("已分配 1");
+  await ops.context.close();
+
+  await page.reload();
+  await expect(page.getByTestId("volunteer-assigned")).toContainText(volunteerRole.zh);
   await context.close();
 });

@@ -17,6 +17,7 @@ import { ProofUploadPage } from "./pages/ProofUploadPage";
 import { ReferralPage } from "./pages/ReferralPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { RouteErrorPage } from "./pages/RouteErrorPage";
+import { VolunteerPage } from "./pages/VolunteerPage";
 
 /** document.title 用的 i18n key，由 Layout 读取 */
 const title = (key: string): RouteHandle => ({ title: key });
@@ -42,6 +43,7 @@ export const routes: RouteObject[] = [
           { path: "events/:slug/register", element: <RegisterPage />, handle: title("user:titles.register") },
           { path: "events/:slug/free-signup", element: <FreeSignupPage />, handle: title("user:free.title") },
           { path: "events/:slug/comp", element: <CompRequestPage />, handle: title("user:comp.title") },
+          { path: "events/:slug/volunteer", element: <VolunteerPage />, handle: title("user:volunteer.title") },
           { path: "orders", element: <OrdersPage />, handle: title("user:orders.title") },
           { path: "orders/:orderNo", element: <OrderDetailPage />, handle: title("user:titles.orderDetail") },
           { path: "orders/:orderNo/pay", element: <PayPage />, handle: title("user:pay.title") },

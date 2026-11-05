@@ -411,6 +411,36 @@ func (e CreateEventRequestOrganizerType) Valid() bool {
 	}
 }
 
+// Defines values for CreateVolunteerApplicationTshirtSize.
+const (
+	CreateVolunteerApplicationTshirtSizeL   CreateVolunteerApplicationTshirtSize = "L"
+	CreateVolunteerApplicationTshirtSizeM   CreateVolunteerApplicationTshirtSize = "M"
+	CreateVolunteerApplicationTshirtSizeS   CreateVolunteerApplicationTshirtSize = "S"
+	CreateVolunteerApplicationTshirtSizeXL  CreateVolunteerApplicationTshirtSize = "XL"
+	CreateVolunteerApplicationTshirtSizeXS  CreateVolunteerApplicationTshirtSize = "XS"
+	CreateVolunteerApplicationTshirtSizeXXL CreateVolunteerApplicationTshirtSize = "XXL"
+)
+
+// Valid indicates whether the value is a known member of the CreateVolunteerApplicationTshirtSize enum.
+func (e CreateVolunteerApplicationTshirtSize) Valid() bool {
+	switch e {
+	case CreateVolunteerApplicationTshirtSizeL:
+		return true
+	case CreateVolunteerApplicationTshirtSizeM:
+		return true
+	case CreateVolunteerApplicationTshirtSizeS:
+		return true
+	case CreateVolunteerApplicationTshirtSizeXL:
+		return true
+	case CreateVolunteerApplicationTshirtSizeXS:
+		return true
+	case CreateVolunteerApplicationTshirtSizeXXL:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DiscountType.
 const (
 	DiscountTypeAMOUNT  DiscountType = "AMOUNT"
@@ -1134,6 +1164,33 @@ func (e UpdateMeRequestLocale) Valid() bool {
 	}
 }
 
+// Defines values for VolunteerStatus.
+const (
+	VolunteerStatusASSIGNED  VolunteerStatus = "ASSIGNED"
+	VolunteerStatusPENDING   VolunteerStatus = "PENDING"
+	VolunteerStatusREJECTED  VolunteerStatus = "REJECTED"
+	VolunteerStatusWAITLIST  VolunteerStatus = "WAITLIST"
+	VolunteerStatusWITHDRAWN VolunteerStatus = "WITHDRAWN"
+)
+
+// Valid indicates whether the value is a known member of the VolunteerStatus enum.
+func (e VolunteerStatus) Valid() bool {
+	switch e {
+	case VolunteerStatusASSIGNED:
+		return true
+	case VolunteerStatusPENDING:
+		return true
+	case VolunteerStatusREJECTED:
+		return true
+	case VolunteerStatusWAITLIST:
+		return true
+	case VolunteerStatusWITHDRAWN:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for AdminListOrdersParamsStatus.
 const (
 	AdminListOrdersParamsStatusCANCELLED         AdminListOrdersParamsStatus = "CANCELLED"
@@ -1500,6 +1557,38 @@ type AdminReceiptItem struct {
 // AdminReceiptItemMatchStatus defines model for AdminReceiptItem.MatchStatus.
 type AdminReceiptItemMatchStatus string
 
+// AdminVolunteerApplication defines model for AdminVolunteerApplication.
+type AdminVolunteerApplication struct {
+	AssignedRoleId   *int64               `json:"assignedRoleId"`
+	CreatedAt        time.Time            `json:"createdAt"`
+	Dates            []openapi_types.Date `json:"dates"`
+	FullAvailability bool                 `json:"fullAvailability"`
+	FullName         string               `json:"fullName"`
+	Id               int64                `json:"id"`
+	MediaConsent     bool                 `json:"mediaConsent"`
+	Note             *string              `json:"note"`
+	Phone            string               `json:"phone"`
+	ReviewNote       *string              `json:"reviewNote"`
+	RoleIds          []int64              `json:"roleIds"`
+	Status           VolunteerStatus      `json:"status"`
+	TelegramUsername *string              `json:"telegramUsername"`
+	TshirtSize       *string              `json:"tshirtSize"`
+}
+
+// AdminVolunteerRole defines model for AdminVolunteerRole.
+type AdminVolunteerRole struct {
+	Active        bool  `json:"active"`
+	AssignedCount int32 `json:"assignedCount"`
+
+	// Candidates 选了这个岗位、还在待处理或候补的申请数
+	Candidates int32          `json:"candidates"`
+	Capacity   int32          `json:"capacity"`
+	Id         int64          `json:"id"`
+	Name       LocalizedText  `json:"name"`
+	Schedule   *LocalizedText `json:"schedule"`
+	SortOrder  int32          `json:"sortOrder"`
+}
+
 // AppCompStatus defines model for AppCompStatus.
 type AppCompStatus struct {
 	// Open 赛事是否接受免费入场申请
@@ -1534,11 +1623,27 @@ type AppUser struct {
 // AppUserLocale defines model for AppUser.Locale.
 type AppUserLocale string
 
+// AppVolunteerInfo defines model for AppVolunteerInfo.
+type AppVolunteerInfo struct {
+	Application *VolunteerApplication `json:"application"`
+
+	// Dates 需要志愿者的日期
+	Dates []openapi_types.Date  `json:"dates"`
+	Note  *string               `json:"note"`
+	Open  bool                  `json:"open"`
+	Roles []PublicVolunteerRole `json:"roles"`
+}
+
 // ApproveProofRequest defines model for ApproveProofRequest.
 type ApproveProofRequest struct {
 	Note                *string   `json:"note,omitempty"`
 	ReceivedAmountCents int64     `json:"receivedAmountCents"`
 	ReceivedAt          time.Time `json:"receivedAt"`
+}
+
+// AssignVolunteerRequest defines model for AssignVolunteerRequest.
+type AssignVolunteerRequest struct {
+	RoleId int64 `json:"roleId"`
 }
 
 // CompKind defines model for CompKind.
@@ -1701,6 +1806,27 @@ type CreateReferralLinkRequest struct {
 	Offer *ReferralOfferInput `json:"offer,omitempty"`
 	Slug  string              `json:"slug"`
 }
+
+// CreateVolunteerApplication defines model for CreateVolunteerApplication.
+type CreateVolunteerApplication struct {
+	// ConductAccepted 必须为 true：同意志愿者行为准则、理解岗位按席位分配
+	ConductAccepted bool `json:"conductAccepted"`
+
+	// Dates 不是全程参加时必填，须是赛事列出的日期
+	Dates            *[]openapi_types.Date `json:"dates,omitempty"`
+	FullAvailability bool                  `json:"fullAvailability"`
+	FullName         string                `json:"fullName"`
+	MediaConsent     *bool                 `json:"mediaConsent,omitempty"`
+	Note             *string               `json:"note,omitempty"`
+
+	// Phone E.164
+	Phone      string                                `json:"phone"`
+	RoleIds    []int64                               `json:"roleIds"`
+	TshirtSize *CreateVolunteerApplicationTshirtSize `json:"tshirtSize,omitempty"`
+}
+
+// CreateVolunteerApplicationTshirtSize defines model for CreateVolunteerApplication.TshirtSize.
+type CreateVolunteerApplicationTshirtSize string
 
 // DiscountType PRICE = 每位参赛人按固定价（discountValue 为每人价格，单位分）
 type DiscountType string
@@ -2162,6 +2288,9 @@ type PublicEvent struct {
 	RegistrationOpen     bool       `json:"registrationOpen"`
 	RegistrationOpensAt  *time.Time `json:"registrationOpensAt"`
 	Slug                 string     `json:"slug"`
+
+	// VolunteerOpen 是否在招志愿者
+	VolunteerOpen bool `json:"volunteerOpen"`
 }
 
 // PublicEventEventType defines model for PublicEvent.EventType.
@@ -2208,6 +2337,17 @@ type PublicQualification struct {
 
 	// Rule 资格说明，如「需近两年 21K 1:45 以内的官方成绩」
 	Rule string `json:"rule"`
+}
+
+// PublicVolunteerRole defines model for PublicVolunteerRole.
+type PublicVolunteerRole struct {
+	Capacity int32  `json:"capacity"`
+	Id       int64  `json:"id"`
+	Name     string `json:"name"`
+
+	// Remaining 剩余席位；0 表示满员，申请会进候补
+	Remaining int32   `json:"remaining"`
+	Schedule  *string `json:"schedule"`
 }
 
 // QualificationInput 报精英组时必填：自报最好成绩与证明链接
@@ -2469,6 +2609,11 @@ type RejectQualificationProofRequest struct {
 	Note *string `json:"note,omitempty"`
 }
 
+// RejectVolunteerRequest defines model for RejectVolunteerRequest.
+type RejectVolunteerRequest struct {
+	Note *string `json:"note,omitempty"`
+}
+
 // Role defines model for Role.
 type Role string
 
@@ -2592,6 +2737,52 @@ type UpdateRefundPolicyRequest struct {
 	Policy *RefundPolicy `json:"policy"`
 }
 
+// UpdateVolunteerRoleRequest defines model for UpdateVolunteerRoleRequest.
+type UpdateVolunteerRoleRequest struct {
+	Active    bool           `json:"active"`
+	Capacity  int32          `json:"capacity"`
+	Name      LocalizedText  `json:"name"`
+	Schedule  *LocalizedText `json:"schedule,omitempty"`
+	SortOrder *int32         `json:"sortOrder,omitempty"`
+}
+
+// VolunteerApplication defines model for VolunteerApplication.
+type VolunteerApplication struct {
+	AssignedRoleName *string              `json:"assignedRoleName"`
+	CreatedAt        time.Time            `json:"createdAt"`
+	Dates            []openapi_types.Date `json:"dates"`
+	FullAvailability bool                 `json:"fullAvailability"`
+	Id               int64                `json:"id"`
+	ReviewNote       *string              `json:"reviewNote"`
+	RoleIds          []int64              `json:"roleIds"`
+	Status           VolunteerStatus      `json:"status"`
+}
+
+// VolunteerBoard defines model for VolunteerBoard.
+type VolunteerBoard struct {
+	Applications []AdminVolunteerApplication `json:"applications"`
+	Roles        []AdminVolunteerRole        `json:"roles"`
+	Settings     VolunteerSettings           `json:"settings"`
+}
+
+// VolunteerRoleInput defines model for VolunteerRoleInput.
+type VolunteerRoleInput struct {
+	Capacity  int32          `json:"capacity"`
+	Name      LocalizedText  `json:"name"`
+	Schedule  *LocalizedText `json:"schedule,omitempty"`
+	SortOrder *int32         `json:"sortOrder,omitempty"`
+}
+
+// VolunteerSettings defines model for VolunteerSettings.
+type VolunteerSettings struct {
+	Dates []openapi_types.Date `json:"dates"`
+	Note  *LocalizedText       `json:"note"`
+	Open  bool                 `json:"open"`
+}
+
+// VolunteerStatus defines model for VolunteerStatus.
+type VolunteerStatus string
+
 // AdminListCouponsParams defines parameters for AdminListCoupons.
 type AdminListCouponsParams struct {
 	EventId *int64 `form:"eventId,omitempty" json:"eventId,omitempty"`
@@ -2712,6 +2903,12 @@ type AdminUpdateEventRegistrationJSONRequestBody = UpdateEventRegistrationReques
 // AdminPutEventAssignmentJSONRequestBody defines body for AdminPutEventAssignment for application/json ContentType.
 type AdminPutEventAssignmentJSONRequestBody = EventAssignmentRequest
 
+// AdminCreateVolunteerRoleJSONRequestBody defines body for AdminCreateVolunteerRole for application/json ContentType.
+type AdminCreateVolunteerRoleJSONRequestBody = VolunteerRoleInput
+
+// AdminUpdateVolunteerSettingsJSONRequestBody defines body for AdminUpdateVolunteerSettings for application/json ContentType.
+type AdminUpdateVolunteerSettingsJSONRequestBody = VolunteerSettings
+
 // AdminCreatePaymentAccountMultipartRequestBody defines body for AdminCreatePaymentAccount for multipart/form-data ContentType.
 type AdminCreatePaymentAccountMultipartRequestBody AdminCreatePaymentAccountMultipartBody
 
@@ -2739,6 +2936,15 @@ type AdminUndoRacepackJSONRequestBody = RacepackUndoRequest
 // AdminUpdateReferralLinkJSONRequestBody defines body for AdminUpdateReferralLink for application/json ContentType.
 type AdminUpdateReferralLinkJSONRequestBody = UpdateReferralLinkRequest
 
+// AdminAssignVolunteerJSONRequestBody defines body for AdminAssignVolunteer for application/json ContentType.
+type AdminAssignVolunteerJSONRequestBody = AssignVolunteerRequest
+
+// AdminRejectVolunteerJSONRequestBody defines body for AdminRejectVolunteer for application/json ContentType.
+type AdminRejectVolunteerJSONRequestBody = RejectVolunteerRequest
+
+// AdminUpdateVolunteerRoleJSONRequestBody defines body for AdminUpdateVolunteerRole for application/json ContentType.
+type AdminUpdateVolunteerRoleJSONRequestBody = UpdateVolunteerRoleRequest
+
 // AppRequestPhoneCodeJSONRequestBody defines body for AppRequestPhoneCode for application/json ContentType.
 type AppRequestPhoneCodeJSONRequestBody = PhoneCodeRequest
 
@@ -2756,6 +2962,9 @@ type AppCreateFreeSignupJSONRequestBody = FreeSignupRequest
 
 // AppQuoteJSONRequestBody defines body for AppQuote for application/json ContentType.
 type AppQuoteJSONRequestBody = QuoteRequest
+
+// AppApplyVolunteerJSONRequestBody defines body for AppApplyVolunteer for application/json ContentType.
+type AppApplyVolunteerJSONRequestBody = CreateVolunteerApplication
 
 // AppUpdateMeJSONRequestBody defines body for AppUpdateMe for application/json ContentType.
 type AppUpdateMeJSONRequestBody = UpdateMeRequest
@@ -2843,6 +3052,15 @@ type ServerInterface interface {
 	// AdminPutEventAssignment 新增或修改一名员工对该赛事的指派（有效期、启用）
 	// (PUT /admin/events/{id}/staff-assignments/{staffId})
 	AdminPutEventAssignment(c *gin.Context, id int64, staffId int64)
+	// AdminCreateVolunteerRole 新建志愿者岗位
+	// (POST /admin/events/{id}/volunteer-roles)
+	AdminCreateVolunteerRole(c *gin.Context, id int64)
+	// AdminUpdateVolunteerSettings 开关志愿者报名、需要志愿者的日期与说明
+	// (PUT /admin/events/{id}/volunteer-settings)
+	AdminUpdateVolunteerSettings(c *gin.Context, id int64)
+	// AdminGetVolunteers 志愿者：设置、岗位与申请
+	// (GET /admin/events/{id}/volunteers)
+	AdminGetVolunteers(c *gin.Context, id int64)
 	// AdminGetFile 凭证截图原图（仅被凭证引用的 PAYMENT_PROOF 私有文件；Cache-Control private, no-store）
 	// (GET /admin/files/{id})
 	AdminGetFile(c *gin.Context, id int64)
@@ -2903,6 +3121,18 @@ type ServerInterface interface {
 	// AdminListStaff 员工列表（指派现场角色用）
 	// (GET /admin/staff)
 	AdminListStaff(c *gin.Context)
+	// AdminAssignVolunteer 分配到岗位（占一个席位；已在别的岗位时换岗）
+	// (POST /admin/volunteer-applications/{id}/assign)
+	AdminAssignVolunteer(c *gin.Context, id int64)
+	// AdminRejectVolunteer 拒绝申请（已分配的释放席位）
+	// (POST /admin/volunteer-applications/{id}/reject)
+	AdminRejectVolunteer(c *gin.Context, id int64)
+	// AdminWaitlistVolunteer 转候补（已分配的释放席位）
+	// (POST /admin/volunteer-applications/{id}/waitlist)
+	AdminWaitlistVolunteer(c *gin.Context, id int64)
+	// AdminUpdateVolunteerRole 修改岗位（席位不能少于已分配人数）
+	// (PUT /admin/volunteer-roles/{id})
+	AdminUpdateVolunteerRole(c *gin.Context, id int64)
 	// AppLogout 吊销当前跑者令牌
 	// (POST /app/auth/logout)
 	AppLogout(c *gin.Context)
@@ -2930,6 +3160,15 @@ type ServerInterface interface {
 	// AppQuote 报名算价预览（不占名额、不选识别分）
 	// (POST /app/events/{slug}/quote)
 	AppQuote(c *gin.Context, slug string)
+	// AppGetVolunteer 志愿者报名页：岗位与实时席位、本人最近一份申请
+	// (GET /app/events/{slug}/volunteer)
+	AppGetVolunteer(c *gin.Context, slug string)
+	// AppApplyVolunteer 申请当志愿者：选日期与 1–3 个岗位
+	// (POST /app/events/{slug}/volunteer)
+	AppApplyVolunteer(c *gin.Context, slug string)
+	// AppWithdrawVolunteer 撤回志愿者申请（已分配的岗位席位随之释放）
+	// (POST /app/events/{slug}/volunteer/withdraw)
+	AppWithdrawVolunteer(c *gin.Context, slug string)
 	// AppListFreeSignups 我的免费报名（最近 100 条，新的在前）
 	// (GET /app/free-signups)
 	AppListFreeSignups(c *gin.Context)
@@ -3521,6 +3760,81 @@ func (siw *ServerInterfaceWrapper) AdminPutEventAssignment(c *gin.Context) {
 	siw.Handler.AdminPutEventAssignment(c, id, staffId)
 }
 
+// AdminCreateVolunteerRole operation middleware
+func (siw *ServerInterfaceWrapper) AdminCreateVolunteerRole(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminCreateVolunteerRole(c, id)
+}
+
+// AdminUpdateVolunteerSettings operation middleware
+func (siw *ServerInterfaceWrapper) AdminUpdateVolunteerSettings(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminUpdateVolunteerSettings(c, id)
+}
+
+// AdminGetVolunteers operation middleware
+func (siw *ServerInterfaceWrapper) AdminGetVolunteers(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminGetVolunteers(c, id)
+}
+
 // AdminGetFile operation middleware
 func (siw *ServerInterfaceWrapper) AdminGetFile(c *gin.Context) {
 
@@ -4008,6 +4322,106 @@ func (siw *ServerInterfaceWrapper) AdminListStaff(c *gin.Context) {
 	siw.Handler.AdminListStaff(c)
 }
 
+// AdminAssignVolunteer operation middleware
+func (siw *ServerInterfaceWrapper) AdminAssignVolunteer(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminAssignVolunteer(c, id)
+}
+
+// AdminRejectVolunteer operation middleware
+func (siw *ServerInterfaceWrapper) AdminRejectVolunteer(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminRejectVolunteer(c, id)
+}
+
+// AdminWaitlistVolunteer operation middleware
+func (siw *ServerInterfaceWrapper) AdminWaitlistVolunteer(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminWaitlistVolunteer(c, id)
+}
+
+// AdminUpdateVolunteerRole operation middleware
+func (siw *ServerInterfaceWrapper) AdminUpdateVolunteerRole(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminUpdateVolunteerRole(c, id)
+}
+
 // AppLogout operation middleware
 func (siw *ServerInterfaceWrapper) AppLogout(c *gin.Context) {
 
@@ -4193,6 +4607,81 @@ func (siw *ServerInterfaceWrapper) AppQuote(c *gin.Context) {
 	}
 
 	siw.Handler.AppQuote(c, slug)
+}
+
+// AppGetVolunteer operation middleware
+func (siw *ServerInterfaceWrapper) AppGetVolunteer(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "slug" -------------
+	var slug string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Param("slug"), &slug, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppGetVolunteer(c, slug)
+}
+
+// AppApplyVolunteer operation middleware
+func (siw *ServerInterfaceWrapper) AppApplyVolunteer(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "slug" -------------
+	var slug string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Param("slug"), &slug, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppApplyVolunteer(c, slug)
+}
+
+// AppWithdrawVolunteer operation middleware
+func (siw *ServerInterfaceWrapper) AppWithdrawVolunteer(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "slug" -------------
+	var slug string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Param("slug"), &slug, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppWithdrawVolunteer(c, slug)
 }
 
 // AppListFreeSignups operation middleware
@@ -4652,6 +5141,16 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/admin/events/:id/qualification-proofs", wrapper.AdminListQualificationProofs)
 	router.POST(options.BaseURL+"/admin/qualification-proofs/:id/approve", wrapper.AdminApproveQualificationProof)
 	router.POST(options.BaseURL+"/admin/qualification-proofs/:id/reject", wrapper.AdminRejectQualificationProof)
+	router.GET(options.BaseURL+"/app/events/:slug/volunteer", wrapper.AppGetVolunteer)
+	router.POST(options.BaseURL+"/app/events/:slug/volunteer", wrapper.AppApplyVolunteer)
+	router.POST(options.BaseURL+"/app/events/:slug/volunteer/withdraw", wrapper.AppWithdrawVolunteer)
+	router.GET(options.BaseURL+"/admin/events/:id/volunteers", wrapper.AdminGetVolunteers)
+	router.PUT(options.BaseURL+"/admin/events/:id/volunteer-settings", wrapper.AdminUpdateVolunteerSettings)
+	router.POST(options.BaseURL+"/admin/events/:id/volunteer-roles", wrapper.AdminCreateVolunteerRole)
+	router.PUT(options.BaseURL+"/admin/volunteer-roles/:id", wrapper.AdminUpdateVolunteerRole)
+	router.POST(options.BaseURL+"/admin/volunteer-applications/:id/assign", wrapper.AdminAssignVolunteer)
+	router.POST(options.BaseURL+"/admin/volunteer-applications/:id/waitlist", wrapper.AdminWaitlistVolunteer)
+	router.POST(options.BaseURL+"/admin/volunteer-applications/:id/reject", wrapper.AdminRejectVolunteer)
 }
 
 type AdminLoginRequestObject struct {
@@ -5553,6 +6052,125 @@ func (response AdminPutEventAssignmentdefaultJSONResponse) VisitAdminPutEventAss
 	return err
 }
 
+type AdminCreateVolunteerRoleRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminCreateVolunteerRoleJSONRequestBody
+}
+
+type AdminCreateVolunteerRoleResponseObject interface {
+	VisitAdminCreateVolunteerRoleResponse(w http.ResponseWriter) error
+}
+
+type AdminCreateVolunteerRole201JSONResponse VolunteerBoard
+
+func (response AdminCreateVolunteerRole201JSONResponse) VisitAdminCreateVolunteerRoleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminCreateVolunteerRoledefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminCreateVolunteerRoledefaultJSONResponse) VisitAdminCreateVolunteerRoleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdateVolunteerSettingsRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminUpdateVolunteerSettingsJSONRequestBody
+}
+
+type AdminUpdateVolunteerSettingsResponseObject interface {
+	VisitAdminUpdateVolunteerSettingsResponse(w http.ResponseWriter) error
+}
+
+type AdminUpdateVolunteerSettings200JSONResponse VolunteerBoard
+
+func (response AdminUpdateVolunteerSettings200JSONResponse) VisitAdminUpdateVolunteerSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdateVolunteerSettingsdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminUpdateVolunteerSettingsdefaultJSONResponse) VisitAdminUpdateVolunteerSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminGetVolunteersRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminGetVolunteersResponseObject interface {
+	VisitAdminGetVolunteersResponse(w http.ResponseWriter) error
+}
+
+type AdminGetVolunteers200JSONResponse VolunteerBoard
+
+func (response AdminGetVolunteers200JSONResponse) VisitAdminGetVolunteersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminGetVolunteersdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminGetVolunteersdefaultJSONResponse) VisitAdminGetVolunteersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AdminGetFileRequestObject struct {
 	Id int64 `json:"id"`
 }
@@ -6345,6 +6963,165 @@ func (response AdminListStaffdefaultJSONResponse) VisitAdminListStaffResponse(w 
 	return err
 }
 
+type AdminAssignVolunteerRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminAssignVolunteerJSONRequestBody
+}
+
+type AdminAssignVolunteerResponseObject interface {
+	VisitAdminAssignVolunteerResponse(w http.ResponseWriter) error
+}
+
+type AdminAssignVolunteer200JSONResponse VolunteerBoard
+
+func (response AdminAssignVolunteer200JSONResponse) VisitAdminAssignVolunteerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminAssignVolunteerdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminAssignVolunteerdefaultJSONResponse) VisitAdminAssignVolunteerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminRejectVolunteerRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminRejectVolunteerJSONRequestBody
+}
+
+type AdminRejectVolunteerResponseObject interface {
+	VisitAdminRejectVolunteerResponse(w http.ResponseWriter) error
+}
+
+type AdminRejectVolunteer200JSONResponse VolunteerBoard
+
+func (response AdminRejectVolunteer200JSONResponse) VisitAdminRejectVolunteerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminRejectVolunteerdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminRejectVolunteerdefaultJSONResponse) VisitAdminRejectVolunteerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminWaitlistVolunteerRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminWaitlistVolunteerResponseObject interface {
+	VisitAdminWaitlistVolunteerResponse(w http.ResponseWriter) error
+}
+
+type AdminWaitlistVolunteer200JSONResponse VolunteerBoard
+
+func (response AdminWaitlistVolunteer200JSONResponse) VisitAdminWaitlistVolunteerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminWaitlistVolunteerdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminWaitlistVolunteerdefaultJSONResponse) VisitAdminWaitlistVolunteerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdateVolunteerRoleRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminUpdateVolunteerRoleJSONRequestBody
+}
+
+type AdminUpdateVolunteerRoleResponseObject interface {
+	VisitAdminUpdateVolunteerRoleResponse(w http.ResponseWriter) error
+}
+
+type AdminUpdateVolunteerRole200JSONResponse VolunteerBoard
+
+func (response AdminUpdateVolunteerRole200JSONResponse) VisitAdminUpdateVolunteerRoleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdateVolunteerRoledefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminUpdateVolunteerRoledefaultJSONResponse) VisitAdminUpdateVolunteerRoleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AppLogoutRequestObject struct {
 }
 
@@ -6681,6 +7458,124 @@ type AppQuotedefaultJSONResponse struct {
 }
 
 func (response AppQuotedefaultJSONResponse) VisitAppQuoteResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppGetVolunteerRequestObject struct {
+	Slug string `json:"slug"`
+}
+
+type AppGetVolunteerResponseObject interface {
+	VisitAppGetVolunteerResponse(w http.ResponseWriter) error
+}
+
+type AppGetVolunteer200JSONResponse AppVolunteerInfo
+
+func (response AppGetVolunteer200JSONResponse) VisitAppGetVolunteerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppGetVolunteerdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppGetVolunteerdefaultJSONResponse) VisitAppGetVolunteerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppApplyVolunteerRequestObject struct {
+	Slug string `json:"slug"`
+	Body *AppApplyVolunteerJSONRequestBody
+}
+
+type AppApplyVolunteerResponseObject interface {
+	VisitAppApplyVolunteerResponse(w http.ResponseWriter) error
+}
+
+type AppApplyVolunteer201JSONResponse VolunteerApplication
+
+func (response AppApplyVolunteer201JSONResponse) VisitAppApplyVolunteerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppApplyVolunteerdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppApplyVolunteerdefaultJSONResponse) VisitAppApplyVolunteerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppWithdrawVolunteerRequestObject struct {
+	Slug string `json:"slug"`
+}
+
+type AppWithdrawVolunteerResponseObject interface {
+	VisitAppWithdrawVolunteerResponse(w http.ResponseWriter) error
+}
+
+type AppWithdrawVolunteer200JSONResponse VolunteerApplication
+
+func (response AppWithdrawVolunteer200JSONResponse) VisitAppWithdrawVolunteerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppWithdrawVolunteerdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppWithdrawVolunteerdefaultJSONResponse) VisitAppWithdrawVolunteerResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -7476,6 +8371,15 @@ type StrictServerInterface interface {
 	// AdminPutEventAssignment 新增或修改一名员工对该赛事的指派（有效期、启用）
 	// (PUT /admin/events/{id}/staff-assignments/{staffId})
 	AdminPutEventAssignment(ctx context.Context, request AdminPutEventAssignmentRequestObject) (AdminPutEventAssignmentResponseObject, error)
+	// AdminCreateVolunteerRole 新建志愿者岗位
+	// (POST /admin/events/{id}/volunteer-roles)
+	AdminCreateVolunteerRole(ctx context.Context, request AdminCreateVolunteerRoleRequestObject) (AdminCreateVolunteerRoleResponseObject, error)
+	// AdminUpdateVolunteerSettings 开关志愿者报名、需要志愿者的日期与说明
+	// (PUT /admin/events/{id}/volunteer-settings)
+	AdminUpdateVolunteerSettings(ctx context.Context, request AdminUpdateVolunteerSettingsRequestObject) (AdminUpdateVolunteerSettingsResponseObject, error)
+	// AdminGetVolunteers 志愿者：设置、岗位与申请
+	// (GET /admin/events/{id}/volunteers)
+	AdminGetVolunteers(ctx context.Context, request AdminGetVolunteersRequestObject) (AdminGetVolunteersResponseObject, error)
 	// AdminGetFile 凭证截图原图（仅被凭证引用的 PAYMENT_PROOF 私有文件；Cache-Control private, no-store）
 	// (GET /admin/files/{id})
 	AdminGetFile(ctx context.Context, request AdminGetFileRequestObject) (AdminGetFileResponseObject, error)
@@ -7536,6 +8440,18 @@ type StrictServerInterface interface {
 	// AdminListStaff 员工列表（指派现场角色用）
 	// (GET /admin/staff)
 	AdminListStaff(ctx context.Context, request AdminListStaffRequestObject) (AdminListStaffResponseObject, error)
+	// AdminAssignVolunteer 分配到岗位（占一个席位；已在别的岗位时换岗）
+	// (POST /admin/volunteer-applications/{id}/assign)
+	AdminAssignVolunteer(ctx context.Context, request AdminAssignVolunteerRequestObject) (AdminAssignVolunteerResponseObject, error)
+	// AdminRejectVolunteer 拒绝申请（已分配的释放席位）
+	// (POST /admin/volunteer-applications/{id}/reject)
+	AdminRejectVolunteer(ctx context.Context, request AdminRejectVolunteerRequestObject) (AdminRejectVolunteerResponseObject, error)
+	// AdminWaitlistVolunteer 转候补（已分配的释放席位）
+	// (POST /admin/volunteer-applications/{id}/waitlist)
+	AdminWaitlistVolunteer(ctx context.Context, request AdminWaitlistVolunteerRequestObject) (AdminWaitlistVolunteerResponseObject, error)
+	// AdminUpdateVolunteerRole 修改岗位（席位不能少于已分配人数）
+	// (PUT /admin/volunteer-roles/{id})
+	AdminUpdateVolunteerRole(ctx context.Context, request AdminUpdateVolunteerRoleRequestObject) (AdminUpdateVolunteerRoleResponseObject, error)
 	// AppLogout 吊销当前跑者令牌
 	// (POST /app/auth/logout)
 	AppLogout(ctx context.Context, request AppLogoutRequestObject) (AppLogoutResponseObject, error)
@@ -7563,6 +8479,15 @@ type StrictServerInterface interface {
 	// AppQuote 报名算价预览（不占名额、不选识别分）
 	// (POST /app/events/{slug}/quote)
 	AppQuote(ctx context.Context, request AppQuoteRequestObject) (AppQuoteResponseObject, error)
+	// AppGetVolunteer 志愿者报名页：岗位与实时席位、本人最近一份申请
+	// (GET /app/events/{slug}/volunteer)
+	AppGetVolunteer(ctx context.Context, request AppGetVolunteerRequestObject) (AppGetVolunteerResponseObject, error)
+	// AppApplyVolunteer 申请当志愿者：选日期与 1–3 个岗位
+	// (POST /app/events/{slug}/volunteer)
+	AppApplyVolunteer(ctx context.Context, request AppApplyVolunteerRequestObject) (AppApplyVolunteerResponseObject, error)
+	// AppWithdrawVolunteer 撤回志愿者申请（已分配的岗位席位随之释放）
+	// (POST /app/events/{slug}/volunteer/withdraw)
+	AppWithdrawVolunteer(ctx context.Context, request AppWithdrawVolunteerRequestObject) (AppWithdrawVolunteerResponseObject, error)
 	// AppListFreeSignups 我的免费报名（最近 100 条，新的在前）
 	// (GET /app/free-signups)
 	AppListFreeSignups(ctx context.Context, request AppListFreeSignupsRequestObject) (AppListFreeSignupsResponseObject, error)
@@ -8349,6 +9274,98 @@ func (sh *strictHandler) AdminPutEventAssignment(ctx *gin.Context, id int64, sta
 	}
 }
 
+// AdminCreateVolunteerRole operation middleware
+func (sh *strictHandler) AdminCreateVolunteerRole(ctx *gin.Context, id int64) {
+	var request AdminCreateVolunteerRoleRequestObject
+
+	request.Id = id
+
+	var body AdminCreateVolunteerRoleJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminCreateVolunteerRole(ctx, request.(AdminCreateVolunteerRoleRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminCreateVolunteerRole")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminCreateVolunteerRoleResponseObject); ok {
+		if err := validResponse.VisitAdminCreateVolunteerRoleResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminUpdateVolunteerSettings operation middleware
+func (sh *strictHandler) AdminUpdateVolunteerSettings(ctx *gin.Context, id int64) {
+	var request AdminUpdateVolunteerSettingsRequestObject
+
+	request.Id = id
+
+	var body AdminUpdateVolunteerSettingsJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminUpdateVolunteerSettings(ctx, request.(AdminUpdateVolunteerSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminUpdateVolunteerSettings")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminUpdateVolunteerSettingsResponseObject); ok {
+		if err := validResponse.VisitAdminUpdateVolunteerSettingsResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminGetVolunteers operation middleware
+func (sh *strictHandler) AdminGetVolunteers(ctx *gin.Context, id int64) {
+	var request AdminGetVolunteersRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminGetVolunteers(ctx, request.(AdminGetVolunteersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminGetVolunteers")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminGetVolunteersResponseObject); ok {
+		if err := validResponse.VisitAdminGetVolunteersResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // AdminGetFile operation middleware
 func (sh *strictHandler) AdminGetFile(ctx *gin.Context, id int64) {
 	var request AdminGetFileRequestObject
@@ -8923,6 +9940,131 @@ func (sh *strictHandler) AdminListStaff(ctx *gin.Context) {
 	}
 }
 
+// AdminAssignVolunteer operation middleware
+func (sh *strictHandler) AdminAssignVolunteer(ctx *gin.Context, id int64) {
+	var request AdminAssignVolunteerRequestObject
+
+	request.Id = id
+
+	var body AdminAssignVolunteerJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminAssignVolunteer(ctx, request.(AdminAssignVolunteerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminAssignVolunteer")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminAssignVolunteerResponseObject); ok {
+		if err := validResponse.VisitAdminAssignVolunteerResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminRejectVolunteer operation middleware
+func (sh *strictHandler) AdminRejectVolunteer(ctx *gin.Context, id int64) {
+	var request AdminRejectVolunteerRequestObject
+
+	request.Id = id
+
+	var body AdminRejectVolunteerJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminRejectVolunteer(ctx, request.(AdminRejectVolunteerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminRejectVolunteer")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminRejectVolunteerResponseObject); ok {
+		if err := validResponse.VisitAdminRejectVolunteerResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminWaitlistVolunteer operation middleware
+func (sh *strictHandler) AdminWaitlistVolunteer(ctx *gin.Context, id int64) {
+	var request AdminWaitlistVolunteerRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminWaitlistVolunteer(ctx, request.(AdminWaitlistVolunteerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminWaitlistVolunteer")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminWaitlistVolunteerResponseObject); ok {
+		if err := validResponse.VisitAdminWaitlistVolunteerResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminUpdateVolunteerRole operation middleware
+func (sh *strictHandler) AdminUpdateVolunteerRole(ctx *gin.Context, id int64) {
+	var request AdminUpdateVolunteerRoleRequestObject
+
+	request.Id = id
+
+	var body AdminUpdateVolunteerRoleJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminUpdateVolunteerRole(ctx, request.(AdminUpdateVolunteerRoleRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminUpdateVolunteerRole")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminUpdateVolunteerRoleResponseObject); ok {
+		if err := validResponse.VisitAdminUpdateVolunteerRoleResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // AppLogout operation middleware
 func (sh *strictHandler) AppLogout(ctx *gin.Context) {
 	var request AppLogoutRequestObject
@@ -9184,6 +10326,91 @@ func (sh *strictHandler) AppQuote(ctx *gin.Context, slug string) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AppQuoteResponseObject); ok {
 		if err := validResponse.VisitAppQuoteResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppGetVolunteer operation middleware
+func (sh *strictHandler) AppGetVolunteer(ctx *gin.Context, slug string) {
+	var request AppGetVolunteerRequestObject
+
+	request.Slug = slug
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppGetVolunteer(ctx, request.(AppGetVolunteerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppGetVolunteer")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppGetVolunteerResponseObject); ok {
+		if err := validResponse.VisitAppGetVolunteerResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppApplyVolunteer operation middleware
+func (sh *strictHandler) AppApplyVolunteer(ctx *gin.Context, slug string) {
+	var request AppApplyVolunteerRequestObject
+
+	request.Slug = slug
+
+	var body AppApplyVolunteerJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppApplyVolunteer(ctx, request.(AppApplyVolunteerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppApplyVolunteer")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppApplyVolunteerResponseObject); ok {
+		if err := validResponse.VisitAppApplyVolunteerResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppWithdrawVolunteer operation middleware
+func (sh *strictHandler) AppWithdrawVolunteer(ctx *gin.Context, slug string) {
+	var request AppWithdrawVolunteerRequestObject
+
+	request.Slug = slug
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppWithdrawVolunteer(ctx, request.(AppWithdrawVolunteerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppWithdrawVolunteer")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppWithdrawVolunteerResponseObject); ok {
+		if err := validResponse.VisitAppWithdrawVolunteerResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

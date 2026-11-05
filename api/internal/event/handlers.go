@@ -146,6 +146,7 @@ func toPublicEvent(e Event, lang i18n.Lang) apigen.PublicEvent {
 		RegisteredCount:      registeredOf(e.Categories),
 		CompOpen:             e.CompOpen,
 		RefundPolicy:         refundPolicyToAPI(e.RefundPolicy),
+		VolunteerOpen:        e.VolunteerOpen,
 	}
 }
 

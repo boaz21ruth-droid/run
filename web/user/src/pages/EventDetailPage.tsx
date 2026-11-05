@@ -186,6 +186,16 @@ export function EventDetailPage() {
               </Link>
             ) : null}
 
+            {data.volunteerOpen ? (
+              <Link to={`/events/${data.slug}/volunteer`} className={styles.compLink} data-testid="volunteer-link">
+                <span>
+                  <b>{t("volunteer.entryTitle")}</b>
+                  <span>{t("volunteer.entryHint")}</span>
+                </span>
+                <span aria-hidden="true">→</span>
+              </Link>
+            ) : null}
+
             {action ? <div className={styles.stickyBar}>{renderAction(false)}</div> : null}
           </article>
         );

@@ -22,6 +22,7 @@ import (
 	"werun/api/internal/racepack"
 	"werun/api/internal/registration"
 	"werun/api/internal/runner"
+	"werun/api/internal/volunteer"
 )
 
 // 请求体上限：没有上限的话，一个超大请求体在被参数校验拒绝之前就要被完整读入内存
@@ -64,11 +65,12 @@ type RouterDeps struct {
 	Pricing      *pricing.Service
 	Registration *registration.Service // 跑者算价与下单
 	Payment      *payment.Service
-	Racepack     *racepack.Service // v8 领物核销站与现场人员指派
-	Promo        *promo.Service    // v8 推荐链接与免费入场
-	Notify       *notify.Service   // Task 20：推送登记（后续 HTTP 路径直接触发推送时使用）
-	Server       *Server           // 为 nil 时由 NewServer 构造
-	Env          string            // "dev" | "prod"
+	Racepack     *racepack.Service  // v8 领物核销站与现场人员指派
+	Promo        *promo.Service     // v8 推荐链接与免费入场
+	Volunteer    *volunteer.Service // v8 赛事志愿者
+	Notify       *notify.Service    // Task 20：推送登记（后续 HTTP 路径直接触发推送时使用）
+	Server       *Server            // 为 nil 时由 NewServer 构造
+	Env          string             // "dev" | "prod"
 }
 
 // trustedProxies：只信任本机与私有网段（compose 网络里的 Caddy）转发的 X-Forwarded-For，

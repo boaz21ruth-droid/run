@@ -1,0 +1,337 @@
+.page {
+  display: grid;
+  gap: 4px;
+}
+
+.eventPill {
+  justify-self: start;
+  padding: 3px 10px;
+  border-radius: 100px;
+  background: var(--brand-tint);
+  color: var(--brand);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.note {
+  margin: 0 0 12px;
+  color: var(--ink-mid);
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+  max-width: 560px;
+}
+
+.card {
+  display: grid;
+  gap: 12px;
+  max-width: 560px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--card);
+  min-width: 0;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.segment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.segmentOn,
+.segmentOff {
+  min-height: 44px;
+  border-radius: 100px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.segmentOn {
+  border: 1px solid var(--brand);
+  background: var(--brand);
+  color: var(--card);
+}
+
+.segmentOff {
+  border: 1px solid var(--line-hard);
+  background: var(--card);
+  color: var(--ink-mid);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--line-hard);
+  border-radius: 100px;
+  background: var(--card);
+  color: var(--ink-mid);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chip:focus-within {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.chipOn {
+  border-color: var(--brand);
+  background: var(--brand-tint);
+  color: var(--brand);
+}
+
+.rolesHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.roles {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.role {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--card);
+  cursor: pointer;
+}
+
+.role input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--brand);
+}
+
+.roleOn {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 1px var(--brand);
+}
+
+.roleBody {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.roleMeta {
+  font-size: 13px;
+  color: var(--ink-mute);
+}
+
+.bar {
+  height: 5px;
+  margin-top: 4px;
+  border-radius: 100px;
+  background: var(--sunk);
+  overflow: hidden;
+}
+
+.barFill,
+.barFull {
+  display: block;
+  height: 100%;
+  border-radius: 100px;
+  background: var(--sun);
+}
+
+.barFull {
+  background: var(--stop);
+}
+
+.seats {
+  display: grid;
+  justify-items: end;
+  font-size: 12px;
+  color: var(--ink-mute);
+}
+
+.seats b {
+  font-family: var(--display);
+  font-size: 22px;
+  color: var(--ink);
+}
+
+.fullBadge {
+  padding: 3px 10px;
+  border-radius: 100px;
+  background: var(--warn-tint);
+  color: var(--warn);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  resize: vertical;
+}
+
+.conduct {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-mid);
+}
+
+.optional {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: var(--sunk);
+  color: var(--ink-mute);
+  font-size: 12px;
+}
+
+.pill {
+  justify-self: start;
+  padding: 2px 10px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pillPENDING,
+.pillWAITLIST {
+  background: var(--warn-tint);
+  color: var(--warn);
+}
+
+.pillASSIGNED {
+  background: var(--leaf-tint);
+  color: var(--leaf-ink);
+}
+
+.pillREJECTED,
+.pillWITHDRAWN {
+  background: var(--sunk);
+  color: var(--ink-mid);
+}
+
+.assigned {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.summary {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  font-size: 14px;
+}
+
+.summary div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.summary dt {
+  color: var(--ink-mute);
+}
+
+.summary dd {
+  margin: 0;
+  text-align: right;
+}
+
+.reviewNote {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--sunk);
+  color: var(--ink-mid);
+}
+
+.secondary,
+.danger {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 100px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.secondary {
+  justify-self: start;
+  border: 1px solid var(--brand);
+  background: var(--card);
+  color: var(--brand);
+}
+
+.danger {
+  border: 1px solid var(--stop);
+  background: var(--stop);
+  color: var(--card);
+}
+
+.linkButton {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-mute);
+  font: inherit;
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.confirm {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--stop-tint);
+}
+
+.confirm p {
+  margin: 0;
+}
+
+.confirmActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}

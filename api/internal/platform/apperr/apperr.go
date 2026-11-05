@@ -65,6 +65,10 @@ const (
 	CodeQualifyFallbackFull       = "QUALIFY_FALLBACK_FULL"
 	CodeQualifyBibAssigned        = "QUALIFY_BIB_ASSIGNED"
 	CodeQualifyNoFallback         = "QUALIFY_NO_FALLBACK"
+	CodeVolunteerClosed           = "VOLUNTEER_CLOSED"
+	CodeVolunteerApplied          = "VOLUNTEER_APPLIED"
+	CodeVolunteerRoleFull         = "VOLUNTEER_ROLE_FULL"
+	CodeVolunteerStateConflict    = "VOLUNTEER_STATE_CONFLICT"
 )
 
 // AllCodes 列出全部错误码，供文案完整性测试使用。新增错误码时必须同时加到这里。
@@ -125,6 +129,10 @@ var AllCodes = []string{
 	CodeQualifyFallbackFull,
 	CodeQualifyBibAssigned,
 	CodeQualifyNoFallback,
+	CodeVolunteerClosed,
+	CodeVolunteerApplied,
+	CodeVolunteerRoleFull,
+	CodeVolunteerStateConflict,
 }
 
 // FieldError 描述某个字段的错误：文案 key 与参数。

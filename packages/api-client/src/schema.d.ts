@@ -1034,6 +1034,160 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/app/events/{slug}/volunteer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 志愿者报名页：岗位与实时席位、本人最近一份申请 */
+        get: operations["appGetVolunteer"];
+        put?: never;
+        /** 申请当志愿者：选日期与 1–3 个岗位 */
+        post: operations["appApplyVolunteer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/app/events/{slug}/volunteer/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 撤回志愿者申请（已分配的岗位席位随之释放） */
+        post: operations["appWithdrawVolunteer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/{id}/volunteers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 志愿者：设置、岗位与申请 */
+        get: operations["adminGetVolunteers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/{id}/volunteer-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 开关志愿者报名、需要志愿者的日期与说明 */
+        put: operations["adminUpdateVolunteerSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/{id}/volunteer-roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 新建志愿者岗位 */
+        post: operations["adminCreateVolunteerRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/volunteer-roles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 修改岗位（席位不能少于已分配人数） */
+        put: operations["adminUpdateVolunteerRole"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/volunteer-applications/{id}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 分配到岗位（占一个席位；已在别的岗位时换岗） */
+        post: operations["adminAssignVolunteer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/volunteer-applications/{id}/waitlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 转候补（已分配的释放席位） */
+        post: operations["adminWaitlistVolunteer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/volunteer-applications/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 拒绝申请（已分配的释放席位） */
+        post: operations["adminRejectVolunteer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1204,6 +1358,127 @@ export interface components {
             items: components["schemas"]["AdminQualificationProof"][];
         };
         RejectQualificationProofRequest: {
+            note?: string;
+        };
+        /** @enum {string} */
+        VolunteerStatus: "PENDING" | "ASSIGNED" | "WAITLIST" | "REJECTED" | "WITHDRAWN";
+        PublicVolunteerRole: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            schedule: string | null;
+            /** Format: int32 */
+            capacity: number;
+            /**
+             * Format: int32
+             * @description 剩余席位；0 表示满员，申请会进候补
+             */
+            remaining: number;
+        };
+        VolunteerApplication: {
+            /** Format: int64 */
+            id: number;
+            status: components["schemas"]["VolunteerStatus"];
+            fullAvailability: boolean;
+            dates: string[];
+            roleIds: number[];
+            assignedRoleName: string | null;
+            reviewNote: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AppVolunteerInfo: {
+            open: boolean;
+            /** @description 需要志愿者的日期 */
+            dates: string[];
+            note: string | null;
+            roles: components["schemas"]["PublicVolunteerRole"][];
+            application: components["schemas"]["VolunteerApplication"] | null;
+        };
+        CreateVolunteerApplication: {
+            fullName: string;
+            /** @description E.164 */
+            phone: string;
+            fullAvailability: boolean;
+            /** @description 不是全程参加时必填，须是赛事列出的日期 */
+            dates?: string[];
+            roleIds: number[];
+            /** @enum {string} */
+            tshirtSize?: "XS" | "S" | "M" | "L" | "XL" | "XXL";
+            note?: string;
+            mediaConsent?: boolean;
+            /** @description 必须为 true：同意志愿者行为准则、理解岗位按席位分配 */
+            conductAccepted: boolean;
+        };
+        VolunteerSettings: {
+            open: boolean;
+            dates: string[];
+            note: components["schemas"]["LocalizedText"] | null;
+        };
+        AdminVolunteerRole: {
+            /** Format: int64 */
+            id: number;
+            name: components["schemas"]["LocalizedText"];
+            schedule: components["schemas"]["LocalizedText"] | null;
+            /** Format: int32 */
+            capacity: number;
+            /** Format: int32 */
+            assignedCount: number;
+            /** Format: int32 */
+            sortOrder: number;
+            active: boolean;
+            /**
+             * Format: int32
+             * @description 选了这个岗位、还在待处理或候补的申请数
+             */
+            candidates: number;
+        };
+        AdminVolunteerApplication: {
+            /** Format: int64 */
+            id: number;
+            status: components["schemas"]["VolunteerStatus"];
+            fullName: string;
+            phone: string;
+            telegramUsername: string | null;
+            fullAvailability: boolean;
+            dates: string[];
+            roleIds: number[];
+            tshirtSize: string | null;
+            note: string | null;
+            mediaConsent: boolean;
+            /** Format: int64 */
+            assignedRoleId: number | null;
+            reviewNote: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        VolunteerBoard: {
+            settings: components["schemas"]["VolunteerSettings"];
+            roles: components["schemas"]["AdminVolunteerRole"][];
+            applications: components["schemas"]["AdminVolunteerApplication"][];
+        };
+        VolunteerRoleInput: {
+            name: components["schemas"]["LocalizedText"];
+            schedule?: components["schemas"]["LocalizedText"];
+            /** Format: int32 */
+            capacity: number;
+            /** Format: int32 */
+            sortOrder?: number;
+        };
+        UpdateVolunteerRoleRequest: {
+            name: components["schemas"]["LocalizedText"];
+            schedule?: components["schemas"]["LocalizedText"];
+            /** Format: int32 */
+            capacity: number;
+            /** Format: int32 */
+            sortOrder?: number;
+            active: boolean;
+        };
+        AssignVolunteerRequest: {
+            /** Format: int64 */
+            roleId: number;
+        };
+        RejectVolunteerRequest: {
             note?: string;
         };
         RejectCompRequest: {
@@ -1469,6 +1744,8 @@ export interface components {
             qualification: components["schemas"]["PublicQualification"] | null;
         };
         PublicEvent: {
+            /** @description 是否在招志愿者 */
+            volunteerOpen: boolean;
             /** @description 主办方设置的退改政策；未设置时为空 */
             refundPolicy: components["schemas"]["RefundPolicy"] | null;
             /** @description 是否接受免费入场申请（KOL / 跑团团长 / 赞助商 / 媒体） */
@@ -4570,6 +4847,340 @@ export interface operations {
                 };
             };
             /** @description 错误（QUALIFY_REVIEWED / QUALIFY_NOT_CONFIRMED / QUALIFY_FALLBACK_FULL / QUALIFY_BIB_ASSIGNED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appGetVolunteer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppVolunteerInfo"];
+                };
+            };
+            /** @description 错误（EVENT_NOT_FOUND） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appApplyVolunteer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateVolunteerApplication"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VolunteerApplication"];
+                };
+            };
+            /** @description 错误（VOLUNTEER_CLOSED、VOLUNTEER_APPLIED、VALIDATION_FAILED、EVENT_NOT_FOUND） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appWithdrawVolunteer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VolunteerApplication"];
+                };
+            };
+            /** @description 错误（NOT_FOUND） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminGetVolunteers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VolunteerBoard"];
+                };
+            };
+            /** @description 错误（EVENT_NOT_FOUND） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminUpdateVolunteerSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VolunteerSettings"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VolunteerBoard"];
+                };
+            };
+            /** @description 错误（VALIDATION_FAILED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminCreateVolunteerRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VolunteerRoleInput"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VolunteerBoard"];
+                };
+            };
+            /** @description 错误（VALIDATION_FAILED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminUpdateVolunteerRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateVolunteerRoleRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VolunteerBoard"];
+                };
+            };
+            /** @description 错误（VALIDATION_FAILED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminAssignVolunteer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignVolunteerRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VolunteerBoard"];
+                };
+            };
+            /** @description 错误（VOLUNTEER_ROLE_FULL、VOLUNTEER_STATE_CONFLICT） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminWaitlistVolunteer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VolunteerBoard"];
+                };
+            };
+            /** @description 错误（VOLUNTEER_STATE_CONFLICT） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminRejectVolunteer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectVolunteerRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VolunteerBoard"];
+                };
+            };
+            /** @description 错误（VOLUNTEER_STATE_CONFLICT） */
             default: {
                 headers: {
                     [name: string]: unknown;

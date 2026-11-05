@@ -91,5 +91,10 @@
   "QUALIFY_NO_FALLBACK": "This category no longer requires qualification and has no category to move into. You can only approve.",
   "field.qualify_too_slow": "You need a time of {max} or faster for this category.",
   "field.refund_tier_order": "Days must go from largest to smallest, and the refund can't rise closer to race day.",
-  "field.fallback_chain": "The category to move into can't require qualification itself, and a category others move into can't become an elite category."
+  "field.fallback_chain": "The category to move into can't require qualification itself, and a category others move into can't become an elite category.",
+  "VOLUNTEER_CLOSED": "This event isn't looking for volunteers right now.",
+  "VOLUNTEER_APPLIED": "You've already applied. The organizer will get back to you.",
+  "VOLUNTEER_ROLE_FULL": "This role is full. Add seats first or pick another role.",
+  "VOLUNTEER_STATE_CONFLICT": "This application has changed. Refresh and try again.",
+  "field.volunteer_roles_max": "Pick up to {max} roles."
 }
