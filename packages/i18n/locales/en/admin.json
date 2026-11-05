@@ -712,5 +712,57 @@
       "REJECTED": "Declined",
       "WITHDRAWN": "Withdrawn"
     }
+  },
+  "community": {
+    "title": "Club runs",
+    "intro": "Club runs posted by runners. They need approval before showing on the club page; live runs can be taken down.",
+    "all": "All",
+    "empty": "Nothing here",
+    "cancel": "Cancel",
+    "col": {
+      "activity": "Run",
+      "author": "Host",
+      "spots": "Joined / spots · cost",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "REVIEWING": "To review",
+      "PUBLISHED": "Live",
+      "REJECTED": "Rejected",
+      "CLOSED": "Cancelled"
+    },
+    "frozen": "Taken down",
+    "approve": "Approve",
+    "rejectAction": "Reject",
+    "rejectTitle": "Reject “{{title}}”",
+    "freeze": "Take down",
+    "unfreeze": "Restore",
+    "freezeTitle": "Take down “{{title}}”",
+    "freezeHint": "Runners can't see or join it; the host sees it's taken down. Restoring brings it back.",
+    "freezePlaceholder": "Reason (required, admin only)",
+    "done": {
+      "approve": "Approved",
+      "reject": "Rejected",
+      "freeze": "Taken down",
+      "unfreeze": "Restored"
+    },
+    "reject": {
+      "R01": "Missing details",
+      "R02": "Paid or promotional",
+      "R03": "Safety risk",
+      "R04": "Inappropriate",
+      "R05": "Duplicate"
+    },
+    "tags": {
+      "MORNING": "Morning",
+      "NIGHT": "Night",
+      "LONG": "Long",
+      "TRAIL": "Trail",
+      "TRAINING": "Training",
+      "FAMILY": "Family",
+      "CYCLING": "Cycling",
+      "OTHER": "Other"
+    }
   }
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 
+	"werun/api/internal/community"
 	"werun/api/internal/event"
 	"werun/api/internal/iam"
 	"werun/api/internal/jobs"
@@ -48,6 +49,7 @@ type App struct {
 	Racepack     *racepack.Service
 	Promo        *promo.Service
 	Volunteer    *volunteer.Service
+	Community    *community.Service
 	Runner       *runner.Service
 	Notify       *notify.Service // Task 20
 }
@@ -97,6 +99,7 @@ func Bootstrap(ctx context.Context) (*App, error) {
 	app.Racepack = racepack.NewService(app.Pool, time.Now)
 	app.Promo = promo.NewService(app.Pool, time.Now)
 	app.Volunteer = volunteer.NewService(app.Pool, time.Now)
+	app.Community = community.NewService(app.Pool, app.Runner, time.Now)
 	return app, nil
 }
 

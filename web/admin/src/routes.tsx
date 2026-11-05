@@ -1,5 +1,6 @@
 import type { RouteObject } from "react-router";
 import {
+  PERM_CONTENT_MANAGE,
   PERM_EVENT_CONFIG,
   PERM_ORDER_VIEW,
   PERM_PAYMENT_ACCOUNT_MANAGE,
@@ -19,6 +20,7 @@ import { OrdersPage } from "./pages/OrdersPage";
 import { PaymentAccountsPage } from "./pages/PaymentAccountsPage";
 import { ProofDetailPage } from "./pages/ProofDetailPage";
 import { ProofsPage } from "./pages/ProofsPage";
+import { CommunityReviewPage } from "./pages/CommunityReviewPage";
 import { RacepackPage } from "./pages/RacepackPage";
 
 export const routes: RouteObject[] = [
@@ -75,6 +77,14 @@ export const routes: RouteObject[] = [
             element: (
               <RequirePermission permission={PERM_PROOF_REVIEW} access="read">
                 <ProofDetailPage />
+              </RequirePermission>
+            ),
+          },
+          {
+            path: "community",
+            element: (
+              <RequirePermission permission={PERM_CONTENT_MANAGE} access="read">
+                <CommunityReviewPage />
               </RequirePermission>
             ),
           },

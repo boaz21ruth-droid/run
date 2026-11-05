@@ -2,7 +2,7 @@ import { ApiError, unwrap, type Schemas } from "@werun/api-client";
 import { setLanguage } from "@werun/i18n";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useApi } from "../api";
 import { useAuth } from "../auth/AuthProvider";
 import styles from "./MePage.module.css";
@@ -118,6 +118,14 @@ export function MePage() {
           </p>
         )}
       </form>
+      <nav className={styles.links} aria-label={t("me.linksLabel")}>
+        <Link to="/profiles" data-testid="me-profiles">
+          {t("profiles.nav")}
+        </Link>
+        <Link to="/community/mine" data-testid="me-community">
+          {t("community.mine.title")}
+        </Link>
+      </nav>
       <button type="button" className={styles.logout} onClick={handleLogout} data-testid="me-logout">
         {t("me.logout")}
       </button>

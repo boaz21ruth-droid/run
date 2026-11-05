@@ -156,7 +156,8 @@
     "save": "保存",
     "saving": "正在保存…",
     "saved": "已保存",
-    "logout": "退出登录"
+    "logout": "退出登录",
+    "linksLabel": "更多"
   },
   "profiles": {
     "nav": "常用参赛人",
@@ -392,7 +393,8 @@
       "home": "首页",
       "events": "赛事",
       "orders": "我的赛事",
-      "profiles": "参赛人"
+      "profiles": "参赛人",
+      "community": "跑团"
     }
   },
   "titles": {
@@ -554,6 +556,115 @@
       "dates": "请至少选一天。",
       "roles": "请至少选一个岗位。",
       "conduct": "请勾选行为准则和席位说明。"
+    }
+  },
+  "community": {
+    "nav": "跑团",
+    "title": "跑团",
+    "detailTitle": "跑团活动",
+    "publish": "发布活动",
+    "filter": {
+      "label": "筛选活动",
+      "all": "全部",
+      "official": "官方免费",
+      "club": "跑团发起"
+    },
+    "empty": "最近还没有活动，发起一个吧。",
+    "disclaimer": "跑团活动由发起人组织，WeRun 只提供发布与报名记录，不参与现场执行。",
+    "checkin": {
+      "title": "今天谁在跑",
+      "ttl": "8 小时内有效",
+      "me": "我在",
+      "on": "已签到",
+      "nobody": "还没人签到"
+    },
+    "official": "WeRun 官方",
+    "verified": "已认证",
+    "count": "{{joined}} / {{capacity}}",
+    "fullWaitlist": "已满 · 候补 {{n}} 人",
+    "fullOpen": "已满 · 可候补",
+    "waitlistCount": "候补 {{n}} 人",
+    "freeSignup": "免费登记",
+    "viewEvent": "查看",
+    "join": "参加",
+    "waitlist": "候补",
+    "joinWaitlist": "已满，排候补",
+    "notOpen": "已开始或暂不能报名",
+    "youJoined": "你已参加",
+    "youWaitlisted": "你在候补中，有人退出会自动补上",
+    "leave": "不去了",
+    "leaveWaitlist": "取消候补",
+    "contactTitle": "联系发起人",
+    "contactHidden": "参加后可以看到发起人的联系方式。",
+    "close": "取消活动",
+    "closeConfirm": "取消后跑团页不再显示，已参加的人需要你自己通知。确定取消？",
+    "keep": "先不取消",
+    "reviewingHint": "平台审核通过后会出现在跑团页，通常 1 个工作日内。",
+    "status": {
+      "REVIEWING": "审核中",
+      "PUBLISHED": "已发布",
+      "REJECTED": "未通过",
+      "CLOSED": "已取消",
+      "FROZEN": "已暂停展示"
+    },
+    "reject": {
+      "R01": "信息不全：请补全时间、集合点与联系方式后重新发布。",
+      "R02": "涉及收费或商业推广：跑团活动只能收取明确的成本费。",
+      "R03": "安全风险：路线、时间或人数存在安全隐患。",
+      "R04": "内容不当。",
+      "R05": "重复发布。"
+    },
+    "tags": {
+      "MORNING": "晨跑",
+      "NIGHT": "夜跑",
+      "LONG": "长距离",
+      "TRAIL": "越野",
+      "TRAINING": "训练营",
+      "FAMILY": "亲子",
+      "CYCLING": "骑行",
+      "OTHER": "其他"
+    },
+    "visibility": {
+      "JOINED": "参加后可见",
+      "PUBLIC": "所有人可见"
+    },
+    "fields": {
+      "title": "活动名称",
+      "tag": "类型",
+      "time": "开始时间",
+      "city": "城市",
+      "location": "地点",
+      "meetPoint": "集合点",
+      "distance": "距离 / 配速",
+      "capacity": "人数上限",
+      "fee": "费用",
+      "spots": "已参加",
+      "host": "发起人",
+      "hostName": "跑团名（可选）",
+      "telegram": "Telegram 用户名",
+      "phone": "手机号",
+      "contactVisibility": "联系方式给谁看",
+      "body": "介绍"
+    },
+    "new": {
+      "title": "发布跑团活动",
+      "intro": "平台不收钱、不组织现场。提交后通常需要审核，通过后出现在跑团页。",
+      "titlePlaceholder": "如：周三夜跑 · 滨河大道 8K",
+      "locationPlaceholder": "如：滨河大道",
+      "meetPlaceholder": "如：独立纪念碑北侧",
+      "feePlaceholder": "免费 / 均摊饮料 $1",
+      "consentTitle": "跑友活动免责声明",
+      "submit": "提交",
+      "submitting": "正在提交…"
+    },
+    "mine": {
+      "title": "我发布的跑团活动",
+      "empty": "你还没发布过活动。"
+    },
+    "errors": {
+      "capacity": "人数上限填 1–500。",
+      "contact": "请至少留一个 Telegram 用户名或手机号。",
+      "consent": "请勾选免责声明。"
     }
   }
 }

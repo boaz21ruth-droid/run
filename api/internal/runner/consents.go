@@ -214,30 +214,51 @@ func (s *Service) SignConsent(ctx context.Context, tx pgx.Tx, u User, acc Consen
 	if (link.RegOrderID == nil) == (link.FreeSignupID == nil) {
 		return errors.New("runner: ConsentLink must set exactly one of RegOrderID and FreeSignupID")
 	}
+	signatureID, err := s.sign(ctx, tx, u, acc, meta, PurposeRegistration)
+	if err != nil {
+		return err
+	}
+	if err := s.q.WithTx(tx).InsertRegistrationConsent(ctx, store.InsertRegistrationConsentParams{
+		SignatureID:  signatureID,
+		RegOrderID:   link.RegOrderID,
+		FreeSignupID: link.FreeSignupID,
+	}); err != nil {
+		return fmt.Errorf("runner: link consent signature %d: %w", signatureID, err)
+	}
+	return nil
+}
+
+// SignCommunityConsent 在调用方事务里签署跑友活动免责声明（purpose COMMUNITY），返回签署记录 id，
+// 由调用方写进 community_activities.signature_id。
+func (s *Service) SignCommunityConsent(ctx context.Context, tx pgx.Tx, u User, acc ConsentAcceptance, meta httpx.Meta) (int64, error) {
+	return s.sign(ctx, tx, u, acc, meta, PurposeCommunity)
+}
+
+// sign 校验版本用途与勾选项，写一条 disclaimer_signatures。
+func (s *Service) sign(ctx context.Context, tx pgx.Tx, u User, acc ConsentAcceptance, meta httpx.Meta, purpose string) (int64, error) {
 	q := s.q.WithTx(tx)
 	row, err := q.GetConsentVersion(ctx, store.GetConsentVersionParams{Version: acc.Version, Lang: acc.Lang})
 	if errors.Is(err, pgx.ErrNoRows) {
-		return consentInvalid("version %q in %q not found", acc.Version, acc.Lang)
+		return 0, consentInvalid("version %q in %q not found", acc.Version, acc.Lang)
 	}
 	if err != nil {
-		return fmt.Errorf("runner: load consent %s/%s: %w", acc.Version, acc.Lang, err)
+		return 0, fmt.Errorf("runner: load consent %s/%s: %w", acc.Version, acc.Lang, err)
 	}
-	if row.Purpose != PurposeRegistration {
-		return consentInvalid("version %s/%s has purpose %s", row.Version, row.Lang, row.Purpose)
+	if row.Purpose != purpose {
+		return 0, consentInvalid("version %s/%s has purpose %s, want %s", row.Version, row.Lang, row.Purpose, purpose)
 	}
 	items, err := decodeConsentItems(row.Items)
 	if err != nil {
-		return fmt.Errorf("runner: consent %s/%s: %w", row.Version, row.Lang, err)
+		return 0, fmt.Errorf("runner: consent %s/%s: %w", row.Version, row.Lang, err)
 	}
 	checked, ok := orderedCheckedItems(items, acc.CheckedItems)
 	if !ok {
-		return consentInvalid("checked items %v do not match version %s/%s", acc.CheckedItems, row.Version, row.Lang)
+		return 0, consentInvalid("checked items %v do not match version %s/%s", acc.CheckedItems, row.Version, row.Lang)
 	}
 	checkedJSON, err := json.Marshal(checked)
 	if err != nil {
-		return fmt.Errorf("runner: encode checked items: %w", err)
+		return 0, fmt.Errorf("runner: encode checked items: %w", err)
 	}
-
 	signatureID, err := q.InsertConsentSignature(ctx, store.InsertConsentSignatureParams{
 		Version:      row.Version,
 		Lang:         row.Lang,
@@ -249,16 +270,9 @@ func (s *Service) SignConsent(ctx context.Context, tx pgx.Tx, u User, acc Consen
 		UserAgent:    optionalString(meta.UserAgent),
 	})
 	if err != nil {
-		return fmt.Errorf("runner: insert consent signature for user %d: %w", u.ID, err)
+		return 0, fmt.Errorf("runner: insert consent signature for user %d: %w", u.ID, err)
 	}
-	if err := q.InsertRegistrationConsent(ctx, store.InsertRegistrationConsentParams{
-		SignatureID:  signatureID,
-		RegOrderID:   link.RegOrderID,
-		FreeSignupID: link.FreeSignupID,
-	}); err != nil {
-		return fmt.Errorf("runner: link consent signature %d: %w", signatureID, err)
-	}
-	return nil
+	return signatureID, nil
 }
 
 func consentLangOrder(l i18n.Lang) []i18n.Lang {

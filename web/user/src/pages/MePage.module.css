@@ -84,3 +84,31 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+.links {
+  display: grid;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--card);
+}
+
+.links a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.links a:last-child {
+  border-bottom: 0;
+}
+
+.links a::after {
+  content: "→";
+  color: var(--ink-mute);
+}

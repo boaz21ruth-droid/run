@@ -17,7 +17,7 @@ const DESTINATIONS = [
   { to: "/", end: true, label: "common:nav.home", tab: "nav.tabs.home", icon: <HomeIcon />, testId: "home" },
   { to: "/events", end: false, label: "common:nav.events", tab: "nav.tabs.events", icon: <FlagIcon />, testId: "events" },
   { to: "/orders", end: false, label: "orders.nav", tab: "nav.tabs.orders", icon: <ReceiptIcon />, testId: "orders" },
-  { to: "/profiles", end: false, label: "profiles.nav", tab: "nav.tabs.profiles", icon: <RunnersIcon />, testId: "profiles" },
+  { to: "/community", end: false, label: "community.nav", tab: "nav.tabs.community", icon: <RunnersIcon />, testId: "community" },
 ] as const;
 
 export function Layout() {

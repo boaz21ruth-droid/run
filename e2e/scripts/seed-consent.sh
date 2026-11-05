@@ -11,21 +11,25 @@ VERSION="REG-E2E-v1"
 EFFECTIVE_DATE="2026-01-01"
 
 consent_exists() {
-  local lang="$1"
+  local purpose="$1" version="$2" lang="$3"
   "${COMPOSE[@]}" exec -T postgres \
-    psql -U werun -d werun -tAc "SELECT 1 FROM disclaimer_versions WHERE purpose = 'REGISTRATION' AND version = '${VERSION}' AND lang = '${lang}'" | grep -q '^1$'
+    psql -U werun -d werun -tAc "SELECT 1 FROM disclaimer_versions WHERE purpose = '${purpose}' AND version = '${version}' AND lang = '${lang}'" | grep -q '^1$'
 }
 
-publish_consent() {
-  local lang="$1" text="$2" items="$3"
-  if consent_exists "$lang"; then
-    echo "skip ${VERSION} (${lang}): already published"
+publish_as() {
+  local purpose="$1" version="$2" lang="$3" text="$4" items="$5"
+  if consent_exists "$purpose" "$version" "$lang"; then
+    echo "skip ${version} (${lang}): already published"
     return
   fi
   printf '%s\n' "$text" | "${COMPOSE[@]}" exec -T api /werun publish-consent \
-    --purpose REGISTRATION --version "$VERSION" --lang "$lang" \
+    --purpose "$purpose" --version "$version" --lang "$lang" \
     --effective-date "$EFFECTIVE_DATE" --file - --items "$items"
-  echo "published ${VERSION} (${lang})"
+  echo "published ${version} (${lang})"
+}
+
+publish_consent() {
+  publish_as REGISTRATION "$VERSION" "$@"
 }
 
 ZH_TEXT='# 报名同意书（端到端测试）
@@ -52,3 +56,15 @@ KM_ITEMS='[{"k":"rules","t":"ខ្ញុំបានអាន ហើយនឹ�
 publish_consent zh "$ZH_TEXT" "$ZH_ITEMS"
 publish_consent en "$EN_TEXT" "$EN_ITEMS"
 publish_consent km "$KM_TEXT" "$KM_ITEMS"
+
+# 跑友活动免责声明（发布跑团活动时签署）
+UGC_VERSION="UGC-E2E-v1"
+publish_as COMMUNITY "$UGC_VERSION" zh '# 跑友活动免责声明（端到端测试）
+
+跑团活动由发起人组织，WeRun 只提供发布与报名记录。' '[{"k":"safety","t":"我理解活动由发起人组织，参与风险自担"}]'
+publish_as COMMUNITY "$UGC_VERSION" en '# Club run disclaimer (end-to-end test)
+
+Club runs are organised by their hosts. WeRun only hosts the post and sign-ups.' '[{"k":"safety","t":"I understand the host organises the run and I take part at my own risk"}]'
+publish_as COMMUNITY "$UGC_VERSION" km '# សេចក្តីបដិសេធការរត់ក្លឹប (ការធ្វើតេស្ត)
+
+ការរត់ក្លឹបរៀបចំដោយម្ចាស់។' '[{"k":"safety","t":"ខ្ញុំយល់ថាម្ចាស់រៀបចំ ហើយខ្ញុំទទួលខុសត្រូវហានិភ័យខ្លួនឯង"}]'

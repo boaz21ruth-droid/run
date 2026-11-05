@@ -65,3 +65,16 @@ export function formatMonthDay(isoDateTime: string, lang: Lang): string {
     timeZone: RACE_TIME_ZONE,
   }).format(new Date(isoDateTime));
 }
+
+/** 跑团活动时间：11/8 周六 05:30，按金边时间 */
+export function formatActivityTime(isoDateTime: string, lang: Lang): string {
+  return new Intl.DateTimeFormat(INTL_LOCALES[lang], {
+    month: "numeric",
+    day: "numeric",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: RACE_TIME_ZONE,
+  }).format(new Date(isoDateTime));
+}

@@ -335,7 +335,11 @@ func TestAppGetConsent(t *testing.T) {
 		{Key: "health", Title: "I am fit to run", Description: ""},
 	}, got.Items)
 
+	// 跑团活动免责声明也走这个接口；还没发布时 404
 	rec = e.do(t, http.MethodGet, "/api/app/consents?purpose=COMMUNITY", nil, auth)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+	assert.Equal(t, apperr.CodeNotFound, decodeRunnerError(t, rec).Error.Code)
+	rec = e.do(t, http.MethodGet, "/api/app/consents?purpose=MARKETING", nil, auth)
 	assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
 	assert.Equal(t, apperr.CodeValidation, decodeRunnerError(t, rec).Error.Code)
 
