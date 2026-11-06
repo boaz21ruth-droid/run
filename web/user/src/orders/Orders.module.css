@@ -225,3 +225,42 @@
   background: var(--leaf-tint);
   color: var(--leaf-ink);
 }
+
+.notices {
+  margin-bottom: 20px;
+}
+
+.noticeList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notice {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-left: 4px solid var(--brand);
+  border-radius: 10px;
+  background: var(--brand-tint);
+}
+
+.noticeEvent {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.noticeBody {
+  margin: 0;
+  white-space: pre-wrap;
+  color: var(--ink);
+}
+
+.noticeTime {
+  font-size: 12px;
+  color: var(--ink-mute);
+}

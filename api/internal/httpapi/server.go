@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"werun/api/internal/broadcast"
 	"werun/api/internal/community"
 	"werun/api/internal/event"
 	"werun/api/internal/httpapi/apigen"
@@ -27,6 +28,7 @@ type (
 	PromoHandlers        = promo.Handlers
 	VolunteerHandlers    = volunteer.Handlers
 	CommunityHandlers    = community.Handlers
+	BroadcastHandlers    = broadcast.Handlers
 )
 
 // Server 组合各模块的 handler，实现 apigen.StrictServerInterface。
@@ -43,6 +45,7 @@ type Server struct {
 	*PromoHandlers
 	*VolunteerHandlers
 	*CommunityHandlers
+	*BroadcastHandlers
 }
 
 var _ apigen.StrictServerInterface = (*Server)(nil)
@@ -61,5 +64,6 @@ func NewServer(d RouterDeps) *Server {
 		PromoHandlers:        promo.NewHandlers(d.Promo),
 		VolunteerHandlers:    volunteer.NewHandlers(d.Volunteer),
 		CommunityHandlers:    community.NewHandlers(d.Community),
+		BroadcastHandlers:    broadcast.NewHandlers(d.Broadcast),
 	}
 }

@@ -1428,6 +1428,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/events/{id}/broadcasts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 发通知：各人群人数与已发记录 */
+        get: operations["adminGetBroadcasts"];
+        put?: never;
+        /** 给一批人发通知（Telegram 推送，同时显示在「我的赛事」） */
+        post: operations["adminSendBroadcast"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/app/notices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 主办方发给我的通知（最近 20 条） */
+        get: operations["appListNotices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1861,6 +1896,54 @@ export interface components {
         };
         FreezeCommunityActivityRequest: {
             reason: string;
+        };
+        /**
+         * @description PAID 已确认报名（含免费活动报名）· PENDING 待付款 · ELITE 精英组（资格未被拒）· VOLUNTEERS 已分配岗位的志愿者
+         * @enum {string}
+         */
+        BroadcastAudience: "PAID" | "PENDING" | "ELITE" | "VOLUNTEERS";
+        BroadcastAudienceCount: {
+            audience: components["schemas"]["BroadcastAudience"];
+            /** Format: int32 */
+            count: number;
+        };
+        BroadcastItem: {
+            /** Format: int64 */
+            id: number;
+            audience: components["schemas"]["BroadcastAudience"];
+            body: string;
+            /** Format: int32 */
+            recipientCount: number;
+            /**
+             * Format: int32
+             * @description Telegram 已送达数（没有 Telegram 的跑者只在「我的赛事」看到）
+             */
+            sentCount: number;
+            /** Format: int32 */
+            failedCount: number;
+            senderName: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        BroadcastBoard: {
+            audiences: components["schemas"]["BroadcastAudienceCount"][];
+            items: components["schemas"]["BroadcastItem"][];
+        };
+        SendBroadcastRequest: {
+            audience: components["schemas"]["BroadcastAudience"];
+            body: string;
+        };
+        Notice: {
+            /** Format: int64 */
+            id: number;
+            eventSlug: string;
+            eventName: string;
+            body: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        NoticeList: {
+            items: components["schemas"]["Notice"][];
         };
         RejectCompRequest: {
             note?: string;
@@ -6065,6 +6148,101 @@ export interface operations {
                 };
             };
             /** @description 错误（COMMUNITY_STATE_CONFLICT） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminGetBroadcasts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BroadcastBoard"];
+                };
+            };
+            /** @description 错误（EVENT_NOT_FOUND） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminSendBroadcast: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendBroadcastRequest"];
+            };
+        };
+        responses: {
+            /** @description 已入队 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BroadcastBoard"];
+                };
+            };
+            /** @description 错误（BROADCAST_DUPLICATE、BROADCAST_NO_RECIPIENTS、VALIDATION_FAILED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appListNotices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoticeList"];
+                };
+            };
+            /** @description 错误 */
             default: {
                 headers: {
                     [name: string]: unknown;

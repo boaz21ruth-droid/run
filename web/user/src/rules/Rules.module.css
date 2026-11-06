@@ -129,3 +129,12 @@
   gap: 4px;
   margin-top: 6px;
 }
+
+.noAccount {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--leaf-tint);
+  color: var(--leaf-ink);
+  font-size: 14px;
+}

@@ -640,3 +640,26 @@ test("跑者申请志愿者，OPS 分配到检录台，跑者看到自己的岗�
   await expect(page.getByTestId("volunteer-assigned")).toContainText(volunteerRole.zh);
   await context.close();
 });
+
+test("OPS 给已付款的人发通知，已付款的跑者在「我的赛事」看到，待付款的人看不到", async ({ browser }) => {
+  const notice = `领物地点已公布 ${runId}：永旺 1 期一楼中庭，17:00–20:00。`;
+  const ops = await adminSession(browser, OPS.username, OPS.password);
+  await ops.page.goto(`${ADMIN_URL}/events/${shared.eventId}`);
+  await ops.page.getByTestId("event-tab-broadcast").click();
+  await expect(ops.page.getByTestId("broadcast-audience-PAID")).toContainText("已付款");
+  await ops.page.getByTestId("broadcast-body").fill(notice);
+  await ops.page.getByTestId("broadcast-send").click();
+  await ops.page.getByTestId("broadcast-confirm").click();
+  await expect(ops.page.getByText(notice).first()).toBeVisible();
+  await ops.context.close();
+
+  const paid = await runnerPage(browser, runnerA, "/orders");
+  await expect(paid.page.getByTestId("notices")).toContainText(notice);
+  await paid.context.close();
+
+  // 跑者 C 只有一张待付款的推荐价订单
+  const unpaid = await runnerPage(browser, runnerC, "/orders");
+  await expect(unpaid.page.locator('[data-testid^="order-item-"]').first()).toBeVisible();
+  await expect(unpaid.page.getByText(notice)).toHaveCount(0);
+  await unpaid.context.close();
+});

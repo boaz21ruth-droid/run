@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"werun/api/internal/broadcast"
 	"werun/api/internal/community"
 	"werun/api/internal/event"
 	"werun/api/internal/httpapi/apigen"
@@ -70,6 +71,7 @@ type RouterDeps struct {
 	Promo        *promo.Service     // v8 推荐链接与免费入场
 	Volunteer    *volunteer.Service // v8 赛事志愿者
 	Community    *community.Service // v8 跑团页
+	Broadcast    *broadcast.Service // v8 主办方群发通知
 	Notify       *notify.Service    // Task 20：推送登记（后续 HTTP 路径直接触发推送时使用）
 	Server       *Server            // 为 nil 时由 NewServer 构造
 	Env          string             // "dev" | "prod"

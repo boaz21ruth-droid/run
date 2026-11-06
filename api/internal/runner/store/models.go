@@ -309,6 +309,21 @@ type Event struct {
 	VolunteerNote           []byte
 }
 
+type EventBroadcast struct {
+	ID             int64
+	EventID        int64
+	Audience       string
+	Body           string
+	RecipientCount int32
+	CreatedBy      int64
+	CreatedAt      time.Time
+}
+
+type EventBroadcastRecipient struct {
+	BroadcastID int64
+	UserID      int64
+}
+
 type EventCategory struct {
 	ID                 int64
 	EventID            int64

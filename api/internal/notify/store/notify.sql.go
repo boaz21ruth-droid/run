@@ -47,6 +47,32 @@ func (q *Queries) GetNotifyRecipient(ctx context.Context, id int64) (GetNotifyRe
 	return i, err
 }
 
+const insertBroadcastLog = `-- name: InsertBroadcastLog :one
+INSERT INTO notification_logs (channel, recipient, template, locale, entity_type, entity_id, dedupe_key)
+VALUES ('TELEGRAM', $1, 'event_broadcast', $2, 'event_broadcast', $3, $4)
+ON CONFLICT (dedupe_key) DO NOTHING
+RETURNING id
+`
+
+type InsertBroadcastLogParams struct {
+	Recipient string
+	Locale    string
+	EntityID  *int64
+	DedupeKey string
+}
+
+func (q *Queries) InsertBroadcastLog(ctx context.Context, arg InsertBroadcastLogParams) (int64, error) {
+	row := q.db.QueryRow(ctx, insertBroadcastLog,
+		arg.Recipient,
+		arg.Locale,
+		arg.EntityID,
+		arg.DedupeKey,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const insertNotificationLog = `-- name: InsertNotificationLog :one
 INSERT INTO notification_logs (channel, recipient, template, locale, entity_type, entity_id, dedupe_key)
 VALUES ('TELEGRAM', $1, $2, $3, 'reg_order', $4, $5)

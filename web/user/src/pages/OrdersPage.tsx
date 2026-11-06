@@ -1,7 +1,9 @@
-import { formatUsd, type Schemas } from "@werun/api-client";
+import { useQuery } from "@tanstack/react-query";
+import { formatUsd, unwrap, type Schemas } from "@werun/api-client";
 import { useLang } from "@werun/i18n";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
+import { useApi } from "../api";
 import { QueryState } from "../components/QueryState";
 import { formatDateTime, formatRaceDate, pickText } from "../format";
 import { useMyFreeSignups, useMyOrders } from "../orders/api";
@@ -19,6 +21,7 @@ export function OrdersPage() {
   return (
     <section>
       <h1 className={styles.title}>{t("orders.title")}</h1>
+      <Notices />
       <QueryState query={orderQuery}>
         {(paid) => (
           <QueryState query={freeQuery}>
@@ -37,6 +40,40 @@ export function OrdersPage() {
           </QueryState>
         )}
       </QueryState>
+    </section>
+  );
+}
+
+/** 主办方群发的通知（最近几条）；取不到时不显示，不影响订单列表 */
+function Notices() {
+  const { t } = useTranslation("user");
+  const lang = useLang();
+  const api = useApi();
+  const notices = useQuery({
+    queryKey: ["notices"],
+    queryFn: async () => unwrap(await api.GET("/app/notices")).items,
+    retry: false,
+  });
+  const items = notices.data?.slice(0, 3) ?? [];
+  if (items.length === 0) {
+    return null;
+  }
+  return (
+    <section className={orders.notices} aria-labelledby="notices-title" data-testid="notices">
+      <h2 id="notices-title" className={orders.sectionTitle}>
+        {t("orders.notices")}
+      </h2>
+      <ul className={orders.noticeList}>
+        {items.map((n) => (
+          <li key={n.id} className={orders.notice}>
+            <Link to={`/events/${n.eventSlug}`} className={orders.noticeEvent}>
+              {n.eventName}
+            </Link>
+            <p className={orders.noticeBody}>{n.body}</p>
+            <span className={orders.noticeTime}>{formatDateTime(n.createdAt, lang)}</span>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

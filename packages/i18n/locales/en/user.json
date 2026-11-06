@@ -273,7 +273,8 @@
       "proofUrl": "Result link",
       "proofHint": "An official results page or certificate. The organizer checks it after payment.",
       "fallback": "If it can't be verified you'll be moved to {{category}} and stay registered."
-    }
+    },
+    "noAccount": "No account needed: open WeRun in Telegram and sign up, or use your phone number and a code in the browser. Your ticket and race reminders arrive on Telegram."
   },
   "orders": {
     "nav": "My events",
@@ -346,7 +347,8 @@
       "CANCELLED": "Cancelled",
       "ATTENDED": "Checked in",
       "NO_SHOW": "No-show"
-    }
+    },
+    "notices": "From the organizer"
   },
   "free": {
     "title": "Free sign-up",

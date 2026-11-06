@@ -273,7 +273,8 @@
       "proofUrl": "成绩证明链接",
       "proofHint": "官方成绩页或证书链接，主办方会在付款后核验。",
       "fallback": "核验不通过将自动转到「{{category}}」，报名仍然有效。"
-    }
+    },
+    "noAccount": "无需注册账号：在 Telegram 里打开直接报名；用浏览器时输入手机号收验证码即可。参赛凭证和赛前提醒会发到 Telegram。"
   },
   "orders": {
     "nav": "我的赛事",
@@ -346,7 +347,8 @@
       "CANCELLED": "已取消",
       "ATTENDED": "已签到",
       "NO_SHOW": "未到场"
-    }
+    },
+    "notices": "主办方通知"
   },
   "free": {
     "title": "免费报名",

@@ -119,7 +119,8 @@
     "tabStaff": "Field staff",
     "tabPromo": "Promotion",
     "tabRules": "Rules",
-    "tabVolunteers": "Volunteers"
+    "tabVolunteers": "Volunteers",
+    "tabBroadcast": "Messages"
   },
   "pricing": {
     "hint": "When several tiers apply to a category, runners automatically get the lowest price.",
@@ -763,6 +764,33 @@
       "FAMILY": "Family",
       "CYCLING": "Cycling",
       "OTHER": "Other"
+    }
+  },
+  "broadcast": {
+    "title": "Send a message",
+    "audience": {
+      "PAID": "Paid",
+      "PENDING": "Unpaid",
+      "ELITE": "Elite",
+      "VOLUNTEERS": "Volunteers"
+    },
+    "placeholder": "e.g. Race-pack pickup: 13–14 Nov, Aeon 1 atrium, 17:00–20:00. Bring your reference code and ID.",
+    "hint": "Sent on Telegram and shown in My events. Runners without Telegram only see it in My events.",
+    "send": "Send",
+    "cancel": "Cancel",
+    "confirmTitle": "Send to {{n}} people ({{audience}})?",
+    "confirmBody": "This can't be undone; runners get it on Telegram right away.",
+    "sent": "Sent to {{n}} people",
+    "history": "Sent messages",
+    "empty": "No messages yet",
+    "recipients": "{{n}} people",
+    "delivery": "Telegram: {{sent}} delivered · {{failed}} failed",
+    "col": {
+      "time": "Time",
+      "audience": "Group",
+      "body": "Message",
+      "delivery": "Delivery",
+      "sender": "Sent by"
     }
   }
 }

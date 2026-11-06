@@ -2548,6 +2548,77 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /admin/events/{id}/broadcasts:
+    get:
+      operationId: adminGetBroadcasts
+      summary: 发通知：各人群人数与已发记录
+      x-permission: event_config
+      x-access: read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BroadcastBoard'
+        default:
+          description: 错误（EVENT_NOT_FOUND）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: adminSendBroadcast
+      summary: 给一批人发通知（Telegram 推送，同时显示在「我的赛事」）
+      x-permission: event_config
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendBroadcastRequest'
+      responses:
+        '201':
+          description: 已入队
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BroadcastBoard'
+        default:
+          description: 错误（BROADCAST_DUPLICATE、BROADCAST_NO_RECIPIENTS、VALIDATION_FAILED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /app/notices:
+    get:
+      operationId: appListNotices
+      summary: 主办方发给我的通知（最近 20 条）
+      x-auth: app
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoticeList'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     ReferralKind:
@@ -3222,6 +3293,69 @@ components:
       required: [reason]
       properties:
         reason: { type: string, minLength: 1, maxLength: 200 }
+    BroadcastAudience:
+      type: string
+      enum: [PAID, PENDING, ELITE, VOLUNTEERS]
+      description: PAID 已确认报名（含免费活动报名）· PENDING 待付款 · ELITE 精英组（资格未被拒）· VOLUNTEERS 已分配岗位的志愿者
+    BroadcastAudienceCount:
+      type: object
+      required: [audience, count]
+      properties:
+        audience:
+          $ref: '#/components/schemas/BroadcastAudience'
+        count: { type: integer, format: int32 }
+    BroadcastItem:
+      type: object
+      required: [id, audience, body, recipientCount, sentCount, failedCount, senderName, createdAt]
+      properties:
+        id: { type: integer, format: int64 }
+        audience:
+          $ref: '#/components/schemas/BroadcastAudience'
+        body: { type: string }
+        recipientCount: { type: integer, format: int32 }
+        sentCount:
+          type: integer
+          format: int32
+          description: Telegram 已送达数（没有 Telegram 的跑者只在「我的赛事」看到）
+        failedCount: { type: integer, format: int32 }
+        senderName: { type: string }
+        createdAt: { type: string, format: date-time }
+    BroadcastBoard:
+      type: object
+      required: [audiences, items]
+      properties:
+        audiences:
+          type: array
+          items:
+            $ref: '#/components/schemas/BroadcastAudienceCount'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BroadcastItem'
+    SendBroadcastRequest:
+      type: object
+      required: [audience, body]
+      properties:
+        audience:
+          $ref: '#/components/schemas/BroadcastAudience'
+        body: { type: string, minLength: 1, maxLength: 500 }
+    Notice:
+      type: object
+      required: [id, eventSlug, eventName, body, createdAt]
+      properties:
+        id: { type: integer, format: int64 }
+        eventSlug: { type: string }
+        eventName: { type: string }
+        body: { type: string }
+        createdAt: { type: string, format: date-time }
+    NoticeList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notice'
     RejectCompRequest:
       type: object
       properties:
