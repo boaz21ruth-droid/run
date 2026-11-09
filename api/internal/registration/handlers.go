@@ -97,6 +97,9 @@ func createInputFromAPI(b apigen.CreateOrderRequest, key string) CreateOrderInpu
 		if p.SaveAsProfile != nil {
 			op.SaveAsProfile = *p.SaveAsProfile
 		}
+		if qi := p.Qualification; qi != nil {
+			op.Qualification = &QualificationInput{BestTimeMs: qi.BestTimeMs, Source: qi.Source, ProofURL: qi.ProofUrl}
+		}
 		if p.Profile != nil {
 			prof := runner.ProfileData{
 				FullName:       p.Profile.FullName,
@@ -156,6 +159,7 @@ func toAPIOrderDetail(d OrderDetail) apigen.OrderDetail {
 			PaidCents:          p.PaidCents,
 			RegistrationStatus: apigen.OrderParticipantRegistrationStatus(p.RegistrationStatus),
 			TicketCode:         p.TicketCode,
+			Qualification:      qualificationToAPI(p.Qualification),
 		})
 	}
 	out := apigen.OrderDetail{
@@ -231,6 +235,7 @@ func orderDetailFromAPI(a apigen.OrderDetail) OrderDetail {
 			PaidCents:          p.PaidCents,
 			RegistrationStatus: string(p.RegistrationStatus),
 			TicketCode:         p.TicketCode,
+			Qualification:      qualificationFromAPI(p.Qualification),
 		})
 	}
 	if a.LastRejection != nil {

@@ -45,9 +45,10 @@ type Profile struct {
 	IsSelf     bool
 }
 
-// ConsentItem 是同意书里需要逐项勾选的一条。
+// ConsentItem 是同意书里逐项勾选的一条。Optional 的条目跑者可以不勾（如同意公开成绩），其余必须勾选才能提交。
 type ConsentItem struct {
 	Key, Title, Description string
+	Optional                bool
 }
 
 // ConsentVersion 是一版已发布的同意书。

@@ -83,5 +83,13 @@
   "COMP_REQUEST_EXISTS": "你已经提交过申请，请等待主办方审核。",
   "COMP_REQUEST_REVIEWED": "这条申请已经处理过了。",
   "COMP_QUOTA_FULL": "免费入场名额已满，请先调高名额。",
-  "field.url_format": "请填写以 https:// 或 http:// 开头的链接。"
+  "field.url_format": "请填写以 https:// 或 http:// 开头的链接。",
+  "QUALIFY_REVIEWED": "这份资格证明已经核验过了。",
+  "QUALIFY_NOT_CONFIRMED": "报名还没确认（未付款或已取消），付款确认后再核验。",
+  "QUALIFY_FALLBACK_FULL": "要转入的组别名额已满，请先调高该组名额。",
+  "QUALIFY_BIB_ASSIGNED": "这位跑者已分配号码布，请先作废号码布再转组。",
+  "QUALIFY_NO_FALLBACK": "该组已取消资格要求，没有可转入的组别；只能核验通过。",
+  "field.qualify_too_slow": "成绩须在 {max} 以内才能报这个组别。",
+  "field.refund_tier_order": "各档天数须从大到小，退款比例不能越临近开赛越高。",
+  "field.fallback_chain": "转入的组别不能也要求资格证明，被转入的组别也不能设为精英组。"
 }

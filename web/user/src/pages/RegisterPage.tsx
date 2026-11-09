@@ -20,6 +20,8 @@ import styles from "./Page.module.css";
 const STEP_KEYS = ["participants", "details", "confirm"] as const;
 type Step = 0 | 1 | 2;
 const PARTICIPANT_FIELD = /^participants\[(\d+)\]\.(\w+)$/;
+/** 精英组成绩证明的字段在第 1 步填写 */
+const QUALIFY_FIELDS = new Set(["bestTimeMs", "proofSource", "proofUrl"]);
 
 /** 步骤放在 ?step=1..3（第 1 步不带参数），浏览器后退在步骤间移动 */
 function parseStep(params: URLSearchParams): Step {
@@ -47,6 +49,7 @@ export function hasDraftData(participants: ParticipantDraft[]): boolean {
       p.categoryId !== null ||
       p.profileId !== null ||
       p.saveAsProfile ||
+      Object.values(p.qualification).some((v) => v !== "") ||
       (Object.keys(emptyProfileForm) as (keyof ProfileFormValues)[]).some((field) => p.form[field] !== emptyProfileForm[field]),
   );
 }
@@ -188,8 +191,8 @@ function RegisterWizard({ event, profiles }: { event: PublicEvent; profiles: Run
       const index = Number(match[1]);
       const name = match[2] ?? "";
       const usesSavedProfile = (participants[index]?.profileId ?? null) !== null;
-      if (name === "categoryId") {
-        mapped[participantField(index, "categoryId")] = message;
+      if (name === "categoryId" || QUALIFY_FIELDS.has(name)) {
+        mapped[participantField(index, name)] = message;
         target = 0;
       } else if (name === "profileId" || usesSavedProfile) {
         // 常用参赛人的资料问题只能在第 1 步换人或去资料页修改

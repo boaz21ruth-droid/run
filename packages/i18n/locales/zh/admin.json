@@ -117,7 +117,8 @@
       "saved": "报名设置已保存"
     },
     "tabStaff": "现场人员",
-    "tabPromo": "推广"
+    "tabPromo": "推广",
+    "tabRules": "报名规则"
   },
   "pricing": {
     "hint": "同一组别有多个可用价格档时，跑者自动获得最低价。",
@@ -549,6 +550,79 @@
         "status": "状态 / 免费码",
         "actions": "操作"
       }
+    }
+  },
+  "rules": {
+    "save": "保存",
+    "cancel": "取消",
+    "required": "必填",
+    "refund": {
+      "title": "退改政策",
+      "intro": "跑者在报名确认页和赛事页看到这份政策。退款仍由客服发起、财务按退款流程办理，比例按跑者申请那天适用。",
+      "enabled": "向跑者展示退改政策",
+      "tierBefore": "开赛前至少",
+      "tierRefund": "申请，退",
+      "days": "天",
+      "addTier": "加一档",
+      "removeTier": "删除这一档",
+      "restNone": "比最后一档更临近开赛的申请不退款。",
+      "transfer": "接受转让给他人",
+      "transferBefore": "开赛前至少",
+      "saved": "退改政策已保存"
+    },
+    "qualify": {
+      "title": "精英组资格",
+      "intro": "精英组报名时要自报最好成绩并附证明链接。付款确认后在下方核验；不通过的跑者转到设置的组别，报名仍然有效。",
+      "col": {
+        "requirement": "资格要求",
+        "actions": "操作"
+      },
+      "elite": "精英组",
+      "none": "不需要资格证明",
+      "fallbackTo": "不通过转到 {{code}}",
+      "edit": "设置",
+      "editTitle": "{{code}} 资格要求",
+      "required": "需要资格证明（精英组）",
+      "rule": {
+        "zh": "资格说明（中文）",
+        "en": "资格说明（英文）",
+        "km": "资格说明（高棉语）"
+      },
+      "rulePlaceholder": "如：需近两年 21K 1:45 以内的官方成绩",
+      "maxTime": "成绩上限",
+      "maxTimeHelp": "时:分:秒；自报成绩慢于此不能报。留空只看证明。",
+      "timeInvalid": "请按 1:45:00 的格式填写",
+      "fallback": "不通过转到",
+      "fallbackHelp": "通常是同距离的公开组；名额随之转移。",
+      "saved": "资格要求已保存"
+    },
+    "proofs": {
+      "title": "成绩证明核验",
+      "summary": "待核验 {{pending}} / 共 {{total}}",
+      "empty": "还没有精英组报名",
+      "col": {
+        "runner": "跑者",
+        "time": "自报成绩",
+        "proof": "来源与证明",
+        "submitted": "提交时间",
+        "status": "状态",
+        "actions": "操作"
+      },
+      "status": {
+        "PENDING": "待核验",
+        "APPROVED": "已通过",
+        "REJECTED": "未通过"
+      },
+      "movedTo": "已转到 {{code}}",
+      "approve": "通过",
+      "reject": "不通过",
+      "waitPayment": "付款确认后才能核验",
+      "approved": "已通过",
+      "rejected": "已转组",
+      "rejectTitle": "{{name}} 资格未通过",
+      "rejectBody": "报名会转到 {{code}}，名额随之转移，跑者在订单页能看到。组别价格不同时，差价请按退款流程处理。",
+      "rejectConfirm": "确认转组",
+      "notePlaceholder": "给跑者的说明（可选），如：成绩页查不到这个名字"
     }
   }
 }

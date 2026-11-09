@@ -117,7 +117,8 @@
       "saved": "Registration settings saved"
     },
     "tabStaff": "Field staff",
-    "tabPromo": "Promotion"
+    "tabPromo": "Promotion",
+    "tabRules": "Rules"
   },
   "pricing": {
     "hint": "When several tiers apply to a category, runners automatically get the lowest price.",
@@ -549,6 +550,79 @@
         "status": "Status / code",
         "actions": "Actions"
       }
+    }
+  },
+  "rules": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "required": "Required",
+    "refund": {
+      "title": "Refunds and transfers",
+      "intro": "Runners see this policy on the event page and before they pay. Support still starts refunds and finance settles them; the rate depends on the day the runner asks.",
+      "enabled": "Show a refund policy to runners",
+      "tierBefore": "At least",
+      "tierRefund": "before race day, refund",
+      "days": "days",
+      "addTier": "Add a tier",
+      "removeTier": "Remove tier",
+      "restNone": "Requests closer to race day than the last tier get no refund.",
+      "transfer": "Allow transfers to another runner",
+      "transferBefore": "At least",
+      "saved": "Refund policy saved"
+    },
+    "qualify": {
+      "title": "Elite categories",
+      "intro": "Runners entering an elite category give their best time and a result link. Review them below once paid; anyone who isn't verified is moved to the category you choose and stays registered.",
+      "col": {
+        "requirement": "Requirement",
+        "actions": "Actions"
+      },
+      "elite": "Elite",
+      "none": "No proof needed",
+      "fallbackTo": "If not verified → {{code}}",
+      "edit": "Edit",
+      "editTitle": "{{code}} requirement",
+      "required": "Requires proof (elite)",
+      "rule": {
+        "zh": "Requirement (Chinese)",
+        "en": "Requirement (English)",
+        "km": "Requirement (Khmer)"
+      },
+      "rulePlaceholder": "e.g. An official 21K under 1:45 in the last two years",
+      "maxTime": "Time limit",
+      "maxTimeHelp": "h:mm:ss. Slower times can't enter. Leave empty to judge by proof only.",
+      "timeInvalid": "Use the format 1:45:00",
+      "fallback": "If not verified, move to",
+      "fallbackHelp": "Usually the open category of the same distance. The spot moves with them.",
+      "saved": "Requirement saved"
+    },
+    "proofs": {
+      "title": "Result checks",
+      "summary": "{{pending}} to check / {{total}} total",
+      "empty": "No elite entries yet",
+      "col": {
+        "runner": "Runner",
+        "time": "Best time",
+        "proof": "Race and link",
+        "submitted": "Submitted",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "PENDING": "To check",
+        "APPROVED": "Approved",
+        "REJECTED": "Not verified"
+      },
+      "movedTo": "Moved to {{code}}",
+      "approve": "Approve",
+      "reject": "Not verified",
+      "waitPayment": "Can be checked once payment is confirmed",
+      "approved": "Approved",
+      "rejected": "Moved",
+      "rejectTitle": "{{name}} not verified",
+      "rejectBody": "The entry moves to {{code}} with its spot, and the runner sees this on their order. If the prices differ, refund the difference through the refund process.",
+      "rejectConfirm": "Move entry",
+      "notePlaceholder": "A note for the runner (optional), e.g. The name isn't on the results page"
     }
   }
 }

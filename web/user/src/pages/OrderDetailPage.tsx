@@ -9,6 +9,7 @@ import { useCancelOrder, useMyOrder } from "../orders/api";
 import orders from "../orders/Orders.module.css";
 import { OrderStatePanel } from "../orders/OrderStatePanel";
 import { formatCountdown, useCountdown } from "../pay/useCountdown";
+import rules from "../rules/Rules.module.css";
 import { NotFoundPage } from "./NotFoundPage";
 import styles from "./Page.module.css";
 
@@ -68,7 +69,17 @@ function OrderDetailView({ order }: { order: Schemas["OrderDetail"] }) {
             {order.participants.map((p) => (
               <tr key={p.regNo}>
                 <th scope="row">{p.fullName}</th>
-                <td>{pickText(p.categoryName, lang)}</td>
+                <td>
+                  {pickText(p.categoryName, lang)}
+                  {p.qualification ? (
+                    <span className={rules.orderQualify} data-testid={`qualify-${p.regNo}`}>
+                      <span className={`${rules.status} ${rules[`status${p.qualification.status}`]}`}>
+                        {t(`rules.qualify.${p.qualification.status}`, { category: pickText(p.qualification.appliedCategoryName, lang) })}
+                      </span>
+                      {p.qualification.reviewNote ? <span className={rules.note}>{p.qualification.reviewNote}</span> : null}
+                    </span>
+                  ) : null}
+                </td>
                 <td className={styles.num}>{formatUsd(p.listPriceCents)}</td>
                 <td className={styles.num}>{formatUsd(p.paidCents)}</td>
                 <td>{t(`orders.regStatus.${p.registrationStatus}`)}</td>

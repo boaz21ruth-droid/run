@@ -15,6 +15,8 @@ import {
   type FreeSignupValues,
 } from "../free/validate";
 import { usePublicEvent } from "../queries";
+import { checkedKeys, requiredChecked } from "../rules/consent";
+import rules from "../rules/Rules.module.css";
 import styles from "./FreeSignupPage.module.css";
 import { NotFoundPage } from "./NotFoundPage";
 import pageStyles from "./Page.module.css";
@@ -95,7 +97,8 @@ function FreeSignupForm({
   const category = event.categories.find((c) => String(c.id) === values.categoryId);
   // 勾选按「版本:条目」记录：换语言后版本不变则保留勾选，版本变了需要重新勾选
   const checkKey = (itemKey: string) => `${consent.version}:${itemKey}`;
-  const allChecked = consent.items.every((item) => checked.has(checkKey(item.key)));
+  const isChecked = (itemKey: string) => checked.has(checkKey(itemKey));
+  const allChecked = requiredChecked(consent.items, isChecked);
 
   if (create.data) {
     return (
@@ -149,7 +152,7 @@ function FreeSignupForm({
       version: consent.version,
       // 服务端可能回退到别的语言，签署时原样提交它返回的语言（契约）
       lang: isLang(consent.lang) ? consent.lang : lang,
-      checkedItems: consent.items.map((item) => item.key),
+      checkedItems: checkedKeys(consent.items, isChecked),
     });
     create.mutate(body, {
       onError: (error) => {
@@ -286,7 +289,10 @@ function FreeSignupForm({
               onChange={toggle(item.key)}
             />
             <span className={styles.consentText}>
-              <strong>{item.title}</strong>
+              <strong>
+                {item.title}
+                {item.optional ? <span className={rules.optional}>{t("rules.optional")}</span> : null}
+              </strong>
               {item.description ? <span className={styles.hint}>{item.description}</span> : null}
             </span>
           </label>

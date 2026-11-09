@@ -14,7 +14,7 @@ import (
 	"werun/api/internal/runner"
 )
 
-const consentItemsArg = `[{"k":"rules","t":"我已阅读并遵守赛事规则","d":"包括关门时间"},{"k":"health","t":"我的身体状况适合参赛"}]`
+const consentItemsArg = `[{"k":"rules","t":"我已阅读并遵守赛事规则","d":"包括关门时间"},{"k":"health","t":"我的身体状况适合参赛"},{"k":"results_public","t":"同意公开成绩","o":true}]`
 
 func consentArgs(file string, extra ...string) []string {
 	args := []string{
@@ -44,6 +44,7 @@ func TestParsePublishConsentArgsReadsFile(t *testing.T) {
 		Items: []runner.ConsentItem{
 			{Key: "rules", Title: "我已阅读并遵守赛事规则", Description: "包括关门时间"},
 			{Key: "health", Title: "我的身体状况适合参赛"},
+			{Key: "results_public", Title: "同意公开成绩", Optional: true},
 		},
 	}, in)
 }

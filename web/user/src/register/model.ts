@@ -1,5 +1,6 @@
 import type { Schemas } from "@werun/api-client";
 import { emptyProfileForm, toProfileInput, type ProfileFormValues } from "../profiles/validate";
+import { parseDuration } from "../rules/duration";
 
 export const MAX_PARTICIPANTS = 10;
 
@@ -13,10 +14,32 @@ export interface ParticipantDraft {
   profileId: number | null;
   form: ProfileFormValues;
   saveAsProfile: boolean;
+  /** 报精英组时自报的最好成绩（h:mm:ss）、成绩来源与证明链接；其他组别不提交 */
+  qualification: QualificationDraft;
 }
 
+export interface QualificationDraft {
+  time: string;
+  source: string;
+  proofUrl: string;
+}
+
+export const emptyQualification: QualificationDraft = { time: "", source: "", proofUrl: "" };
+
 export function newParticipant(): ParticipantDraft {
-  return { key: crypto.randomUUID(), categoryId: null, profileId: null, form: { ...emptyProfileForm }, saveAsProfile: false };
+  return {
+    key: crypto.randomUUID(),
+    categoryId: null,
+    profileId: null,
+    form: { ...emptyProfileForm },
+    saveAsProfile: false,
+    qualification: { ...emptyQualification },
+  };
+}
+
+/** 选中的组别是不是要求资格证明的精英组 */
+export function categoryOf(event: PublicEvent, draft: ParticipantDraft) {
+  return event.categories.find((c) => c.id === draft.categoryId);
 }
 
 function dateParts(iso: string): [number, number, number] {
@@ -60,10 +83,13 @@ export function registrationAvailable(event: PublicEvent, now: Date = new Date()
   return !(event.registrationClosesAt && Date.parse(event.registrationClosesAt) <= t);
 }
 
-export function toOrderParticipant(draft: ParticipantDraft): Schemas["OrderParticipantInput"] {
+/** 下单请求里的一位参赛人；传入 event 时，报精英组的带上成绩证明 */
+export function toOrderParticipant(draft: ParticipantDraft, event?: PublicEvent): Schemas["OrderParticipantInput"] {
   const categoryId = draft.categoryId ?? 0;
+  const proof = event && categoryOf(event, draft)?.qualification ? toQualificationInput(draft.qualification) : null;
+  const extra = proof ? { qualification: proof } : {};
   if (draft.profileId !== null) {
-    return { categoryId, profileId: draft.profileId };
+    return { categoryId, profileId: draft.profileId, ...extra };
   }
   // 规范化沿用 profiles/validate；下单资料没有 isSelf，证件号必填
   const input = toProfileInput(draft.form);
@@ -83,7 +109,13 @@ export function toOrderParticipant(draft: ParticipantDraft): Schemas["OrderParti
       emergencyPhone: input.emergencyPhone,
       tshirtSize: input.tshirtSize,
     },
+    ...extra,
   };
+}
+
+function toQualificationInput(q: QualificationDraft): Schemas["QualificationInput"] | null {
+  const bestTimeMs = parseDuration(q.time);
+  return bestTimeMs === null ? null : { bestTimeMs, source: q.source.trim(), proofUrl: q.proofUrl.trim() };
 }
 
 export function toQuoteParticipant(draft: ParticipantDraft, profiles: readonly RunnerProfile[]): Schemas["QuoteParticipantInput"] {

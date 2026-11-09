@@ -243,7 +243,7 @@ func (h *Handlers) AppGetConsent(ctx context.Context, req apigen.AppGetConsentRe
 	}
 	items := make([]apigen.ConsentItem, 0, len(v.Items))
 	for _, item := range v.Items {
-		items = append(items, apigen.ConsentItem{Key: item.Key, Title: item.Title, Description: item.Description})
+		items = append(items, apigen.ConsentItem{Key: item.Key, Title: item.Title, Description: item.Description, Optional: item.Optional})
 	}
 	return apigen.AppGetConsent200JSONResponse{
 		Version:       v.Version,

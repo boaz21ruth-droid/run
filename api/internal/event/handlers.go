@@ -116,16 +116,17 @@ func toPublicEvent(e Event, lang i18n.Lang) apigen.PublicEvent {
 	cats := make([]apigen.PublicCategory, 0, len(e.Categories))
 	for _, c := range e.Categories {
 		cats = append(cats, apigen.PublicCategory{
-			Id:        c.ID,
-			Code:      c.Code,
-			Name:      c.Name.In(lang),
-			DistanceM: c.DistanceM,
-			Capacity:  c.Capacity,
-			StartAt:   derefTime(c.StartAt),
-			CutoffAt:  derefTime(c.CutoffAt),
-			MinAge:    int32(c.MinAge),
-			SoldOut:   int64(c.UsedCount)+int64(c.ReservedCount) >= int64(c.Capacity),
-			Remaining: remainingOf(c),
+			Id:            c.ID,
+			Code:          c.Code,
+			Name:          c.Name.In(lang),
+			DistanceM:     c.DistanceM,
+			Capacity:      c.Capacity,
+			StartAt:       derefTime(c.StartAt),
+			CutoffAt:      derefTime(c.CutoffAt),
+			MinAge:        int32(c.MinAge),
+			SoldOut:       int64(c.UsedCount)+int64(c.ReservedCount) >= int64(c.Capacity),
+			Remaining:     remainingOf(c),
+			Qualification: publicQualificationOf(c.Qualification, lang),
 		})
 	}
 	return apigen.PublicEvent{
@@ -144,7 +145,44 @@ func toPublicEvent(e Event, lang i18n.Lang) apigen.PublicEvent {
 		PriceTiers:           toPublicPriceTiers(e.PriceTiers, lang),
 		RegisteredCount:      registeredOf(e.Categories),
 		CompOpen:             e.CompOpen,
+		RefundPolicy:         refundPolicyToAPI(e.RefundPolicy),
 	}
+}
+
+func publicQualificationOf(q *Qualification, lang i18n.Lang) *apigen.PublicQualification {
+	if q == nil {
+		return nil
+	}
+	return &apigen.PublicQualification{Rule: q.Rule.In(lang), MaxTimeMs: q.MaxMs, FallbackCategoryId: q.FallbackCategoryID}
+}
+
+func adminQualificationOf(q *Qualification) *apigen.AdminQualification {
+	if q == nil {
+		return nil
+	}
+	return &apigen.AdminQualification{Rule: textToAPI(q.Rule), MaxTimeMs: q.MaxMs, FallbackCategoryId: q.FallbackCategoryID}
+}
+
+func refundPolicyToAPI(p *RefundPolicy) *apigen.RefundPolicy {
+	if p == nil {
+		return nil
+	}
+	tiers := make([]apigen.RefundTier, 0, len(p.Tiers))
+	for _, t := range p.Tiers {
+		tiers = append(tiers, apigen.RefundTier{Days: t.Days, Percent: t.Percent})
+	}
+	return &apigen.RefundPolicy{Tiers: tiers, TransferDays: p.TransferDays}
+}
+
+func refundPolicyFromAPI(p *apigen.RefundPolicy) *RefundPolicy {
+	if p == nil {
+		return nil
+	}
+	tiers := make([]RefundTier, 0, len(p.Tiers))
+	for _, t := range p.Tiers {
+		tiers = append(tiers, RefundTier{Days: t.Days, Percent: t.Percent})
+	}
+	return &RefundPolicy{Tiers: tiers, TransferDays: p.TransferDays}
 }
 
 func toPublicPriceTiers(tiers []PriceTier, lang i18n.Lang) []apigen.PublicPriceTier {
@@ -198,13 +236,14 @@ func toAdminEvent(e Event) apigen.AdminEvent {
 	cats := make([]apigen.AdminCategory, 0, len(e.Categories))
 	for _, c := range e.Categories {
 		cats = append(cats, apigen.AdminCategory{
-			Id:        c.ID,
-			Code:      c.Code,
-			Name:      textToAPI(c.Name),
-			DistanceM: c.DistanceM,
-			Capacity:  c.Capacity,
-			StartAt:   c.StartAt,
-			CutoffAt:  c.CutoffAt,
+			Id:            c.ID,
+			Code:          c.Code,
+			Name:          textToAPI(c.Name),
+			DistanceM:     c.DistanceM,
+			Capacity:      c.Capacity,
+			StartAt:       c.StartAt,
+			CutoffAt:      c.CutoffAt,
+			Qualification: adminQualificationOf(c.Qualification),
 		})
 	}
 	return apigen.AdminEvent{
@@ -223,7 +262,42 @@ func toAdminEvent(e Event) apigen.AdminEvent {
 		RegistrationOpensAt:  e.RegistrationOpensAt,
 		RegistrationClosesAt: e.RegistrationClosesAt,
 		Categories:           cats,
+		RefundPolicy:         refundPolicyToAPI(e.RefundPolicy),
 	}
+}
+
+func (h *Handlers) AdminUpdateRefundPolicy(ctx context.Context, req apigen.AdminUpdateRefundPolicyRequestObject) (apigen.AdminUpdateRefundPolicyResponseObject, error) {
+	actor, ok := iam.StaffFrom(ctx)
+	if !ok {
+		return nil, apperr.New(http.StatusUnauthorized, apperr.CodeUnauthenticated)
+	}
+	if req.Body == nil {
+		return nil, apperr.New(http.StatusBadRequest, apperr.CodeBadRequest)
+	}
+	ev, err := h.svc.UpdateRefundPolicy(ctx, actor, req.Id, refundPolicyFromAPI(req.Body.Policy))
+	if err != nil {
+		return nil, err
+	}
+	return apigen.AdminUpdateRefundPolicy200JSONResponse(toAdminEvent(ev)), nil
+}
+
+func (h *Handlers) AdminUpdateCategoryQualification(ctx context.Context, req apigen.AdminUpdateCategoryQualificationRequestObject) (apigen.AdminUpdateCategoryQualificationResponseObject, error) {
+	actor, ok := iam.StaffFrom(ctx)
+	if !ok {
+		return nil, apperr.New(http.StatusUnauthorized, apperr.CodeUnauthenticated)
+	}
+	if req.Body == nil {
+		return nil, apperr.New(http.StatusBadRequest, apperr.CodeBadRequest)
+	}
+	var qual *Qualification
+	if q := req.Body.Qualification; q != nil {
+		qual = &Qualification{Rule: textFromAPI(q.Rule), MaxMs: q.MaxTimeMs, FallbackCategoryID: q.FallbackCategoryId}
+	}
+	ev, err := h.svc.UpdateQualification(ctx, actor, req.Id, qual)
+	if err != nil {
+		return nil, err
+	}
+	return apigen.AdminUpdateCategoryQualification200JSONResponse(toAdminEvent(ev)), nil
 }
 
 func createInputFromAPI(b apigen.CreateEventRequest) CreateInput {

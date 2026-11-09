@@ -19,6 +19,7 @@ type consentItemArg struct {
 	K string `json:"k"`
 	T string `json:"t"`
 	D string `json:"d"`
+	O bool   `json:"o"`
 }
 
 // runPublishConsent 实现 `werun publish-consent`。参数校验在连接数据库之前完成。
@@ -49,7 +50,7 @@ func parsePublishConsentArgs(args []string, stdin io.Reader, stderr io.Writer) (
 	lang := fs.String("lang", "", "zh | en | km")
 	effective := fs.String("effective-date", "", "生效日期 YYYY-MM-DD")
 	file := fs.String("file", "", "正文文件路径；- 表示从标准输入读取")
-	items := fs.String("items", "", `勾选项 JSON 数组，如 [{"k":"rules","t":"我已阅读赛事规则","d":"说明，可省略"}]`)
+	items := fs.String("items", "", `勾选项 JSON 数组，如 [{"k":"rules","t":"我已阅读赛事规则","d":"说明，可省略"},{"k":"results_public","t":"同意公开成绩","o":true}]；o=true 为可选条目`)
 	if err := fs.Parse(args); err != nil {
 		return runner.PublishConsentInput{}, err
 	}
@@ -106,7 +107,7 @@ func readConsentText(path string, stdin io.Reader) (string, error) {
 }
 
 func parseConsentItems(raw string) ([]runner.ConsentItem, error) {
-	const hint = `--items 必须是一个 JSON 数组，元素形如 {"k":"rules","t":"标题","d":"说明"}`
+	const hint = `--items 必须是一个 JSON 数组，元素形如 {"k":"rules","t":"标题","d":"说明","o":false}`
 	dec := json.NewDecoder(strings.NewReader(raw))
 	dec.DisallowUnknownFields()
 	var parsed []consentItemArg
@@ -118,7 +119,7 @@ func parseConsentItems(raw string) ([]runner.ConsentItem, error) {
 	}
 	items := make([]runner.ConsentItem, len(parsed))
 	for i, item := range parsed {
-		items[i] = runner.ConsentItem{Key: item.K, Title: item.T, Description: item.D}
+		items[i] = runner.ConsentItem{Key: item.K, Title: item.T, Description: item.D, Optional: item.O}
 	}
 	return items, nil
 }

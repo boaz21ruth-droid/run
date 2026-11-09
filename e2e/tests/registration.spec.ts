@@ -41,7 +41,7 @@ const CONSENT_KEYS = ["rules", "health", "terms"] as const;
 const runnerA = runnerUser("Dara", "zh");
 const runnerB = runnerUser("Sophea", "zh");
 
-const shared = { eventId: 0, categoryId: 0, orderNo: "", dueCents: 0 };
+const shared = { eventId: 0, categoryId: 0, eliteCategoryId: 0, orderNo: "", dueCents: 0 };
 
 test.describe.configure({ mode: "serial" });
 
@@ -66,6 +66,7 @@ async function createPriceRule(
   await page.locator("#priceRule_quota").fill(rule.quota);
   await page.locator("#priceRule_sortOrder").fill(rule.sortOrder);
   await selectAntdOption(page, "priceRule_categoryIds", String(shared.categoryId), { multiple: true });
+  await selectAntdOption(page, "priceRule_categoryIds", String(shared.eliteCategoryId), { multiple: true });
   await page.getByTestId("price-rule-submit").click();
   await expect(page.locator("#priceRule_name_zh")).toHaveCount(0);
 }
@@ -150,10 +151,12 @@ test("OPS 建赛事，配置早鸟与标准价格档、百分比与免单优惠�
   test.setTimeout(120_000);
   const { context, page } = await adminSession(browser, OPS.username, OPS.password);
 
-  await createAndPublishEvent(page, { slug, name: eventName, eventType: "RACE", capacity: 100 });
+  await createAndPublishEvent(page, { slug, name: eventName, eventType: "RACE", capacity: 100, eliteCategory: true });
   const detail = await openEventDetail(page, slug);
   shared.eventId = detail.id;
   shared.categoryId = detail.categoryId;
+  shared.eliteCategoryId = detail.categoryIds[1] ?? 0;
+  expect(shared.eliteCategoryId).toBeGreaterThan(0);
 
   await page.getByTestId("event-tab-pricing").click();
   const rows = page.locator('[data-testid^="price-rule-row-"]');
@@ -486,5 +489,93 @@ test("KOL 申请免费入场，OPS 批准，KOL 用专属码免费报名并直�
   const orderNo = /\/orders\/(WR[0-9A-Z]{8})/.exec(new URL(page.url()).pathname)![1]!;
   await openAsRunner(page, kol, `/orders/${orderNo}`);
   await expect(page.getByTestId("order-status")).toHaveAttribute("data-status", "PAID");
+  await context.close();
+});
+
+const eliteRunner = runnerUser("Bopha", "zh");
+const eliteNote = `成绩页查不到 ${runId}`;
+const elite = { orderNo: "" };
+
+test("OPS 设置退改政策与 5KE 精英组资格（30 分钟以内，不通过转 5K）", async ({ browser }) => {
+  const { context, page } = await adminSession(browser, OPS.username, OPS.password);
+  await page.goto(`${ADMIN_URL}/events/${shared.eventId}`);
+  await page.getByTestId("event-tab-rules").click();
+
+  // 默认两档：14 天前退 80%、7 天前退 50%，接受转让到开赛前 3 天
+  await page.getByTestId("refund-enabled").click();
+  await expect(page.getByTestId("refund-days-0")).toHaveValue("14");
+  await page.getByTestId("refund-save").click();
+  await expect(page.getByText("退改政策已保存")).toBeVisible();
+
+  await page.getByTestId("qualify-edit-5KE").click();
+  await page.getByTestId("qualify-required").click();
+  await page.locator("#qualify_rule_zh").fill("需近两年 5K 30 分钟以内的官方成绩");
+  await page.locator("#qualify_rule_en").fill("Official 5K under 30:00 in the last two years");
+  await page.locator("#qualify_rule_km").fill("5K ផ្លូវការក្រោម 30:00");
+  await page.locator("#qualify_maxTime").fill("30:00");
+  await page.getByTestId("qualify-save").click();
+  await expect(page.getByText("不通过转到 5K", { exact: true })).toBeVisible();
+  await context.close();
+});
+
+test("跑者报 5KE：成绩太慢被拦，填好证明后用免单码直接确认，订单显示核验中", async ({ browser }) => {
+  test.setTimeout(120_000);
+  const { context, page } = await runnerPage(browser, eliteRunner, `/events/${slug}`);
+  await expect(page.getByTestId("category-5KE-qualify")).toContainText("30 分钟以内");
+  await expect(page.getByTestId("refund-policy")).toContainText("开赛 14 天前");
+
+  await page.getByTestId("register-button").click();
+  await ensureParticipants(page, 1);
+  await fillControl(page.getByTestId("participant-0-category"), String(shared.eliteCategoryId));
+  await page.getByTestId("participant-0-bestTimeMs").fill("31:00");
+  await page.getByTestId("participant-0-proofSource").fill("Mekong Night Run 2025");
+  await page.getByTestId("participant-0-proofUrl").fill("https://results.example.kh/5k/123");
+  await page.getByTestId("wizard-next").click();
+  await expect(page.getByTestId("participant-0-qualify")).toContainText("成绩须在 30:00 以内");
+  await page.getByTestId("participant-0-bestTimeMs").fill("24:30");
+  await page.getByTestId("wizard-next").click();
+  await fillParticipant(page, 0, { fullName: "Bopha Chea", gender: "F", birthDate: "1996-04-12", idNo: `P${RUN}07`, phone: "+85512345683" });
+  await page.getByTestId("wizard-next").click();
+
+  await expect(page.getByTestId("refund-policy")).toContainText("退 80%");
+  await expect(page.getByTestId("refund-policy")).toContainText("开赛 3 天前可转给他人");
+  await expect(page.getByTestId("consent-item-results_public")).not.toBeChecked();
+  await page.getByTestId("coupon-input").fill(waiverCode);
+  await page.getByTestId("coupon-apply").click();
+  await expect(page.getByTestId("quote-amount")).toHaveText("$0.00");
+  // 可选条目不勾也能提交
+  await checkConsents(page);
+  await page.getByTestId("order-submit").click();
+  await page.waitForURL(/\/orders\/WR[0-9A-Z]{8}(\/pay)?$/);
+  elite.orderNo = /\/orders\/(WR[0-9A-Z]{8})/.exec(new URL(page.url()).pathname)![1]!;
+
+  await openAsRunner(page, eliteRunner, `/orders/${elite.orderNo}`);
+  await expect(page.getByTestId("order-status")).toHaveAttribute("data-status", "PAID");
+  await expect(page.locator('[data-testid^="qualify-"]')).toContainText("精英组资格核验中");
+  await context.close();
+});
+
+test("OPS 核验不通过：报名转到 5K，跑者订单显示已转组和原因", async ({ browser }) => {
+  const ops = await adminSession(browser, OPS.username, OPS.password);
+  await ops.page.goto(`${ADMIN_URL}/events/${shared.eventId}`);
+  await ops.page.getByTestId("event-tab-rules").click();
+  const proofs = await adminFetch<{ items: { id: number; fullName: string; status: string }[] }>(
+    ops.page,
+    "GET",
+    `/admin/events/${shared.eventId}/qualification-proofs`,
+  );
+  const proof = proofs.json.items.find((p) => p.fullName === "Bopha Chea");
+  expect(proof?.status).toBe("PENDING");
+  await ops.page.getByTestId(`proof-reject-${proof!.id}`).click();
+  await ops.page.getByTestId("proof-reject-note").fill(eliteNote);
+  await ops.page.getByTestId("proof-reject-confirm").click();
+  await expect(ops.page.getByText("已转到 5K", { exact: true })).toBeVisible();
+  await ops.context.close();
+
+  const { context, page } = await runnerPage(browser, eliteRunner, `/orders/${elite.orderNo}`);
+  const status = page.locator('[data-testid^="qualify-"]');
+  await expect(status).toContainText("资格未通过");
+  await expect(status).toContainText(eliteNote);
+  await expect(page.getByRole("row", { name: /Bopha Chea/ })).toContainText("欢乐 5K");
   await context.close();
 });

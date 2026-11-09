@@ -53,6 +53,7 @@ type consentItemJSON struct {
 	K string `json:"k"`
 	T string `json:"t"`
 	D string `json:"d,omitempty"`
+	O bool   `json:"o,omitempty"` // 可选条目；旧版本没有这个字段，一律必勾
 }
 
 // PublishConsent 发布一版同意书（text_sha256 = SHA-256(full_text)），写审计 consent.publish。
@@ -63,7 +64,7 @@ func (s *Service) PublishConsent(ctx context.Context, in PublishConsentInput) er
 	stored := make([]consentItemJSON, len(in.Items))
 	keys := make([]string, len(in.Items))
 	for i, item := range in.Items {
-		stored[i] = consentItemJSON{K: item.Key, T: strings.TrimSpace(item.Title), D: strings.TrimSpace(item.Description)}
+		stored[i] = consentItemJSON{K: item.Key, T: strings.TrimSpace(item.Title), D: strings.TrimSpace(item.Description), O: item.Optional}
 		keys[i] = item.Key
 	}
 	itemsJSON, err := json.Marshal(stored)
@@ -140,6 +141,10 @@ func validatePublishConsent(in PublishConsentInput) error {
 	case len(in.Items) == 0:
 		add("items", "field.required")
 	case len(in.Items) > maxConsentItems:
+		add("items", "field.invalid")
+	}
+	// 全部可选等于没有同意书：至少要有一条必勾
+	if len(in.Items) > 0 && !slices.ContainsFunc(in.Items, func(item ConsentItem) bool { return !item.Optional }) {
 		add("items", "field.invalid")
 	}
 	seen := make(map[string]bool, len(in.Items))
@@ -273,16 +278,14 @@ func decodeConsentItems(raw []byte) ([]ConsentItem, error) {
 	}
 	items := make([]ConsentItem, len(stored))
 	for i, item := range stored {
-		items[i] = ConsentItem{Key: item.K, Title: item.T, Description: item.D}
+		items[i] = ConsentItem{Key: item.K, Title: item.T, Description: item.D, Optional: item.O}
 	}
 	return items, nil
 }
 
-// orderedCheckedItems 要求 checked 恰好等于版本的全部 key（顺序无关、不得重复），返回按版本顺序排列的 key。
+// orderedCheckedItems 要求 checked 含版本的全部必勾 key、可含可选 key，不得重复或出现版本外的 key（顺序无关），
+// 返回按版本顺序排列的 key。签署记录里没有的可选 key 就是跑者没同意的那几条。
 func orderedCheckedItems(items []ConsentItem, checked []string) ([]string, bool) {
-	if len(checked) != len(items) {
-		return nil, false
-	}
 	set := make(map[string]bool, len(checked))
 	for _, key := range checked {
 		if set[key] {
@@ -290,12 +293,17 @@ func orderedCheckedItems(items []ConsentItem, checked []string) ([]string, bool)
 		}
 		set[key] = true
 	}
-	ordered := make([]string, 0, len(items))
+	ordered := make([]string, 0, len(checked))
 	for _, item := range items {
-		if !set[item.Key] {
+		switch {
+		case set[item.Key]:
+			ordered = append(ordered, item.Key)
+		case !item.Optional:
 			return nil, false
 		}
-		ordered = append(ordered, item.Key)
+	}
+	if len(ordered) != len(checked) {
+		return nil, false
 	}
 	return ordered, true
 }

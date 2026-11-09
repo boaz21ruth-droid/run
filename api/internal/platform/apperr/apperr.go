@@ -60,6 +60,11 @@ const (
 	CodeCompRequestExists         = "COMP_REQUEST_EXISTS"
 	CodeCompRequestReviewed       = "COMP_REQUEST_REVIEWED"
 	CodeCompQuotaFull             = "COMP_QUOTA_FULL"
+	CodeQualifyReviewed           = "QUALIFY_REVIEWED"
+	CodeQualifyNotConfirmed       = "QUALIFY_NOT_CONFIRMED"
+	CodeQualifyFallbackFull       = "QUALIFY_FALLBACK_FULL"
+	CodeQualifyBibAssigned        = "QUALIFY_BIB_ASSIGNED"
+	CodeQualifyNoFallback         = "QUALIFY_NO_FALLBACK"
 )
 
 // AllCodes 列出全部错误码，供文案完整性测试使用。新增错误码时必须同时加到这里。
@@ -115,6 +120,11 @@ var AllCodes = []string{
 	CodeCompRequestExists,
 	CodeCompRequestReviewed,
 	CodeCompQuotaFull,
+	CodeQualifyReviewed,
+	CodeQualifyNotConfirmed,
+	CodeQualifyFallbackFull,
+	CodeQualifyBibAssigned,
+	CodeQualifyNoFallback,
 }
 
 // FieldError 描述某个字段的错误：文案 key 与参数。

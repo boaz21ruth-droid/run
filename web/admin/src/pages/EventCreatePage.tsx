@@ -167,7 +167,7 @@ export function EventCreatePage() {
                   </Row>
                 </Card>
               ))}
-              <Button type="dashed" block icon={<PlusOutlined />} onClick={() => add(emptyCategory())}>
+              <Button type="dashed" block icon={<PlusOutlined />} onClick={() => add(emptyCategory())} data-testid="event-category-add">
                 {t("form.addCategory")}
               </Button>
             </Space>

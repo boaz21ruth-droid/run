@@ -61,7 +61,8 @@
     "registered_other": "{{n}} runners registered",
     "share": "Share",
     "share_copied": "Link copied",
-    "share_failed": "Couldn't copy — copy the address bar instead"
+    "share_failed": "Couldn't copy — copy the address bar instead",
+    "elite": "Elite"
   },
   "notFound": {
     "title": "Page not found",
@@ -238,7 +239,10 @@
       "soldOut": "This category is sold out.",
       "duplicateProfile": "This runner has already been added.",
       "duplicateIdNo": "Another runner in this order has the same ID number.",
-      "network": "Network problem. Please check your connection and try again."
+      "network": "Network problem. Please check your connection and try again.",
+      "timeFormat": "Use the format 1:41:20 (h:mm:ss).",
+      "tooSlow": "You need a time of {{max}} or faster for this category.",
+      "urlFormat": "Enter a link starting with https:// or http://."
     },
     "quote": {
       "title": "Estimated price",
@@ -260,7 +264,15 @@
     },
     "submit": "Place order",
     "submitting": "Placing order…",
-    "ctaTier": "Register · {{name}} {{price}}"
+    "ctaTier": "Register · {{name}} {{price}}",
+    "qualify": {
+      "time": "Best time",
+      "source": "Race",
+      "sourcePlaceholder": "e.g. Mekong Night Run 2025",
+      "proofUrl": "Result link",
+      "proofHint": "An official results page or certificate. The organizer checks it after payment.",
+      "fallback": "If it can't be verified you'll be moved to {{category}} and stay registered."
+    }
   },
   "orders": {
     "nav": "My events",
@@ -466,5 +478,27 @@
     "register": "Register with free code",
     "rejected": "This request wasn't approved.",
     "reapply": "Apply again"
+  },
+  "rules": {
+    "optional": "Optional",
+    "refund": {
+      "title": "Refunds and transfers",
+      "byOrganizer": "Set by organizer",
+      "before": "{{days}}+ days before",
+      "between": "{{from}}–{{to}} days before",
+      "within": "Within {{days}} days",
+      "any": "Any time",
+      "percent": "{{percent}}% refund",
+      "none": "No refund",
+      "transfer": "Transfer",
+      "noTransfer": "Not allowed",
+      "transferUntil": "Until {{days}} days before",
+      "howTo": "To get a refund or transfer, contact support from your order page. The rate depends on the day you ask."
+    },
+    "qualify": {
+      "PENDING": "Elite entry being checked",
+      "APPROVED": "Elite entry approved",
+      "REJECTED": "Not verified, moved from {{category}}"
+    }
   }
 }
