@@ -714,6 +714,7 @@ type RacePackFact struct {
 	VerifiedAt     *time.Time
 	VerifiedBy     *int64
 	UpdatedAt      time.Time
+	ProxyName      *string
 }
 
 type RacePackScanLog struct {
@@ -729,6 +730,7 @@ type RacePackScanLog struct {
 	Offline        bool
 	OccurredAt     time.Time
 	SyncedAt       time.Time
+	ProxyName      *string
 }
 
 type Reconciliation struct {

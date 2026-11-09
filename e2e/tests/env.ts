@@ -16,5 +16,11 @@ export const FINANCE = {
   password: process.env.E2E_FINANCE_PASSWORD ?? "e2e-Finance-Password-1",
 };
 
+export const RACE_STAFF = {
+  username: "staff.e2e",
+  fullName: "STAFF E2E",
+  password: process.env.E2E_STAFF_PASSWORD ?? "e2e-Staff-Password-1",
+};
+
 /** 必须与 compose 环境 .env 里的 WERUN_TELEGRAM_BOT_TOKEN 一致 */
 export const TELEGRAM_BOT_TOKEN = process.env.E2E_TELEGRAM_BOT_TOKEN ?? "123456:e2e-test-token";

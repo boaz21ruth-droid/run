@@ -61,6 +61,8 @@
 	import security_headers
 	header {
 		X-Frame-Options "DENY"
+		# 领物核销站用摄像头扫跑者的凭证二维码；只在后台域名、只对同源开放
+		Permissions-Policy "camera=(self), microphone=(), geolocation=()"
 		# antd 运行时注入内联样式，style-src 需要 'unsafe-inline'
 		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; font-src 'self' data:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 	}

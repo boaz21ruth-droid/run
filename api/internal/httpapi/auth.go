@@ -94,6 +94,9 @@ func AuthMiddleware(staff *iam.Service, runners RunnerAuthenticator, auths map[s
 			// 中的赛事 ID，查 staff_event_assignments 确认该员工在有效期内被指派到该
 			// 赛事，否则返回 FORBIDDEN。在补齐之前，绝不能给这三个角色开放任何按赛事 ID
 			// 访问的路由，否则他们将能访问未被指派的赛事数据。
+			// 目前对这三个角色开放的只有领物核销站（/admin/racepack/*），它在
+			// racepack.Service.checkScope 里自行校验指派；新开放的路由要么同样在服务层
+			// 校验，要么先补上这里的通用钩子。
 			return next(c, request)
 		}
 	}

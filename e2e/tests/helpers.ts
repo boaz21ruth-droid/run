@@ -18,12 +18,13 @@ export async function presetLanguage(context: BrowserContext, lang: "zh" | "en" 
   }, lang);
 }
 
-export async function loginAdmin(page: Page, username: string, password: string): Promise<void> {
+/** landing 是该角色登录后的落地页：有赛事权限的角色落在 /events，现场人员落在 /racepack */
+export async function loginAdmin(page: Page, username: string, password: string, landing = "/events"): Promise<void> {
   await page.goto(`${ADMIN_URL}/login`);
   await page.getByTestId("login-username").fill(username);
   await page.getByTestId("login-password").fill(password);
   await page.getByTestId("login-submit").click();
-  await expect(page).toHaveURL(`${ADMIN_URL}/events`);
+  await expect(page).toHaveURL(`${ADMIN_URL}${landing}`);
 }
 
 /**
@@ -47,11 +48,12 @@ export async function adminSession(
   browser: Browser,
   username: string,
   password: string,
+  landing?: string,
 ): Promise<{ context: BrowserContext; page: Page }> {
   const context = await browser.newContext();
   await presetLanguage(context, "zh");
   const page = await context.newPage();
-  await loginAdmin(page, username, password);
+  await loginAdmin(page, username, password, landing);
   return { context, page };
 }
 

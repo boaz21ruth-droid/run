@@ -74,5 +74,8 @@
   "OTP_SEND_FAILED": "验证码暂时发不出去，请稍后再试。",
   "OTP_INVALID": "验证码不正确。",
   "OTP_EXPIRED": "验证码已过期或不存在，请重新获取。",
-  "OTP_ATTEMPTS_EXCEEDED": "错误次数过多，请重新获取验证码。"
+  "OTP_ATTEMPTS_EXCEEDED": "错误次数过多，请重新获取验证码。",
+  "RACEPACK_NOT_PAID": "付款还没有核验，不能发放领物。请让跑者联系客服或到付款处核对。",
+  "RACEPACK_ID_REQUIRED": "本地价参赛人领物前需要当面核验证件。",
+  "RACEPACK_NOT_PICKED": "这份领物还没有发放，无需撤销。"
 }

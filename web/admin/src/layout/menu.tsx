@@ -1,10 +1,11 @@
-import { AuditOutlined, CalendarOutlined, ProfileOutlined, WalletOutlined } from "@ant-design/icons";
+import { AuditOutlined, CalendarOutlined, GiftOutlined, ProfileOutlined, WalletOutlined } from "@ant-design/icons";
 import type { ReactNode } from "react";
 import {
   PERM_EVENT_CONFIG,
   PERM_ORDER_VIEW,
   PERM_PAYMENT_ACCOUNT_MANAGE,
   PERM_PROOF_REVIEW,
+  PERM_RACEPACK_ISSUE,
   can,
   type Access,
   type PermissionMap,
@@ -30,6 +31,7 @@ export const MENU: MenuEntry[] = [
   },
   { key: "/proofs", labelKey: "proofs.title", permission: PERM_PROOF_REVIEW, access: "read", icon: <AuditOutlined /> },
   { key: "/orders", labelKey: "orders.title", permission: PERM_ORDER_VIEW, access: "read", icon: <ProfileOutlined /> },
+  { key: "/racepack", labelKey: "racepack.title", permission: PERM_RACEPACK_ISSUE, access: "read", icon: <GiftOutlined /> },
 ];
 
 export function visibleMenu(permissions: PermissionMap | undefined): MenuEntry[] {

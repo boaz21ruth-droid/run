@@ -74,5 +74,8 @@
   "OTP_SEND_FAILED": "We couldn't send the code right now. Please try again shortly.",
   "OTP_INVALID": "The code is incorrect.",
   "OTP_EXPIRED": "The code has expired or doesn't exist. Request a new one.",
-  "OTP_ATTEMPTS_EXCEEDED": "Too many wrong attempts. Request a new code."
+  "OTP_ATTEMPTS_EXCEEDED": "Too many wrong attempts. Request a new code.",
+  "RACEPACK_NOT_PAID": "Payment is not verified yet, so the race pack can't be issued. Send the runner to support or the payment desk.",
+  "RACEPACK_ID_REQUIRED": "Check the runner's ID in person before issuing a Cambodian-rate race pack.",
+  "RACEPACK_NOT_PICKED": "This race pack hasn't been issued, so there is nothing to undo."
 }

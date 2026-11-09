@@ -1,6 +1,13 @@
 {
-  "login": { "title": "Sign in to WeRun Admin", "username": "Username", "password": "Password", "submit": "Sign in" },
-  "layout": { "logout": "Sign out" },
+  "login": {
+    "title": "Sign in to WeRun Admin",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign in"
+  },
+  "layout": {
+    "logout": "Sign out"
+  },
   "role": {
     "ADMIN": "Administrator",
     "OPS": "Operations",
@@ -10,19 +17,42 @@
     "RACE_STAFF": "Race staff",
     "PHOTOGRAPHER": "Photographer"
   },
-  "forbidden": { "title": "You don't have access", "body": "Your role can't view this page. Ask an administrator for access." },
-  "landing": { "noPagesTitle": "No pages for your role", "noPagesBody": "You are signed in as {{role}}, but this role has no admin pages yet. Contact a system administrator to get access." },
-  "time": { "zone": "Time zone: {{zone}}", "eventTimezone": "Event time zone" },
+  "forbidden": {
+    "title": "You don't have access",
+    "body": "Your role can't view this page. Ask an administrator for access."
+  },
+  "landing": {
+    "noPagesTitle": "No pages for your role",
+    "noPagesBody": "You are signed in as {{role}}, but this role has no admin pages yet. Contact a system administrator to get access."
+  },
+  "time": {
+    "zone": "Time zone: {{zone}}",
+    "eventTimezone": "Event time zone"
+  },
   "events": {
     "title": "Events",
     "create": "New event",
     "publish": "Publish",
     "publishedToast": "Event published",
-    "publishConfirm": { "title": "Publish “{{name}}”?", "body": "The event will immediately appear in the public list for runners, who can view its details and order once registration opens. A published event cannot be reverted to draft.", "ok": "Publish", "cancel": "Cancel" },
+    "publishConfirm": {
+      "title": "Publish “{{name}}”?",
+      "body": "The event will immediately appear in the public list for runners, who can view its details and order once registration opens. A published event cannot be reverted to draft.",
+      "ok": "Publish",
+      "cancel": "Cancel"
+    },
     "empty": "No events yet",
-    "col": { "name": "Event", "date": "Race day", "city": "City", "status": "Status", "actions": "Actions" }
+    "col": {
+      "name": "Event",
+      "date": "Race day",
+      "city": "City",
+      "status": "Status",
+      "actions": "Actions"
+    }
   },
-  "status": { "DRAFT": "Draft", "PUBLISHED": "Published" },
+  "status": {
+    "DRAFT": "Draft",
+    "PUBLISHED": "Published"
+  },
   "form": {
     "title": "New event",
     "slug": "URL slug",
@@ -48,8 +78,14 @@
     "submit": "Save draft",
     "created": "Event saved as draft"
   },
-  "eventType": { "RACE": "Paid race", "FREE_ACTIVITY": "Free activity" },
-  "organizerType": { "OFFICIAL": "Official", "PARTNER": "Partner" },
+  "eventType": {
+    "RACE": "Paid race",
+    "FREE_ACTIVITY": "Free activity"
+  },
+  "organizerType": {
+    "OFFICIAL": "Official",
+    "PARTNER": "Partner"
+  },
   "eventDetail": {
     "back": "Back to events",
     "tabBasic": "Overview",
@@ -64,7 +100,13 @@
       "city": "City",
       "timezone": "Time zone"
     },
-    "categories": { "title": "Categories", "code": "Code", "name": "Name", "distanceM": "Distance (m)", "capacity": "Spots" },
+    "categories": {
+      "title": "Categories",
+      "code": "Code",
+      "name": "Name",
+      "distanceM": "Distance (m)",
+      "capacity": "Spots"
+    },
     "registration": {
       "title": "Registration",
       "open": "Registration open",
@@ -73,7 +115,8 @@
       "timeHelp": "Leave empty for no limit",
       "save": "Save registration settings",
       "saved": "Registration settings saved"
-    }
+    },
+    "tabStaff": "Field staff"
   },
   "pricing": {
     "hint": "When several tiers apply to a category, runners automatically get the lowest price.",
@@ -98,7 +141,10 @@
       "sortOrder": "Order",
       "actions": "Actions"
     },
-    "audience": { "ALL": "Everyone", "LOCAL": "Cambodian nationals" },
+    "audience": {
+      "ALL": "Everyone",
+      "LOCAL": "Cambodian nationals"
+    },
     "form": {
       "name": "Name",
       "audience": "Audience",
@@ -132,8 +178,15 @@
       "status": "Status",
       "actions": "Actions"
     },
-    "discountType": { "PERCENT": "Percentage", "AMOUNT": "Fixed amount", "WAIVER": "Free entry" },
-    "status": { "ACTIVE": "Active", "DISABLED": "Disabled" },
+    "discountType": {
+      "PERCENT": "Percentage",
+      "AMOUNT": "Fixed amount",
+      "WAIVER": "Free entry"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "DISABLED": "Disabled"
+    },
     "form": {
       "code": "Code",
       "codeHelp": "3–32 letters, digits, underscores or hyphens. Saved in uppercase and can't be changed later",
@@ -164,7 +217,14 @@
     "active": "Active",
     "inactive": "Inactive",
     "currencyNote": "Payments are collected in US dollars (USD). Orders use an active account bound to the event first, then an account shared by all events.",
-    "confirm": { "qrTitle": "Replace the payment QR code?", "qrBody": "This takes effect immediately: every unpaid order using this account, including orders already placed, will show the new QR code on its payment page. Make sure the new QR code can receive payments.", "disableTitle": "Deactivate this payment account?", "disableBody": "New orders will no longer be assigned to this account. If the event has no other active account, runners will not be able to pay. Orders already assigned to this account are not affected.", "ok": "Save", "cancel": "Cancel" },
+    "confirm": {
+      "qrTitle": "Replace the payment QR code?",
+      "qrBody": "This takes effect immediately: every unpaid order using this account, including orders already placed, will show the new QR code on its payment page. Make sure the new QR code can receive payments.",
+      "disableTitle": "Deactivate this payment account?",
+      "disableBody": "New orders will no longer be assigned to this account. If the event has no other active account, runners will not be able to pay. Orders already assigned to this account are not affected.",
+      "ok": "Save",
+      "cancel": "Cancel"
+    },
     "col": {
       "qr": "QR code",
       "name": "Name",
@@ -176,8 +236,18 @@
       "status": "Status",
       "actions": "Actions"
     },
-    "provider": { "ABA": "ABA", "ACLEDA": "ACLEDA", "WING": "Wing", "BAKONG": "Bakong", "OTHER": "Other" },
-    "scope": { "REGISTRATION": "Registration", "MERCH": "Merchandise", "ALL": "Registration and merchandise" },
+    "provider": {
+      "ABA": "ABA",
+      "ACLEDA": "ACLEDA",
+      "WING": "Wing",
+      "BAKONG": "Bakong",
+      "OTHER": "Other"
+    },
+    "scope": {
+      "REGISTRATION": "Registration",
+      "MERCH": "Merchandise",
+      "ALL": "Registration and merchandise"
+    },
     "form": {
       "name": "Name",
       "nameHelp": "Shown only in admin, e.g. ABA USD main account",
@@ -199,7 +269,12 @@
   "proofs": {
     "title": "Payment review",
     "required": "Required",
-    "status": { "SUBMITTED": "Pending review", "APPROVED": "Approved", "REJECTED": "Rejected", "WITHDRAWN": "Withdrawn" },
+    "status": {
+      "SUBMITTED": "Pending review",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected",
+      "WITHDRAWN": "Withdrawn"
+    },
     "col": {
       "proofNo": "Proof no.",
       "orderNo": "Order no.",
@@ -264,7 +339,13 @@
   },
   "orders": {
     "title": "Orders",
-    "filter": { "event": "Event", "status": "Status", "q": "Order no., phone or name", "submit": "Search", "reset": "Reset" },
+    "filter": {
+      "event": "Event",
+      "status": "Status",
+      "q": "Order no., phone or name",
+      "submit": "Search",
+      "reset": "Reset"
+    },
     "status": {
       "PENDING_PAYMENT": "Awaiting payment",
       "PROOF_SUBMITTED": "Proof under review",
@@ -316,9 +397,78 @@
       "paid": "Paid share",
       "status": "Status"
     },
-    "registrationStatus": { "PENDING": "Pending", "CONFIRMED": "Confirmed", "CANCELLED": "Cancelled" },
-    "receipt": { "txnRef": "Transaction ref", "amount": "Amount", "receivedAt": "Received at", "match": "Match" },
-    "matchStatus": { "APPLIED": "Applied", "EXCEPTION": "Exception", "UNMATCHED": "Unmatched" },
-    "couponState": { "RESERVED": "Reserved", "CONSUMED": "Used", "RELEASED": "Released" }
+    "registrationStatus": {
+      "PENDING": "Pending",
+      "CONFIRMED": "Confirmed",
+      "CANCELLED": "Cancelled"
+    },
+    "receipt": {
+      "txnRef": "Transaction ref",
+      "amount": "Amount",
+      "receivedAt": "Received at",
+      "match": "Match"
+    },
+    "matchStatus": {
+      "APPLIED": "Applied",
+      "EXCEPTION": "Exception",
+      "UNMATCHED": "Unmatched"
+    },
+    "couponState": {
+      "RESERVED": "Reserved",
+      "CONSUMED": "Used",
+      "RELEASED": "Released"
+    }
+  },
+  "racepack": {
+    "title": "Race-pack pickup",
+    "noEvents": "You're not assigned to an active event yet. Ask an admin.",
+    "chooseEvent": "Choose an event",
+    "progress": "{{picked}} / {{confirmed}} issued",
+    "searchPlaceholder": "Bib / reference / name / phone last 4",
+    "searchHint": "Scan the runner's ticket QR, or type a bib, reference or name.",
+    "scan": "Scan ticket QR",
+    "noResults": "Nothing found for “{{q}}”",
+    "recent": "Recently issued",
+    "reference": "Ref",
+    "tshirt": "T-shirt {{size}}",
+    "phone": "phone …{{last4}}",
+    "paid": "Payment confirmed",
+    "noBib": "No bib yet",
+    "idVerified": "ID checked",
+    "localNeedsId": "Cambodian rate · ID required",
+    "idCheck": "I checked the Cambodian ID in person",
+    "issueSelf": "Runner collects",
+    "issueProxy": "Someone else collects",
+    "proxyTitle": "Proxy pickup",
+    "proxyName": "Proxy's name",
+    "proxyCheck": "The proxy showed the runner's reference or ticket",
+    "proxyConfirm": "Issue to proxy",
+    "issued": "Issued to {{name}}",
+    "alreadyPicked": "{{name}} already collected",
+    "picked": "Collected",
+    "bySelf": "in person",
+    "byProxy": "proxy: {{name}}",
+    "block": {
+      "NOT_PAID": "Payment not verified",
+      "CANCELLED": "Registration cancelled"
+    },
+    "blockHint": "Don't hand out the pack. Send the runner to support or finance.",
+    "undo": "Undo",
+    "undoTitle": "Undo {{name}}'s pickup",
+    "undoReason": "Why (e.g. handed to the wrong person)",
+    "undoConfirm": "Undo pickup",
+    "undone": "Pickup undone"
+  },
+  "assignments": {
+    "intro": "Race supervisors, race staff and photographers can only work on events they're assigned to, within the time window. The pickup station follows this list.",
+    "chooseStaff": "Choose a staff member",
+    "add": "Assign",
+    "saved": "Assignment saved",
+    "col": {
+      "staff": "Staff",
+      "role": "Role",
+      "window": "Valid",
+      "enabled": "Enabled"
+    }
   }
 }

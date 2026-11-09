@@ -1,5 +1,11 @@
 import type { RouteObject } from "react-router";
-import { PERM_EVENT_CONFIG, PERM_ORDER_VIEW, PERM_PAYMENT_ACCOUNT_MANAGE, PERM_PROOF_REVIEW } from "./auth/can";
+import {
+  PERM_EVENT_CONFIG,
+  PERM_ORDER_VIEW,
+  PERM_PAYMENT_ACCOUNT_MANAGE,
+  PERM_PROOF_REVIEW,
+  PERM_RACEPACK_ISSUE,
+} from "./auth/can";
 import { RequireAuth } from "./auth/RequireAuth";
 import { RequirePermission } from "./auth/RequirePermission";
 import { AppLayout } from "./layout/AppLayout";
@@ -13,6 +19,7 @@ import { OrdersPage } from "./pages/OrdersPage";
 import { PaymentAccountsPage } from "./pages/PaymentAccountsPage";
 import { ProofDetailPage } from "./pages/ProofDetailPage";
 import { ProofsPage } from "./pages/ProofsPage";
+import { RacepackPage } from "./pages/RacepackPage";
 
 export const routes: RouteObject[] = [
   { path: "/login", element: <LoginPage /> },
@@ -68,6 +75,14 @@ export const routes: RouteObject[] = [
             element: (
               <RequirePermission permission={PERM_PROOF_REVIEW} access="read">
                 <ProofDetailPage />
+              </RequirePermission>
+            ),
+          },
+          {
+            path: "racepack",
+            element: (
+              <RequirePermission permission={PERM_RACEPACK_ISSUE} access="read">
+                <RacepackPage />
               </RequirePermission>
             ),
           },

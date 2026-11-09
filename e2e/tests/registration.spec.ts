@@ -1,6 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
-import { ADMIN_URL, FINANCE, OPS } from "./env";
+import { ADMIN, ADMIN_URL, FINANCE, OPS, RACE_STAFF } from "./env";
 import {
+  adminFetch,
   adminSession,
   centsToPlainUsd,
   createAndPublishEvent,
@@ -330,3 +331,55 @@ test("免单码下单直接显示已确认", async ({ browser }) => {
 
   await context.close();
 });
+
+test("ADMIN 把现场工作人员指派到赛事", async ({ browser }) => {
+  const { context, page } = await adminSession(browser, ADMIN.username, ADMIN.password);
+  await page.goto(`${ADMIN_URL}/events/${shared.eventId}`);
+  await page.getByTestId("event-tab-staff").click();
+  const staff = await adminFetch<{ items: { id: number; username: string }[] }>(page, "GET", "/admin/staff");
+  const staffId = staff.json.items.find((m) => m.username === RACE_STAFF.username)?.id;
+  expect(staffId).toBeDefined();
+  await selectAntdOption(page, "assignment_staff", String(staffId));
+  await page.getByTestId("assignment-add").click();
+  await expect(page.getByText(`${RACE_STAFF.fullName} (${RACE_STAFF.username})`)).toBeVisible();
+  await context.close();
+});
+
+test("现场工作人员在核销站搜索、本人领取与代领，重复扫码提示已领", async ({ browser }) => {
+  // 现场人员只有领物权限，登录后落在核销站
+  const { context, page } = await adminSession(browser, RACE_STAFF.username, RACE_STAFF.password, "/racepack");
+  await page.goto(`${ADMIN_URL}/racepack?event=${shared.eventId}`);
+  await expect(page.getByTestId("racepack-progress")).toHaveText("已发 0 / 3");
+
+  const search = page.getByTestId("racepack-search");
+  await search.fill(shared.orderNo);
+  await search.press("Enter");
+  const cards = page.locator('[data-testid^="racepack-entry-"][data-state]');
+  await expect(cards).toHaveCount(2);
+
+  const dara = cards.filter({ hasText: "Dara Sok" });
+  await expect(dara).toHaveAttribute("data-state", "ready");
+  await dara.getByRole("button", { name: "本人领取" }).click();
+  await expect(page.getByText("已发放给 Dara Sok")).toBeVisible();
+  await expect(search).toHaveValue("");
+
+  await search.fill("Mealea");
+  await search.press("Enter");
+  const mealea = cards.filter({ hasText: "Mealea Sok" });
+  await mealea.getByRole("button", { name: "他人代领" }).click();
+  await mealea.getByPlaceholder("代领人姓名").fill("Chan Sophea");
+  await mealea.getByText("代领人出示了跑者的参考码或凭证").click();
+  await mealea.getByRole("button", { name: "确认代领发放" }).click();
+  await expect(page.getByText("已发放给 Mealea Sok")).toBeVisible();
+
+  await search.fill("Dara Sok");
+  await search.press("Enter");
+  await expect(cards.filter({ hasText: "Dara Sok" })).toHaveAttribute("data-state", "picked");
+  await expect(page.getByTestId("racepack-progress")).toHaveText("已发 2 / 3");
+  await expect(page.getByTestId("racepack-recent")).toContainText("代领：Chan Sophea");
+
+  // 现场工作人员没有撤销权限
+  await expect(page.getByRole("button", { name: "撤销" })).toHaveCount(0);
+  await context.close();
+});
+
