@@ -1,40 +1,10 @@
-import { AuditOutlined, CalendarOutlined, LogoutOutlined, ProfileOutlined, WalletOutlined } from "@ant-design/icons";
+import { LogoutOutlined } from "@ant-design/icons";
 import { Button, Layout, Menu, Space, Tag, Typography, type MenuProps } from "antd";
-import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useLocation, useNavigate } from "react-router";
-import {
-  PERM_EVENT_CONFIG,
-  PERM_ORDER_VIEW,
-  PERM_PAYMENT_ACCOUNT_MANAGE,
-  PERM_PROOF_REVIEW,
-  can,
-  type Access,
-} from "../auth/can";
 import { useLogout, useMe } from "../auth/useMe";
 import { LanguageSwitch } from "./LanguageSwitch";
-
-interface MenuEntry {
-  key: string;
-  labelKey: string;
-  permission: string;
-  access: Access;
-  icon: ReactNode;
-}
-
-/** 菜单项声明所需权限；没有权限的菜单项不渲染 */
-const MENU: MenuEntry[] = [
-  { key: "/events", labelKey: "events.title", permission: PERM_EVENT_CONFIG, access: "read", icon: <CalendarOutlined /> },
-  {
-    key: "/payment-accounts",
-    labelKey: "paymentAccounts.title",
-    permission: PERM_PAYMENT_ACCOUNT_MANAGE,
-    access: "read",
-    icon: <WalletOutlined />,
-  },
-  { key: "/proofs", labelKey: "proofs.title", permission: PERM_PROOF_REVIEW, access: "read", icon: <AuditOutlined /> },
-  { key: "/orders", labelKey: "orders.title", permission: PERM_ORDER_VIEW, access: "read", icon: <ProfileOutlined /> },
-];
+import { visibleMenu } from "./menu";
 
 export function AppLayout() {
   const { t } = useTranslation("admin");
@@ -43,7 +13,7 @@ export function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const visible = MENU.filter((entry) => can(me?.permissions, entry.permission, entry.access));
+  const visible = visibleMenu(me?.permissions);
   const items: MenuProps["items"] = visible.map((entry) => ({
     key: entry.key,
     icon: entry.icon,

@@ -7,7 +7,7 @@ import { useNavigate } from "react-router";
 import { PERM_EVENT_CONFIG, can } from "../auth/can";
 import { useMe } from "../auth/useMe";
 import { pickText } from "../events/localize";
-import { formatDateTime, rowProps } from "../orders/format";
+import { clickableRowProps, formatDateTime, rowProps } from "../orders/format";
 import { OrderStatusTag } from "../orders/OrderStatusTag";
 import {
   ORDER_PAGE_SIZE,
@@ -17,6 +17,7 @@ import {
   type AdminOrderFilter,
   type AdminOrderStatus,
 } from "../orders/queries";
+import { DEFAULT_TIMEZONE } from "../time/eventTime";
 
 type OrderSummary = Schemas["AdminOrderSummary"];
 
@@ -36,6 +37,9 @@ export function OrdersPage() {
   const [form] = Form.useForm<FilterValues>();
   const [filter, setFilter] = useState<AdminOrderFilter>({ page: 1 });
   const orders = useAdminOrders(filter);
+  // 订单列表接口不带赛事时区：有赛事读权限时从赛事列表查，否则按平台默认时区显示
+  const timezoneByEvent = new Map((events.data ?? []).map((event) => [event.id, event.timezone]));
+  const timezoneOf = (eventId: number) => timezoneByEvent.get(eventId) ?? DEFAULT_TIMEZONE;
 
   const columns: TableProps<OrderSummary>["columns"] = [
     {
@@ -47,7 +51,7 @@ export function OrdersPage() {
     { title: t("orders.col.participants"), dataIndex: "participantCount", key: "participantCount", align: "right" },
     { title: t("orders.col.amount"), key: "amount", align: "right", render: (_, order) => formatUsd(order.amountCents) },
     { title: t("orders.col.status"), key: "status", render: (_, order) => <OrderStatusTag status={order.status} /> },
-    { title: t("orders.col.createdAt"), key: "createdAt", render: (_, order) => formatDateTime(order.createdAt) },
+    { title: t("orders.col.createdAt"), key: "createdAt", render: (_, order) => formatDateTime(order.createdAt, timezoneOf(order.eventId)) },
   ];
 
   const onFinish = (values: FilterValues) => {
@@ -115,10 +119,10 @@ export function OrdersPage() {
           onChange: (page) => setFilter((previous) => ({ ...previous, page })),
         }}
         onRow={(order) =>
-          rowProps(`order-row-${order.orderNo}`, {
-            onClick: () => void navigate(`/orders/${order.id}`),
-            style: { cursor: "pointer" },
-          })
+          rowProps(
+            `order-row-${order.orderNo}`,
+            clickableRowProps(() => void navigate(`/orders/${order.id}`)),
+          )
         }
       />
     </Space>

@@ -53,7 +53,7 @@
 
 .badge[data-status="PAID"] {
   background: var(--leaf-tint);
-  color: var(--leaf);
+  color: var(--leaf-ink);
 }
 
 .statusLine {
@@ -126,7 +126,14 @@
 .primary,
 .primaryButton {
   border: 1px solid var(--brand);
-  background: var(--brand-fill);
+  background: var(--brand);
+  color: #fff;
+}
+
+.primary:hover,
+.primaryButton:hover:not(:disabled) {
+  border-color: var(--brand-deep);
+  background: var(--brand-deep);
   color: #fff;
 }
 
@@ -216,5 +223,5 @@
 .badge[data-status="REGISTERED"],
 .badge[data-status="ATTENDED"] {
   background: var(--leaf-tint);
-  color: var(--leaf);
+  color: var(--leaf-ink);
 }

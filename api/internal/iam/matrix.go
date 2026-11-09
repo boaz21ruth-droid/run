@@ -84,12 +84,15 @@ var AllPermissions = []Permission{
 	PermProofReview,
 }
 
-// matrix 逐格照抄 admin.html 第 753–789 行。
+// matrix 逐格照抄 admin.html 第 753–789 行，唯一偏离是 order_view：
+// RACE_SUPERVISOR / RACE_STAFF 在 Demo 里为 R，这里暂时收回。订单列表与详情含跑者个人信息，而赛事范围校验
+// 尚未实现（见 api/internal/httpapi/auth.go 的 TODO(spec §5.1 step 7)），开放会让他们看到未被指派赛事的订单。
+// 补齐赛事范围校验后再恢复为 R。
 // 列顺序：ADMIN, OPS, FINANCE, SUPPORT, RACE_SUPERVISOR, RACE_STAFF, PHOTOGRAPHER。
 var matrix = map[Permission]map[Role]Access{
 	PermEventPublish:       row("R", "W", "", "R", "", "", ""),
 	PermEventConfig:        row("R", "W", "R", "", "", "", ""),
-	PermOrderView:          row("R", "R", "R", "R", "R", "R", ""),
+	PermOrderView:          row("R", "R", "R", "R", "", "", ""), // 偏离 Demo，见上方注释
 	PermRosterExport:       row("R", "W", "", "", "W", "", ""),
 	PermManualConfirm:      row("", "", "W", "", "", "", ""),
 	PermRefundRequest:      row("", "", "W", "W", "", "", ""),

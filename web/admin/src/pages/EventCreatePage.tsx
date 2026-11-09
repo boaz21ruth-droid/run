@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { emptyCategory, toCreateEventRequest, toNamePath, type EventFormValues } from "../events/eventForm";
 import { useCreateEvent } from "../events/queries";
+import { DEFAULT_TIMEZONE } from "../time/eventTime";
+import { TimezoneHint } from "../time/TimezoneHint";
 
 const NAME_LABEL_KEYS = { zh: "form.nameZh", en: "form.nameEn", km: "form.nameKm" } as const;
 const NAME_LANGS = ["zh", "en", "km"] as const;
@@ -18,7 +20,8 @@ export function EventCreatePage() {
   const required = [{ required: true, message: t("form.required") }];
 
   const onFinish = (values: EventFormValues) => {
-    create.mutate(toCreateEventRequest(values), {
+    // 新建接口不接受 timezone，服务端按 DEFAULT_TIMEZONE 建赛事
+    create.mutate(toCreateEventRequest(values, DEFAULT_TIMEZONE), {
       onSuccess: () => {
         void message.success(t("form.created"));
         void navigate("/events");
@@ -144,12 +147,20 @@ export function EventCreatePage() {
                   </Row>
                   <Row gutter={16}>
                     <Col xs={24} md={12}>
-                      <Form.Item name={[field.name, "startAt"]} label={t("form.startAt")}>
+                      <Form.Item
+                        name={[field.name, "startAt"]}
+                        label={t("form.startAt")}
+                        extra={<TimezoneHint tz={DEFAULT_TIMEZONE} />}
+                      >
                         <DatePicker showTime={{ format: "HH:mm" }} format="YYYY-MM-DD HH:mm" style={{ width: "100%" }} />
                       </Form.Item>
                     </Col>
                     <Col xs={24} md={12}>
-                      <Form.Item name={[field.name, "cutoffAt"]} label={t("form.cutoffAt")}>
+                      <Form.Item
+                        name={[field.name, "cutoffAt"]}
+                        label={t("form.cutoffAt")}
+                        extra={<TimezoneHint tz={DEFAULT_TIMEZONE} />}
+                      >
                         <DatePicker showTime={{ format: "HH:mm" }} format="YYYY-MM-DD HH:mm" style={{ width: "100%" }} />
                       </Form.Item>
                     </Col>

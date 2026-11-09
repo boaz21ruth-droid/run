@@ -1,6 +1,7 @@
 import { formatUsd, parseUsdToCents, type Schemas } from "@werun/api-client";
-import dayjs, { type Dayjs } from "dayjs";
+import type { Dayjs } from "dayjs";
 import { toNamePath, type LocalizedValues } from "../events/eventForm";
+import { fromEventWallClockOrNull, toEventWallClockOrNull } from "../time/eventTime";
 
 export interface PriceRuleFormValues {
   name: LocalizedValues;
@@ -27,20 +28,21 @@ export function emptyPriceRule(categoryIds: number[]): PriceRuleFormValues {
   };
 }
 
-export function fromPriceRule(rule: Schemas["PriceRule"]): PriceRuleFormValues {
+/** 时间字段按赛事时区回填（tz 为赛事 timezone），见 time/eventTime.ts */
+export function fromPriceRule(rule: Schemas["PriceRule"], tz: string): PriceRuleFormValues {
   return {
     name: { zh: rule.name.zh ?? "", en: rule.name.en ?? "", km: rule.name.km ?? "" },
     audience: rule.audience,
     priceUsd: formatUsd(rule.priceCents).slice(1),
     quota: rule.quota,
-    saleStartsAt: rule.saleStartsAt ? dayjs(rule.saleStartsAt) : null,
-    saleEndsAt: rule.saleEndsAt ? dayjs(rule.saleEndsAt) : null,
+    saleStartsAt: toEventWallClockOrNull(rule.saleStartsAt, tz),
+    saleEndsAt: toEventWallClockOrNull(rule.saleEndsAt, tz),
     sortOrder: rule.sortOrder,
     categoryIds: [...rule.categoryIds],
   };
 }
 
-export function toPriceRuleInput(values: PriceRuleFormValues): Schemas["PriceRuleInput"] {
+export function toPriceRuleInput(values: PriceRuleFormValues, tz: string): Schemas["PriceRuleInput"] {
   const priceCents = parseUsdToCents(values.priceUsd);
   if (priceCents === null) {
     throw new Error(`invalid price: ${values.priceUsd}`);
@@ -50,8 +52,8 @@ export function toPriceRuleInput(values: PriceRuleFormValues): Schemas["PriceRul
     audience: values.audience,
     priceCents,
     quota: values.quota ?? null,
-    saleStartsAt: values.saleStartsAt ? values.saleStartsAt.toISOString() : null,
-    saleEndsAt: values.saleEndsAt ? values.saleEndsAt.toISOString() : null,
+    saleStartsAt: fromEventWallClockOrNull(values.saleStartsAt, tz),
+    saleEndsAt: fromEventWallClockOrNull(values.saleEndsAt, tz),
     sortOrder: values.sortOrder ?? 0,
     categoryIds: values.categoryIds,
   };

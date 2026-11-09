@@ -63,5 +63,5 @@ func TestInvariants(t *testing.T) {
 		}
 	}
 	assert.Empty(t, failed)
-	assert.Equal(t, 23, passed)
+	assert.Equal(t, 26, passed)
 }

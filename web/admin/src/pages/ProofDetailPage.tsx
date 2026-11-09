@@ -58,13 +58,13 @@ export function ProofDetailPage() {
         </Typography.Text>
       ),
     },
-    { key: "declaredPaidAt", label: t("proofs.detail.declaredPaidAt"), children: formatDateTime(proof.declaredPaidAt) },
+    { key: "declaredPaidAt", label: t("proofs.detail.declaredPaidAt"), children: formatDateTime(proof.declaredPaidAt, order.eventTimezone) },
     { key: "payerName", label: t("proofs.detail.payerName"), children: proof.payerName ?? "—" },
-    { key: "submittedAt", label: t("proofs.detail.submittedAt"), children: formatDateTime(proof.createdAt) },
+    { key: "submittedAt", label: t("proofs.detail.submittedAt"), children: formatDateTime(proof.createdAt, order.eventTimezone) },
     { key: "orderStatus", label: t("orders.col.status"), children: <OrderStatusTag status={order.status} /> },
   ];
   if (proof.reviewedAt) {
-    declaredItems.push({ key: "reviewedAt", label: t("proofs.detail.reviewedAt"), children: formatDateTime(proof.reviewedAt) });
+    declaredItems.push({ key: "reviewedAt", label: t("proofs.detail.reviewedAt"), children: formatDateTime(proof.reviewedAt, order.eventTimezone) });
   }
   if (proof.rejectCode) {
     declaredItems.push(
@@ -122,7 +122,12 @@ export function ProofDetailPage() {
       <OrderProofsCard order={order} currentProofId={proof.id} />
 
       {dialog === "approve" ? (
-        <ApproveProofModal proof={proof} amountCents={order.amountCents} onClose={() => setDialog(null)} />
+        <ApproveProofModal
+          proof={proof}
+          amountCents={order.amountCents}
+          timezone={order.eventTimezone}
+          onClose={() => setDialog(null)}
+        />
       ) : null}
       {dialog === "reject" ? <RejectProofModal proofId={proof.id} onClose={() => setDialog(null)} /> : null}
     </Space>

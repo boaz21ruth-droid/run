@@ -20,6 +20,8 @@
   --sun-tint: #FFF3DD;
   --leaf: #3EB489;
   --leaf-tint: #E2F6EE;
+  /* AA text green：--leaf 太浅，作文字色或白字底色时用这个（白底/--leaf-tint 底均 ≥4.5:1） */
+  --leaf-ink: #1E7A56;
   --night: #12395C;
   --night-2: #17486F;
   --warn: #C0770A;

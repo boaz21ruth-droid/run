@@ -1,9 +1,12 @@
 import { ApiError, formatUsd, parseUsdToCents, type Schemas } from "@werun/api-client";
-import { Alert, App as AntdApp, Button, DatePicker, Form, Input, Modal, Space } from "antd";
+import { Alert, App as AntdApp, Button, Checkbox, DatePicker, Form, Input, Modal, Space } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { centsToUsdInput } from "../orders/format";
-import { useApproveProof } from "./queries";
+import { fromEventWallClock, toEventWallClock } from "../time/eventTime";
+import { TimezoneHint } from "../time/TimezoneHint";
+import { isReviewConflict, useApproveProof, useRefreshAfterConflict } from "./queries";
 
 interface ApproveValues {
   receivedUsd: string;
@@ -21,34 +24,53 @@ const SERVER_FIELDS: [string, keyof ApproveValues][] = [
 interface ApproveProofModalProps {
   proof: Schemas["Proof"];
   amountCents: number;
+  /** 赛事时区（order.eventTimezone）：到账时间按它填写与回填 */
+  timezone: string;
   onClose: () => void;
 }
 
-export function ApproveProofModal({ proof, amountCents, onClose }: ApproveProofModalProps) {
+export function ApproveProofModal({ proof, amountCents, timezone, onClose }: ApproveProofModalProps) {
   const { t } = useTranslation("admin");
   const { message } = AntdApp.useApp();
   const [form] = Form.useForm<ApproveValues>();
   const approve = useApproveProof(proof.id);
+  const refreshAfterConflict = useRefreshAfterConflict();
+  /** 勾选确认时的多付金额；金额再变化就需要重新确认 */
+  const [confirmedOverpay, setConfirmedOverpay] = useState<number | null>(null);
 
   const receivedUsd = Form.useWatch("receivedUsd", form);
   const cents = parseUsdToCents((receivedUsd ?? "").trim());
   const tooLow = cents !== null && cents < amountCents;
   const overpaid = cents !== null && cents > amountCents ? cents - amountCents : 0;
+  const overpayConfirmed = overpaid === 0 || confirmedOverpay === overpaid;
 
   const onFinish = (values: ApproveValues) => {
     const received = parseUsdToCents(values.receivedUsd.trim());
     if (received === null || received < amountCents) {
       return;
     }
+    if (received > amountCents && confirmedOverpay !== received - amountCents) {
+      return;
+    }
     const note = values.note?.trim();
     approve.mutate(
-      { receivedAmountCents: received, receivedAt: values.receivedAt.toISOString(), note: note ? note : null },
+      {
+        receivedAmountCents: received,
+        receivedAt: fromEventWallClock(values.receivedAt, timezone),
+        note: note ? note : null,
+      },
       {
         onSuccess: () => {
           void message.success(t("proofs.approve.success"));
           onClose();
         },
         onError: (error) => {
+          if (isReviewConflict(error)) {
+            void message.warning(t("proofs.conflict"));
+            refreshAfterConflict();
+            onClose();
+            return;
+          }
           if (error instanceof ApiError) {
             const fields = SERVER_FIELDS.flatMap(([server, local]) => {
               const text = error.fields[server];
@@ -75,7 +97,7 @@ export function ApproveProofModal({ proof, amountCents, onClose }: ApproveProofM
         disabled={approve.isPending}
         initialValues={{
           receivedUsd: centsToUsdInput(proof.declaredAmountCents),
-          receivedAt: proof.declaredPaidAt ? dayjs(proof.declaredPaidAt) : dayjs(),
+          receivedAt: toEventWallClock(proof.declaredPaidAt ?? dayjs().toISOString(), timezone),
         }}
       >
         <Form.Item
@@ -105,13 +127,28 @@ export function ApproveProofModal({ proof, amountCents, onClose }: ApproveProofM
         ) : null}
         {overpaid > 0 ? (
           <Alert
+            data-testid="proof-approve-overpaid"
             type="warning"
             showIcon
             style={{ marginBottom: 16 }}
             message={t("proofs.approve.overpaid", { amount: formatUsd(overpaid) })}
+            description={
+              <Checkbox
+                data-testid="proof-approve-overpay-confirm"
+                checked={overpayConfirmed}
+                onChange={(event) => setConfirmedOverpay(event.target.checked ? overpaid : null)}
+              >
+                {t("proofs.approve.confirmOverpay", { amount: formatUsd(overpaid) })}
+              </Checkbox>
+            }
           />
         ) : null}
-        <Form.Item name="receivedAt" label={t("proofs.approve.receivedAt")} rules={[{ required: true, message: t("proofs.required") }]}>
+        <Form.Item
+          name="receivedAt"
+          label={t("proofs.approve.receivedAt")}
+          extra={<TimezoneHint tz={timezone} />}
+          rules={[{ required: true, message: t("proofs.required") }]}
+        >
           <DatePicker showTime={{ format: "HH:mm" }} format="YYYY-MM-DD HH:mm" style={{ width: "100%" }} />
         </Form.Item>
         <Form.Item name="note" label={t("proofs.approve.note")}>
@@ -123,7 +160,7 @@ export function ApproveProofModal({ proof, amountCents, onClose }: ApproveProofM
             type="primary"
             htmlType="submit"
             data-testid="proof-approve-submit"
-            disabled={cents === null || tooLow}
+            disabled={cents === null || tooLow || !overpayConfirmed}
             loading={approve.isPending}
           >
             {t("proofs.approve.submit")}

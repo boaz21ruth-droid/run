@@ -4,9 +4,13 @@ import { Alert, Button, Space, Table, Tag, Typography, type TableProps } from "a
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { pickText } from "../events/localize";
-import { rowProps, waitingParts } from "../orders/format";
+import { clickableRowProps, rowProps, waitingParts } from "../orders/format";
 import { ProofStatusTag } from "../proofs/ProofStatusTag";
 import { useProofQueue } from "../proofs/queries";
+import { useNow } from "../time/useNow";
+
+/** 等待时长每 30 秒刷新一次显示 */
+export const WAITING_TICK_MS = 30_000;
 
 type QueueItem = Schemas["ProofQueueItem"];
 
@@ -15,7 +19,7 @@ export function ProofsPage() {
   const lang = useLang();
   const navigate = useNavigate();
   const queue = useProofQueue();
-  const now = Date.now();
+  const now = useNow(WAITING_TICK_MS);
 
   const columns: TableProps<QueueItem>["columns"] = [
     {
@@ -90,10 +94,9 @@ export function ProofsPage() {
         onRow={(item) =>
           rowProps(
             `proof-row-${item.proof.proofNo}`,
-            {
-              onClick: () => void navigate(`/proofs/${item.proof.id}`),
-              style: { cursor: "pointer", background: item.overSla ? "var(--stop-tint)" : undefined },
-            },
+            clickableRowProps(() => void navigate(`/proofs/${item.proof.id}`), {
+              background: item.overSla ? "var(--stop-tint)" : undefined,
+            }),
             { "data-over-sla": String(item.overSla) },
           )
         }

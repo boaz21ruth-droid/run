@@ -1,3 +1,14 @@
+:root {
+  /* 底部标签栏高度（不含安全区）；≥1024px 时没有标签栏，为 0。EventDetail 的底部报名条据此上移 */
+  --tabbar-h: 60px;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --tabbar-h: 0px;
+  }
+}
+
 .app {
   display: flex;
   flex-direction: column;
@@ -5,6 +16,8 @@
   min-height: var(--tg-viewport-height, 100vh);
   /* 首屏破出容器铺满视口，这里兜住不出横向滚动条 */
   overflow-x: clip;
+  /* 给固定的底部标签栏留位，内容与页脚不被遮住 */
+  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
 }
 
 .header {
@@ -78,6 +91,7 @@
 
 .main {
   width: 100%;
+  outline: none;
   max-width: var(--shell-max);
   margin: 0 auto;
   padding: 20px var(--gutter) 56px;
@@ -88,5 +102,65 @@
     display: flex;
     gap: 28px;
     margin-left: auto;
+  }
+}
+
+/* 窄屏底部标签栏 */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  min-height: var(--tabbar-h);
+  padding-bottom: env(safe-area-inset-bottom);
+  background: rgba(246, 248, 250, 0.96);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--line);
+}
+
+.tab {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 6px 4px;
+  color: var(--ink-mute);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.tab:hover {
+  color: var(--ink);
+}
+
+.tabActive,
+.tabActive:hover {
+  color: var(--brand);
+}
+
+.tabIcon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+}
+
+.tabLabel {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 1024px) {
+  .tabbar {
+    display: none;
   }
 }

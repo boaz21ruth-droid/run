@@ -4,7 +4,16 @@ x-api-build: &api-build
   context: ..
   dockerfile: api/Dockerfile
 
+# 日志轮转：默认 json-file 不限大小，长期运行会写满磁盘
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 x-api-env: &api-env
+  # 必须显式指定（prod/staging/dev），避免漏配时以错误的环境语义启动
+  WERUN_ENV: ${WERUN_ENV:?WERUN_ENV must be set}
   WERUN_DATABASE_URL: postgres://werun:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/werun?sslmode=disable
   WERUN_HTTP_ADDR: ":8080"
   WERUN_FILES_DIR: /data/files
@@ -19,6 +28,7 @@ x-api-env: &api-env
 services:
   postgres:
     image: postgres:16-alpine
+    logging: *logging
     environment:
       POSTGRES_DB: werun
       POSTGRES_USER: werun
@@ -34,6 +44,7 @@ services:
 
   migrate:
     image: ${WERUN_API_IMAGE:-werun-api:local}
+    logging: *logging
     build: *api-build
     command: ["migrate", "up"]
     env_file: ../.env
@@ -45,6 +56,7 @@ services:
 
   api:
     image: ${WERUN_API_IMAGE:-werun-api:local}
+    logging: *logging
     build: *api-build
     command: ["serve", "--with-worker"]
     env_file: ../.env
@@ -69,6 +81,7 @@ services:
 
   caddy:
     image: ${WERUN_WEB_IMAGE:-werun-web:local}
+    logging: *logging
     build:
       context: ..
       dockerfile: deploy/web.Dockerfile

@@ -1,5 +1,5 @@
 import { screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { halfMarathon, jsonResponse } from "../test/fixtures";
 import { renderApp } from "../test/renderApp";
 
@@ -17,6 +17,16 @@ const freeRun = {
 };
 
 describe("HomePage", () => {
+  // 「下一场」按今天往后找最近的比赛日：把今天钉在所有夹具之前，免得用例随真实日期过期。
+  // 只伪造 Date，定时器保持真实，findBy* 的轮询不受影响。
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-01T03:00:00Z"));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("首屏显示下一场赛事、真实统计与近期赛事卡片", async () => {
     window.localStorage.setItem("werun.lang", "en");
     renderApp("/", async () => jsonResponse(200, { items: [paidHalf, freeRun] }));

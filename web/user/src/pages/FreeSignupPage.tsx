@@ -1,5 +1,5 @@
 import { ApiError, type Schemas } from "@werun/api-client";
-import { useLang } from "@werun/i18n";
+import { isLang, useLang } from "@werun/i18n";
 import { useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router";
@@ -25,7 +25,8 @@ type FieldMessages = Partial<Record<FreeSignupField, string>>;
 export function FreeSignupPage() {
   const { slug = "" } = useParams();
   const { t } = useTranslation("user");
-  const event = usePublicEvent(slug);
+  // 与报名向导相同：切换语言时沿用已加载的活动与同意书，表单不卸载，已填内容保留
+  const event = usePublicEvent(slug, { keepDataOnLanguageChange: true });
 
   if (event.error instanceof ApiError && event.error.status === 404) {
     return <NotFoundPage />;
@@ -49,8 +50,12 @@ export function FreeSignupPage() {
 }
 
 function ConsentLoader({ event }: { event: PublicEvent }) {
-  const consent = useRegistrationConsent();
-  return <QueryState query={consent}>{(data) => <FreeSignupForm event={event} consent={data} />}</QueryState>;
+  const consent = useRegistrationConsent({ keepDataOnLanguageChange: true });
+  return (
+    <QueryState query={consent}>
+      {(data) => <FreeSignupForm event={event} consent={data} consentRefreshing={consent.isPlaceholderData} />}
+    </QueryState>
+  );
 }
 
 function Field({ id, label, message, hint, children }: { id: string; label: string; message?: string; hint?: string; children: ReactNode }) {
@@ -70,7 +75,16 @@ function Field({ id, label, message, hint, children }: { id: string; label: stri
   );
 }
 
-function FreeSignupForm({ event, consent }: { event: PublicEvent; consent: RegistrationConsent }) {
+function FreeSignupForm({
+  event,
+  consent,
+  consentRefreshing,
+}: {
+  event: PublicEvent;
+  consent: RegistrationConsent;
+  /** 新语言的同意书还在加载，界面暂时显示旧语言的版本：此时不允许提交 */
+  consentRefreshing: boolean;
+}) {
   const { t } = useTranslation("user");
   const lang = useLang();
   const create = useCreateFreeSignup(event.slug);
@@ -79,7 +93,9 @@ function FreeSignupForm({ event, consent }: { event: PublicEvent; consent: Regis
   const [messages, setMessages] = useState<FieldMessages>({});
 
   const category = event.categories.find((c) => String(c.id) === values.categoryId);
-  const allChecked = consent.items.every((item) => checked.has(item.key));
+  // 勾选按「版本:条目」记录：换语言后版本不变则保留勾选，版本变了需要重新勾选
+  const checkKey = (itemKey: string) => `${consent.version}:${itemKey}`;
+  const allChecked = consent.items.every((item) => checked.has(checkKey(item.key)));
 
   if (create.data) {
     return (
@@ -107,9 +123,9 @@ function FreeSignupForm({ event, consent }: { event: PublicEvent; consent: Regis
     setChecked((prev) => {
       const next = new Set(prev);
       if (on) {
-        next.add(key);
+        next.add(checkKey(key));
       } else {
-        next.delete(key);
+        next.delete(checkKey(key));
       }
       return next;
     });
@@ -126,12 +142,13 @@ function FreeSignupForm({ event, consent }: { event: PublicEvent; consent: Regis
       }
     }
     setMessages(next);
-    if (Object.keys(next).length > 0 || !allChecked) {
+    if (Object.keys(next).length > 0 || !allChecked || consentRefreshing) {
       return;
     }
     const body = toFreeSignupRequest(values, {
       version: consent.version,
-      lang,
+      // 服务端可能回退到别的语言，签署时原样提交它返回的语言（契约）
+      lang: isLang(consent.lang) ? consent.lang : lang,
       checkedItems: consent.items.map((item) => item.key),
     });
     create.mutate(body, {
@@ -265,7 +282,7 @@ function FreeSignupForm({ event, consent }: { event: PublicEvent; consent: Regis
             <input
               type="checkbox"
               data-testid={`consent-item-${item.key}`}
-              checked={checked.has(item.key)}
+              checked={checked.has(checkKey(item.key))}
               onChange={toggle(item.key)}
             />
             <span className={styles.consentText}>
@@ -283,7 +300,7 @@ function FreeSignupForm({ event, consent }: { event: PublicEvent; consent: Regis
         </p>
       ) : null}
 
-      <button type="submit" className={styles.submit} data-testid="free-submit" disabled={!allChecked || create.isPending}>
+      <button type="submit" className={styles.submit} data-testid="free-submit" disabled={!allChecked || consentRefreshing || create.isPending}>
         {create.isPending ? t("free.submitting") : t("free.submit")}
       </button>
     </form>

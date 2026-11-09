@@ -1,5 +1,6 @@
 import { formatUsd, parseUsdToCents, type Schemas } from "@werun/api-client";
-import dayjs, { type Dayjs } from "dayjs";
+import type { Dayjs } from "dayjs";
+import { fromEventWallClockOrNull, toEventWallClockOrNull } from "../time/eventTime";
 
 type DiscountType = Schemas["DiscountType"];
 
@@ -44,7 +45,8 @@ export function parseDiscountValue(type: DiscountType, input: string | undefined
   return cents !== null && cents > 0 ? cents : null;
 }
 
-export function fromCoupon(coupon: Schemas["Coupon"]): CouponFormValues {
+/** 时间字段按赛事时区回填（tz 为赛事 timezone），见 time/eventTime.ts */
+export function fromCoupon(coupon: Schemas["Coupon"], tz: string): CouponFormValues {
   let discountValue = "";
   if (coupon.discountType === "PERCENT") {
     discountValue = String(coupon.discountValue);
@@ -57,13 +59,13 @@ export function fromCoupon(coupon: Schemas["Coupon"]): CouponFormValues {
     discountValue,
     quota: coupon.quota,
     minRunners: coupon.minRunners,
-    validFrom: coupon.validFrom ? dayjs(coupon.validFrom) : null,
-    validUntil: coupon.validUntil ? dayjs(coupon.validUntil) : null,
+    validFrom: toEventWallClockOrNull(coupon.validFrom, tz),
+    validUntil: toEventWallClockOrNull(coupon.validUntil, tz),
     status: coupon.status,
   };
 }
 
-function commonFields(values: CouponFormValues) {
+function commonFields(values: CouponFormValues, tz: string) {
   const discountValue = parseDiscountValue(values.discountType, values.discountValue);
   if (discountValue === null) {
     throw new Error(`invalid discount: ${values.discountValue ?? ""}`);
@@ -73,18 +75,22 @@ function commonFields(values: CouponFormValues) {
     discountValue,
     quota: values.quota ?? 0,
     minRunners: values.minRunners ?? null,
-    validFrom: values.validFrom ? values.validFrom.toISOString() : null,
-    validUntil: values.validUntil ? values.validUntil.toISOString() : null,
+    validFrom: fromEventWallClockOrNull(values.validFrom, tz),
+    validUntil: fromEventWallClockOrNull(values.validUntil, tz),
     status: values.status,
   };
 }
 
-export function toCreateCouponRequest(values: CouponFormValues, eventId: number): Schemas["CreateCouponRequest"] {
-  return { code: values.code.trim().toUpperCase(), eventId, ...commonFields(values) };
+export function toCreateCouponRequest(values: CouponFormValues, eventId: number, tz: string): Schemas["CreateCouponRequest"] {
+  return { code: values.code.trim().toUpperCase(), eventId, ...commonFields(values, tz) };
 }
 
-export function toUpdateCouponRequest(values: CouponFormValues, eventId: number | null): Schemas["UpdateCouponRequest"] {
-  return { eventId, ...commonFields(values) };
+export function toUpdateCouponRequest(
+  values: CouponFormValues,
+  eventId: number | null,
+  tz: string,
+): Schemas["UpdateCouponRequest"] {
+  return { eventId, ...commonFields(values, tz) };
 }
 
 export function formatDiscount(

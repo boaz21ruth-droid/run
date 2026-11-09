@@ -22,5 +22,5 @@ export function renderAdminApp(path: string, routes: MockRoutes) {
   );
   const app = createAdminApp({ baseUrl: "http://localhost/api", memoryPath: path });
   const view = render(app.element);
-  return { ...view, router: app.router, requests };
+  return { ...view, router: app.router, queryClient: app.queryClient, requests };
 }

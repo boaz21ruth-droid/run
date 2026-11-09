@@ -19,7 +19,6 @@ import {
   Typography,
   type TableProps,
 } from "antd";
-import dayjs from "dayjs";
 import { useState, type HTMLAttributes } from "react";
 import { useTranslation } from "react-i18next";
 import { PERM_PRICE_CONFIG, can } from "../auth/can";
@@ -33,6 +32,8 @@ import {
   toPriceRuleInput,
   type PriceRuleFormValues,
 } from "./priceRuleForm";
+import { formatInTimezone } from "../time/eventTime";
+import { TimezoneHint } from "../time/TimezoneHint";
 import { usePriceRules, useSavePriceRule } from "./queries";
 
 type AdminEvent = Schemas["AdminEvent"];
@@ -40,10 +41,6 @@ type PriceRule = Schemas["PriceRule"];
 
 const NAME_LANGS = ["zh", "en", "km"] as const;
 const NAME_LABEL_KEYS = { zh: "form.nameZh", en: "form.nameEn", km: "form.nameKm" } as const;
-
-function formatTime(value: string | null): string {
-  return value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "—";
-}
 
 export function PricingTab({ event }: { event: AdminEvent }) {
   const { t } = useTranslation("admin");
@@ -70,7 +67,7 @@ export function PricingTab({ event }: { event: AdminEvent }) {
     {
       title: t("pricing.col.sale"),
       key: "sale",
-      render: (_, rule) => `${formatTime(rule.saleStartsAt)} ~ ${formatTime(rule.saleEndsAt)}`,
+      render: (_, rule) => `${formatInTimezone(rule.saleStartsAt, event.timezone)} ~ ${formatInTimezone(rule.saleEndsAt, event.timezone)}`,
     },
     {
       title: t("pricing.col.categories"),
@@ -140,7 +137,7 @@ function PriceRuleModal({ event, rule, onClose }: PriceRuleModalProps) {
 
   const onFinish = (values: PriceRuleFormValues) => {
     save.mutate(
-      { id: rule?.id, body: toPriceRuleInput(values) },
+      { id: rule?.id, body: toPriceRuleInput(values, event.timezone) },
       {
         onSuccess: () => {
           void message.success(t(rule ? "pricing.updated" : "pricing.created"));
@@ -170,7 +167,7 @@ function PriceRuleModal({ event, rule, onClose }: PriceRuleModalProps) {
         layout="vertical"
         onFinish={onFinish}
         disabled={save.isPending}
-        initialValues={rule ? fromPriceRule(rule) : emptyPriceRule(event.categories.map((category) => category.id))}
+        initialValues={rule ? fromPriceRule(rule, event.timezone) : emptyPriceRule(event.categories.map((category) => category.id))}
       >
         <Typography.Text strong>{t("pricing.form.name")}</Typography.Text>
         <Row gutter={16}>
@@ -224,12 +221,12 @@ function PriceRuleModal({ event, rule, onClose }: PriceRuleModalProps) {
         </Row>
         <Row gutter={16}>
           <Col xs={24} md={12}>
-            <Form.Item name="saleStartsAt" label={t("pricing.form.saleStartsAt")}>
+            <Form.Item name="saleStartsAt" label={t("pricing.form.saleStartsAt")} extra={<TimezoneHint tz={event.timezone} />}>
               <DatePicker showTime={{ format: "HH:mm" }} format="YYYY-MM-DD HH:mm" style={{ width: "100%" }} />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item name="saleEndsAt" label={t("pricing.form.saleEndsAt")}>
+            <Form.Item name="saleEndsAt" label={t("pricing.form.saleEndsAt")} extra={<TimezoneHint tz={event.timezone} />}>
               <DatePicker showTime={{ format: "HH:mm" }} format="YYYY-MM-DD HH:mm" style={{ width: "100%" }} />
             </Form.Item>
           </Col>

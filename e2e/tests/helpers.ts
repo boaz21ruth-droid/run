@@ -236,6 +236,7 @@ export async function createAndPublishEvent(page: Page, ev: NewEvent): Promise<v
   const publish = page.getByTestId(`event-publish-${ev.slug}`);
   await expect(publish).toBeVisible();
   await publish.click();
+  await confirmPublish(page);
   await expect(publish).toBeHidden();
 }
 
@@ -294,8 +295,22 @@ export function centsToPlainUsd(cents: number): string {
   return `${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, "0")}`;
 }
 
-/** 本地时间 "YYYY-MM-DD HH:mm"，默认为 1 分钟前（到账时间不能晚于现在） */
-export function pickerNow(offsetMinutes = -1): string {
+/**
+ * 赛事时区（Asia/Phnom_Penh）的墙上时间 "YYYY-MM-DD HH:mm"，默认为 1 分钟前（到账时间不能晚于现在）。
+ * 后台的日期选择器按赛事时区解释输入，所以这里不能用跑测试那台机器的本地时区。
+ */
+export function pickerNow(offsetMinutes = -1, timeZone = "Asia/Phnom_Penh"): string {
   const d = new Date(Date.now() + offsetMinutes * 60_000);
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone, year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+    }).formatToParts(d).map((p) => [p.type, p.value]),
+  );
+  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}`;
+}
+
+/** 后台发布赛事前的二次确认框 */
+export async function confirmPublish(page: Page): Promise<void> {
+  await page.getByRole("dialog").getByRole("button", { name: /确认发布|Confirm publish|Publish/ }).click();
 }

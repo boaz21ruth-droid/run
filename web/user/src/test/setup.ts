@@ -6,6 +6,9 @@ import { resetSessionModeForTests } from "../auth/session";
 // CI 机器核数少，页面首屏渲染可能超过 findBy* 默认的 1 秒
 configure({ asyncUtilTimeout: 5_000 });
 
+// jsdom 没有实现 window.scrollTo；布局里的 ScrollRestoration 每次导航都会调用
+window.scrollTo = (() => {}) as typeof window.scrollTo;
+
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();

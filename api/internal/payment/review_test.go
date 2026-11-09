@@ -54,6 +54,7 @@ func TestApproveExactAmountConfirmsOrderAndConsumesCounters(t *testing.T) {
 	c := newReviewCase(t)
 	ctx := context.Background()
 	_, order, proof := c.submitted(t, 7501, paytest.OrderSpec{WithCoupon: true})
+	c.env.Clock.Advance(15 * time.Minute) // 下单 15 分钟后审核；到账时间在下单之后、审核之前
 	receivedAt := c.env.Clock.Now().Add(-10 * time.Minute)
 
 	detail, err := c.env.Payments.ApproveProof(ctx, c.finance, proof.ID,
@@ -272,6 +273,28 @@ func TestApproveValidatesInput(t *testing.T) {
 		payment.ApproveInput{ReceivedAmountCents: order.AmountCents, ReceivedAt: now}, testMeta)
 	requireAppErr(t, err, apperr.CodeNotFound, http.StatusNotFound)
 	require.Equal(t, 1, paytest.Count(t, c.env.Pool, `SELECT count(*) FROM payment_proofs WHERE id = $1 AND status = 'SUBMITTED'`, proof.ID))
+}
+
+// 到账时间早于下单时间（超出 5 分钟录入误差）的流水不可能是这张订单的付款，必须拒绝且不改任何状态。
+func TestApproveRejectsReceivedAtBeforeOrderCreated(t *testing.T) {
+	c := newReviewCase(t)
+	ctx := context.Background()
+	_, order, proof := c.submitted(t, 7507, paytest.OrderSpec{})
+	var createdAt time.Time
+	require.NoError(t, c.env.Pool.QueryRow(ctx, `SELECT created_at FROM reg_orders WHERE id = $1`, order.ID).Scan(&createdAt))
+
+	_, err := c.env.Payments.ApproveProof(ctx, c.finance, proof.ID,
+		payment.ApproveInput{ReceivedAmountCents: order.AmountCents, ReceivedAt: createdAt.Add(-6 * time.Minute)}, testMeta)
+
+	ae := requireAppErr(t, err, apperr.CodeValidation, http.StatusUnprocessableEntity)
+	require.Equal(t, "field.received_before_order", ae.Fields["receivedAt"].Key)
+	require.Equal(t, 1, paytest.Count(t, c.env.Pool, `SELECT count(*) FROM payment_proofs WHERE id = $1 AND status = 'SUBMITTED'`, proof.ID))
+	require.Equal(t, 0, paytest.Count(t, c.env.Pool, `SELECT count(*) FROM payment_receipts`))
+
+	// 录入只到分钟：同一分钟内、略早于下单时间的到账时间仍然放行
+	_, err = c.env.Payments.ApproveProof(ctx, c.finance, proof.ID,
+		payment.ApproveInput{ReceivedAmountCents: order.AmountCents, ReceivedAt: createdAt.Truncate(time.Minute)}, testMeta)
+	require.NoError(t, err)
 }
 
 func TestRejectOpensReuploadWindow(t *testing.T) {

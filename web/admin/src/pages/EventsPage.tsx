@@ -15,13 +15,28 @@ export function EventsPage() {
   const { t } = useTranslation("admin");
   const lang = useLang();
   const navigate = useNavigate();
-  const { message } = AntdApp.useApp();
+  const { message, modal } = AntdApp.useApp();
   const { data: me } = useMe();
   const events = useAdminEvents();
   const publish = usePublishEvent();
 
   const canCreate = can(me?.permissions, PERM_EVENT_CONFIG, "write");
   const canPublish = can(me?.permissions, PERM_EVENT_PUBLISH, "write");
+
+  /** 发布对跑者立即可见且不能撤回，先确认 */
+  const confirmPublish = (event: AdminEvent) => {
+    void modal.confirm({
+      title: t("events.publishConfirm.title", { name: pickText(event.name, lang) }),
+      content: t("events.publishConfirm.body"),
+      okText: t("events.publishConfirm.ok"),
+      cancelText: t("events.publishConfirm.cancel"),
+      onOk: () =>
+        publish.mutateAsync(event.id).then(
+          () => void message.success(t("events.publishedToast")),
+          (error: Error) => void message.error(error.message),
+        ),
+    });
+  };
 
   const columns: TableProps<AdminEvent>["columns"] = [
     {
@@ -52,12 +67,7 @@ export function EventsPage() {
             type="primary"
             data-testid={`event-publish-${event.slug}`}
             loading={publish.isPending && publish.variables === event.id}
-            onClick={() =>
-              publish.mutate(event.id, {
-                onSuccess: () => void message.success(t("events.publishedToast")),
-                onError: (error) => void message.error(error.message),
-              })
-            }
+            onClick={() => confirmPublish(event)}
           >
             {t("events.publish")}
           </Button>

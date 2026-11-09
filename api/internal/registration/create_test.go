@@ -209,13 +209,14 @@ func TestCreateOrderIdentOffsetsAreDistinctUnderConcurrency(t *testing.T) {
 	start := make(chan struct{})
 	results := make([]registration.OrderDetail, workers)
 	errs := make([]error, workers)
+	buyers := distinctBuyers(t, e, 910000, workers) // 每位跑者最多 3 张待付款订单，并发方用不同跑者
 	for i := range workers {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			<-start
 			in := e.input(fmt.Sprintf("ident-key-%04d", i), fx.Profile(fmt.Sprintf("Runner %d", i), fmt.Sprintf("C%07d", i), "US", "1990-01-01"))
-			results[i], errs[i] = e.svc.CreateOrder(context.Background(), e.user, in, testMeta)
+			results[i], errs[i] = e.svc.CreateOrder(context.Background(), buyers[i], in, testMeta)
 		}()
 	}
 	close(start)
@@ -240,13 +241,14 @@ func TestCreateOrderLastSeatUnderConcurrency(t *testing.T) {
 	var wg sync.WaitGroup
 	start := make(chan struct{})
 	errs := make([]error, workers)
+	buyers := distinctBuyers(t, e, 920000, workers)
 	for i := range workers {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			<-start
 			in := e.input(fmt.Sprintf("seat-key-%04d", i), fx.Profile(fmt.Sprintf("Runner %d", i), fmt.Sprintf("S%07d", i), "KH", "1990-01-01"))
-			_, errs[i] = e.svc.CreateOrder(context.Background(), e.user, in, testMeta)
+			_, errs[i] = e.svc.CreateOrder(context.Background(), buyers[i], in, testMeta)
 		}()
 	}
 	close(start)
@@ -264,6 +266,80 @@ func TestCreateOrderLastSeatUnderConcurrency(t *testing.T) {
 	require.Equal(t, fx.Counts{Reserved: 1}, e.counts(t, "event_categories", e.event.CategoryIDs[0]))
 	require.Equal(t, 1, fx.Count(t, e.pool, `SELECT count(*) FROM reg_orders`))
 	require.Equal(t, 1, fx.Count(t, e.pool, `SELECT count(*) FROM registrations`))
+}
+
+// distinctBuyers 建 n 个不同的跑者，telegram id 从 base 起。
+func distinctBuyers(t *testing.T, e orderEnv, base int64, n int) []runner.User {
+	t.Helper()
+	buyers := make([]runner.User, n)
+	for i := range buyers {
+		buyers[i] = fx.Runner(t, e.pool, base+int64(i), fmt.Sprintf("Buyer %d", i))
+	}
+	return buyers
+}
+
+// 同一跑者跨赛事最多持有 3 张待付款订单；超时（或过了截止时间）的订单不再计入。
+func TestCreateOrderCapsOpenOrdersPerBuyer(t *testing.T) {
+	e := newOrderEnv(t, 100)
+	ctx := context.Background()
+	other := fx.RaceEvent(t, e.pool, fx.EventOpts{Slug: "siem-reap-2026", RegistrationOpen: true,
+		Categories: []fx.CategoryOpts{{Code: "10K", Capacity: 100, MinAge: 16}}})
+	fx.PriceRule(t, e.pool, other.ID, fx.PriceRuleOpts{PriceCents: 1500, CategoryIDs: other.CategoryIDs})
+	fx.PaymentAccount(t, e.pool, &other.ID)
+
+	for i := range registration.MaxOpenOrdersPerBuyer {
+		_, err := e.svc.CreateOrder(ctx, e.user, e.input(fmt.Sprintf("cap-key-%04d", i),
+			fx.Profile(fmt.Sprintf("Cap %d", i), fmt.Sprintf("K%07d", i), "KH", "1990-01-01")), testMeta)
+		require.NoError(t, err)
+	}
+	// 换一个赛事也被拦：上限跨赛事
+	in := registration.CreateOrderInput{EventSlug: other.Slug, Consent: e.consent, IdempotencyKey: "cap-key-other"}
+	p := fx.Profile("Cap X", "K9999999", "KH", "1990-01-01")
+	in.Participants = []registration.OrderParticipantInput{{CategoryID: other.CategoryIDs[0], Profile: &p}}
+	_, err := e.svc.CreateOrder(ctx, e.user, in, testMeta)
+	ae := requireAppErr(t, err, apperr.CodeTooManyUnpaidOrders, http.StatusConflict)
+	require.Equal(t, registration.MaxOpenOrdersPerBuyer, ae.Params["max"])
+	require.Equal(t, registration.MaxOpenOrdersPerBuyer, fx.Count(t, e.pool, `SELECT count(*) FROM reg_orders`))
+
+	// 别的跑者不受影响
+	_, err = e.svc.CreateOrder(ctx, fx.Runner(t, e.pool, 900099, "Other"), e.input("cap-key-peer",
+		fx.Profile("Peer", "K8888888", "KH", "1990-01-01")), testMeta)
+	require.NoError(t, err)
+
+	// 截止时间已过（超时任务尚未扫到）的订单不再计入
+	e.clock.Advance(48 * time.Hour)
+	_, err = e.svc.CreateOrder(ctx, e.user, in, testMeta)
+	require.NoError(t, err)
+}
+
+// 同一跑者并发下单时上限也不能被绕过：跑者 advisory 锁让计数与插入串行。
+func TestCreateOrderOpenOrderCapUnderConcurrency(t *testing.T) {
+	e := newOrderEnv(t, 100)
+	const workers = 8
+	var wg sync.WaitGroup
+	start := make(chan struct{})
+	errs := make([]error, workers)
+	for i := range workers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			in := e.input(fmt.Sprintf("cap-race-%04d", i), fx.Profile(fmt.Sprintf("Racer %d", i), fmt.Sprintf("R%07d", i), "KH", "1990-01-01"))
+			_, errs[i] = e.svc.CreateOrder(context.Background(), e.user, in, testMeta)
+		}()
+	}
+	close(start)
+	wg.Wait()
+
+	success := 0
+	for _, err := range errs {
+		if err == nil {
+			success++
+			continue
+		}
+		requireAppErr(t, err, apperr.CodeTooManyUnpaidOrders, http.StatusConflict)
+	}
+	require.Equal(t, registration.MaxOpenOrdersPerBuyer, success)
 }
 
 func TestCreateOrderIdempotencyKey(t *testing.T) {

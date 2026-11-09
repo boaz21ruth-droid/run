@@ -1,10 +1,12 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { daraProfile, halfMarathon, jsonResponse } from "../test/fixtures";
 import { consentEn, inTelegram, orderDetail, quoteFor, runnerRoutes } from "../test/orderFixtures";
+import { newParticipant } from "../register/model";
 import { renderApp } from "../test/renderApp";
 import { pasteInto } from "../test/userInput";
+import { hasDraftData } from "./RegisterPage";
 
 const PATH = "/events/phnom-penh-half-2026/register";
 
@@ -438,6 +440,97 @@ describe("RegisterPage", () => {
       expect(await screen.findByText("版本 REG-E2E-v2")).toBeInTheDocument();
       expect(screen.getByTestId("consent-item-rules")).not.toBeChecked();
       expect(screen.getByTestId("order-submit")).toBeDisabled();
+    });
+  });
+
+  describe("步骤与浏览器历史", () => {
+    it("步骤写进 ?step=，浏览器后退/前进在步骤间移动且保留已填内容", async () => {
+      const user = userEvent.setup();
+      const { router } = renderApp(PATH, routes(), inTelegram);
+
+      await user.selectOptions(await screen.findByTestId("participant-0-category"), "11");
+      await user.click(screen.getByTestId("wizard-next"));
+      await fillNewRunner(user, 0);
+      expect(router.state.location.search).toBe("?step=2");
+      await user.click(screen.getByTestId("wizard-next"));
+      await screen.findByTestId("quote-amount");
+      expect(router.state.location.search).toBe("?step=3");
+
+      await act(() => router.navigate(-1));
+      expect(await screen.findByTestId("participant-0-fullName")).toHaveValue("Chan Sophea");
+      expect(router.state.location.search).toBe("?step=2");
+
+      await act(() => router.navigate(-1));
+      expect(await screen.findByTestId("participant-0-category")).toHaveValue("11");
+      expect(router.state.location.pathname).toBe(PATH);
+      expect(router.state.location.search).toBe("");
+
+      await act(() => router.navigate(1));
+      expect(await screen.findByTestId("participant-0-idNo")).toHaveValue("N01234567");
+    });
+
+    it("向导里的「上一步」走浏览器后退，不堆叠重复历史", async () => {
+      const user = userEvent.setup();
+      const { router } = renderApp(PATH, routes(), inTelegram);
+
+      await user.selectOptions(await screen.findByTestId("participant-0-category"), "11");
+      await user.click(screen.getByTestId("wizard-next"));
+      await screen.findByTestId("wizard-back");
+      await user.click(screen.getByTestId("wizard-back"));
+
+      expect(await screen.findByTestId("participant-0-category")).toHaveValue("11");
+      expect(router.state.historyAction).toBe("POP");
+      expect(router.state.location.search).toBe("");
+    });
+
+    it("直接打开带 ?step= 的地址（草稿已不在）从第 1 步开始并去掉参数", async () => {
+      const { router } = renderApp(`${PATH}?step=3`, routes(), inTelegram);
+
+      expect(await screen.findByTestId("participant-0-category")).toHaveValue("");
+      await waitFor(() => expect(router.state.location.search).toBe(""));
+      expect(screen.queryByTestId("order-submit")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("离开确认", () => {
+    it("填了参赛人数据后离开报名页先确认；选「继续填写」留在原页，选「离开」才走", async () => {
+      const user = userEvent.setup();
+      const { router } = renderApp(PATH, routes({ "GET /api/events": () => jsonResponse(200, { items: [] }) }), inTelegram);
+
+      await user.selectOptions(await screen.findByTestId("participant-0-category"), "11");
+      await user.click(screen.getByTestId("tab-events"));
+
+      const dialog = await screen.findByTestId("leave-confirm");
+      expect(dialog).toHaveAttribute("role", "alertdialog");
+      expect(dialog).toHaveTextContent("Leave registration?");
+      expect(router.state.location.pathname).toBe(PATH);
+
+      await user.click(screen.getByTestId("leave-stay"));
+      await waitFor(() => expect(screen.queryByTestId("leave-confirm")).not.toBeInTheDocument());
+      expect(router.state.location.pathname).toBe(PATH);
+      expect(screen.getByTestId("participant-0-category")).toHaveValue("11");
+
+      await user.click(screen.getByTestId("tab-events"));
+      await user.click(await screen.findByTestId("leave-confirm-leave"));
+      await waitFor(() => expect(router.state.location.pathname).toBe("/events"));
+    });
+
+    it("在报名页内换步骤不拦截；没填任何内容时离开不拦截", async () => {
+      const user = userEvent.setup();
+      const { router } = renderApp(PATH, routes({ "GET /api/events": () => jsonResponse(200, { items: [] }) }), inTelegram);
+
+      await screen.findByTestId("participant-0-category");
+      await user.click(screen.getByTestId("tab-events"));
+      await waitFor(() => expect(router.state.location.pathname).toBe("/events"));
+      expect(screen.queryByTestId("leave-confirm")).not.toBeInTheDocument();
+    });
+
+    it("hasDraftData 只在有参赛人数据时为真", () => {
+      expect(hasDraftData([newParticipant()])).toBe(false);
+      expect(hasDraftData([newParticipant(), newParticipant()])).toBe(true);
+      expect(hasDraftData([{ ...newParticipant(), categoryId: 11 }])).toBe(true);
+      const typed = newParticipant();
+      expect(hasDraftData([{ ...typed, form: { ...typed.form, fullName: "A" } }])).toBe(true);
     });
   });
 });

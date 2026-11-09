@@ -12,8 +12,11 @@ import (
 	"werun/api/internal/platform/config"
 )
 
-// base64("dev-only-pii-key-32-bytes-000000")，解码后正好 32 字节
-const validPIIKey = "ZGV2LW9ubHktcGlpLWtleS0zMi1ieXRlcy0wMDAwMDA="
+// base64("dev-only-pii-key-32-bytes-000000")，解码后正好 32 字节；与 .env.example 相同，prod 下会被拒绝
+const examplePIIKey = "ZGV2LW9ubHktcGlpLWtleS0zMi1ieXRlcy0wMDAwMDA="
+
+// base64("prod-pii-key-32-bytes-0000000000")，解码后正好 32 字节；不是示例值，dev 与 prod 都接受
+const validPIIKey = "cHJvZC1waWkta2V5LTMyLWJ5dGVzLTAwMDAwMDAwMDA="
 
 // unset 让变量在本测试内处于"未设置"状态，测试结束后自动恢复原值。
 func unset(t *testing.T, keys ...string) {
@@ -26,7 +29,8 @@ func unset(t *testing.T, keys ...string) {
 
 func setRequired(t *testing.T) {
 	t.Helper()
-	unset(t, "WERUN_ENV", "WERUN_HTTP_ADDR", "WERUN_FILES_DIR", "WERUN_LOG_LEVEL", "WERUN_TELEGRAM_SEND")
+	unset(t, "WERUN_HTTP_ADDR", "WERUN_FILES_DIR", "WERUN_LOG_LEVEL", "WERUN_TELEGRAM_SEND")
+	t.Setenv("WERUN_ENV", "dev")
 	t.Setenv("WERUN_DATABASE_URL", "postgres://werun:werun@localhost:55432/werun?sslmode=disable")
 	t.Setenv("WERUN_SESSION_SECRET", strings.Repeat("s", 32))
 	t.Setenv("WERUN_PII_KEY", validPIIKey)
@@ -52,6 +56,56 @@ func TestLoadAppliesDefaults(t *testing.T) {
 	assert.Equal(t, "", cfg.TelegramSend)
 	assert.Equal(t, "http://werun.localhost", cfg.AppBaseURL)
 	assert.False(t, cfg.TelegramSendEnabled(), "dev 默认不发送")
+}
+
+// WERUN_ENV 没有默认值：生产环境漏配时不能静默按 dev 运行（Cookie 不带 Secure、允许 log 发送器等）。
+func TestLoadRequiresEnv(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		value *string
+	}{
+		{name: "未设置"},
+		{name: "空串", value: new(string)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			setRequired(t)
+			unset(t, "WERUN_ENV")
+			if tc.value != nil {
+				t.Setenv("WERUN_ENV", *tc.value)
+			}
+
+			_, err := config.Load()
+
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "WERUN_ENV")
+		})
+	}
+}
+
+// .env.example 里公开的开发密钥在 prod 下必须拒绝；dev 下照常可用。
+func TestLoadRejectsExampleSecretsInProd(t *testing.T) {
+	const exampleSecret = "dev-only-session-secret-change-me-0123456789"
+	for _, tc := range []struct {
+		name, key, value string
+	}{
+		{"session secret", "WERUN_SESSION_SECRET", exampleSecret},
+		{"pii key", "WERUN_PII_KEY", examplePIIKey},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			setRequired(t)
+			t.Setenv(tc.key, tc.value)
+			t.Setenv("WERUN_APP_BASE_URL", "https://app.werun.asia")
+
+			_, err := config.Load()
+			require.NoError(t, err, "dev 允许使用示例密钥")
+
+			t.Setenv("WERUN_ENV", "prod")
+			_, err = config.Load()
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), tc.key)
+			assert.Contains(t, err.Error(), ".env.example")
+		})
+	}
 }
 
 func TestLoadProd(t *testing.T) {

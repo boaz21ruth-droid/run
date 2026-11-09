@@ -1,8 +1,8 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent, { PointerEventsCheckLevel } from "@testing-library/user-event";
-import dayjs from "dayjs";
 import { beforeEach, describe, expect, it } from "vitest";
 import { adminMe, draftEvent, jsonResponse, opsMe, photographerMe, unauthenticated } from "./test/fixtures";
+import { supportMe } from "./test/reviewFixtures";
 import { renderAdminApp } from "./test/renderAdminApp";
 
 beforeEach(() => {
@@ -128,12 +128,33 @@ describe("赛事列表", () => {
     expect(await screen.findByTestId("event-create-button")).toBeInTheDocument();
     await userEvent.click(await screen.findByTestId("event-publish-phnom-penh-half-2026"));
 
+    // 先弹确认框说明后果，确认前不发请求
+    const dialog = await screen.findByRole("dialog", { name: "Publish “Phnom Penh Half Marathon 2026”?" });
+    expect(within(dialog).getByText(/cannot be reverted to draft/)).toBeInTheDocument();
+    expect(requests.some((request) => request.method === "POST")).toBe(false);
+    await userEvent.click(within(dialog).getByRole("button", { name: "Publish" }));
+
     await waitFor(() => {
       expect(screen.queryByTestId("event-publish-phnom-penh-half-2026")).not.toBeInTheDocument();
     });
     expect(screen.getByText("Published")).toBeInTheDocument();
     const publishRequest = requests.find((request) => request.method === "POST");
     expect(publishRequest?.headers.get("X-WeRun-Client")).toBe("admin");
+  });
+
+  it("发布确认框点取消：不发请求，赛事保持草稿", async () => {
+    const { requests } = renderAdminApp("/events", {
+      "GET /api/admin/me": () => jsonResponse(200, opsMe),
+      "GET /api/admin/events": () => jsonResponse(200, { items: [draftEvent] }),
+    });
+
+    await userEvent.click(await screen.findByTestId("event-publish-phnom-penh-half-2026"));
+    const dialog = await screen.findByRole("dialog");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByTestId("event-publish-phnom-penh-half-2026")).toBeInTheDocument();
+    expect(requests.some((request) => request.method === "POST")).toBe(false);
   });
 
   it("切换语言后页面文案与 html lang 同步", async () => {
@@ -187,8 +208,9 @@ describe("新建赛事", () => {
           name: { zh: "半程", en: "Half marathon", km: "ពាក់កណ្ដាល" },
           distanceM: 21097,
           capacity: 800,
-          startAt: dayjs("2026-11-15 06:00", "YYYY-MM-DD HH:mm").toISOString(),
-          cutoffAt: dayjs("2026-11-15 09:00", "YYYY-MM-DD HH:mm").toISOString(),
+          // 按赛事时区 Asia/Phnom_Penh（UTC+7）解释，与浏览器时区无关
+          startAt: "2026-11-14T23:00:00.000Z",
+          cutoffAt: "2026-11-15T02:00:00.000Z",
         },
       ],
     });
@@ -215,5 +237,56 @@ describe("新建赛事", () => {
     expect(await screen.findByText("Slug already taken")).toBeInTheDocument();
     expect(screen.getByText("Category code is invalid")).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/events/new");
+  });
+});
+
+describe("按角色落地", () => {
+  it("首页跳到角色能访问的第一个菜单页（SUPPORT 没有赛事权限 → 凭证审核）", async () => {
+    const { router } = renderAdminApp("/", {
+      "GET /api/admin/me": () => jsonResponse(200, supportMe),
+      "GET /api/admin/proofs": () => jsonResponse(200, { items: [] }),
+    });
+
+    expect(await screen.findByRole("heading", { name: "Payment review" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/proofs");
+  });
+
+  it("未知地址同样按角色落地", async () => {
+    const { router } = renderAdminApp("/no-such-page", {
+      "GET /api/admin/me": () => jsonResponse(200, supportMe),
+      "GET /api/admin/proofs": () => jsonResponse(200, { items: [] }),
+    });
+
+    await waitFor(() => expect(router.state.location.pathname).toBe("/proofs"));
+  });
+
+  it("直接打开登录页登录后，按角色落地而不是固定去赛事页", async () => {
+    let signedIn = false;
+    const { router } = renderAdminApp("/login", {
+      "GET /api/admin/me": () => (signedIn ? jsonResponse(200, supportMe) : jsonResponse(401, unauthenticated)),
+      "POST /api/admin/auth/login": () => {
+        signedIn = true;
+        return jsonResponse(200, supportMe);
+      },
+      "GET /api/admin/proofs": () => jsonResponse(200, { items: [] }),
+    });
+
+    await userEvent.type(await screen.findByTestId("login-username"), "support.dara");
+    await userEvent.type(screen.getByTestId("login-password"), "correct-horse-battery");
+    await userEvent.click(screen.getByTestId("login-submit"));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe("/proofs"));
+  });
+
+  it("没有任何可访问页面的角色看到友好提示，而不是 403 或空白页", async () => {
+    const { router } = renderAdminApp("/", {
+      "GET /api/admin/me": () => jsonResponse(200, photographerMe),
+    });
+
+    const notice = await screen.findByTestId("no-pages");
+    expect(notice).toHaveTextContent("No pages for your role");
+    expect(notice).toHaveTextContent("Photographer");
+    expect(screen.queryByTestId("forbidden-page")).not.toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/");
   });
 });

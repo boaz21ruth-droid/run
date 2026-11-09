@@ -71,6 +71,14 @@ VALUES (1,'ABA88213',2193,'USD',now(),1,1,'APPLIED','STAFF',1);
 SELECT pg_temp.expect_fail('same bank txn recorded twice',
   $q$INSERT INTO payment_receipts (payment_account_id, txn_ref, amount_cents, currency, received_at, match_status, recorded_by_type)
      VALUES (1,'ABA88213',2193,'USD',now(),'UNMATCHED','SYSTEM')$q$);
+SELECT pg_temp.expect_fail('receipt amount immutable',
+  $q$UPDATE payment_receipts SET amount_cents = 1 WHERE txn_ref = 'ABA88213'$q$);
+SELECT pg_temp.expect_fail('receipt txn ref immutable',
+  $q$UPDATE payment_receipts SET txn_ref = 'ABA00000' WHERE txn_ref = 'ABA88213'$q$);
+SELECT pg_temp.expect_fail('receipt received_at immutable',
+  $q$UPDATE payment_receipts SET received_at = received_at - interval '1 day' WHERE txn_ref = 'ABA88213'$q$);
+-- 对账处理仍可改 match_status（保持同值的 UPDATE 也必须放行）
+UPDATE payment_receipts SET match_status = 'APPLIED' WHERE txn_ref = 'ABA88213';
 UPDATE event_categories SET reserved_count = reserved_count - 1, used_count = used_count + 1 WHERE id = 1;
 UPDATE reg_orders SET status='PAID', reservation_state='CONSUMED', paid_at=now(), deadline_at=NULL WHERE id=1;
 UPDATE registrations SET status='CONFIRMED', confirmed_at=now() WHERE id=1;

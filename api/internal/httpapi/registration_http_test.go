@@ -192,6 +192,25 @@ func TestAppQuoteAndCreateOrderHTTP(t *testing.T) {
 	require.Equal(t, "This ID number is already registered for this event.", dup.Error.Fields["participants[0].idNo"])
 }
 
+// 算价预览按跑者限流（10 分钟 30 次），超出返回 429 RATE_LIMITED 并给出重试等待秒数。
+func TestAppQuoteRateLimitedPerRunnerHTTP(t *testing.T) {
+	env := newOrderHTTPEnv(t)
+	body := map[string]any{
+		"participants": []map[string]any{{"categoryId": env.event.CategoryIDs[0], "nationality": "KH", "birthDate": "1990-05-01"}},
+	}
+	path := "/api/app/events/" + env.event.Slug + "/quote"
+	for i := range 30 {
+		rec := env.do(t, http.MethodPost, path, body, env.token, nil)
+		require.Equal(t, http.StatusOK, rec.Code, "第 %d 次: %s", i+1, rec.Body.String())
+	}
+
+	rec := env.do(t, http.MethodPost, path, body, env.token, nil)
+	require.Equal(t, http.StatusTooManyRequests, rec.Code, rec.Body.String())
+	limited := eventsDecode[httpx.ErrorBody](t, rec)
+	require.Equal(t, apperr.CodeRateLimited, limited.Error.Code)
+	require.Contains(t, limited.Error.Fields, "retryAfterSeconds")
+}
+
 func TestAppQuoteAndCreateOrderRejectParticipantCountHTTP(t *testing.T) {
 	env := newOrderHTTPEnv(t)
 	template := env.orderBody("N01234567")["participants"].([]map[string]any)[0]

@@ -52,6 +52,9 @@ const (
 	maxReviewTextLen = 500
 	// receivedAtFutureTolerance 是到账时间允许晚于服务器时间的最大偏差（财务电脑时钟误差）。
 	receivedAtFutureTolerance = 5 * time.Minute
+	// receivedAtBeforeOrderTolerance 是到账时间允许早于下单时间的最大偏差：后台只录到分钟、银行流水也常只到分钟，
+	// 下单当分钟内到账的真实流水录入后会略早于 created_at；再加上时钟误差。
+	receivedAtBeforeOrderTolerance = 5 * time.Minute
 )
 
 var (
@@ -157,6 +160,10 @@ func (s *Service) ApproveProof(ctx context.Context, actor iam.Staff, id int64, i
 		proof, order, err := s.lockForReview(ctx, tx, q, id)
 		if err != nil {
 			return err
+		}
+		// 到账不可能早于下单：早于下单时间的银行流水只能是另一笔钱，入账会把它错记到这张订单上。
+		if receivedAt.Before(order.CreatedAt.Add(-receivedAtBeforeOrderTolerance)) {
+			return validationError().WithField("receivedAt", "field.received_before_order", nil)
 		}
 		if in.ReceivedAmountCents < order.AmountCents {
 			params := map[string]any{"amountDue": money.Cents(order.AmountCents).String()}

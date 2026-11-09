@@ -11,11 +11,14 @@
     "PHOTOGRAPHER": "摄影师"
   },
   "forbidden": { "title": "没有访问权限", "body": "当前角色不能查看这个页面。如需开通，请联系系统管理员。" },
+  "landing": { "noPagesTitle": "当前角色没有可访问的页面", "noPagesBody": "你已登录为「{{role}}」，但这个角色还没有开通任何后台页面。如需开通，请联系系统管理员。" },
+  "time": { "zone": "时区：{{zone}}", "eventTimezone": "赛事时区" },
   "events": {
     "title": "赛事管理",
     "create": "新建赛事",
     "publish": "发布",
     "publishedToast": "赛事已发布",
+    "publishConfirm": { "title": "发布「{{name}}」？", "body": "发布后赛事会立即出现在跑者端的公开列表中，跑者可以查看详情；开放报名后即可下单。发布后不能撤回为草稿。", "ok": "确认发布", "cancel": "取消" },
     "empty": "还没有赛事",
     "col": { "name": "赛事名称", "date": "比赛日期", "city": "城市", "status": "状态", "actions": "操作" }
   },
@@ -161,6 +164,7 @@
     "active": "启用",
     "inactive": "停用",
     "currencyNote": "收款币种固定为美元（USD）。跑者下单时优先使用绑定该赛事的启用账户，其次使用所有赛事通用的账户。",
+    "confirm": { "qrTitle": "更换收款二维码？", "qrBody": "保存后立即生效：所有使用这个账户、尚未付款的订单（包括已经下单的）付款页都会改为显示新二维码。请先确认新二维码能正常收款。", "disableTitle": "停用这个收款账户？", "disableBody": "停用后新订单不会再分配到这个账户；如果对应赛事没有其他启用的账户，跑者将无法下单付款。已分配到这个账户的订单不受影响。", "ok": "确认保存", "cancel": "取消" },
     "col": {
       "qr": "二维码",
       "name": "名称",
@@ -208,6 +212,7 @@
     },
     "dupTag": "重复截图",
     "overSla": "已超时",
+    "conflict": "这份凭证已被其他同事处理，已刷新为最新状态。",
     "waitingMinutes": "{{minutes}} 分钟",
     "waitingHours": "{{hours}} 小时 {{minutes}} 分钟",
     "empty": "没有凭证",
@@ -233,6 +238,7 @@
       "submit": "确认通过",
       "tooLow": "到账金额少于应付 {{amount}}，不能通过；请以「金额不符」驳回。",
       "overpaid": "多付 {{amount}}，通过后会登记一条多付异常。",
+      "confirmOverpay": "我确认多收 {{amount}}，按实际到账金额通过",
       "invalidAmount": "请输入正确的美元金额，最多两位小数",
       "success": "已通过，订单已确认"
     },

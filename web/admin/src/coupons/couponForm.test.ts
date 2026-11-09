@@ -10,6 +10,9 @@ import {
   toUpdateCouponRequest,
 } from "./couponForm";
 
+/** 赛事时区；DatePicker 的值是该时区的墙上时间（见 time/eventTime.ts） */
+const TZ = "Asia/Phnom_Penh";
+
 describe("parseDiscountValue", () => {
   it.each([
     ["PERCENT", "20", 20],
@@ -37,9 +40,10 @@ describe("请求体转换", () => {
         discountType: "AMOUNT",
         discountValue: "5.5",
         quota: 10,
-        validFrom: dayjs("2026-09-20T01:00:00Z"),
+        validFrom: dayjs("2026-09-20 08:00", "YYYY-MM-DD HH:mm"),
       },
       7,
+      TZ,
     );
 
     expect(body).toEqual({
@@ -56,21 +60,21 @@ describe("请求体转换", () => {
   });
 
   it("修改：请求体不含代码，免单值为 0", () => {
-    const body = toUpdateCouponRequest({ ...fromCoupon(earlyCoupon), discountType: "WAIVER", discountValue: "" }, 7);
+    const body = toUpdateCouponRequest({ ...fromCoupon(earlyCoupon, TZ), discountType: "WAIVER", discountValue: "" }, 7, TZ);
 
     expect(body).not.toHaveProperty("code");
     expect(body).toMatchObject({ eventId: 7, discountType: "WAIVER", discountValue: 0, quota: 50, minRunners: 2 });
   });
 
   it("折扣值非法时抛错（表单校验保证不会走到这里）", () => {
-    expect(() => toCreateCouponRequest({ ...emptyCoupon(), code: "ABC", discountValue: "0", quota: 1 }, 7)).toThrow(
+    expect(() => toCreateCouponRequest({ ...emptyCoupon(), code: "ABC", discountValue: "0", quota: 1 }, 7, TZ)).toThrow(
       "invalid discount",
     );
   });
 
   it("fromCoupon 回填与 formatDiscount 展示", () => {
-    expect(fromCoupon(earlyCoupon)).toMatchObject({ code: "EARLY_2026", discountValue: "20", quota: 50, minRunners: 2 });
-    expect(fromCoupon({ ...earlyCoupon, discountType: "AMOUNT", discountValue: 500 }).discountValue).toBe("5.00");
+    expect(fromCoupon(earlyCoupon, TZ)).toMatchObject({ code: "EARLY_2026", discountValue: "20", quota: 50, minRunners: 2 });
+    expect(fromCoupon({ ...earlyCoupon, discountType: "AMOUNT", discountValue: 500 }, TZ).discountValue).toBe("5.00");
     expect(formatDiscount(earlyCoupon, "Free")).toBe("20%");
     expect(formatDiscount({ discountType: "AMOUNT", discountValue: 250 }, "Free")).toBe("$2.50");
     expect(formatDiscount({ discountType: "WAIVER", discountValue: 0 }, "Free")).toBe("Free");

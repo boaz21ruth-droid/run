@@ -130,7 +130,7 @@ func registrationOpen(status, eventType string, open bool, opensAt, closesAt *ti
 // CreateOrder 按 spec 6.1 在一个事务（默认 READ COMMITTED）里下单。同一跑者同一幂等键：请求体相同返回首次响应，
 // 不同返回 IDEMPOTENCY_KEY_REUSED。
 //
-// 锁顺序（契约补充 6）：events 行 FOR SHARE → 幂等键行 → 证件号哈希 advisory 锁 → pricing.Quote 内的收款账户 advisory 锁
+// 锁顺序（契约补充 6）：events 行 FOR SHARE → 幂等键行 → 跑者 advisory 锁（未付款订单上限）→ 证件号哈希 advisory 锁 → pricing.Quote 内的收款账户 advisory 锁
 // → Reserve 更新的组别、价格档、优惠码行；订单在 Reserve 之后于同一事务写入，收款账户锁一直持有到提交。
 func (s *Service) CreateOrder(ctx context.Context, u runner.User, in CreateOrderInput, meta httpx.Meta) (OrderDetail, error) {
 	norm, err := normalizeCreateInput(in)
@@ -222,6 +222,23 @@ func claimIdempotencyKey(ctx context.Context, q *store.Queries, subject, key str
 	return orderDetailFromAPI(body), true, nil
 }
 
+// checkOpenOrderCap 拒绝已有 MaxOpenOrdersPerBuyer 个待付款订单的跑者再下单：每张待付款订单都占着名额，
+// 不设上限时一个账号就能批量下单把各赛事名额占满直到超时。
+func checkOpenOrderCap(ctx context.Context, q *store.Queries, userID int64, now time.Time) error {
+	if err := q.LockBuyerOpenOrders(ctx, userID); err != nil {
+		return fmt.Errorf("lock buyer %d open orders: %w", userID, err)
+	}
+	n, err := q.CountOpenOrdersForBuyer(ctx, store.CountOpenOrdersForBuyerParams{BuyerUserID: userID, Now: now})
+	if err != nil {
+		return fmt.Errorf("count open orders for buyer %d: %w", userID, err)
+	}
+	if n >= MaxOpenOrdersPerBuyer {
+		return apperr.New(http.StatusConflict, apperr.CodeTooManyUnpaidOrders).
+			WithParams(map[string]any{"max": MaxOpenOrdersPerBuyer})
+	}
+	return nil
+}
+
 type resolvedParticipant struct {
 	input   OrderParticipantInput
 	profile runner.ProfileData // 已规范化
@@ -233,6 +250,11 @@ func (s *Service) createOrderTx(ctx context.Context, tx pgx.Tx, q *store.Queries
 	// 1. 校验报名开放（赛事行已由调用方 FOR SHARE 锁住）
 	if !registrationOpen(ev.Status, ev.EventType, ev.RegistrationOpen, ev.RegistrationOpensAt, ev.RegistrationClosesAt, now) {
 		return OrderDetail{}, apperr.New(http.StatusConflict, apperr.CodeRegistrationClosed)
+	}
+
+	// 1b. 未付款订单上限：跨赛事计数，先加跑者 advisory 锁，防止并发下单同时通过计数
+	if err := checkOpenOrderCap(ctx, q, u.ID, now); err != nil {
+		return OrderDetail{}, err
 	}
 
 	// 2. 参赛人资料与单内证件号去重（人数已在 normalizeCreateInput 校验）

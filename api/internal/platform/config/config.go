@@ -15,9 +15,17 @@ import (
 // fixedCodePattern 是 WERUN_OTP_FIXED_CODE 的格式：6 位数字。
 var fixedCodePattern = regexp.MustCompile(`^[0-9]{6}$`)
 
+// 下面两个值是仓库根目录 .env.example 里随代码公开的开发密钥。任何人都能读到它们，
+// 所以 WERUN_ENV=prod 时必须拒绝：用它们签发的会话可被伪造，加密的个人信息可被解密。
+// 修改 .env.example 里的对应值时同步修改这里。
+const (
+	devExampleSessionSecret = "dev-only-session-secret-change-me-0123456789"
+	devExamplePIIKey        = "ZGV2LW9ubHktcGlpLWtleS0zMi1ieXRlcy0wMDAwMDA="
+)
+
 // Config 是 werun 进程的全部运行配置。
 type Config struct {
-	Env                  string `env:"WERUN_ENV" envDefault:"dev"`
+	Env                  string `env:"WERUN_ENV,required"` // 必须显式设置 dev | prod，不提供默认值，避免生产环境漏配时静默按 dev 运行
 	HTTPAddr             string `env:"WERUN_HTTP_ADDR" envDefault:":8080"`
 	DatabaseURL          string `env:"WERUN_DATABASE_URL,required"`
 	SessionSecret        string `env:"WERUN_SESSION_SECRET,required"`
@@ -41,8 +49,15 @@ func Load() (Config, error) {
 	if err != nil {
 		errs = append(errs, err)
 	}
-	if cfg.Env != "dev" && cfg.Env != "prod" {
+	// 变量未设置时 env.ParseAs 已经报过 WERUN_ENV，不重复报
+	if cfg.Env != "dev" && cfg.Env != "prod" && (err == nil || !strings.Contains(err.Error(), "WERUN_ENV")) {
 		errs = append(errs, fmt.Errorf("WERUN_ENV must be dev or prod, got %q", cfg.Env))
+	}
+	if cfg.IsProd() && cfg.SessionSecret == devExampleSessionSecret {
+		errs = append(errs, errors.New("WERUN_SESSION_SECRET is the public development value from .env.example; it must be replaced when WERUN_ENV=prod"))
+	}
+	if cfg.IsProd() && cfg.PIIKey == devExamplePIIKey {
+		errs = append(errs, errors.New("WERUN_PII_KEY is the public development value from .env.example; it must be replaced when WERUN_ENV=prod"))
 	}
 	if cfg.SessionSecret != "" && len(cfg.SessionSecret) < 32 {
 		errs = append(errs, errors.New("WERUN_SESSION_SECRET must be at least 32 bytes"))

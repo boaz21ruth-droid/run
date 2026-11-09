@@ -1,6 +1,7 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent, { PointerEventsCheckLevel } from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { PROOF_QUEUE_REFETCH_MS, PROOFS_KEY } from "./proofs/queries";
 import { jsonResponse, photographerMe } from "./test/fixtures";
 import { renderAdminApp } from "./test/renderAdminApp";
 import {
@@ -15,6 +16,10 @@ import {
 
 beforeEach(() => {
   window.localStorage.setItem("werun.lang", "en");
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 /** antd 表单交互关闭 pointer-events 检查，原因见 app.test.tsx */
@@ -169,5 +174,155 @@ describe("凭证详情", () => {
     expect(screen.getByTestId("proof-image")).toBeInTheDocument();
     expect(screen.queryByTestId("proof-approve-open")).not.toBeInTheDocument();
     expect(screen.queryByTestId("proof-reject-open")).not.toBeInTheDocument();
+  });
+});
+
+describe("凭证队列：刷新与键盘", () => {
+  it("队列每 30 秒自动刷新", async () => {
+    const { queryClient } = renderAdminApp("/proofs", {
+      "GET /api/admin/me": () => jsonResponse(200, reviewerMe),
+      "GET /api/admin/proofs": () => jsonResponse(200, { items: queueItems }),
+    });
+
+    await screen.findByTestId("proof-row-PF8H2K4M6N");
+    const query = queryClient.getQueryCache().find({ queryKey: [...PROOFS_KEY, "queue", "SUBMITTED"] });
+    expect(PROOF_QUEUE_REFETCH_MS).toBe(30_000);
+    expect((query?.options as { refetchInterval?: unknown }).refetchInterval).toBe(30_000);
+  });
+
+  it("等待时长不用刷新页面也会走动", async () => {
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
+    vi.setSystemTime(new Date("2026-09-14T02:10:00Z"));
+    renderAdminApp("/proofs", {
+      "GET /api/admin/me": () => jsonResponse(200, reviewerMe),
+      "GET /api/admin/proofs": () => jsonResponse(200, { items: [queueItems[1]!] }),
+    });
+
+    const row = await screen.findByTestId("proof-row-PF3J5L7P9R");
+    expect(row).toHaveTextContent("10 min");
+
+    await act(async () => {
+      vi.advanceTimersByTime(60_000);
+    });
+    expect(screen.getByTestId("proof-row-PF3J5L7P9R")).toHaveTextContent("11 min");
+  });
+
+  it("行可以用 Tab 聚焦、按 Enter 打开详情", async () => {
+    const { router } = renderAdminApp("/proofs", {
+      "GET /api/admin/me": () => jsonResponse(200, reviewerMe),
+      "GET /api/admin/proofs": () => jsonResponse(200, { items: queueItems }),
+      "GET /api/admin/proofs/301": () => jsonResponse(200, proofDetail),
+    });
+
+    const row = await screen.findByTestId("proof-row-PF8H2K4M6N");
+    expect(row).toHaveAttribute("tabindex", "0");
+    row.focus();
+    await setupFormUser().keyboard("{Enter}");
+
+    await waitFor(() => expect(router.state.location.pathname).toBe("/proofs/301"));
+  });
+});
+
+describe("凭证审核：并发冲突与多付确认", () => {
+  const conflict = () =>
+    jsonResponse(409, { error: { code: "ORDER_STATE_CONFLICT", message: "Order state has changed" } });
+
+  it("通过时 409：关闭弹窗、提示已被他人处理，并重新拉取最新详情", async () => {
+    let handledElsewhere = false;
+    const { requests } = renderAdminApp("/proofs/301", {
+      "GET /api/admin/me": () => jsonResponse(200, reviewerMe),
+      "GET /api/admin/proofs/301": () => jsonResponse(200, handledElsewhere ? approvedDetail : proofDetail),
+      "POST /api/admin/proofs/301/approve": () => {
+        handledElsewhere = true;
+        return conflict();
+      },
+    });
+
+    const user = setupFormUser();
+    await user.click(await screen.findByTestId("proof-approve-open"));
+    await findField("approve_receivedUsd");
+    await waitFor(() => expect(screen.getByTestId("proof-approve-submit")).toBeEnabled());
+    await user.click(screen.getByTestId("proof-approve-submit"));
+
+    expect(await screen.findByText("Another staff member has already handled this proof. Showing the latest status.")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByTestId("proof-approve-submit")).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId("proof-status")).toHaveAttribute("data-status", "APPROVED"));
+    expect(screen.queryByTestId("proof-approve-open")).not.toBeInTheDocument();
+    const detailFetches = requests.filter(
+      (request) => request.method === "GET" && new URL(request.url).pathname === "/api/admin/proofs/301",
+    );
+    expect(detailFetches.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("驳回时 409：同样关闭弹窗并刷新", async () => {
+    let handledElsewhere = false;
+    renderAdminApp("/proofs/301", {
+      "GET /api/admin/me": () => jsonResponse(200, reviewerMe),
+      "GET /api/admin/proofs/301": () => jsonResponse(200, handledElsewhere ? approvedDetail : proofDetail),
+      "POST /api/admin/proofs/301/reject": () => {
+        handledElsewhere = true;
+        return conflict();
+      },
+    });
+
+    const user = setupFormUser();
+    await user.click(await screen.findByTestId("proof-reject-open"));
+    await user.click(await findField("reject_rejectCode"));
+    await user.click(await screen.findByTitle("Payment not received"));
+    await user.click(screen.getByTestId("proof-reject-submit"));
+
+    expect(await screen.findByText("Another staff member has already handled this proof. Showing the latest status.")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByTestId("proof-reject-submit")).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId("proof-status")).toHaveAttribute("data-status", "APPROVED"));
+  });
+
+  it("到账金额大于应付：必须勾选确认多付才能提交，改金额后需要重新确认", async () => {
+    const { requests } = renderAdminApp("/proofs/301", {
+      "GET /api/admin/me": () => jsonResponse(200, reviewerMe),
+      "GET /api/admin/proofs/301": () => jsonResponse(200, proofDetail),
+      "POST /api/admin/proofs/301/approve": () => jsonResponse(200, approvedDetail),
+    });
+
+    const user = setupFormUser();
+    await user.click(await screen.findByTestId("proof-approve-open"));
+    const amount = await findField<HTMLInputElement>("approve_receivedUsd");
+    await user.clear(amount);
+    await user.paste("30.00");
+
+    const confirm = await screen.findByTestId("proof-approve-overpay-confirm");
+    expect(screen.getByTestId("proof-approve-overpaid")).toHaveTextContent("I confirm the overpayment of $5.49");
+    await waitFor(() => expect(screen.getByTestId("proof-approve-submit")).toBeDisabled());
+
+    await user.click(confirm);
+    await waitFor(() => expect(screen.getByTestId("proof-approve-submit")).toBeEnabled());
+
+    // 金额变了，之前的确认作废
+    await user.clear(amount);
+    await user.paste("31.00");
+    await waitFor(() => expect(screen.getByTestId("proof-approve-submit")).toBeDisabled());
+    expect(screen.getByTestId("proof-approve-overpaid")).toHaveTextContent("$6.49");
+    expect(requests.some((request) => request.method === "POST")).toBe(false);
+
+    await user.click(screen.getByTestId("proof-approve-overpay-confirm"));
+    await waitFor(() => expect(screen.getByTestId("proof-approve-submit")).toBeEnabled());
+    await user.click(screen.getByTestId("proof-approve-submit"));
+
+    await waitFor(() => expect(requests.some((request) => request.method === "POST")).toBe(true));
+    const post = requests.find((request) => request.method === "POST");
+    expect(await post!.clone().json()).toMatchObject({ receivedAmountCents: 3100 });
+  });
+
+  it("到账时间按赛事时区回填与显示，旁边标出时区", async () => {
+    renderAdminApp("/proofs/301", {
+      "GET /api/admin/me": () => jsonResponse(200, reviewerMe),
+      "GET /api/admin/proofs/301": () => jsonResponse(200, proofDetail),
+    });
+
+    // declaredPaidAt 2026-09-14T02:55:00Z = 金边 09:55
+    expect(await screen.findByText("2026-09-14 09:55")).toBeInTheDocument();
+    const user = setupFormUser();
+    await user.click(screen.getByTestId("proof-approve-open"));
+    expect(await findField<HTMLInputElement>("approve_receivedAt")).toHaveValue("2026-09-14 09:55");
+    expect(screen.getByTestId("timezone-hint")).toHaveTextContent("Asia/Phnom_Penh (UTC+7)");
   });
 });

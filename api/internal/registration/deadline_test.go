@@ -177,9 +177,10 @@ func TestProcessDeadlinesReleasesOnlyOverdueOrderAndKeepsOtherReservations(t *te
 func TestProcessDeadlinesProcessesMultipleBatches(t *testing.T) {
 	env := regtest.New(t)
 	ctx := context.Background()
-	user := env.NewRunner(t, 810005, "en")
 	const total = 150
 	for i := range total {
+		// 每位跑者最多 3 张待付款订单（registration.MaxOpenOrdersPerBuyer），每单换一个跑者
+		user := env.NewRunner(t, 810100+int64(i), "en")
 		env.CreateOrder(t, user, fmt.Sprintf("B%07d", i), "")
 	}
 	require.Equal(t, total, env.Counters(t).CategoryReserved)
