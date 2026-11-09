@@ -96,5 +96,10 @@
   "VOLUNTEER_APPLIED": "You've already applied. The organizer will get back to you.",
   "VOLUNTEER_ROLE_FULL": "This role is full. Add seats first or pick another role.",
   "VOLUNTEER_STATE_CONFLICT": "This application has changed. Refresh and try again.",
-  "field.volunteer_roles_max": "Pick up to {max} roles."
+  "field.volunteer_roles_max": "Pick up to {max} roles.",
+  "COMMUNITY_TOO_MANY": "You already have {max} runs in review or coming up. Post a new one after they're done.",
+  "COMMUNITY_CLOSED": "This run has started, been cancelled or taken down, so you can't join.",
+  "COMMUNITY_STATE_CONFLICT": "This run has changed. Refresh and try again.",
+  "field.community_starts_soon": "The start time must be at least 1 hour from now.",
+  "field.community_contact_required": "Leave a Telegram username or a phone number."
 }

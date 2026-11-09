@@ -13,6 +13,7 @@ export const PERM_PROOF_REVIEW = "proof_review";
 export const PERM_RACEPACK_ISSUE = "racepack_issue";
 export const PERM_RACEPACK_UNDO = "racepack_undo";
 export const PERM_ACCESS_MANAGE = "access_manage";
+export const PERM_CONTENT_MANAGE = "content_manage";
 
 /** 与后端 iam.Allowed 规则一致：要求读时，读或写权限都可以；要求写时，必须有写权限 */
 export function can(permissions: PermissionMap | undefined, permission: string, access: Access): boolean {

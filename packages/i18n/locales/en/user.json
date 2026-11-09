@@ -156,7 +156,8 @@
     "save": "Save",
     "saving": "Saving…",
     "saved": "Saved",
-    "logout": "Log out"
+    "logout": "Log out",
+    "linksLabel": "More"
   },
   "profiles": {
     "nav": "Saved runners",
@@ -392,7 +393,8 @@
       "home": "Home",
       "events": "Events",
       "orders": "My events",
-      "profiles": "Runners"
+      "profiles": "Runners",
+      "community": "Clubs"
     }
   },
   "titles": {
@@ -554,6 +556,115 @@
       "dates": "Pick at least one day.",
       "roles": "Pick at least one role.",
       "conduct": "Tick the code of conduct and the seats note."
+    }
+  },
+  "community": {
+    "nav": "Clubs",
+    "title": "Run clubs",
+    "detailTitle": "Club run",
+    "publish": "Post a run",
+    "filter": {
+      "label": "Filter runs",
+      "all": "All",
+      "official": "Official · free",
+      "club": "By clubs"
+    },
+    "empty": "No runs coming up. Post one!",
+    "disclaimer": "Club runs are organised by their hosts. WeRun only hosts the post and sign-ups and isn't on site.",
+    "checkin": {
+      "title": "Who's running today",
+      "ttl": "Shows for 8 hours",
+      "me": "I'm in",
+      "on": "You're in",
+      "nobody": "Nobody yet"
+    },
+    "official": "WeRun official",
+    "verified": "Verified",
+    "count": "{{joined}} / {{capacity}}",
+    "fullWaitlist": "Full · {{n}} waiting",
+    "fullOpen": "Full · waitlist open",
+    "waitlistCount": "{{n}} waiting",
+    "freeSignup": "Sign up free",
+    "viewEvent": "View",
+    "join": "Join",
+    "waitlist": "Waitlist",
+    "joinWaitlist": "Full · join the waitlist",
+    "notOpen": "Started or not open",
+    "youJoined": "You're in",
+    "youWaitlisted": "You're on the waitlist and move up if someone drops out",
+    "leave": "Can't make it",
+    "leaveWaitlist": "Leave the waitlist",
+    "contactTitle": "Contact the host",
+    "contactHidden": "You'll see the host's contact after you join.",
+    "close": "Cancel this run",
+    "closeConfirm": "It disappears from the club page and you'll need to tell people who joined. Cancel it?",
+    "keep": "Keep it",
+    "reviewingHint": "It appears on the club page once approved, usually within one working day.",
+    "status": {
+      "REVIEWING": "In review",
+      "PUBLISHED": "Live",
+      "REJECTED": "Not approved",
+      "CLOSED": "Cancelled",
+      "FROZEN": "Taken down"
+    },
+    "reject": {
+      "R01": "Missing details: add the time, meeting point and contact, then post again.",
+      "R02": "Paid or promotional: club runs can only charge clear costs.",
+      "R03": "Safety risk in the route, time or group size.",
+      "R04": "Inappropriate content.",
+      "R05": "Duplicate post."
+    },
+    "tags": {
+      "MORNING": "Morning run",
+      "NIGHT": "Night run",
+      "LONG": "Long run",
+      "TRAIL": "Trail",
+      "TRAINING": "Training",
+      "FAMILY": "Family",
+      "CYCLING": "Cycling",
+      "OTHER": "Other"
+    },
+    "visibility": {
+      "JOINED": "After joining",
+      "PUBLIC": "Everyone"
+    },
+    "fields": {
+      "title": "Name",
+      "tag": "Type",
+      "time": "Start time",
+      "city": "City",
+      "location": "Area",
+      "meetPoint": "Meeting point",
+      "distance": "Distance / pace",
+      "capacity": "Spots",
+      "fee": "Cost",
+      "spots": "Joined",
+      "host": "Host",
+      "hostName": "Club name (optional)",
+      "telegram": "Telegram username",
+      "phone": "Phone",
+      "contactVisibility": "Who sees your contact",
+      "body": "Details"
+    },
+    "new": {
+      "title": "Post a club run",
+      "intro": "WeRun doesn't take money or run things on site. Posts are usually reviewed before they appear.",
+      "titlePlaceholder": "e.g. Wednesday night run · Riverside 8K",
+      "locationPlaceholder": "e.g. Riverside",
+      "meetPlaceholder": "e.g. North side of Independence Monument",
+      "feePlaceholder": "Free / $1 for drinks",
+      "consentTitle": "Club run disclaimer",
+      "submit": "Post",
+      "submitting": "Posting…"
+    },
+    "mine": {
+      "title": "My club runs",
+      "empty": "You haven't posted a run yet."
+    },
+    "errors": {
+      "capacity": "Spots must be 1–500.",
+      "contact": "Leave a Telegram username or phone number.",
+      "consent": "Tick the disclaimer."
     }
   }
 }

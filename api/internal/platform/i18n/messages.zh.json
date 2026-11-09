@@ -96,5 +96,10 @@
   "VOLUNTEER_APPLIED": "你已经提交过志愿者申请，请等待主办方安排。",
   "VOLUNTEER_ROLE_FULL": "这个岗位的席位已满，请先调高席位或选别的岗位。",
   "VOLUNTEER_STATE_CONFLICT": "这份申请的状态已经变了，请刷新后再操作。",
-  "field.volunteer_roles_max": "最多选 {max} 个岗位。"
+  "field.volunteer_roles_max": "最多选 {max} 个岗位。",
+  "COMMUNITY_TOO_MANY": "你已经有 {max} 个审核中或即将开始的活动，结束后再发布新的。",
+  "COMMUNITY_CLOSED": "这个活动已开始、已取消或暂时下架，不能报名了。",
+  "COMMUNITY_STATE_CONFLICT": "活动状态已经变了，请刷新后再操作。",
+  "field.community_starts_soon": "开始时间至少要在 1 小时以后。",
+  "field.community_contact_required": "请至少留一个 Telegram 用户名或手机号。"
 }

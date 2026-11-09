@@ -1188,6 +1188,246 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/community/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 跑团页：官方免费活动与跑团活动混排、今天谁在跑 */
+        get: operations["getCommunityFeed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/community/activities/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 跑团活动详情（已发布、未冻结；不含联系方式） */
+        get: operations["getCommunityActivity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/app/community/activities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发布跑团活动（签署免责声明；需要审核时先进审核） */
+        post: operations["appCreateCommunityActivity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/app/community/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 我发布的跑团活动（含审核状态） */
+        get: operations["appListMyCommunityActivities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/app/community/activities/{id}/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 我在这个活动的状态与联系方式（按发起人设置的可见范围） */
+        get: operations["appGetCommunityActivityMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/app/community/activities/{id}/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 参加；满员时进候补 */
+        post: operations["appJoinCommunityActivity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/app/community/activities/{id}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 退出或取消候补；空出的名额按候补先后补上 */
+        post: operations["appLeaveCommunityActivity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/app/community/activities/{id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 发起人取消活动 */
+        post: operations["appCloseCommunityActivity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/app/community/checkin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 我今天有没有签到「我在跑」 */
+        get: operations["appGetCommunityCheckin"];
+        put?: never;
+        /** 签到「今天我在跑」，8 小时内显示在跑团页 */
+        post: operations["appCommunityCheckin"];
+        /** 取消今天的签到 */
+        delete: operations["appCommunityCheckout"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/community/activities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 跑团活动审核列表（待审核在前） */
+        get: operations["adminListCommunityActivities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/community/activities/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 审核通过并发布 */
+        post: operations["adminApproveCommunityActivity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/community/activities/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 审核不通过（R01–R05） */
+        post: operations["adminRejectCommunityActivity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/community/activities/{id}/freeze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 紧急冻结（跑者看不到，解冻后恢复） */
+        post: operations["adminFreezeCommunityActivity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/community/activities/{id}/unfreeze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 解冻 */
+        post: operations["adminUnfreezeCommunityActivity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1480,6 +1720,147 @@ export interface components {
         };
         RejectVolunteerRequest: {
             note?: string;
+        };
+        /** @enum {string} */
+        CommunityTag: "MORNING" | "NIGHT" | "LONG" | "TRAIL" | "TRAINING" | "FAMILY" | "CYCLING" | "OTHER";
+        /** @enum {string} */
+        CommunityStatus: "REVIEWING" | "PUBLISHED" | "REJECTED" | "CLOSED";
+        CommunityFeedItem: {
+            /**
+             * @description OFFICIAL = 官方免费活动（赛事），CLUB = 跑团发起
+             * @enum {string}
+             */
+            kind: "OFFICIAL" | "CLUB";
+            /**
+             * Format: int64
+             * @description OFFICIAL 时是赛事 id
+             */
+            id: number;
+            eventSlug: string | null;
+            title: string;
+            /** Format: date-time */
+            startsAt: string;
+            city: string;
+            location: string;
+            /** @description 跑团名；没填时为发起人显示名。官方为空串 */
+            hostName: string;
+            tag: components["schemas"]["CommunityTag"] | null;
+            distanceText: string | null;
+            /** Format: int32 */
+            capacity: number;
+            /** Format: int32 */
+            joinedCount: number;
+            /** Format: int32 */
+            waitlistCount: number;
+            /** @description 跑团写的费用说明；官方免费活动为空 */
+            feeNote: string | null;
+            coverUrl: string | null;
+            /** @description 最早报名的几位跑者的名字缩写（头像用） */
+            joinerInitials: string[];
+        };
+        CommunityCheckin: {
+            /** @description 显示名的第一个词 */
+            name: string;
+            initials: string;
+        };
+        CommunityFeed: {
+            items: components["schemas"]["CommunityFeedItem"][];
+            checkins: components["schemas"]["CommunityCheckin"][];
+            /** @description 有活动的城市，供筛选 */
+            cities: string[];
+        };
+        CommunityActivity: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+            tag: components["schemas"]["CommunityTag"];
+            /** Format: date-time */
+            startsAt: string;
+            city: string;
+            location: string;
+            meetPoint: string;
+            distanceText: string | null;
+            /** Format: int32 */
+            capacity: number;
+            /** Format: int32 */
+            joinedCount: number;
+            /** Format: int32 */
+            waitlistCount: number;
+            feeNote: string;
+            hostName: string | null;
+            authorName: string;
+            body: string;
+            /** @enum {string} */
+            contactVisibility: "JOINED" | "PUBLIC";
+            status: components["schemas"]["CommunityStatus"];
+            rejectCode: string | null;
+            frozen: boolean;
+            joinerInitials: string[];
+        };
+        CommunityActivityList: {
+            items: components["schemas"]["CommunityActivity"][];
+        };
+        CommunityContact: {
+            telegram: string | null;
+            phone: string | null;
+        };
+        CommunityActivityView: {
+            activity: components["schemas"]["CommunityActivity"];
+            /** @enum {string} */
+            myStatus: "NONE" | "JOINED" | "WAITLIST";
+            isAuthor: boolean;
+            /** @description 发起人联系方式；仅公开、已参加或发起人本人可见 */
+            contact: components["schemas"]["CommunityContact"] | null;
+        };
+        CreateCommunityActivity: {
+            title: string;
+            tag: components["schemas"]["CommunityTag"];
+            /** Format: date-time */
+            startsAt: string;
+            city?: string;
+            location: string;
+            meetPoint: string;
+            distanceText?: string;
+            /** Format: int32 */
+            capacity: number;
+            feeNote?: string;
+            hostName?: string;
+            contactTelegram?: string;
+            contactPhone?: string;
+            /** @enum {string} */
+            contactVisibility: "JOINED" | "PUBLIC";
+            body: string;
+            consent: components["schemas"]["OrderConsentInput"];
+        };
+        CommunityCheckinRequest: {
+            city?: string;
+        };
+        CommunityCheckinState: {
+            checkedIn: boolean;
+            checkins: components["schemas"]["CommunityCheckin"][];
+        };
+        AdminCommunityActivity: {
+            activity: components["schemas"]["CommunityActivity"];
+            authorTelegram: string | null;
+            contactTelegram: string | null;
+            contactPhone: string | null;
+            reviewRequired: boolean;
+            freezeReason: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AdminCommunityActivityList: {
+            items: components["schemas"]["AdminCommunityActivity"][];
+        };
+        RejectCommunityActivityRequest: {
+            /**
+             * @description R01 信息不全 · R02 涉及收费或商业推广 · R03 安全风险 · R04 内容不当 · R05 重复发布
+             * @enum {string}
+             */
+            code: "R01" | "R02" | "R03" | "R04" | "R05";
+        };
+        FreezeCommunityActivityRequest: {
+            reason: string;
         };
         RejectCompRequest: {
             note?: string;
@@ -3613,7 +3994,7 @@ export interface operations {
     appGetConsent: {
         parameters: {
             query: {
-                purpose: "REGISTRATION";
+                purpose: "REGISTRATION" | "COMMUNITY";
                 lang?: "zh" | "en" | "km";
             };
             header?: never;
@@ -5181,6 +5562,509 @@ export interface operations {
                 };
             };
             /** @description 错误（VOLUNTEER_STATE_CONFLICT） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getCommunityFeed: {
+        parameters: {
+            query?: {
+                kind?: "ALL" | "OFFICIAL" | "CLUB";
+                city?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityFeed"];
+                };
+            };
+            /** @description 错误（VALIDATION_FAILED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getCommunityActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityActivity"];
+                };
+            };
+            /** @description 错误（NOT_FOUND） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appCreateCommunityActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCommunityActivity"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityActivity"];
+                };
+            };
+            /** @description 错误（CONSENT_INVALID、COMMUNITY_TOO_MANY、VALIDATION_FAILED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appListMyCommunityActivities: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityActivityList"];
+                };
+            };
+            /** @description 错误（VALIDATION_FAILED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appGetCommunityActivityMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityActivityView"];
+                };
+            };
+            /** @description 错误（NOT_FOUND） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appJoinCommunityActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityActivityView"];
+                };
+            };
+            /** @description 错误（COMMUNITY_CLOSED、COMMUNITY_STATE_CONFLICT） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appLeaveCommunityActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityActivityView"];
+                };
+            };
+            /** @description 错误（COMMUNITY_STATE_CONFLICT） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appCloseCommunityActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityActivityView"];
+                };
+            };
+            /** @description 错误（COMMUNITY_STATE_CONFLICT） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appGetCommunityCheckin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityCheckinState"];
+                };
+            };
+            /** @description 错误（VALIDATION_FAILED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appCommunityCheckin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommunityCheckinRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityCheckinState"];
+                };
+            };
+            /** @description 错误（VALIDATION_FAILED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appCommunityCheckout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityCheckinState"];
+                };
+            };
+            /** @description 错误（VALIDATION_FAILED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminListCommunityActivities: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["CommunityStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCommunityActivityList"];
+                };
+            };
+            /** @description 错误（VALIDATION_FAILED） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminApproveCommunityActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCommunityActivity"];
+                };
+            };
+            /** @description 错误（COMMUNITY_STATE_CONFLICT） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminRejectCommunityActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectCommunityActivityRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCommunityActivity"];
+                };
+            };
+            /** @description 错误（COMMUNITY_STATE_CONFLICT） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminFreezeCommunityActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FreezeCommunityActivityRequest"];
+            };
+        };
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCommunityActivity"];
+                };
+            };
+            /** @description 错误（COMMUNITY_STATE_CONFLICT） */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminUnfreezeCommunityActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCommunityActivity"];
+                };
+            };
+            /** @description 错误（COMMUNITY_STATE_CONFLICT） */
             default: {
                 headers: {
                     [name: string]: unknown;

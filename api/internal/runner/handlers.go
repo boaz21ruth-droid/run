@@ -227,7 +227,8 @@ func toRunnerProfile(p Profile) apigen.RunnerProfile {
 }
 
 func (h *Handlers) AppGetConsent(ctx context.Context, req apigen.AppGetConsentRequestObject) (apigen.AppGetConsentResponseObject, error) {
-	if string(req.Params.Purpose) != PurposeRegistration {
+	purpose := string(req.Params.Purpose)
+	if purpose != PurposeRegistration && purpose != PurposeCommunity {
 		return nil, apperr.New(http.StatusUnprocessableEntity, apperr.CodeValidation).
 			WithField("purpose", "field.invalid", nil)
 	}
@@ -237,7 +238,7 @@ func (h *Handlers) AppGetConsent(ctx context.Context, req apigen.AppGetConsentRe
 			lang = l
 		}
 	}
-	v, err := h.svc.CurrentConsent(ctx, PurposeRegistration, lang)
+	v, err := h.svc.CurrentConsent(ctx, purpose, lang)
 	if err != nil {
 		return nil, err
 	}

@@ -712,5 +712,57 @@
       "REJECTED": "不安排",
       "WITHDRAWN": "已撤回"
     }
+  },
+  "community": {
+    "title": "跑团活动",
+    "intro": "跑者发布的跑团活动。默认需要审核：通过后出现在用户站跑团页；已发布的可以紧急冻结。",
+    "all": "全部",
+    "empty": "没有活动",
+    "cancel": "取消",
+    "col": {
+      "activity": "活动",
+      "author": "发起人",
+      "spots": "报名 / 上限 · 费用",
+      "status": "状态",
+      "actions": "操作"
+    },
+    "status": {
+      "REVIEWING": "待审核",
+      "PUBLISHED": "已发布",
+      "REJECTED": "未通过",
+      "CLOSED": "已取消"
+    },
+    "frozen": "已冻结",
+    "approve": "通过",
+    "rejectAction": "不通过",
+    "rejectTitle": "不通过「{{title}}」",
+    "freeze": "冻结",
+    "unfreeze": "解冻",
+    "freezeTitle": "冻结「{{title}}」",
+    "freezeHint": "冻结后跑者看不到、不能报名；发起人能看到冻结状态。解冻后恢复原状态。",
+    "freezePlaceholder": "冻结原因（必填，只在后台显示）",
+    "done": {
+      "approve": "已发布",
+      "reject": "已标为不通过",
+      "freeze": "已冻结",
+      "unfreeze": "已解冻"
+    },
+    "reject": {
+      "R01": "信息不全",
+      "R02": "涉及收费或商业推广",
+      "R03": "安全风险",
+      "R04": "内容不当",
+      "R05": "重复发布"
+    },
+    "tags": {
+      "MORNING": "晨跑",
+      "NIGHT": "夜跑",
+      "LONG": "长距离",
+      "TRAIL": "越野",
+      "TRAINING": "训练营",
+      "FAMILY": "亲子",
+      "CYCLING": "骑行",
+      "OTHER": "其他"
+    }
   }
 }

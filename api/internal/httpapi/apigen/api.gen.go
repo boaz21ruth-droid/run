@@ -312,6 +312,123 @@ func (e AppUserLocale) Valid() bool {
 	}
 }
 
+// Defines values for CommunityActivityContactVisibility.
+const (
+	CommunityActivityContactVisibilityJOINED CommunityActivityContactVisibility = "JOINED"
+	CommunityActivityContactVisibilityPUBLIC CommunityActivityContactVisibility = "PUBLIC"
+)
+
+// Valid indicates whether the value is a known member of the CommunityActivityContactVisibility enum.
+func (e CommunityActivityContactVisibility) Valid() bool {
+	switch e {
+	case CommunityActivityContactVisibilityJOINED:
+		return true
+	case CommunityActivityContactVisibilityPUBLIC:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CommunityActivityViewMyStatus.
+const (
+	CommunityActivityViewMyStatusJOINED   CommunityActivityViewMyStatus = "JOINED"
+	CommunityActivityViewMyStatusNONE     CommunityActivityViewMyStatus = "NONE"
+	CommunityActivityViewMyStatusWAITLIST CommunityActivityViewMyStatus = "WAITLIST"
+)
+
+// Valid indicates whether the value is a known member of the CommunityActivityViewMyStatus enum.
+func (e CommunityActivityViewMyStatus) Valid() bool {
+	switch e {
+	case CommunityActivityViewMyStatusJOINED:
+		return true
+	case CommunityActivityViewMyStatusNONE:
+		return true
+	case CommunityActivityViewMyStatusWAITLIST:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CommunityFeedItemKind.
+const (
+	CommunityFeedItemKindCLUB     CommunityFeedItemKind = "CLUB"
+	CommunityFeedItemKindOFFICIAL CommunityFeedItemKind = "OFFICIAL"
+)
+
+// Valid indicates whether the value is a known member of the CommunityFeedItemKind enum.
+func (e CommunityFeedItemKind) Valid() bool {
+	switch e {
+	case CommunityFeedItemKindCLUB:
+		return true
+	case CommunityFeedItemKindOFFICIAL:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CommunityStatus.
+const (
+	CommunityStatusCLOSED    CommunityStatus = "CLOSED"
+	CommunityStatusPUBLISHED CommunityStatus = "PUBLISHED"
+	CommunityStatusREJECTED  CommunityStatus = "REJECTED"
+	CommunityStatusREVIEWING CommunityStatus = "REVIEWING"
+)
+
+// Valid indicates whether the value is a known member of the CommunityStatus enum.
+func (e CommunityStatus) Valid() bool {
+	switch e {
+	case CommunityStatusCLOSED:
+		return true
+	case CommunityStatusPUBLISHED:
+		return true
+	case CommunityStatusREJECTED:
+		return true
+	case CommunityStatusREVIEWING:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CommunityTag.
+const (
+	CommunityTagCYCLING  CommunityTag = "CYCLING"
+	CommunityTagFAMILY   CommunityTag = "FAMILY"
+	CommunityTagLONG     CommunityTag = "LONG"
+	CommunityTagMORNING  CommunityTag = "MORNING"
+	CommunityTagNIGHT    CommunityTag = "NIGHT"
+	CommunityTagOTHER    CommunityTag = "OTHER"
+	CommunityTagTRAIL    CommunityTag = "TRAIL"
+	CommunityTagTRAINING CommunityTag = "TRAINING"
+)
+
+// Valid indicates whether the value is a known member of the CommunityTag enum.
+func (e CommunityTag) Valid() bool {
+	switch e {
+	case CommunityTagCYCLING:
+		return true
+	case CommunityTagFAMILY:
+		return true
+	case CommunityTagLONG:
+		return true
+	case CommunityTagMORNING:
+		return true
+	case CommunityTagNIGHT:
+		return true
+	case CommunityTagOTHER:
+		return true
+	case CommunityTagTRAIL:
+		return true
+	case CommunityTagTRAINING:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CompKind.
 const (
 	CompKindCLUB    CompKind = "CLUB"
@@ -369,6 +486,24 @@ func (e CouponStatus) Valid() bool {
 	case CouponStatusACTIVE:
 		return true
 	case CouponStatusDISABLED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CreateCommunityActivityContactVisibility.
+const (
+	CreateCommunityActivityContactVisibilityJOINED CreateCommunityActivityContactVisibility = "JOINED"
+	CreateCommunityActivityContactVisibilityPUBLIC CreateCommunityActivityContactVisibility = "PUBLIC"
+)
+
+// Valid indicates whether the value is a known member of the CreateCommunityActivityContactVisibility enum.
+func (e CreateCommunityActivityContactVisibility) Valid() bool {
+	switch e {
+	case CreateCommunityActivityContactVisibilityJOINED:
+		return true
+	case CreateCommunityActivityContactVisibilityPUBLIC:
 		return true
 	default:
 		return false
@@ -1029,6 +1164,33 @@ func (e ReferralKind) Valid() bool {
 	}
 }
 
+// Defines values for RejectCommunityActivityRequestCode.
+const (
+	RejectCommunityActivityRequestCodeR01 RejectCommunityActivityRequestCode = "R01"
+	RejectCommunityActivityRequestCodeR02 RejectCommunityActivityRequestCode = "R02"
+	RejectCommunityActivityRequestCodeR03 RejectCommunityActivityRequestCode = "R03"
+	RejectCommunityActivityRequestCodeR04 RejectCommunityActivityRequestCode = "R04"
+	RejectCommunityActivityRequestCodeR05 RejectCommunityActivityRequestCode = "R05"
+)
+
+// Valid indicates whether the value is a known member of the RejectCommunityActivityRequestCode enum.
+func (e RejectCommunityActivityRequestCode) Valid() bool {
+	switch e {
+	case RejectCommunityActivityRequestCodeR01:
+		return true
+	case RejectCommunityActivityRequestCodeR02:
+		return true
+	case RejectCommunityActivityRequestCodeR03:
+		return true
+	case RejectCommunityActivityRequestCodeR04:
+		return true
+	case RejectCommunityActivityRequestCodeR05:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RejectProofRequestRejectCode.
 const (
 	RejectProofRequestRejectCodeAMOUNTMISMATCH RejectProofRequestRejectCode = "AMOUNT_MISMATCH"
@@ -1286,12 +1448,15 @@ func (e AdminListProofsParamsStatus) Valid() bool {
 
 // Defines values for AppGetConsentParamsPurpose.
 const (
+	AppGetConsentParamsPurposeCOMMUNITY    AppGetConsentParamsPurpose = "COMMUNITY"
 	AppGetConsentParamsPurposeREGISTRATION AppGetConsentParamsPurpose = "REGISTRATION"
 )
 
 // Valid indicates whether the value is a known member of the AppGetConsentParamsPurpose enum.
 func (e AppGetConsentParamsPurpose) Valid() bool {
 	switch e {
+	case AppGetConsentParamsPurposeCOMMUNITY:
+		return true
 	case AppGetConsentParamsPurposeREGISTRATION:
 		return true
 	default:
@@ -1314,6 +1479,27 @@ func (e AppGetConsentParamsLang) Valid() bool {
 	case AppGetConsentParamsLangKm:
 		return true
 	case AppGetConsentParamsLangZh:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetCommunityFeedParamsKind.
+const (
+	GetCommunityFeedParamsKindALL      GetCommunityFeedParamsKind = "ALL"
+	GetCommunityFeedParamsKindCLUB     GetCommunityFeedParamsKind = "CLUB"
+	GetCommunityFeedParamsKindOFFICIAL GetCommunityFeedParamsKind = "OFFICIAL"
+)
+
+// Valid indicates whether the value is a known member of the GetCommunityFeedParamsKind enum.
+func (e GetCommunityFeedParamsKind) Valid() bool {
+	switch e {
+	case GetCommunityFeedParamsKindALL:
+		return true
+	case GetCommunityFeedParamsKindCLUB:
+		return true
+	case GetCommunityFeedParamsKindOFFICIAL:
 		return true
 	default:
 		return false
@@ -1343,6 +1529,22 @@ type AdminCategory struct {
 	Name          LocalizedText       `json:"name"`
 	Qualification *AdminQualification `json:"qualification"`
 	StartAt       *time.Time          `json:"startAt"`
+}
+
+// AdminCommunityActivity defines model for AdminCommunityActivity.
+type AdminCommunityActivity struct {
+	Activity        CommunityActivity `json:"activity"`
+	AuthorTelegram  *string           `json:"authorTelegram"`
+	ContactPhone    *string           `json:"contactPhone"`
+	ContactTelegram *string           `json:"contactTelegram"`
+	CreatedAt       time.Time         `json:"createdAt"`
+	FreezeReason    *string           `json:"freezeReason"`
+	ReviewRequired  bool              `json:"reviewRequired"`
+}
+
+// AdminCommunityActivityList defines model for AdminCommunityActivityList.
+type AdminCommunityActivityList struct {
+	Items []AdminCommunityActivity `json:"items"`
 }
 
 // AdminCompRequest defines model for AdminCompRequest.
@@ -1646,6 +1848,124 @@ type AssignVolunteerRequest struct {
 	RoleId int64 `json:"roleId"`
 }
 
+// CommunityActivity defines model for CommunityActivity.
+type CommunityActivity struct {
+	AuthorName        string                             `json:"authorName"`
+	Body              string                             `json:"body"`
+	Capacity          int32                              `json:"capacity"`
+	City              string                             `json:"city"`
+	ContactVisibility CommunityActivityContactVisibility `json:"contactVisibility"`
+	DistanceText      *string                            `json:"distanceText"`
+	FeeNote           string                             `json:"feeNote"`
+	Frozen            bool                               `json:"frozen"`
+	HostName          *string                            `json:"hostName"`
+	Id                int64                              `json:"id"`
+	JoinedCount       int32                              `json:"joinedCount"`
+	JoinerInitials    []string                           `json:"joinerInitials"`
+	Location          string                             `json:"location"`
+	MeetPoint         string                             `json:"meetPoint"`
+	RejectCode        *string                            `json:"rejectCode"`
+	StartsAt          time.Time                          `json:"startsAt"`
+	Status            CommunityStatus                    `json:"status"`
+	Tag               CommunityTag                       `json:"tag"`
+	Title             string                             `json:"title"`
+	WaitlistCount     int32                              `json:"waitlistCount"`
+}
+
+// CommunityActivityContactVisibility defines model for CommunityActivity.ContactVisibility.
+type CommunityActivityContactVisibility string
+
+// CommunityActivityList defines model for CommunityActivityList.
+type CommunityActivityList struct {
+	Items []CommunityActivity `json:"items"`
+}
+
+// CommunityActivityView defines model for CommunityActivityView.
+type CommunityActivityView struct {
+	Activity CommunityActivity `json:"activity"`
+
+	// Contact 发起人联系方式；仅公开、已参加或发起人本人可见
+	Contact  *CommunityContact             `json:"contact"`
+	IsAuthor bool                          `json:"isAuthor"`
+	MyStatus CommunityActivityViewMyStatus `json:"myStatus"`
+}
+
+// CommunityActivityViewMyStatus defines model for CommunityActivityView.MyStatus.
+type CommunityActivityViewMyStatus string
+
+// CommunityCheckin defines model for CommunityCheckin.
+type CommunityCheckin struct {
+	Initials string `json:"initials"`
+
+	// Name 显示名的第一个词
+	Name string `json:"name"`
+}
+
+// CommunityCheckinRequest defines model for CommunityCheckinRequest.
+type CommunityCheckinRequest struct {
+	City *string `json:"city,omitempty"`
+}
+
+// CommunityCheckinState defines model for CommunityCheckinState.
+type CommunityCheckinState struct {
+	CheckedIn bool               `json:"checkedIn"`
+	Checkins  []CommunityCheckin `json:"checkins"`
+}
+
+// CommunityContact defines model for CommunityContact.
+type CommunityContact struct {
+	Phone    *string `json:"phone"`
+	Telegram *string `json:"telegram"`
+}
+
+// CommunityFeed defines model for CommunityFeed.
+type CommunityFeed struct {
+	Checkins []CommunityCheckin `json:"checkins"`
+
+	// Cities 有活动的城市，供筛选
+	Cities []string            `json:"cities"`
+	Items  []CommunityFeedItem `json:"items"`
+}
+
+// CommunityFeedItem defines model for CommunityFeedItem.
+type CommunityFeedItem struct {
+	Capacity     int32   `json:"capacity"`
+	City         string  `json:"city"`
+	CoverUrl     *string `json:"coverUrl"`
+	DistanceText *string `json:"distanceText"`
+	EventSlug    *string `json:"eventSlug"`
+
+	// FeeNote 跑团写的费用说明；官方免费活动为空
+	FeeNote *string `json:"feeNote"`
+
+	// HostName 跑团名；没填时为发起人显示名。官方为空串
+	HostName string `json:"hostName"`
+
+	// Id OFFICIAL 时是赛事 id
+	Id          int64 `json:"id"`
+	JoinedCount int32 `json:"joinedCount"`
+
+	// JoinerInitials 最早报名的几位跑者的名字缩写（头像用）
+	JoinerInitials []string `json:"joinerInitials"`
+
+	// Kind OFFICIAL = 官方免费活动（赛事），CLUB = 跑团发起
+	Kind          CommunityFeedItemKind `json:"kind"`
+	Location      string                `json:"location"`
+	StartsAt      time.Time             `json:"startsAt"`
+	Tag           *CommunityTag         `json:"tag"`
+	Title         string                `json:"title"`
+	WaitlistCount int32                 `json:"waitlistCount"`
+}
+
+// CommunityFeedItemKind OFFICIAL = 官方免费活动（赛事），CLUB = 跑团发起
+type CommunityFeedItemKind string
+
+// CommunityStatus defines model for CommunityStatus.
+type CommunityStatus string
+
+// CommunityTag defines model for CommunityTag.
+type CommunityTag string
+
 // CompKind defines model for CompKind.
 type CompKind string
 
@@ -1743,6 +2063,28 @@ type CreateCategoryRequest struct {
 	Name      LocalizedText `json:"name"`
 	StartAt   *time.Time    `json:"startAt,omitempty"`
 }
+
+// CreateCommunityActivity defines model for CreateCommunityActivity.
+type CreateCommunityActivity struct {
+	Body              string                                   `json:"body"`
+	Capacity          int32                                    `json:"capacity"`
+	City              *string                                  `json:"city,omitempty"`
+	Consent           OrderConsentInput                        `json:"consent"`
+	ContactPhone      *string                                  `json:"contactPhone,omitempty"`
+	ContactTelegram   *string                                  `json:"contactTelegram,omitempty"`
+	ContactVisibility CreateCommunityActivityContactVisibility `json:"contactVisibility"`
+	DistanceText      *string                                  `json:"distanceText,omitempty"`
+	FeeNote           *string                                  `json:"feeNote,omitempty"`
+	HostName          *string                                  `json:"hostName,omitempty"`
+	Location          string                                   `json:"location"`
+	MeetPoint         string                                   `json:"meetPoint"`
+	StartsAt          time.Time                                `json:"startsAt"`
+	Tag               CommunityTag                             `json:"tag"`
+	Title             string                                   `json:"title"`
+}
+
+// CreateCommunityActivityContactVisibility defines model for CreateCommunityActivity.ContactVisibility.
+type CreateCommunityActivityContactVisibility string
 
 // CreateCompRequest defines model for CreateCompRequest.
 type CreateCompRequest struct {
@@ -1921,6 +2263,11 @@ type FreeSignupSummary struct {
 
 // FreeSignupSummaryStatus defines model for FreeSignupSummary.Status.
 type FreeSignupSummaryStatus string
+
+// FreezeCommunityActivityRequest defines model for FreezeCommunityActivityRequest.
+type FreezeCommunityActivityRequest struct {
+	Reason string `json:"reason"`
+}
 
 // Gender defines model for Gender.
 type Gender string
@@ -2590,6 +2937,15 @@ type RefundTier struct {
 	Percent int32 `json:"percent"`
 }
 
+// RejectCommunityActivityRequest defines model for RejectCommunityActivityRequest.
+type RejectCommunityActivityRequest struct {
+	// Code R01 信息不全 · R02 涉及收费或商业推广 · R03 安全风险 · R04 内容不当 · R05 重复发布
+	Code RejectCommunityActivityRequestCode `json:"code"`
+}
+
+// RejectCommunityActivityRequestCode R01 信息不全 · R02 涉及收费或商业推广 · R03 安全风险 · R04 内容不当 · R05 重复发布
+type RejectCommunityActivityRequestCode string
+
 // RejectCompRequest defines model for RejectCompRequest.
 type RejectCompRequest struct {
 	Note *string `json:"note,omitempty"`
@@ -2783,6 +3139,11 @@ type VolunteerSettings struct {
 // VolunteerStatus defines model for VolunteerStatus.
 type VolunteerStatus string
 
+// AdminListCommunityActivitiesParams defines parameters for AdminListCommunityActivities.
+type AdminListCommunityActivitiesParams struct {
+	Status *CommunityStatus `form:"status,omitempty" json:"status,omitempty"`
+}
+
 // AdminListCouponsParams defines parameters for AdminListCoupons.
 type AdminListCouponsParams struct {
 	EventId *int64 `form:"eventId,omitempty" json:"eventId,omitempty"`
@@ -2867,11 +3228,26 @@ type AppCreateOrderParams struct {
 	IdempotencyKey string `json:"Idempotency-Key"`
 }
 
+// GetCommunityFeedParams defines parameters for GetCommunityFeed.
+type GetCommunityFeedParams struct {
+	Kind *GetCommunityFeedParamsKind `form:"kind,omitempty" json:"kind,omitempty"`
+	City *string                     `form:"city,omitempty" json:"city,omitempty"`
+}
+
+// GetCommunityFeedParamsKind defines parameters for GetCommunityFeed.
+type GetCommunityFeedParamsKind string
+
 // AdminLoginJSONRequestBody defines body for AdminLogin for application/json ContentType.
 type AdminLoginJSONRequestBody = LoginRequest
 
 // AdminUpdateCategoryQualificationJSONRequestBody defines body for AdminUpdateCategoryQualification for application/json ContentType.
 type AdminUpdateCategoryQualificationJSONRequestBody = UpdateCategoryQualificationRequest
+
+// AdminFreezeCommunityActivityJSONRequestBody defines body for AdminFreezeCommunityActivity for application/json ContentType.
+type AdminFreezeCommunityActivityJSONRequestBody = FreezeCommunityActivityRequest
+
+// AdminRejectCommunityActivityJSONRequestBody defines body for AdminRejectCommunityActivity for application/json ContentType.
+type AdminRejectCommunityActivityJSONRequestBody = RejectCommunityActivityRequest
 
 // AdminRejectCompRequestJSONRequestBody defines body for AdminRejectCompRequest for application/json ContentType.
 type AdminRejectCompRequestJSONRequestBody = RejectCompRequest
@@ -2954,6 +3330,12 @@ type AppVerifyPhoneCodeJSONRequestBody = PhoneCodeVerify
 // AppLoginTelegramJSONRequestBody defines body for AppLoginTelegram for application/json ContentType.
 type AppLoginTelegramJSONRequestBody = AppLoginRequest
 
+// AppCreateCommunityActivityJSONRequestBody defines body for AppCreateCommunityActivity for application/json ContentType.
+type AppCreateCommunityActivityJSONRequestBody = CreateCommunityActivity
+
+// AppCommunityCheckinJSONRequestBody defines body for AppCommunityCheckin for application/json ContentType.
+type AppCommunityCheckinJSONRequestBody = CommunityCheckinRequest
+
 // AppCreateCompRequestJSONRequestBody defines body for AppCreateCompRequest for application/json ContentType.
 type AppCreateCompRequestJSONRequestBody = CreateCompRequest
 
@@ -2992,6 +3374,21 @@ type ServerInterface interface {
 	// AdminUpdateCategoryQualification 设置精英组资格要求（null 表示不需要资格证明）
 	// (PUT /admin/categories/{id}/qualification)
 	AdminUpdateCategoryQualification(c *gin.Context, id int64)
+	// AdminListCommunityActivities 跑团活动审核列表（待审核在前）
+	// (GET /admin/community/activities)
+	AdminListCommunityActivities(c *gin.Context, params AdminListCommunityActivitiesParams)
+	// AdminApproveCommunityActivity 审核通过并发布
+	// (POST /admin/community/activities/{id}/approve)
+	AdminApproveCommunityActivity(c *gin.Context, id int64)
+	// AdminFreezeCommunityActivity 紧急冻结（跑者看不到，解冻后恢复）
+	// (POST /admin/community/activities/{id}/freeze)
+	AdminFreezeCommunityActivity(c *gin.Context, id int64)
+	// AdminRejectCommunityActivity 审核不通过（R01–R05）
+	// (POST /admin/community/activities/{id}/reject)
+	AdminRejectCommunityActivity(c *gin.Context, id int64)
+	// AdminUnfreezeCommunityActivity 解冻
+	// (POST /admin/community/activities/{id}/unfreeze)
+	AdminUnfreezeCommunityActivity(c *gin.Context, id int64)
 	// AdminApproveCompRequest 批准免费入场：发一个本人专用、限 1 人的免费报名码
 	// (POST /admin/comp-requests/{id}/approve)
 	AdminApproveCompRequest(c *gin.Context, id int64)
@@ -3145,6 +3542,33 @@ type ServerInterface interface {
 	// AppLoginTelegram 用 Telegram 小程序 initData 登录，返回跑者令牌
 	// (POST /app/auth/telegram)
 	AppLoginTelegram(c *gin.Context)
+	// AppCreateCommunityActivity 发布跑团活动（签署免责声明；需要审核时先进审核）
+	// (POST /app/community/activities)
+	AppCreateCommunityActivity(c *gin.Context)
+	// AppCloseCommunityActivity 发起人取消活动
+	// (POST /app/community/activities/{id}/close)
+	AppCloseCommunityActivity(c *gin.Context, id int64)
+	// AppJoinCommunityActivity 参加；满员时进候补
+	// (POST /app/community/activities/{id}/join)
+	AppJoinCommunityActivity(c *gin.Context, id int64)
+	// AppLeaveCommunityActivity 退出或取消候补；空出的名额按候补先后补上
+	// (POST /app/community/activities/{id}/leave)
+	AppLeaveCommunityActivity(c *gin.Context, id int64)
+	// AppGetCommunityActivityMe 我在这个活动的状态与联系方式（按发起人设置的可见范围）
+	// (GET /app/community/activities/{id}/me)
+	AppGetCommunityActivityMe(c *gin.Context, id int64)
+	// AppCommunityCheckout 取消今天的签到
+	// (DELETE /app/community/checkin)
+	AppCommunityCheckout(c *gin.Context)
+	// AppGetCommunityCheckin 我今天有没有签到「我在跑」
+	// (GET /app/community/checkin)
+	AppGetCommunityCheckin(c *gin.Context)
+	// AppCommunityCheckin 签到「今天我在跑」，8 小时内显示在跑团页
+	// (POST /app/community/checkin)
+	AppCommunityCheckin(c *gin.Context)
+	// AppListMyCommunityActivities 我发布的跑团活动（含审核状态）
+	// (GET /app/community/mine)
+	AppListMyCommunityActivities(c *gin.Context)
 	// AppGetConsent 当前生效的同意书版本；所请求语言没有时依次回退到英文、中文
 	// (GET /app/consents)
 	AppGetConsent(c *gin.Context, params AppGetConsentParams)
@@ -3205,6 +3629,12 @@ type ServerInterface interface {
 	// AppUpdateProfile 修改常用参赛人；idNo 省略或为空串时保留原证件号
 	// (PUT /app/profiles/{id})
 	AppUpdateProfile(c *gin.Context, id int64)
+	// GetCommunityActivity 跑团活动详情（已发布、未冻结；不含联系方式）
+	// (GET /community/activities/{id})
+	GetCommunityActivity(c *gin.Context, id int64)
+	// GetCommunityFeed 跑团页：官方免费活动与跑团活动混排、今天谁在跑
+	// (GET /community/feed)
+	GetCommunityFeed(c *gin.Context, params GetCommunityFeedParams)
 	// ListPublicEvents 已发布且公开展示的赛事列表，文案按请求语言返回
 	// (GET /events)
 	ListPublicEvents(c *gin.Context)
@@ -3283,6 +3713,133 @@ func (siw *ServerInterfaceWrapper) AdminUpdateCategoryQualification(c *gin.Conte
 	}
 
 	siw.Handler.AdminUpdateCategoryQualification(c, id)
+}
+
+// AdminListCommunityActivities operation middleware
+func (siw *ServerInterfaceWrapper) AdminListCommunityActivities(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params AdminListCommunityActivitiesParams
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "status", c.Request.URL.Query(), &params.Status, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter status: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminListCommunityActivities(c, params)
+}
+
+// AdminApproveCommunityActivity operation middleware
+func (siw *ServerInterfaceWrapper) AdminApproveCommunityActivity(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminApproveCommunityActivity(c, id)
+}
+
+// AdminFreezeCommunityActivity operation middleware
+func (siw *ServerInterfaceWrapper) AdminFreezeCommunityActivity(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminFreezeCommunityActivity(c, id)
+}
+
+// AdminRejectCommunityActivity operation middleware
+func (siw *ServerInterfaceWrapper) AdminRejectCommunityActivity(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminRejectCommunityActivity(c, id)
+}
+
+// AdminUnfreezeCommunityActivity operation middleware
+func (siw *ServerInterfaceWrapper) AdminUnfreezeCommunityActivity(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminUnfreezeCommunityActivity(c, id)
 }
 
 // AdminApproveCompRequest operation middleware
@@ -4474,6 +5031,171 @@ func (siw *ServerInterfaceWrapper) AppLoginTelegram(c *gin.Context) {
 	siw.Handler.AppLoginTelegram(c)
 }
 
+// AppCreateCommunityActivity operation middleware
+func (siw *ServerInterfaceWrapper) AppCreateCommunityActivity(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppCreateCommunityActivity(c)
+}
+
+// AppCloseCommunityActivity operation middleware
+func (siw *ServerInterfaceWrapper) AppCloseCommunityActivity(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppCloseCommunityActivity(c, id)
+}
+
+// AppJoinCommunityActivity operation middleware
+func (siw *ServerInterfaceWrapper) AppJoinCommunityActivity(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppJoinCommunityActivity(c, id)
+}
+
+// AppLeaveCommunityActivity operation middleware
+func (siw *ServerInterfaceWrapper) AppLeaveCommunityActivity(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppLeaveCommunityActivity(c, id)
+}
+
+// AppGetCommunityActivityMe operation middleware
+func (siw *ServerInterfaceWrapper) AppGetCommunityActivityMe(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppGetCommunityActivityMe(c, id)
+}
+
+// AppCommunityCheckout operation middleware
+func (siw *ServerInterfaceWrapper) AppCommunityCheckout(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppCommunityCheckout(c)
+}
+
+// AppGetCommunityCheckin operation middleware
+func (siw *ServerInterfaceWrapper) AppGetCommunityCheckin(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppGetCommunityCheckin(c)
+}
+
+// AppCommunityCheckin operation middleware
+func (siw *ServerInterfaceWrapper) AppCommunityCheckin(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppCommunityCheckin(c)
+}
+
+// AppListMyCommunityActivities operation middleware
+func (siw *ServerInterfaceWrapper) AppListMyCommunityActivities(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppListMyCommunityActivities(c)
+}
+
 // AppGetConsent operation middleware
 func (siw *ServerInterfaceWrapper) AppGetConsent(c *gin.Context) {
 
@@ -4930,6 +5652,66 @@ func (siw *ServerInterfaceWrapper) AppUpdateProfile(c *gin.Context) {
 	siw.Handler.AppUpdateProfile(c, id)
 }
 
+// GetCommunityActivity operation middleware
+func (siw *ServerInterfaceWrapper) GetCommunityActivity(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetCommunityActivity(c, id)
+}
+
+// GetCommunityFeed operation middleware
+func (siw *ServerInterfaceWrapper) GetCommunityFeed(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetCommunityFeedParams
+
+	// ------------- Optional query parameter "kind" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "kind", c.Request.URL.Query(), &params.Kind, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter kind: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "city" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "city", c.Request.URL.Query(), &params.City, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter city: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetCommunityFeed(c, params)
+}
+
 // ListPublicEvents operation middleware
 func (siw *ServerInterfaceWrapper) ListPublicEvents(c *gin.Context) {
 
@@ -5151,6 +5933,22 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/admin/volunteer-applications/:id/assign", wrapper.AdminAssignVolunteer)
 	router.POST(options.BaseURL+"/admin/volunteer-applications/:id/waitlist", wrapper.AdminWaitlistVolunteer)
 	router.POST(options.BaseURL+"/admin/volunteer-applications/:id/reject", wrapper.AdminRejectVolunteer)
+	router.GET(options.BaseURL+"/community/feed", wrapper.GetCommunityFeed)
+	router.GET(options.BaseURL+"/community/activities/:id", wrapper.GetCommunityActivity)
+	router.POST(options.BaseURL+"/app/community/activities", wrapper.AppCreateCommunityActivity)
+	router.GET(options.BaseURL+"/app/community/mine", wrapper.AppListMyCommunityActivities)
+	router.GET(options.BaseURL+"/app/community/activities/:id/me", wrapper.AppGetCommunityActivityMe)
+	router.POST(options.BaseURL+"/app/community/activities/:id/join", wrapper.AppJoinCommunityActivity)
+	router.POST(options.BaseURL+"/app/community/activities/:id/leave", wrapper.AppLeaveCommunityActivity)
+	router.POST(options.BaseURL+"/app/community/activities/:id/close", wrapper.AppCloseCommunityActivity)
+	router.DELETE(options.BaseURL+"/app/community/checkin", wrapper.AppCommunityCheckout)
+	router.GET(options.BaseURL+"/app/community/checkin", wrapper.AppGetCommunityCheckin)
+	router.POST(options.BaseURL+"/app/community/checkin", wrapper.AppCommunityCheckin)
+	router.GET(options.BaseURL+"/admin/community/activities", wrapper.AdminListCommunityActivities)
+	router.POST(options.BaseURL+"/admin/community/activities/:id/approve", wrapper.AdminApproveCommunityActivity)
+	router.POST(options.BaseURL+"/admin/community/activities/:id/reject", wrapper.AdminRejectCommunityActivity)
+	router.POST(options.BaseURL+"/admin/community/activities/:id/freeze", wrapper.AdminFreezeCommunityActivity)
+	router.POST(options.BaseURL+"/admin/community/activities/:id/unfreeze", wrapper.AdminUnfreezeCommunityActivity)
 }
 
 type AdminLoginRequestObject struct {
@@ -5253,6 +6051,203 @@ type AdminUpdateCategoryQualificationdefaultJSONResponse struct {
 }
 
 func (response AdminUpdateCategoryQualificationdefaultJSONResponse) VisitAdminUpdateCategoryQualificationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListCommunityActivitiesRequestObject struct {
+	Params AdminListCommunityActivitiesParams
+}
+
+type AdminListCommunityActivitiesResponseObject interface {
+	VisitAdminListCommunityActivitiesResponse(w http.ResponseWriter) error
+}
+
+type AdminListCommunityActivities200JSONResponse AdminCommunityActivityList
+
+func (response AdminListCommunityActivities200JSONResponse) VisitAdminListCommunityActivitiesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListCommunityActivitiesdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminListCommunityActivitiesdefaultJSONResponse) VisitAdminListCommunityActivitiesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminApproveCommunityActivityRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminApproveCommunityActivityResponseObject interface {
+	VisitAdminApproveCommunityActivityResponse(w http.ResponseWriter) error
+}
+
+type AdminApproveCommunityActivity200JSONResponse AdminCommunityActivity
+
+func (response AdminApproveCommunityActivity200JSONResponse) VisitAdminApproveCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminApproveCommunityActivitydefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminApproveCommunityActivitydefaultJSONResponse) VisitAdminApproveCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminFreezeCommunityActivityRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminFreezeCommunityActivityJSONRequestBody
+}
+
+type AdminFreezeCommunityActivityResponseObject interface {
+	VisitAdminFreezeCommunityActivityResponse(w http.ResponseWriter) error
+}
+
+type AdminFreezeCommunityActivity200JSONResponse AdminCommunityActivity
+
+func (response AdminFreezeCommunityActivity200JSONResponse) VisitAdminFreezeCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminFreezeCommunityActivitydefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminFreezeCommunityActivitydefaultJSONResponse) VisitAdminFreezeCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminRejectCommunityActivityRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminRejectCommunityActivityJSONRequestBody
+}
+
+type AdminRejectCommunityActivityResponseObject interface {
+	VisitAdminRejectCommunityActivityResponse(w http.ResponseWriter) error
+}
+
+type AdminRejectCommunityActivity200JSONResponse AdminCommunityActivity
+
+func (response AdminRejectCommunityActivity200JSONResponse) VisitAdminRejectCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminRejectCommunityActivitydefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminRejectCommunityActivitydefaultJSONResponse) VisitAdminRejectCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUnfreezeCommunityActivityRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminUnfreezeCommunityActivityResponseObject interface {
+	VisitAdminUnfreezeCommunityActivityResponse(w http.ResponseWriter) error
+}
+
+type AdminUnfreezeCommunityActivity200JSONResponse AdminCommunityActivity
+
+func (response AdminUnfreezeCommunityActivity200JSONResponse) VisitAdminUnfreezeCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUnfreezeCommunityActivitydefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminUnfreezeCommunityActivitydefaultJSONResponse) VisitAdminUnfreezeCommunityActivityResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -7271,6 +8266,354 @@ func (response AppLoginTelegramdefaultJSONResponse) VisitAppLoginTelegramRespons
 	return err
 }
 
+type AppCreateCommunityActivityRequestObject struct {
+	Body *AppCreateCommunityActivityJSONRequestBody
+}
+
+type AppCreateCommunityActivityResponseObject interface {
+	VisitAppCreateCommunityActivityResponse(w http.ResponseWriter) error
+}
+
+type AppCreateCommunityActivity201JSONResponse CommunityActivity
+
+func (response AppCreateCommunityActivity201JSONResponse) VisitAppCreateCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppCreateCommunityActivitydefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppCreateCommunityActivitydefaultJSONResponse) VisitAppCreateCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppCloseCommunityActivityRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AppCloseCommunityActivityResponseObject interface {
+	VisitAppCloseCommunityActivityResponse(w http.ResponseWriter) error
+}
+
+type AppCloseCommunityActivity200JSONResponse CommunityActivityView
+
+func (response AppCloseCommunityActivity200JSONResponse) VisitAppCloseCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppCloseCommunityActivitydefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppCloseCommunityActivitydefaultJSONResponse) VisitAppCloseCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppJoinCommunityActivityRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AppJoinCommunityActivityResponseObject interface {
+	VisitAppJoinCommunityActivityResponse(w http.ResponseWriter) error
+}
+
+type AppJoinCommunityActivity200JSONResponse CommunityActivityView
+
+func (response AppJoinCommunityActivity200JSONResponse) VisitAppJoinCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppJoinCommunityActivitydefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppJoinCommunityActivitydefaultJSONResponse) VisitAppJoinCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppLeaveCommunityActivityRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AppLeaveCommunityActivityResponseObject interface {
+	VisitAppLeaveCommunityActivityResponse(w http.ResponseWriter) error
+}
+
+type AppLeaveCommunityActivity200JSONResponse CommunityActivityView
+
+func (response AppLeaveCommunityActivity200JSONResponse) VisitAppLeaveCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppLeaveCommunityActivitydefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppLeaveCommunityActivitydefaultJSONResponse) VisitAppLeaveCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppGetCommunityActivityMeRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AppGetCommunityActivityMeResponseObject interface {
+	VisitAppGetCommunityActivityMeResponse(w http.ResponseWriter) error
+}
+
+type AppGetCommunityActivityMe200JSONResponse CommunityActivityView
+
+func (response AppGetCommunityActivityMe200JSONResponse) VisitAppGetCommunityActivityMeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppGetCommunityActivityMedefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppGetCommunityActivityMedefaultJSONResponse) VisitAppGetCommunityActivityMeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppCommunityCheckoutRequestObject struct {
+}
+
+type AppCommunityCheckoutResponseObject interface {
+	VisitAppCommunityCheckoutResponse(w http.ResponseWriter) error
+}
+
+type AppCommunityCheckout200JSONResponse CommunityCheckinState
+
+func (response AppCommunityCheckout200JSONResponse) VisitAppCommunityCheckoutResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppCommunityCheckoutdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppCommunityCheckoutdefaultJSONResponse) VisitAppCommunityCheckoutResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppGetCommunityCheckinRequestObject struct {
+}
+
+type AppGetCommunityCheckinResponseObject interface {
+	VisitAppGetCommunityCheckinResponse(w http.ResponseWriter) error
+}
+
+type AppGetCommunityCheckin200JSONResponse CommunityCheckinState
+
+func (response AppGetCommunityCheckin200JSONResponse) VisitAppGetCommunityCheckinResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppGetCommunityCheckindefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppGetCommunityCheckindefaultJSONResponse) VisitAppGetCommunityCheckinResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppCommunityCheckinRequestObject struct {
+	Body *AppCommunityCheckinJSONRequestBody
+}
+
+type AppCommunityCheckinResponseObject interface {
+	VisitAppCommunityCheckinResponse(w http.ResponseWriter) error
+}
+
+type AppCommunityCheckin200JSONResponse CommunityCheckinState
+
+func (response AppCommunityCheckin200JSONResponse) VisitAppCommunityCheckinResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppCommunityCheckindefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppCommunityCheckindefaultJSONResponse) VisitAppCommunityCheckinResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppListMyCommunityActivitiesRequestObject struct {
+}
+
+type AppListMyCommunityActivitiesResponseObject interface {
+	VisitAppListMyCommunityActivitiesResponse(w http.ResponseWriter) error
+}
+
+type AppListMyCommunityActivities200JSONResponse CommunityActivityList
+
+func (response AppListMyCommunityActivities200JSONResponse) VisitAppListMyCommunityActivitiesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppListMyCommunityActivitiesdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppListMyCommunityActivitiesdefaultJSONResponse) VisitAppListMyCommunityActivitiesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AppGetConsentRequestObject struct {
 	Params AppGetConsentParams
 }
@@ -8048,6 +9391,84 @@ func (response AppUpdateProfiledefaultJSONResponse) VisitAppUpdateProfileRespons
 	return err
 }
 
+type GetCommunityActivityRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type GetCommunityActivityResponseObject interface {
+	VisitGetCommunityActivityResponse(w http.ResponseWriter) error
+}
+
+type GetCommunityActivity200JSONResponse CommunityActivity
+
+func (response GetCommunityActivity200JSONResponse) VisitGetCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetCommunityActivitydefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response GetCommunityActivitydefaultJSONResponse) VisitGetCommunityActivityResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetCommunityFeedRequestObject struct {
+	Params GetCommunityFeedParams
+}
+
+type GetCommunityFeedResponseObject interface {
+	VisitGetCommunityFeedResponse(w http.ResponseWriter) error
+}
+
+type GetCommunityFeed200JSONResponse CommunityFeed
+
+func (response GetCommunityFeed200JSONResponse) VisitGetCommunityFeedResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetCommunityFeeddefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response GetCommunityFeeddefaultJSONResponse) VisitGetCommunityFeedResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListPublicEventsRequestObject struct {
 }
 
@@ -8311,6 +9732,21 @@ type StrictServerInterface interface {
 	// AdminUpdateCategoryQualification 设置精英组资格要求（null 表示不需要资格证明）
 	// (PUT /admin/categories/{id}/qualification)
 	AdminUpdateCategoryQualification(ctx context.Context, request AdminUpdateCategoryQualificationRequestObject) (AdminUpdateCategoryQualificationResponseObject, error)
+	// AdminListCommunityActivities 跑团活动审核列表（待审核在前）
+	// (GET /admin/community/activities)
+	AdminListCommunityActivities(ctx context.Context, request AdminListCommunityActivitiesRequestObject) (AdminListCommunityActivitiesResponseObject, error)
+	// AdminApproveCommunityActivity 审核通过并发布
+	// (POST /admin/community/activities/{id}/approve)
+	AdminApproveCommunityActivity(ctx context.Context, request AdminApproveCommunityActivityRequestObject) (AdminApproveCommunityActivityResponseObject, error)
+	// AdminFreezeCommunityActivity 紧急冻结（跑者看不到，解冻后恢复）
+	// (POST /admin/community/activities/{id}/freeze)
+	AdminFreezeCommunityActivity(ctx context.Context, request AdminFreezeCommunityActivityRequestObject) (AdminFreezeCommunityActivityResponseObject, error)
+	// AdminRejectCommunityActivity 审核不通过（R01–R05）
+	// (POST /admin/community/activities/{id}/reject)
+	AdminRejectCommunityActivity(ctx context.Context, request AdminRejectCommunityActivityRequestObject) (AdminRejectCommunityActivityResponseObject, error)
+	// AdminUnfreezeCommunityActivity 解冻
+	// (POST /admin/community/activities/{id}/unfreeze)
+	AdminUnfreezeCommunityActivity(ctx context.Context, request AdminUnfreezeCommunityActivityRequestObject) (AdminUnfreezeCommunityActivityResponseObject, error)
 	// AdminApproveCompRequest 批准免费入场：发一个本人专用、限 1 人的免费报名码
 	// (POST /admin/comp-requests/{id}/approve)
 	AdminApproveCompRequest(ctx context.Context, request AdminApproveCompRequestRequestObject) (AdminApproveCompRequestResponseObject, error)
@@ -8464,6 +9900,33 @@ type StrictServerInterface interface {
 	// AppLoginTelegram 用 Telegram 小程序 initData 登录，返回跑者令牌
 	// (POST /app/auth/telegram)
 	AppLoginTelegram(ctx context.Context, request AppLoginTelegramRequestObject) (AppLoginTelegramResponseObject, error)
+	// AppCreateCommunityActivity 发布跑团活动（签署免责声明；需要审核时先进审核）
+	// (POST /app/community/activities)
+	AppCreateCommunityActivity(ctx context.Context, request AppCreateCommunityActivityRequestObject) (AppCreateCommunityActivityResponseObject, error)
+	// AppCloseCommunityActivity 发起人取消活动
+	// (POST /app/community/activities/{id}/close)
+	AppCloseCommunityActivity(ctx context.Context, request AppCloseCommunityActivityRequestObject) (AppCloseCommunityActivityResponseObject, error)
+	// AppJoinCommunityActivity 参加；满员时进候补
+	// (POST /app/community/activities/{id}/join)
+	AppJoinCommunityActivity(ctx context.Context, request AppJoinCommunityActivityRequestObject) (AppJoinCommunityActivityResponseObject, error)
+	// AppLeaveCommunityActivity 退出或取消候补；空出的名额按候补先后补上
+	// (POST /app/community/activities/{id}/leave)
+	AppLeaveCommunityActivity(ctx context.Context, request AppLeaveCommunityActivityRequestObject) (AppLeaveCommunityActivityResponseObject, error)
+	// AppGetCommunityActivityMe 我在这个活动的状态与联系方式（按发起人设置的可见范围）
+	// (GET /app/community/activities/{id}/me)
+	AppGetCommunityActivityMe(ctx context.Context, request AppGetCommunityActivityMeRequestObject) (AppGetCommunityActivityMeResponseObject, error)
+	// AppCommunityCheckout 取消今天的签到
+	// (DELETE /app/community/checkin)
+	AppCommunityCheckout(ctx context.Context, request AppCommunityCheckoutRequestObject) (AppCommunityCheckoutResponseObject, error)
+	// AppGetCommunityCheckin 我今天有没有签到「我在跑」
+	// (GET /app/community/checkin)
+	AppGetCommunityCheckin(ctx context.Context, request AppGetCommunityCheckinRequestObject) (AppGetCommunityCheckinResponseObject, error)
+	// AppCommunityCheckin 签到「今天我在跑」，8 小时内显示在跑团页
+	// (POST /app/community/checkin)
+	AppCommunityCheckin(ctx context.Context, request AppCommunityCheckinRequestObject) (AppCommunityCheckinResponseObject, error)
+	// AppListMyCommunityActivities 我发布的跑团活动（含审核状态）
+	// (GET /app/community/mine)
+	AppListMyCommunityActivities(ctx context.Context, request AppListMyCommunityActivitiesRequestObject) (AppListMyCommunityActivitiesResponseObject, error)
 	// AppGetConsent 当前生效的同意书版本；所请求语言没有时依次回退到英文、中文
 	// (GET /app/consents)
 	AppGetConsent(ctx context.Context, request AppGetConsentRequestObject) (AppGetConsentResponseObject, error)
@@ -8524,6 +9987,12 @@ type StrictServerInterface interface {
 	// AppUpdateProfile 修改常用参赛人；idNo 省略或为空串时保留原证件号
 	// (PUT /app/profiles/{id})
 	AppUpdateProfile(ctx context.Context, request AppUpdateProfileRequestObject) (AppUpdateProfileResponseObject, error)
+	// GetCommunityActivity 跑团活动详情（已发布、未冻结；不含联系方式）
+	// (GET /community/activities/{id})
+	GetCommunityActivity(ctx context.Context, request GetCommunityActivityRequestObject) (GetCommunityActivityResponseObject, error)
+	// GetCommunityFeed 跑团页：官方免费活动与跑团活动混排、今天谁在跑
+	// (GET /community/feed)
+	GetCommunityFeed(ctx context.Context, request GetCommunityFeedRequestObject) (GetCommunityFeedResponseObject, error)
 	// ListPublicEvents 已发布且公开展示的赛事列表，文案按请求语言返回
 	// (GET /events)
 	ListPublicEvents(ctx context.Context, request ListPublicEventsRequestObject) (ListPublicEventsResponseObject, error)
@@ -8682,6 +10151,150 @@ func (sh *strictHandler) AdminUpdateCategoryQualification(ctx *gin.Context, id i
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AdminUpdateCategoryQualificationResponseObject); ok {
 		if err := validResponse.VisitAdminUpdateCategoryQualificationResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminListCommunityActivities operation middleware
+func (sh *strictHandler) AdminListCommunityActivities(ctx *gin.Context, params AdminListCommunityActivitiesParams) {
+	var request AdminListCommunityActivitiesRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminListCommunityActivities(ctx, request.(AdminListCommunityActivitiesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminListCommunityActivities")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminListCommunityActivitiesResponseObject); ok {
+		if err := validResponse.VisitAdminListCommunityActivitiesResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminApproveCommunityActivity operation middleware
+func (sh *strictHandler) AdminApproveCommunityActivity(ctx *gin.Context, id int64) {
+	var request AdminApproveCommunityActivityRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminApproveCommunityActivity(ctx, request.(AdminApproveCommunityActivityRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminApproveCommunityActivity")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminApproveCommunityActivityResponseObject); ok {
+		if err := validResponse.VisitAdminApproveCommunityActivityResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminFreezeCommunityActivity operation middleware
+func (sh *strictHandler) AdminFreezeCommunityActivity(ctx *gin.Context, id int64) {
+	var request AdminFreezeCommunityActivityRequestObject
+
+	request.Id = id
+
+	var body AdminFreezeCommunityActivityJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminFreezeCommunityActivity(ctx, request.(AdminFreezeCommunityActivityRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminFreezeCommunityActivity")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminFreezeCommunityActivityResponseObject); ok {
+		if err := validResponse.VisitAdminFreezeCommunityActivityResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminRejectCommunityActivity operation middleware
+func (sh *strictHandler) AdminRejectCommunityActivity(ctx *gin.Context, id int64) {
+	var request AdminRejectCommunityActivityRequestObject
+
+	request.Id = id
+
+	var body AdminRejectCommunityActivityJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminRejectCommunityActivity(ctx, request.(AdminRejectCommunityActivityRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminRejectCommunityActivity")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminRejectCommunityActivityResponseObject); ok {
+		if err := validResponse.VisitAdminRejectCommunityActivityResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminUnfreezeCommunityActivity operation middleware
+func (sh *strictHandler) AdminUnfreezeCommunityActivity(ctx *gin.Context, id int64) {
+	var request AdminUnfreezeCommunityActivityRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminUnfreezeCommunityActivity(ctx, request.(AdminUnfreezeCommunityActivityRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminUnfreezeCommunityActivity")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminUnfreezeCommunityActivityResponseObject); ok {
+		if err := validResponse.VisitAdminUnfreezeCommunityActivityResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {
@@ -10182,6 +11795,244 @@ func (sh *strictHandler) AppLoginTelegram(ctx *gin.Context) {
 	}
 }
 
+// AppCreateCommunityActivity operation middleware
+func (sh *strictHandler) AppCreateCommunityActivity(ctx *gin.Context) {
+	var request AppCreateCommunityActivityRequestObject
+
+	var body AppCreateCommunityActivityJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppCreateCommunityActivity(ctx, request.(AppCreateCommunityActivityRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppCreateCommunityActivity")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppCreateCommunityActivityResponseObject); ok {
+		if err := validResponse.VisitAppCreateCommunityActivityResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppCloseCommunityActivity operation middleware
+func (sh *strictHandler) AppCloseCommunityActivity(ctx *gin.Context, id int64) {
+	var request AppCloseCommunityActivityRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppCloseCommunityActivity(ctx, request.(AppCloseCommunityActivityRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppCloseCommunityActivity")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppCloseCommunityActivityResponseObject); ok {
+		if err := validResponse.VisitAppCloseCommunityActivityResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppJoinCommunityActivity operation middleware
+func (sh *strictHandler) AppJoinCommunityActivity(ctx *gin.Context, id int64) {
+	var request AppJoinCommunityActivityRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppJoinCommunityActivity(ctx, request.(AppJoinCommunityActivityRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppJoinCommunityActivity")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppJoinCommunityActivityResponseObject); ok {
+		if err := validResponse.VisitAppJoinCommunityActivityResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppLeaveCommunityActivity operation middleware
+func (sh *strictHandler) AppLeaveCommunityActivity(ctx *gin.Context, id int64) {
+	var request AppLeaveCommunityActivityRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppLeaveCommunityActivity(ctx, request.(AppLeaveCommunityActivityRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppLeaveCommunityActivity")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppLeaveCommunityActivityResponseObject); ok {
+		if err := validResponse.VisitAppLeaveCommunityActivityResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppGetCommunityActivityMe operation middleware
+func (sh *strictHandler) AppGetCommunityActivityMe(ctx *gin.Context, id int64) {
+	var request AppGetCommunityActivityMeRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppGetCommunityActivityMe(ctx, request.(AppGetCommunityActivityMeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppGetCommunityActivityMe")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppGetCommunityActivityMeResponseObject); ok {
+		if err := validResponse.VisitAppGetCommunityActivityMeResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppCommunityCheckout operation middleware
+func (sh *strictHandler) AppCommunityCheckout(ctx *gin.Context) {
+	var request AppCommunityCheckoutRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppCommunityCheckout(ctx, request.(AppCommunityCheckoutRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppCommunityCheckout")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppCommunityCheckoutResponseObject); ok {
+		if err := validResponse.VisitAppCommunityCheckoutResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppGetCommunityCheckin operation middleware
+func (sh *strictHandler) AppGetCommunityCheckin(ctx *gin.Context) {
+	var request AppGetCommunityCheckinRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppGetCommunityCheckin(ctx, request.(AppGetCommunityCheckinRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppGetCommunityCheckin")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppGetCommunityCheckinResponseObject); ok {
+		if err := validResponse.VisitAppGetCommunityCheckinResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppCommunityCheckin operation middleware
+func (sh *strictHandler) AppCommunityCheckin(ctx *gin.Context) {
+	var request AppCommunityCheckinRequestObject
+
+	var body AppCommunityCheckinJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppCommunityCheckin(ctx, request.(AppCommunityCheckinRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppCommunityCheckin")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppCommunityCheckinResponseObject); ok {
+		if err := validResponse.VisitAppCommunityCheckinResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppListMyCommunityActivities operation middleware
+func (sh *strictHandler) AppListMyCommunityActivities(ctx *gin.Context) {
+	var request AppListMyCommunityActivitiesRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppListMyCommunityActivities(ctx, request.(AppListMyCommunityActivitiesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppListMyCommunityActivities")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppListMyCommunityActivitiesResponseObject); ok {
+		if err := validResponse.VisitAppListMyCommunityActivitiesResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // AppGetConsent operation middleware
 func (sh *strictHandler) AppGetConsent(ctx *gin.Context, params AppGetConsentParams) {
 	var request AppGetConsentRequestObject
@@ -10746,6 +12597,58 @@ func (sh *strictHandler) AppUpdateProfile(ctx *gin.Context, id int64) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AppUpdateProfileResponseObject); ok {
 		if err := validResponse.VisitAppUpdateProfileResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetCommunityActivity operation middleware
+func (sh *strictHandler) GetCommunityActivity(ctx *gin.Context, id int64) {
+	var request GetCommunityActivityRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetCommunityActivity(ctx, request.(GetCommunityActivityRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetCommunityActivity")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(GetCommunityActivityResponseObject); ok {
+		if err := validResponse.VisitGetCommunityActivityResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetCommunityFeed operation middleware
+func (sh *strictHandler) GetCommunityFeed(ctx *gin.Context, params GetCommunityFeedParams) {
+	var request GetCommunityFeedRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetCommunityFeed(ctx, request.(GetCommunityFeedRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetCommunityFeed")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(GetCommunityFeedResponseObject); ok {
+		if err := validResponse.VisitGetCommunityFeedResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

@@ -21,6 +21,7 @@ func newRouter(app *App) *gin.Engine {
 		Racepack:     app.Racepack,
 		Promo:        app.Promo,
 		Volunteer:    app.Volunteer,
+		Community:    app.Community,
 		Notify:       app.Notify,
 		Env:          app.Cfg.Env,
 	})

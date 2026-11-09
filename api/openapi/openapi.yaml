@@ -828,7 +828,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [REGISTRATION]
+            enum: [REGISTRATION, COMMUNITY]
         - name: lang
           in: query
           required: false
@@ -2171,6 +2171,383 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /community/feed:
+    get:
+      operationId: getCommunityFeed
+      summary: 跑团页：官方免费活动与跑团活动混排、今天谁在跑
+      parameters:
+        - name: kind
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ALL, OFFICIAL, CLUB]
+        - name: city
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 40
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunityFeed'
+        default:
+          description: 错误（VALIDATION_FAILED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /community/activities/{id}:
+    get:
+      operationId: getCommunityActivity
+      summary: 跑团活动详情（已发布、未冻结；不含联系方式）
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunityActivity'
+        default:
+          description: 错误（NOT_FOUND）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /app/community/activities:
+    post:
+      operationId: appCreateCommunityActivity
+      summary: 发布跑团活动（签署免责声明；需要审核时先进审核）
+      x-auth: app
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCommunityActivity'
+      responses:
+        '201':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunityActivity'
+        default:
+          description: 错误（CONSENT_INVALID、COMMUNITY_TOO_MANY、VALIDATION_FAILED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /app/community/mine:
+    get:
+      operationId: appListMyCommunityActivities
+      summary: 我发布的跑团活动（含审核状态）
+      x-auth: app
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunityActivityList'
+        default:
+          description: 错误（VALIDATION_FAILED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /app/community/activities/{id}/me:
+    get:
+      operationId: appGetCommunityActivityMe
+      summary: 我在这个活动的状态与联系方式（按发起人设置的可见范围）
+      x-auth: app
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunityActivityView'
+        default:
+          description: 错误（NOT_FOUND）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /app/community/activities/{id}/join:
+    post:
+      operationId: appJoinCommunityActivity
+      summary: 参加；满员时进候补
+      x-auth: app
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunityActivityView'
+        default:
+          description: 错误（COMMUNITY_CLOSED、COMMUNITY_STATE_CONFLICT）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /app/community/activities/{id}/leave:
+    post:
+      operationId: appLeaveCommunityActivity
+      summary: 退出或取消候补；空出的名额按候补先后补上
+      x-auth: app
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunityActivityView'
+        default:
+          description: 错误（COMMUNITY_STATE_CONFLICT）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /app/community/activities/{id}/close:
+    post:
+      operationId: appCloseCommunityActivity
+      summary: 发起人取消活动
+      x-auth: app
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunityActivityView'
+        default:
+          description: 错误（COMMUNITY_STATE_CONFLICT）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /app/community/checkin:
+    get:
+      operationId: appGetCommunityCheckin
+      summary: 我今天有没有签到「我在跑」
+      x-auth: app
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunityCheckinState'
+        default:
+          description: 错误（VALIDATION_FAILED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: appCommunityCheckin
+      summary: 签到「今天我在跑」，8 小时内显示在跑团页
+      x-auth: app
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommunityCheckinRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunityCheckinState'
+        default:
+          description: 错误（VALIDATION_FAILED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: appCommunityCheckout
+      summary: 取消今天的签到
+      x-auth: app
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunityCheckinState'
+        default:
+          description: 错误（VALIDATION_FAILED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/community/activities:
+    get:
+      operationId: adminListCommunityActivities
+      summary: 跑团活动审核列表（待审核在前）
+      x-permission: content_manage
+      x-access: read
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CommunityStatus'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCommunityActivityList'
+        default:
+          description: 错误（VALIDATION_FAILED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/community/activities/{id}/approve:
+    post:
+      operationId: adminApproveCommunityActivity
+      summary: 审核通过并发布
+      x-permission: content_manage
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCommunityActivity'
+        default:
+          description: 错误（COMMUNITY_STATE_CONFLICT）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/community/activities/{id}/reject:
+    post:
+      operationId: adminRejectCommunityActivity
+      summary: 审核不通过（R01–R05）
+      x-permission: content_manage
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectCommunityActivityRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCommunityActivity'
+        default:
+          description: 错误（COMMUNITY_STATE_CONFLICT）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/community/activities/{id}/freeze:
+    post:
+      operationId: adminFreezeCommunityActivity
+      summary: 紧急冻结（跑者看不到，解冻后恢复）
+      x-permission: content_manage
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreezeCommunityActivityRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCommunityActivity'
+        default:
+          description: 错误（COMMUNITY_STATE_CONFLICT）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/community/activities/{id}/unfreeze:
+    post:
+      operationId: adminUnfreezeCommunityActivity
+      summary: 解冻
+      x-permission: content_manage
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCommunityActivity'
+        default:
+          description: 错误（COMMUNITY_STATE_CONFLICT）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     ReferralKind:
@@ -2631,6 +3008,220 @@ components:
       type: object
       properties:
         note: { type: string, maxLength: 200 }
+    CommunityTag:
+      type: string
+      enum: [MORNING, NIGHT, LONG, TRAIL, TRAINING, FAMILY, CYCLING, OTHER]
+    CommunityStatus:
+      type: string
+      enum: [REVIEWING, PUBLISHED, REJECTED, CLOSED]
+    CommunityFeedItem:
+      type: object
+      required: [kind, id, eventSlug, title, startsAt, city, location, hostName, tag, distanceText, capacity, joinedCount, waitlistCount, feeNote, coverUrl, joinerInitials]
+      properties:
+        kind:
+          type: string
+          enum: [OFFICIAL, CLUB]
+          description: OFFICIAL = 官方免费活动（赛事），CLUB = 跑团发起
+        id: { type: integer, format: int64, description: OFFICIAL 时是赛事 id }
+        eventSlug:
+          type: string
+          nullable: true
+        title: { type: string }
+        startsAt: { type: string, format: date-time }
+        city: { type: string }
+        location: { type: string }
+        hostName:
+          type: string
+          description: 跑团名；没填时为发起人显示名。官方为空串
+        tag:
+          allOf:
+            - $ref: '#/components/schemas/CommunityTag'
+          nullable: true
+        distanceText:
+          type: string
+          nullable: true
+        capacity: { type: integer, format: int32 }
+        joinedCount: { type: integer, format: int32 }
+        waitlistCount: { type: integer, format: int32 }
+        feeNote:
+          type: string
+          nullable: true
+          description: 跑团写的费用说明；官方免费活动为空
+        coverUrl:
+          type: string
+          nullable: true
+        joinerInitials:
+          type: array
+          description: 最早报名的几位跑者的名字缩写（头像用）
+          items: { type: string }
+    CommunityCheckin:
+      type: object
+      required: [name, initials]
+      properties:
+        name: { type: string, description: 显示名的第一个词 }
+        initials: { type: string }
+    CommunityFeed:
+      type: object
+      required: [items, checkins, cities]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommunityFeedItem'
+        checkins:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommunityCheckin'
+        cities:
+          type: array
+          description: 有活动的城市，供筛选
+          items: { type: string }
+    CommunityActivity:
+      type: object
+      required: [id, title, tag, startsAt, city, location, meetPoint, distanceText, capacity, joinedCount, waitlistCount, feeNote, hostName, authorName, body, contactVisibility, status, rejectCode, frozen, joinerInitials]
+      properties:
+        id: { type: integer, format: int64 }
+        title: { type: string }
+        tag:
+          $ref: '#/components/schemas/CommunityTag'
+        startsAt: { type: string, format: date-time }
+        city: { type: string }
+        location: { type: string }
+        meetPoint: { type: string }
+        distanceText:
+          type: string
+          nullable: true
+        capacity: { type: integer, format: int32 }
+        joinedCount: { type: integer, format: int32 }
+        waitlistCount: { type: integer, format: int32 }
+        feeNote: { type: string }
+        hostName:
+          type: string
+          nullable: true
+        authorName: { type: string }
+        body: { type: string }
+        contactVisibility:
+          type: string
+          enum: [JOINED, PUBLIC]
+        status:
+          $ref: '#/components/schemas/CommunityStatus'
+        rejectCode:
+          type: string
+          nullable: true
+        frozen: { type: boolean }
+        joinerInitials:
+          type: array
+          items: { type: string }
+    CommunityActivityList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommunityActivity'
+    CommunityContact:
+      type: object
+      required: [telegram, phone]
+      properties:
+        telegram:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+    CommunityActivityView:
+      type: object
+      required: [activity, myStatus, isAuthor, contact]
+      properties:
+        activity:
+          $ref: '#/components/schemas/CommunityActivity'
+        myStatus:
+          type: string
+          enum: [NONE, JOINED, WAITLIST]
+        isAuthor: { type: boolean }
+        contact:
+          allOf:
+            - $ref: '#/components/schemas/CommunityContact'
+          nullable: true
+          description: 发起人联系方式；仅公开、已参加或发起人本人可见
+    CreateCommunityActivity:
+      type: object
+      required: [title, tag, startsAt, location, meetPoint, capacity, contactVisibility, body, consent]
+      properties:
+        title: { type: string, maxLength: 30 }
+        tag:
+          $ref: '#/components/schemas/CommunityTag'
+        startsAt: { type: string, format: date-time }
+        city: { type: string, maxLength: 40 }
+        location: { type: string, maxLength: 80 }
+        meetPoint: { type: string, maxLength: 120 }
+        distanceText: { type: string, maxLength: 40 }
+        capacity: { type: integer, format: int32, minimum: 1, maximum: 500 }
+        feeNote: { type: string, maxLength: 40 }
+        hostName: { type: string, maxLength: 40 }
+        contactTelegram: { type: string, maxLength: 33 }
+        contactPhone: { type: string, maxLength: 20 }
+        contactVisibility:
+          type: string
+          enum: [JOINED, PUBLIC]
+        body: { type: string, maxLength: 1000 }
+        consent:
+          $ref: '#/components/schemas/OrderConsentInput'
+    CommunityCheckinRequest:
+      type: object
+      properties:
+        city: { type: string, maxLength: 40 }
+    CommunityCheckinState:
+      type: object
+      required: [checkedIn, checkins]
+      properties:
+        checkedIn: { type: boolean }
+        checkins:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommunityCheckin'
+    AdminCommunityActivity:
+      type: object
+      required: [activity, authorTelegram, contactTelegram, contactPhone, reviewRequired, freezeReason, createdAt]
+      properties:
+        activity:
+          $ref: '#/components/schemas/CommunityActivity'
+        authorTelegram:
+          type: string
+          nullable: true
+        contactTelegram:
+          type: string
+          nullable: true
+        contactPhone:
+          type: string
+          nullable: true
+        reviewRequired: { type: boolean }
+        freezeReason:
+          type: string
+          nullable: true
+        createdAt: { type: string, format: date-time }
+    AdminCommunityActivityList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminCommunityActivity'
+    RejectCommunityActivityRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          enum: [R01, R02, R03, R04, R05]
+          description: R01 信息不全 · R02 涉及收费或商业推广 · R03 安全风险 · R04 内容不当 · R05 重复发布
+    FreezeCommunityActivityRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 1, maxLength: 200 }
     RejectCompRequest:
       type: object
       properties:

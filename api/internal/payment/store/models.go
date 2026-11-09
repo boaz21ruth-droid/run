@@ -130,6 +130,9 @@ type CommunityActivity struct {
 	ReportCount       int32
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
+	HostName          *string
+	City              string
+	WaitlistCount     int32
 }
 
 type CommunityActivityImage struct {
@@ -144,6 +147,12 @@ type CommunityActivityJoin struct {
 	Status     string
 	JoinedAt   time.Time
 	LeftAt     *time.Time
+}
+
+type CommunityCheckin struct {
+	UserID      int64
+	City        string
+	CheckedInAt time.Time
 }
 
 type CommunityReport struct {
