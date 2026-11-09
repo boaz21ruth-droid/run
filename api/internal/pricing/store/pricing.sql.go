@@ -87,7 +87,7 @@ func (q *Queries) EventExists(ctx context.Context, id int64) (bool, error) {
 }
 
 const getCouponForUpdate = `-- name: GetCouponForUpdate :one
-SELECT id, code, event_id, discount_type, discount_value, quota, used_count, reserved_count, min_runners, valid_from, valid_until, description, status, created_by, created_at FROM coupons
+SELECT id, code, event_id, discount_type, discount_value, quota, used_count, reserved_count, min_runners, valid_from, valid_until, description, status, created_by, created_at, owner_user_id, max_runners FROM coupons
 WHERE id = $1
 FOR UPDATE
 `
@@ -111,6 +111,8 @@ func (q *Queries) GetCouponForUpdate(ctx context.Context, id int64) (Coupon, err
 		&i.Status,
 		&i.CreatedBy,
 		&i.CreatedAt,
+		&i.OwnerUserID,
+		&i.MaxRunners,
 	)
 	return i, err
 }
@@ -163,7 +165,7 @@ INSERT INTO coupons (code, event_id, discount_type, discount_value, quota, min_r
                      valid_from, valid_until, description, status, created_by)
 VALUES ($1, $2, $3, $4, $5, $6,
         $7, $8, $9, $10, $11)
-RETURNING id, code, event_id, discount_type, discount_value, quota, used_count, reserved_count, min_runners, valid_from, valid_until, description, status, created_by, created_at
+RETURNING id, code, event_id, discount_type, discount_value, quota, used_count, reserved_count, min_runners, valid_from, valid_until, description, status, created_by, created_at, owner_user_id, max_runners
 `
 
 type InsertCouponParams struct {
@@ -211,6 +213,8 @@ func (q *Queries) InsertCoupon(ctx context.Context, arg InsertCouponParams) (Cou
 		&i.Status,
 		&i.CreatedBy,
 		&i.CreatedAt,
+		&i.OwnerUserID,
+		&i.MaxRunners,
 	)
 	return i, err
 }
@@ -333,7 +337,7 @@ func (q *Queries) ListCategoryLinksByRuleIDs(ctx context.Context, ruleIds []int6
 }
 
 const listCoupons = `-- name: ListCoupons :many
-SELECT id, code, event_id, discount_type, discount_value, quota, used_count, reserved_count, min_runners, valid_from, valid_until, description, status, created_by, created_at FROM coupons
+SELECT id, code, event_id, discount_type, discount_value, quota, used_count, reserved_count, min_runners, valid_from, valid_until, description, status, created_by, created_at, owner_user_id, max_runners FROM coupons
 WHERE ($1::bigint IS NULL OR event_id = $1::bigint)
 ORDER BY created_at DESC, id DESC
 `
@@ -363,6 +367,8 @@ func (q *Queries) ListCoupons(ctx context.Context, eventID *int64) ([]Coupon, er
 			&i.Status,
 			&i.CreatedBy,
 			&i.CreatedAt,
+			&i.OwnerUserID,
+			&i.MaxRunners,
 		); err != nil {
 			return nil, err
 		}
@@ -539,7 +545,7 @@ func (q *Queries) MarkCouponRedemption(ctx context.Context, arg MarkCouponRedemp
 
 const quoteGetCouponByCode = `-- name: QuoteGetCouponByCode :one
 SELECT id, event_id, discount_type, discount_value, quota, used_count, reserved_count,
-       min_runners, valid_from, valid_until, status
+       min_runners, max_runners, owner_user_id, valid_from, valid_until, status
 FROM coupons
 WHERE code = $1
 `
@@ -553,6 +559,8 @@ type QuoteGetCouponByCodeRow struct {
 	UsedCount     int32
 	ReservedCount int32
 	MinRunners    *int16
+	MaxRunners    *int16
+	OwnerUserID   *int64
 	ValidFrom     *time.Time
 	ValidUntil    *time.Time
 	Status        string
@@ -570,6 +578,8 @@ func (q *Queries) QuoteGetCouponByCode(ctx context.Context, code string) (QuoteG
 		&i.UsedCount,
 		&i.ReservedCount,
 		&i.MinRunners,
+		&i.MaxRunners,
+		&i.OwnerUserID,
 		&i.ValidFrom,
 		&i.ValidUntil,
 		&i.Status,
@@ -836,7 +846,7 @@ SET event_id = $1,
     description = $8,
     status = $9
 WHERE id = $10
-RETURNING id, code, event_id, discount_type, discount_value, quota, used_count, reserved_count, min_runners, valid_from, valid_until, description, status, created_by, created_at
+RETURNING id, code, event_id, discount_type, discount_value, quota, used_count, reserved_count, min_runners, valid_from, valid_until, description, status, created_by, created_at, owner_user_id, max_runners
 `
 
 type UpdateCouponParams struct {
@@ -882,6 +892,8 @@ func (q *Queries) UpdateCoupon(ctx context.Context, arg UpdateCouponParams) (Cou
 		&i.Status,
 		&i.CreatedBy,
 		&i.CreatedAt,
+		&i.OwnerUserID,
+		&i.MaxRunners,
 	)
 	return i, err
 }

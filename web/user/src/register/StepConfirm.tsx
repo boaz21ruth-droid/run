@@ -1,10 +1,12 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, formatUsd, type Schemas } from "@werun/api-client";
 import { useLang } from "@werun/i18n";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router";
 import { useApi } from "../api";
 import { ORDERS_KEY, orderKey } from "../orders/api";
+import { loadReferral } from "../promo/referral";
 import { PROFILES_KEY } from "../queries";
 import { createOrder, fetchQuote, quoteQueryKey, useRegistrationConsent } from "./api";
 import { participantName, toOrderParticipant, toQuoteParticipant, type ParticipantDraft, type PublicEvent, type RunnerProfile } from "./model";
@@ -37,7 +39,11 @@ export function StepConfirm({ event, participants, profiles, submissionKey, onSe
   const lang = useLang();
   const api = useApi();
   const queryClient = useQueryClient();
-  const [couponInput, setCouponInput] = useState("");
+  const [searchParams] = useSearchParams();
+  // 推荐链接记下的来源与推荐码；?coupon= 来自免费入场批准后的「用免费码报名」
+  const [referral] = useState(() => loadReferral(event.slug));
+  const [presetCoupon] = useState(() => (searchParams.get("coupon") ?? referral?.couponCode ?? "").trim().toUpperCase());
+  const [couponInput, setCouponInput] = useState(presetCoupon);
   const [appliedCoupon, setAppliedCoupon] = useState("");
   const [couponResult, setCouponResult] = useState<CouponResult | null>(null);
   const [applying, setApplying] = useState(false);
@@ -59,8 +65,17 @@ export function StepConfirm({ event, participants, profiles, submissionKey, onSe
   const checkKey = (itemKey: string) => `${consent.data?.version ?? ""}:${itemKey}`;
   const allChecked = consentItems.length > 0 && consentItems.every((item) => checked[checkKey(item.key)]);
 
-  async function applyCoupon() {
-    const code = couponInput.trim().toUpperCase();
+  // 带着推荐码进来时自动核一次，用不了就照常显示原因
+  const autoApplied = useRef(false);
+  useEffect(() => {
+    if (presetCoupon && !autoApplied.current) {
+      autoApplied.current = true;
+      void applyCoupon(presetCoupon);
+    }
+  });
+
+  async function applyCoupon(preset?: string) {
+    const code = (preset ?? couponInput).trim().toUpperCase();
     if (code === "") {
       setAppliedCoupon("");
       setCouponResult(null);
@@ -88,6 +103,7 @@ export function StepConfirm({ event, participants, profiles, submissionKey, onSe
     const payload: Schemas["CreateOrderRequest"] = {
       eventSlug: event.slug,
       ...(appliedCoupon ? { couponCode: appliedCoupon } : {}),
+      ...(referral ? { referral: referral.slug } : {}),
       // 同意书接口返回的语言可能是回退后的 en 或 zh，按接口说明原样提交
       consent: {
         version: consent.data.version,

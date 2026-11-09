@@ -55,6 +55,11 @@ const (
 	CodeRacepackNotPaid           = "RACEPACK_NOT_PAID"
 	CodeRacepackIDRequired        = "RACEPACK_ID_REQUIRED"
 	CodeRacepackNotPicked         = "RACEPACK_NOT_PICKED"
+	CodeReferralSlugTaken         = "REFERRAL_SLUG_TAKEN"
+	CodeCompClosed                = "COMP_CLOSED"
+	CodeCompRequestExists         = "COMP_REQUEST_EXISTS"
+	CodeCompRequestReviewed       = "COMP_REQUEST_REVIEWED"
+	CodeCompQuotaFull             = "COMP_QUOTA_FULL"
 )
 
 // AllCodes 列出全部错误码，供文案完整性测试使用。新增错误码时必须同时加到这里。
@@ -105,6 +110,11 @@ var AllCodes = []string{
 	CodeRacepackNotPaid,
 	CodeRacepackIDRequired,
 	CodeRacepackNotPicked,
+	CodeReferralSlugTaken,
+	CodeCompClosed,
+	CodeCompRequestExists,
+	CodeCompRequestReviewed,
+	CodeCompQuotaFull,
 }
 
 // FieldError 描述某个字段的错误：文案 key 与参数。

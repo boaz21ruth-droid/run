@@ -69,13 +69,19 @@ LIMIT 1;
 INSERT INTO reg_orders (
   order_no, event_id, buyer_user_id, buyer_name, buyer_phone_e164, buyer_email,
   status, reservation_state, list_amount_cents, discount_cents, ident_offset_cents, amount_cents,
-  currency, coupon_id, payment_account_id, deadline_at, source
+  currency, coupon_id, referral_link_id, payment_account_id, deadline_at, source
 ) VALUES (
   @order_no, @event_id, @buyer_user_id, @buyer_name, @buyer_phone_e164, @buyer_email,
   'PENDING_PAYMENT', 'RESERVED', @list_amount_cents, @discount_cents, @ident_offset_cents, @amount_cents,
-  'USD', @coupon_id, @payment_account_id, @deadline_at, 'TELEGRAM'
+  'USD', @coupon_id, @referral_link_id, @payment_account_id, @deadline_at, 'TELEGRAM'
 )
 RETURNING id;
+
+-- name: ReferralLinkByCoupon :one
+SELECT id FROM referral_links WHERE event_id = @event_id AND coupon_id = @coupon_id;
+
+-- name: ReferralLinkBySlug :one
+SELECT id FROM referral_links WHERE event_id = @event_id AND slug = @slug AND status = 'ACTIVE';
 
 -- name: InsertOrderParticipant :one
 INSERT INTO order_participants (order_id, category_id, price_rule_id, audience, list_price_cents, paid_cents, snapshot_name)

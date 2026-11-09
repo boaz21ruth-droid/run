@@ -291,6 +291,51 @@ func (e AppUserLocale) Valid() bool {
 	}
 }
 
+// Defines values for CompKind.
+const (
+	CompKindCLUB    CompKind = "CLUB"
+	CompKindKOL     CompKind = "KOL"
+	CompKindMEDIA   CompKind = "MEDIA"
+	CompKindSPONSOR CompKind = "SPONSOR"
+)
+
+// Valid indicates whether the value is a known member of the CompKind enum.
+func (e CompKind) Valid() bool {
+	switch e {
+	case CompKindCLUB:
+		return true
+	case CompKindKOL:
+		return true
+	case CompKindMEDIA:
+		return true
+	case CompKindSPONSOR:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CompStatus.
+const (
+	CompStatusAPPROVED CompStatus = "APPROVED"
+	CompStatusPENDING  CompStatus = "PENDING"
+	CompStatusREJECTED CompStatus = "REJECTED"
+)
+
+// Valid indicates whether the value is a known member of the CompStatus enum.
+func (e CompStatus) Valid() bool {
+	switch e {
+	case CompStatusAPPROVED:
+		return true
+	case CompStatusPENDING:
+		return true
+	case CompStatusREJECTED:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CouponStatus.
 const (
 	CouponStatusACTIVE   CouponStatus = "ACTIVE"
@@ -349,6 +394,7 @@ func (e CreateEventRequestOrganizerType) Valid() bool {
 const (
 	DiscountTypeAMOUNT  DiscountType = "AMOUNT"
 	DiscountTypePERCENT DiscountType = "PERCENT"
+	DiscountTypePRICE   DiscountType = "PRICE"
 	DiscountTypeWAIVER  DiscountType = "WAIVER"
 )
 
@@ -358,6 +404,8 @@ func (e DiscountType) Valid() bool {
 	case DiscountTypeAMOUNT:
 		return true
 	case DiscountTypePERCENT:
+		return true
+	case DiscountTypePRICE:
 		return true
 	case DiscountTypeWAIVER:
 		return true
@@ -882,6 +930,33 @@ func (e RacepackEntryStatus) Valid() bool {
 	}
 }
 
+// Defines values for ReferralKind.
+const (
+	ReferralKindCHANNEL ReferralKind = "CHANNEL"
+	ReferralKindCLUB    ReferralKind = "CLUB"
+	ReferralKindKOL     ReferralKind = "KOL"
+	ReferralKindOTHER   ReferralKind = "OTHER"
+	ReferralKindSPONSOR ReferralKind = "SPONSOR"
+)
+
+// Valid indicates whether the value is a known member of the ReferralKind enum.
+func (e ReferralKind) Valid() bool {
+	switch e {
+	case ReferralKindCHANNEL:
+		return true
+	case ReferralKindCLUB:
+		return true
+	case ReferralKindKOL:
+		return true
+	case ReferralKindOTHER:
+		return true
+	case ReferralKindSPONSOR:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RejectProofRequestRejectCode.
 const (
 	RejectProofRequestRejectCodeAMOUNTMISMATCH RejectProofRequestRejectCode = "AMOUNT_MISMATCH"
@@ -1170,6 +1245,28 @@ type AdminCategory struct {
 	StartAt   *time.Time    `json:"startAt"`
 }
 
+// AdminCompRequest defines model for AdminCompRequest.
+type AdminCompRequest struct {
+	ApplicantName string  `json:"applicantName"`
+	Audience      *string `json:"audience"`
+
+	// CouponCode 批准后发的免费报名码（本人专用、限 1 人）
+	CouponCode *string `json:"couponCode"`
+
+	// CouponUsed 免费报名码是否已用于报名
+	CouponUsed       bool       `json:"couponUsed"`
+	CreatedAt        time.Time  `json:"createdAt"`
+	Id               int64      `json:"id"`
+	Kind             CompKind   `json:"kind"`
+	Note             *string    `json:"note"`
+	ProfileUrl       *string    `json:"profileUrl"`
+	ReviewNote       *string    `json:"reviewNote"`
+	ReviewedAt       *time.Time `json:"reviewedAt"`
+	Status           CompStatus `json:"status"`
+	TelegramUsername *string    `json:"telegramUsername"`
+	UserId           int64      `json:"userId"`
+}
+
 // AdminEvent defines model for AdminEvent.
 type AdminEvent struct {
 	Categories           []AdminCategory         `json:"categories"`
@@ -1326,6 +1423,13 @@ type AdminReceiptItem struct {
 // AdminReceiptItemMatchStatus defines model for AdminReceiptItem.MatchStatus.
 type AdminReceiptItemMatchStatus string
 
+// AppCompStatus defines model for AppCompStatus.
+type AppCompStatus struct {
+	// Open 赛事是否接受免费入场申请
+	Open    bool         `json:"open"`
+	Request *CompRequest `json:"request"`
+}
+
 // AppLoginRequest defines model for AppLoginRequest.
 type AppLoginRequest struct {
 	InitData string `json:"initData"`
@@ -1360,6 +1464,38 @@ type ApproveProofRequest struct {
 	ReceivedAt          time.Time `json:"receivedAt"`
 }
 
+// CompKind defines model for CompKind.
+type CompKind string
+
+// CompRequest defines model for CompRequest.
+type CompRequest struct {
+	ApplicantName string  `json:"applicantName"`
+	Audience      *string `json:"audience"`
+
+	// CouponCode 批准后发的免费报名码（本人专用、限 1 人）
+	CouponCode *string    `json:"couponCode"`
+	CreatedAt  time.Time  `json:"createdAt"`
+	Id         int64      `json:"id"`
+	Kind       CompKind   `json:"kind"`
+	Note       *string    `json:"note"`
+	ProfileUrl *string    `json:"profileUrl"`
+	ReviewNote *string    `json:"reviewNote"`
+	Status     CompStatus `json:"status"`
+}
+
+// CompRequestList defines model for CompRequestList.
+type CompRequestList struct {
+	Approved int32              `json:"approved"`
+	Items    []AdminCompRequest `json:"items"`
+	Pending  int32              `json:"pending"`
+
+	// Quota 免费入场名额；null 表示不开放申请
+	Quota *int32 `json:"quota"`
+}
+
+// CompStatus defines model for CompStatus.
+type CompStatus string
+
 // ConsentItem defines model for ConsentItem.
 type ConsentItem struct {
 	// Description 没有说明时为空串
@@ -1381,24 +1517,33 @@ type ConsentVersion struct {
 
 // Coupon defines model for Coupon.
 type Coupon struct {
-	Code          string         `json:"code"`
-	Description   *LocalizedText `json:"description,omitempty"`
-	DiscountType  DiscountType   `json:"discountType"`
-	DiscountValue int64          `json:"discountValue"`
-	EventId       *int64         `json:"eventId"`
-	Id            int64          `json:"id"`
-	MinRunners    *int32         `json:"minRunners"`
-	Quota         int32          `json:"quota"`
-	ReservedCount int32          `json:"reservedCount"`
-	Status        CouponStatus   `json:"status"`
-	UsedCount     int32          `json:"usedCount"`
-	ValidFrom     *time.Time     `json:"validFrom"`
-	ValidUntil    *time.Time     `json:"validUntil"`
+	Code        string         `json:"code"`
+	Description *LocalizedText `json:"description,omitempty"`
+
+	// DiscountType PRICE = 每位参赛人按固定价（discountValue 为每人价格，单位分）
+	DiscountType  DiscountType `json:"discountType"`
+	DiscountValue int64        `json:"discountValue"`
+	EventId       *int64       `json:"eventId"`
+	Id            int64        `json:"id"`
+	MinRunners    *int32       `json:"minRunners"`
+	Quota         int32        `json:"quota"`
+	ReservedCount int32        `json:"reservedCount"`
+	Status        CouponStatus `json:"status"`
+	UsedCount     int32        `json:"usedCount"`
+	ValidFrom     *time.Time   `json:"validFrom"`
+	ValidUntil    *time.Time   `json:"validUntil"`
 }
 
 // CouponList defines model for CouponList.
 type CouponList struct {
 	Items []Coupon `json:"items"`
+}
+
+// CouponOffer defines model for CouponOffer.
+type CouponOffer struct {
+	// DiscountType PRICE = 每位参赛人按固定价（discountValue 为每人价格，单位分）
+	DiscountType  DiscountType `json:"discountType"`
+	DiscountValue int64        `json:"discountValue"`
 }
 
 // CouponStatus defines model for CouponStatus.
@@ -1414,18 +1559,31 @@ type CreateCategoryRequest struct {
 	StartAt   *time.Time    `json:"startAt,omitempty"`
 }
 
+// CreateCompRequest defines model for CreateCompRequest.
+type CreateCompRequest struct {
+	ApplicantName string `json:"applicantName"`
+
+	// Audience 例如「Instagram 4.8 万粉丝」「跑团 120 人」
+	Audience   *string  `json:"audience,omitempty"`
+	Kind       CompKind `json:"kind"`
+	Note       *string  `json:"note,omitempty"`
+	ProfileUrl *string  `json:"profileUrl,omitempty"`
+}
+
 // CreateCouponRequest defines model for CreateCouponRequest.
 type CreateCouponRequest struct {
-	Code          string         `json:"code"`
-	Description   *LocalizedText `json:"description,omitempty"`
-	DiscountType  DiscountType   `json:"discountType"`
-	DiscountValue int64          `json:"discountValue"`
-	EventId       *int64         `json:"eventId,omitempty"`
-	MinRunners    *int32         `json:"minRunners,omitempty"`
-	Quota         int32          `json:"quota"`
-	Status        CouponStatus   `json:"status"`
-	ValidFrom     *time.Time     `json:"validFrom,omitempty"`
-	ValidUntil    *time.Time     `json:"validUntil,omitempty"`
+	Code        string         `json:"code"`
+	Description *LocalizedText `json:"description,omitempty"`
+
+	// DiscountType PRICE = 每位参赛人按固定价（discountValue 为每人价格，单位分）
+	DiscountType  DiscountType `json:"discountType"`
+	DiscountValue int64        `json:"discountValue"`
+	EventId       *int64       `json:"eventId,omitempty"`
+	MinRunners    *int32       `json:"minRunners,omitempty"`
+	Quota         int32        `json:"quota"`
+	Status        CouponStatus `json:"status"`
+	ValidFrom     *time.Time   `json:"validFrom,omitempty"`
+	ValidUntil    *time.Time   `json:"validUntil,omitempty"`
 }
 
 // CreateEventRequest defines model for CreateEventRequest.
@@ -1451,9 +1609,20 @@ type CreateOrderRequest struct {
 	CouponCode   *string                 `json:"couponCode,omitempty"`
 	EventSlug    string                  `json:"eventSlug"`
 	Participants []OrderParticipantInput `json:"participants"`
+
+	// Referral 推荐链接 slug（来自 /r/<slug>），只用于渠道归因
+	Referral *string `json:"referral,omitempty"`
 }
 
-// DiscountType defines model for DiscountType.
+// CreateReferralLinkRequest defines model for CreateReferralLinkRequest.
+type CreateReferralLinkRequest struct {
+	Kind  ReferralKind        `json:"kind"`
+	Label string              `json:"label"`
+	Offer *ReferralOfferInput `json:"offer,omitempty"`
+	Slug  string              `json:"slug"`
+}
+
+// DiscountType PRICE = 每位参赛人按固定价（discountValue 为每人价格，单位分）
 type DiscountType string
 
 // ErrorResponse defines model for ErrorResponse.
@@ -1873,6 +2042,9 @@ type PublicEvent struct {
 	Categories []PublicCategory `json:"categories"`
 	City       string           `json:"city"`
 
+	// CompOpen 是否接受免费入场申请（KOL / 跑团团长 / 赞助商 / 媒体）
+	CompOpen bool `json:"compOpen"`
+
 	// CoverUrl 封面图公开访问地址（/api/files/{id}）；未设置封面时为空
 	CoverUrl  *string              `json:"coverUrl"`
 	EventType PublicEventEventType `json:"eventType"`
@@ -2071,6 +2243,74 @@ type RacepackUndoRequest struct {
 	Reason        string             `json:"reason"`
 }
 
+// ReferralCoupon defines model for ReferralCoupon.
+type ReferralCoupon struct {
+	Code string `json:"code"`
+
+	// DiscountType PRICE = 每位参赛人按固定价（discountValue 为每人价格，单位分）
+	DiscountType  DiscountType `json:"discountType"`
+	DiscountValue int64        `json:"discountValue"`
+	Id            int64        `json:"id"`
+	Quota         int32        `json:"quota"`
+	ReservedCount int32        `json:"reservedCount"`
+	Status        CouponStatus `json:"status"`
+	UsedCount     int32        `json:"usedCount"`
+}
+
+// ReferralKind defines model for ReferralKind.
+type ReferralKind string
+
+// ReferralLink defines model for ReferralLink.
+type ReferralLink struct {
+	ClickCount int64           `json:"clickCount"`
+	Coupon     *ReferralCoupon `json:"coupon"`
+	CreatedAt  time.Time       `json:"createdAt"`
+	EventId    int64           `json:"eventId"`
+	Id         int64           `json:"id"`
+	Kind       ReferralKind    `json:"kind"`
+	Label      string          `json:"label"`
+
+	// Orders 归因到这条链接的订单数（含未付款、已取消）
+	Orders int32 `json:"orders"`
+
+	// PaidOrders 其中已付款的订单数
+	PaidOrders int32        `json:"paidOrders"`
+	Slug       string       `json:"slug"`
+	Status     CouponStatus `json:"status"`
+}
+
+// ReferralLinkList defines model for ReferralLinkList.
+type ReferralLinkList struct {
+	// DirectOrders 没有归因到任何推荐链接的订单数
+	DirectOrders     int32          `json:"directOrders"`
+	DirectPaidOrders int32          `json:"directPaidOrders"`
+	Items            []ReferralLink `json:"items"`
+}
+
+// ReferralOfferInput defines model for ReferralOfferInput.
+type ReferralOfferInput struct {
+	Code string `json:"code"`
+
+	// DiscountType PRICE = 每位参赛人按固定价（discountValue 为每人价格，单位分）
+	DiscountType  DiscountType `json:"discountType"`
+	DiscountValue int64        `json:"discountValue"`
+	Quota         int32        `json:"quota"`
+}
+
+// ReferralVisit defines model for ReferralVisit.
+type ReferralVisit struct {
+	CouponCode *string      `json:"couponCode"`
+	EventSlug  string       `json:"eventSlug"`
+	Kind       ReferralKind `json:"kind"`
+	Label      string       `json:"label"`
+	Offer      *CouponOffer `json:"offer"`
+}
+
+// RejectCompRequest defines model for RejectCompRequest.
+type RejectCompRequest struct {
+	Note *string `json:"note,omitempty"`
+}
+
 // RejectProofRequest defines model for RejectProofRequest.
 type RejectProofRequest struct {
 	RejectCode   RejectProofRequestRejectCode `json:"rejectCode"`
@@ -2149,10 +2389,17 @@ type SubmitProofForm struct {
 // TShirtSize defines model for TShirtSize.
 type TShirtSize string
 
+// UpdateCompQuotaRequest defines model for UpdateCompQuotaRequest.
+type UpdateCompQuotaRequest struct {
+	Quota *int32 `json:"quota"`
+}
+
 // UpdateCouponRequest defines model for UpdateCouponRequest.
 type UpdateCouponRequest struct {
-	Description  *LocalizedText `json:"description,omitempty"`
-	DiscountType DiscountType   `json:"discountType"`
+	Description *LocalizedText `json:"description,omitempty"`
+
+	// DiscountType PRICE = 每位参赛人按固定价（discountValue 为每人价格，单位分）
+	DiscountType DiscountType `json:"discountType"`
 
 	// DiscountValue PERCENT 为 1–100；AMOUNT 为美分；WAIVER 为 0
 	DiscountValue int64        `json:"discountValue"`
@@ -2179,6 +2426,12 @@ type UpdateMeRequest struct {
 
 // UpdateMeRequestLocale defines model for UpdateMeRequest.Locale.
 type UpdateMeRequestLocale string
+
+// UpdateReferralLinkRequest defines model for UpdateReferralLinkRequest.
+type UpdateReferralLinkRequest struct {
+	Label  string       `json:"label"`
+	Status CouponStatus `json:"status"`
+}
 
 // AdminListCouponsParams defines parameters for AdminListCoupons.
 type AdminListCouponsParams struct {
@@ -2267,6 +2520,9 @@ type AppCreateOrderParams struct {
 // AdminLoginJSONRequestBody defines body for AdminLogin for application/json ContentType.
 type AdminLoginJSONRequestBody = LoginRequest
 
+// AdminRejectCompRequestJSONRequestBody defines body for AdminRejectCompRequest for application/json ContentType.
+type AdminRejectCompRequestJSONRequestBody = RejectCompRequest
+
 // AdminCreateCouponJSONRequestBody defines body for AdminCreateCoupon for application/json ContentType.
 type AdminCreateCouponJSONRequestBody = CreateCouponRequest
 
@@ -2276,8 +2532,14 @@ type AdminUpdateCouponJSONRequestBody = UpdateCouponRequest
 // AdminCreateEventJSONRequestBody defines body for AdminCreateEvent for application/json ContentType.
 type AdminCreateEventJSONRequestBody = CreateEventRequest
 
+// AdminUpdateCompQuotaJSONRequestBody defines body for AdminUpdateCompQuota for application/json ContentType.
+type AdminUpdateCompQuotaJSONRequestBody = UpdateCompQuotaRequest
+
 // AdminCreatePriceRuleJSONRequestBody defines body for AdminCreatePriceRule for application/json ContentType.
 type AdminCreatePriceRuleJSONRequestBody = PriceRuleInput
+
+// AdminCreateReferralLinkJSONRequestBody defines body for AdminCreateReferralLink for application/json ContentType.
+type AdminCreateReferralLinkJSONRequestBody = CreateReferralLinkRequest
 
 // AdminUpdateEventRegistrationJSONRequestBody defines body for AdminUpdateEventRegistration for application/json ContentType.
 type AdminUpdateEventRegistrationJSONRequestBody = UpdateEventRegistrationRequest
@@ -2306,6 +2568,9 @@ type AdminIssueRacepackJSONRequestBody = RacepackIssueRequest
 // AdminUndoRacepackJSONRequestBody defines body for AdminUndoRacepack for application/json ContentType.
 type AdminUndoRacepackJSONRequestBody = RacepackUndoRequest
 
+// AdminUpdateReferralLinkJSONRequestBody defines body for AdminUpdateReferralLink for application/json ContentType.
+type AdminUpdateReferralLinkJSONRequestBody = UpdateReferralLinkRequest
+
 // AppRequestPhoneCodeJSONRequestBody defines body for AppRequestPhoneCode for application/json ContentType.
 type AppRequestPhoneCodeJSONRequestBody = PhoneCodeRequest
 
@@ -2314,6 +2579,9 @@ type AppVerifyPhoneCodeJSONRequestBody = PhoneCodeVerify
 
 // AppLoginTelegramJSONRequestBody defines body for AppLoginTelegram for application/json ContentType.
 type AppLoginTelegramJSONRequestBody = AppLoginRequest
+
+// AppCreateCompRequestJSONRequestBody defines body for AppCreateCompRequest for application/json ContentType.
+type AppCreateCompRequestJSONRequestBody = CreateCompRequest
 
 // AppCreateFreeSignupJSONRequestBody defines body for AppCreateFreeSignup for application/json ContentType.
 type AppCreateFreeSignupJSONRequestBody = FreeSignupRequest
@@ -2344,6 +2612,12 @@ type ServerInterface interface {
 	// AdminLogout 退出登录
 	// (POST /admin/auth/logout)
 	AdminLogout(c *gin.Context)
+	// AdminApproveCompRequest 批准免费入场：发一个本人专用、限 1 人的免费报名码
+	// (POST /admin/comp-requests/{id}/approve)
+	AdminApproveCompRequest(c *gin.Context, id int64)
+	// AdminRejectCompRequest 拒绝免费入场申请
+	// (POST /admin/comp-requests/{id}/reject)
+	AdminRejectCompRequest(c *gin.Context, id int64)
 	// AdminListCoupons 优惠码列表（eventId 为空时返回全部）
 	// (GET /admin/coupons)
 	AdminListCoupons(c *gin.Context, params AdminListCouponsParams)
@@ -2362,6 +2636,12 @@ type ServerInterface interface {
 	// AdminGetEvent 后台赛事详情（任意状态，含报名设置与组别）
 	// (GET /admin/events/{id})
 	AdminGetEvent(c *gin.Context, id int64)
+	// AdminUpdateCompQuota 设置免费入场名额（null 关闭申请）
+	// (PUT /admin/events/{id}/comp-quota)
+	AdminUpdateCompQuota(c *gin.Context, id int64)
+	// AdminListCompRequests 免费入场申请与名额
+	// (GET /admin/events/{id}/comp-requests)
+	AdminListCompRequests(c *gin.Context, id int64)
 	// AdminListPriceRules 赛事的价格档列表（含关联组别与计数）
 	// (GET /admin/events/{id}/price-rules)
 	AdminListPriceRules(c *gin.Context, id int64)
@@ -2371,6 +2651,12 @@ type ServerInterface interface {
 	// AdminPublishEvent 发布赛事（发布前校验）
 	// (POST /admin/events/{id}/publish)
 	AdminPublishEvent(c *gin.Context, id int64)
+	// AdminListReferralLinks 赛事的推荐链接与渠道归因统计
+	// (GET /admin/events/{id}/referral-links)
+	AdminListReferralLinks(c *gin.Context, id int64)
+	// AdminCreateReferralLink 新建推荐链接，可同时建一个只限本赛事的优惠码
+	// (POST /admin/events/{id}/referral-links)
+	AdminCreateReferralLink(c *gin.Context, id int64)
 	// AdminUpdateEventRegistration 修改报名开关与报名时间（开放前校验发布状态、价格档与收款账户）
 	// (PATCH /admin/events/{id}/registration)
 	AdminUpdateEventRegistration(c *gin.Context, id int64)
@@ -2428,6 +2714,9 @@ type ServerInterface interface {
 	// AdminUndoRacepack 撤销一次发放（需写原因）
 	// (POST /admin/racepack/registrations/{id}/undo)
 	AdminUndoRacepack(c *gin.Context, id int64)
+	// AdminUpdateReferralLink 修改推荐链接名称、启用状态（停用同时停用它的优惠码）
+	// (PUT /admin/referral-links/{id})
+	AdminUpdateReferralLink(c *gin.Context, id int64)
 	// AdminListStaff 员工列表（指派现场角色用）
 	// (GET /admin/staff)
 	AdminListStaff(c *gin.Context)
@@ -2446,6 +2735,12 @@ type ServerInterface interface {
 	// AppGetConsent 当前生效的同意书版本；所请求语言没有时依次回退到英文、中文
 	// (GET /app/consents)
 	AppGetConsent(c *gin.Context, params AppGetConsentParams)
+	// AppGetCompRequest 本人在该赛事的免费入场申请（open=false 表示不开放申请）
+	// (GET /app/events/{slug}/comp-request)
+	AppGetCompRequest(c *gin.Context, slug string)
+	// AppCreateCompRequest 提交免费入场申请（KOL / 跑团团长 / 赞助商 / 媒体）
+	// (POST /app/events/{slug}/comp-request)
+	AppCreateCompRequest(c *gin.Context, slug string)
 	// AppCreateFreeSignup 免费活动报名（同一跑者可为家人报多人）
 	// (POST /app/events/{slug}/free-signups)
 	AppCreateFreeSignup(c *gin.Context, slug string)
@@ -2503,6 +2798,9 @@ type ServerInterface interface {
 	// GetReadyz 数据库连通检查
 	// (GET /readyz)
 	GetReadyz(c *gin.Context)
+	// VisitReferral 打开推荐链接：计一次点击，返回赛事与推荐码（公开）
+	// (POST /referrals/{slug}/visit)
+	VisitReferral(c *gin.Context, slug string)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -2538,6 +2836,56 @@ func (siw *ServerInterfaceWrapper) AdminLogout(c *gin.Context) {
 	}
 
 	siw.Handler.AdminLogout(c)
+}
+
+// AdminApproveCompRequest operation middleware
+func (siw *ServerInterfaceWrapper) AdminApproveCompRequest(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminApproveCompRequest(c, id)
+}
+
+// AdminRejectCompRequest operation middleware
+func (siw *ServerInterfaceWrapper) AdminRejectCompRequest(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminRejectCompRequest(c, id)
 }
 
 // AdminListCoupons operation middleware
@@ -2656,6 +3004,56 @@ func (siw *ServerInterfaceWrapper) AdminGetEvent(c *gin.Context) {
 	siw.Handler.AdminGetEvent(c, id)
 }
 
+// AdminUpdateCompQuota operation middleware
+func (siw *ServerInterfaceWrapper) AdminUpdateCompQuota(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminUpdateCompQuota(c, id)
+}
+
+// AdminListCompRequests operation middleware
+func (siw *ServerInterfaceWrapper) AdminListCompRequests(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminListCompRequests(c, id)
+}
+
 // AdminListPriceRules operation middleware
 func (siw *ServerInterfaceWrapper) AdminListPriceRules(c *gin.Context) {
 
@@ -2729,6 +3127,56 @@ func (siw *ServerInterfaceWrapper) AdminPublishEvent(c *gin.Context) {
 	}
 
 	siw.Handler.AdminPublishEvent(c, id)
+}
+
+// AdminListReferralLinks operation middleware
+func (siw *ServerInterfaceWrapper) AdminListReferralLinks(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminListReferralLinks(c, id)
+}
+
+// AdminCreateReferralLink operation middleware
+func (siw *ServerInterfaceWrapper) AdminCreateReferralLink(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminCreateReferralLink(c, id)
 }
 
 // AdminUpdateEventRegistration operation middleware
@@ -3214,6 +3662,31 @@ func (siw *ServerInterfaceWrapper) AdminUndoRacepack(c *gin.Context) {
 	siw.Handler.AdminUndoRacepack(c, id)
 }
 
+// AdminUpdateReferralLink operation middleware
+func (siw *ServerInterfaceWrapper) AdminUpdateReferralLink(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminUpdateReferralLink(c, id)
+}
+
 // AdminListStaff operation middleware
 func (siw *ServerInterfaceWrapper) AdminListStaff(c *gin.Context) {
 
@@ -3312,6 +3785,56 @@ func (siw *ServerInterfaceWrapper) AppGetConsent(c *gin.Context) {
 	}
 
 	siw.Handler.AppGetConsent(c, params)
+}
+
+// AppGetCompRequest operation middleware
+func (siw *ServerInterfaceWrapper) AppGetCompRequest(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "slug" -------------
+	var slug string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Param("slug"), &slug, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppGetCompRequest(c, slug)
+}
+
+// AppCreateCompRequest operation middleware
+func (siw *ServerInterfaceWrapper) AppCreateCompRequest(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "slug" -------------
+	var slug string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Param("slug"), &slug, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppCreateCompRequest(c, slug)
 }
 
 // AppCreateFreeSignup operation middleware
@@ -3699,6 +4222,31 @@ func (siw *ServerInterfaceWrapper) GetReadyz(c *gin.Context) {
 	siw.Handler.GetReadyz(c)
 }
 
+// VisitReferral operation middleware
+func (siw *ServerInterfaceWrapper) VisitReferral(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "slug" -------------
+	var slug string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Param("slug"), &slug, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.VisitReferral(c, slug)
+}
+
 // GinServerOptions provides options for the Gin server.
 type GinServerOptions struct {
 	BaseURL      string
@@ -3781,6 +4329,16 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/admin/staff", wrapper.AdminListStaff)
 	router.GET(options.BaseURL+"/admin/events/:id/staff-assignments", wrapper.AdminListEventAssignments)
 	router.PUT(options.BaseURL+"/admin/events/:id/staff-assignments/:staffId", wrapper.AdminPutEventAssignment)
+	router.POST(options.BaseURL+"/referrals/:slug/visit", wrapper.VisitReferral)
+	router.GET(options.BaseURL+"/app/events/:slug/comp-request", wrapper.AppGetCompRequest)
+	router.POST(options.BaseURL+"/app/events/:slug/comp-request", wrapper.AppCreateCompRequest)
+	router.GET(options.BaseURL+"/admin/events/:id/referral-links", wrapper.AdminListReferralLinks)
+	router.POST(options.BaseURL+"/admin/events/:id/referral-links", wrapper.AdminCreateReferralLink)
+	router.PUT(options.BaseURL+"/admin/referral-links/:id", wrapper.AdminUpdateReferralLink)
+	router.GET(options.BaseURL+"/admin/events/:id/comp-requests", wrapper.AdminListCompRequests)
+	router.PUT(options.BaseURL+"/admin/events/:id/comp-quota", wrapper.AdminUpdateCompQuota)
+	router.POST(options.BaseURL+"/admin/comp-requests/:id/approve", wrapper.AdminApproveCompRequest)
+	router.POST(options.BaseURL+"/admin/comp-requests/:id/reject", wrapper.AdminRejectCompRequest)
 }
 
 type AdminLoginRequestObject struct {
@@ -3843,6 +4401,85 @@ type AdminLogoutdefaultJSONResponse struct {
 }
 
 func (response AdminLogoutdefaultJSONResponse) VisitAdminLogoutResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminApproveCompRequestRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminApproveCompRequestResponseObject interface {
+	VisitAdminApproveCompRequestResponse(w http.ResponseWriter) error
+}
+
+type AdminApproveCompRequest200JSONResponse AdminCompRequest
+
+func (response AdminApproveCompRequest200JSONResponse) VisitAdminApproveCompRequestResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminApproveCompRequestdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminApproveCompRequestdefaultJSONResponse) VisitAdminApproveCompRequestResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminRejectCompRequestRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminRejectCompRequestJSONRequestBody
+}
+
+type AdminRejectCompRequestResponseObject interface {
+	VisitAdminRejectCompRequestResponse(w http.ResponseWriter) error
+}
+
+type AdminRejectCompRequest200JSONResponse AdminCompRequest
+
+func (response AdminRejectCompRequest200JSONResponse) VisitAdminRejectCompRequestResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminRejectCompRequestdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminRejectCompRequestdefaultJSONResponse) VisitAdminRejectCompRequestResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -4088,6 +4725,85 @@ func (response AdminGetEventdefaultJSONResponse) VisitAdminGetEventResponse(w ht
 	return err
 }
 
+type AdminUpdateCompQuotaRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminUpdateCompQuotaJSONRequestBody
+}
+
+type AdminUpdateCompQuotaResponseObject interface {
+	VisitAdminUpdateCompQuotaResponse(w http.ResponseWriter) error
+}
+
+type AdminUpdateCompQuota200JSONResponse CompRequestList
+
+func (response AdminUpdateCompQuota200JSONResponse) VisitAdminUpdateCompQuotaResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdateCompQuotadefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminUpdateCompQuotadefaultJSONResponse) VisitAdminUpdateCompQuotaResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListCompRequestsRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminListCompRequestsResponseObject interface {
+	VisitAdminListCompRequestsResponse(w http.ResponseWriter) error
+}
+
+type AdminListCompRequests200JSONResponse CompRequestList
+
+func (response AdminListCompRequests200JSONResponse) VisitAdminListCompRequestsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListCompRequestsdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminListCompRequestsdefaultJSONResponse) VisitAdminListCompRequestsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AdminListPriceRulesRequestObject struct {
 	Id int64 `json:"id"`
 }
@@ -4195,6 +4911,85 @@ type AdminPublishEventdefaultJSONResponse struct {
 }
 
 func (response AdminPublishEventdefaultJSONResponse) VisitAdminPublishEventResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListReferralLinksRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminListReferralLinksResponseObject interface {
+	VisitAdminListReferralLinksResponse(w http.ResponseWriter) error
+}
+
+type AdminListReferralLinks200JSONResponse ReferralLinkList
+
+func (response AdminListReferralLinks200JSONResponse) VisitAdminListReferralLinksResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListReferralLinksdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminListReferralLinksdefaultJSONResponse) VisitAdminListReferralLinksResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminCreateReferralLinkRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminCreateReferralLinkJSONRequestBody
+}
+
+type AdminCreateReferralLinkResponseObject interface {
+	VisitAdminCreateReferralLinkResponse(w http.ResponseWriter) error
+}
+
+type AdminCreateReferralLink201JSONResponse ReferralLink
+
+func (response AdminCreateReferralLink201JSONResponse) VisitAdminCreateReferralLinkResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminCreateReferralLinkdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminCreateReferralLinkdefaultJSONResponse) VisitAdminCreateReferralLinkResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -4961,6 +5756,46 @@ func (response AdminUndoRacepackdefaultJSONResponse) VisitAdminUndoRacepackRespo
 	return err
 }
 
+type AdminUpdateReferralLinkRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminUpdateReferralLinkJSONRequestBody
+}
+
+type AdminUpdateReferralLinkResponseObject interface {
+	VisitAdminUpdateReferralLinkResponse(w http.ResponseWriter) error
+}
+
+type AdminUpdateReferralLink200JSONResponse ReferralLink
+
+func (response AdminUpdateReferralLink200JSONResponse) VisitAdminUpdateReferralLinkResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdateReferralLinkdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminUpdateReferralLinkdefaultJSONResponse) VisitAdminUpdateReferralLinkResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AdminListStaffRequestObject struct {
 }
 
@@ -5176,6 +6011,85 @@ type AppGetConsentdefaultJSONResponse struct {
 }
 
 func (response AppGetConsentdefaultJSONResponse) VisitAppGetConsentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppGetCompRequestRequestObject struct {
+	Slug string `json:"slug"`
+}
+
+type AppGetCompRequestResponseObject interface {
+	VisitAppGetCompRequestResponse(w http.ResponseWriter) error
+}
+
+type AppGetCompRequest200JSONResponse AppCompStatus
+
+func (response AppGetCompRequest200JSONResponse) VisitAppGetCompRequestResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppGetCompRequestdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppGetCompRequestdefaultJSONResponse) VisitAppGetCompRequestResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppCreateCompRequestRequestObject struct {
+	Slug string `json:"slug"`
+	Body *AppCreateCompRequestJSONRequestBody
+}
+
+type AppCreateCompRequestResponseObject interface {
+	VisitAppCreateCompRequestResponse(w http.ResponseWriter) error
+}
+
+type AppCreateCompRequest201JSONResponse CompRequest
+
+func (response AppCreateCompRequest201JSONResponse) VisitAppCreateCompRequestResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppCreateCompRequestdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppCreateCompRequestdefaultJSONResponse) VisitAppCreateCompRequestResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -5941,6 +6855,45 @@ func (response GetReadyzdefaultJSONResponse) VisitGetReadyzResponse(w http.Respo
 	return err
 }
 
+type VisitReferralRequestObject struct {
+	Slug string `json:"slug"`
+}
+
+type VisitReferralResponseObject interface {
+	VisitVisitReferralResponse(w http.ResponseWriter) error
+}
+
+type VisitReferral200JSONResponse ReferralVisit
+
+func (response VisitReferral200JSONResponse) VisitVisitReferralResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type VisitReferraldefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response VisitReferraldefaultJSONResponse) VisitVisitReferralResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// AdminLogin 员工登录
@@ -5949,6 +6902,12 @@ type StrictServerInterface interface {
 	// AdminLogout 退出登录
 	// (POST /admin/auth/logout)
 	AdminLogout(ctx context.Context, request AdminLogoutRequestObject) (AdminLogoutResponseObject, error)
+	// AdminApproveCompRequest 批准免费入场：发一个本人专用、限 1 人的免费报名码
+	// (POST /admin/comp-requests/{id}/approve)
+	AdminApproveCompRequest(ctx context.Context, request AdminApproveCompRequestRequestObject) (AdminApproveCompRequestResponseObject, error)
+	// AdminRejectCompRequest 拒绝免费入场申请
+	// (POST /admin/comp-requests/{id}/reject)
+	AdminRejectCompRequest(ctx context.Context, request AdminRejectCompRequestRequestObject) (AdminRejectCompRequestResponseObject, error)
 	// AdminListCoupons 优惠码列表（eventId 为空时返回全部）
 	// (GET /admin/coupons)
 	AdminListCoupons(ctx context.Context, request AdminListCouponsRequestObject) (AdminListCouponsResponseObject, error)
@@ -5967,6 +6926,12 @@ type StrictServerInterface interface {
 	// AdminGetEvent 后台赛事详情（任意状态，含报名设置与组别）
 	// (GET /admin/events/{id})
 	AdminGetEvent(ctx context.Context, request AdminGetEventRequestObject) (AdminGetEventResponseObject, error)
+	// AdminUpdateCompQuota 设置免费入场名额（null 关闭申请）
+	// (PUT /admin/events/{id}/comp-quota)
+	AdminUpdateCompQuota(ctx context.Context, request AdminUpdateCompQuotaRequestObject) (AdminUpdateCompQuotaResponseObject, error)
+	// AdminListCompRequests 免费入场申请与名额
+	// (GET /admin/events/{id}/comp-requests)
+	AdminListCompRequests(ctx context.Context, request AdminListCompRequestsRequestObject) (AdminListCompRequestsResponseObject, error)
 	// AdminListPriceRules 赛事的价格档列表（含关联组别与计数）
 	// (GET /admin/events/{id}/price-rules)
 	AdminListPriceRules(ctx context.Context, request AdminListPriceRulesRequestObject) (AdminListPriceRulesResponseObject, error)
@@ -5976,6 +6941,12 @@ type StrictServerInterface interface {
 	// AdminPublishEvent 发布赛事（发布前校验）
 	// (POST /admin/events/{id}/publish)
 	AdminPublishEvent(ctx context.Context, request AdminPublishEventRequestObject) (AdminPublishEventResponseObject, error)
+	// AdminListReferralLinks 赛事的推荐链接与渠道归因统计
+	// (GET /admin/events/{id}/referral-links)
+	AdminListReferralLinks(ctx context.Context, request AdminListReferralLinksRequestObject) (AdminListReferralLinksResponseObject, error)
+	// AdminCreateReferralLink 新建推荐链接，可同时建一个只限本赛事的优惠码
+	// (POST /admin/events/{id}/referral-links)
+	AdminCreateReferralLink(ctx context.Context, request AdminCreateReferralLinkRequestObject) (AdminCreateReferralLinkResponseObject, error)
 	// AdminUpdateEventRegistration 修改报名开关与报名时间（开放前校验发布状态、价格档与收款账户）
 	// (PATCH /admin/events/{id}/registration)
 	AdminUpdateEventRegistration(ctx context.Context, request AdminUpdateEventRegistrationRequestObject) (AdminUpdateEventRegistrationResponseObject, error)
@@ -6033,6 +7004,9 @@ type StrictServerInterface interface {
 	// AdminUndoRacepack 撤销一次发放（需写原因）
 	// (POST /admin/racepack/registrations/{id}/undo)
 	AdminUndoRacepack(ctx context.Context, request AdminUndoRacepackRequestObject) (AdminUndoRacepackResponseObject, error)
+	// AdminUpdateReferralLink 修改推荐链接名称、启用状态（停用同时停用它的优惠码）
+	// (PUT /admin/referral-links/{id})
+	AdminUpdateReferralLink(ctx context.Context, request AdminUpdateReferralLinkRequestObject) (AdminUpdateReferralLinkResponseObject, error)
 	// AdminListStaff 员工列表（指派现场角色用）
 	// (GET /admin/staff)
 	AdminListStaff(ctx context.Context, request AdminListStaffRequestObject) (AdminListStaffResponseObject, error)
@@ -6051,6 +7025,12 @@ type StrictServerInterface interface {
 	// AppGetConsent 当前生效的同意书版本；所请求语言没有时依次回退到英文、中文
 	// (GET /app/consents)
 	AppGetConsent(ctx context.Context, request AppGetConsentRequestObject) (AppGetConsentResponseObject, error)
+	// AppGetCompRequest 本人在该赛事的免费入场申请（open=false 表示不开放申请）
+	// (GET /app/events/{slug}/comp-request)
+	AppGetCompRequest(ctx context.Context, request AppGetCompRequestRequestObject) (AppGetCompRequestResponseObject, error)
+	// AppCreateCompRequest 提交免费入场申请（KOL / 跑团团长 / 赞助商 / 媒体）
+	// (POST /app/events/{slug}/comp-request)
+	AppCreateCompRequest(ctx context.Context, request AppCreateCompRequestRequestObject) (AppCreateCompRequestResponseObject, error)
 	// AppCreateFreeSignup 免费活动报名（同一跑者可为家人报多人）
 	// (POST /app/events/{slug}/free-signups)
 	AppCreateFreeSignup(ctx context.Context, request AppCreateFreeSignupRequestObject) (AppCreateFreeSignupResponseObject, error)
@@ -6108,6 +7088,9 @@ type StrictServerInterface interface {
 	// GetReadyz 数据库连通检查
 	// (GET /readyz)
 	GetReadyz(ctx context.Context, request GetReadyzRequestObject) (GetReadyzResponseObject, error)
+	// VisitReferral 打开推荐链接：计一次点击，返回赛事与推荐码（公开）
+	// (POST /referrals/{slug}/visit)
+	VisitReferral(ctx context.Context, request VisitReferralRequestObject) (VisitReferralResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx *gin.Context, request any) (any, error)
@@ -6215,6 +7198,65 @@ func (sh *strictHandler) AdminLogout(ctx *gin.Context) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AdminLogoutResponseObject); ok {
 		if err := validResponse.VisitAdminLogoutResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminApproveCompRequest operation middleware
+func (sh *strictHandler) AdminApproveCompRequest(ctx *gin.Context, id int64) {
+	var request AdminApproveCompRequestRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminApproveCompRequest(ctx, request.(AdminApproveCompRequestRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminApproveCompRequest")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminApproveCompRequestResponseObject); ok {
+		if err := validResponse.VisitAdminApproveCompRequestResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminRejectCompRequest operation middleware
+func (sh *strictHandler) AdminRejectCompRequest(ctx *gin.Context, id int64) {
+	var request AdminRejectCompRequestRequestObject
+
+	request.Id = id
+
+	var body AdminRejectCompRequestJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminRejectCompRequest(ctx, request.(AdminRejectCompRequestRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminRejectCompRequest")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminRejectCompRequestResponseObject); ok {
+		if err := validResponse.VisitAdminRejectCompRequestResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {
@@ -6393,6 +7435,65 @@ func (sh *strictHandler) AdminGetEvent(ctx *gin.Context, id int64) {
 	}
 }
 
+// AdminUpdateCompQuota operation middleware
+func (sh *strictHandler) AdminUpdateCompQuota(ctx *gin.Context, id int64) {
+	var request AdminUpdateCompQuotaRequestObject
+
+	request.Id = id
+
+	var body AdminUpdateCompQuotaJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminUpdateCompQuota(ctx, request.(AdminUpdateCompQuotaRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminUpdateCompQuota")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminUpdateCompQuotaResponseObject); ok {
+		if err := validResponse.VisitAdminUpdateCompQuotaResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminListCompRequests operation middleware
+func (sh *strictHandler) AdminListCompRequests(ctx *gin.Context, id int64) {
+	var request AdminListCompRequestsRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminListCompRequests(ctx, request.(AdminListCompRequestsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminListCompRequests")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminListCompRequestsResponseObject); ok {
+		if err := validResponse.VisitAdminListCompRequestsResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // AdminListPriceRules operation middleware
 func (sh *strictHandler) AdminListPriceRules(ctx *gin.Context, id int64) {
 	var request AdminListPriceRulesRequestObject
@@ -6471,6 +7572,65 @@ func (sh *strictHandler) AdminPublishEvent(ctx *gin.Context, id int64) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AdminPublishEventResponseObject); ok {
 		if err := validResponse.VisitAdminPublishEventResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminListReferralLinks operation middleware
+func (sh *strictHandler) AdminListReferralLinks(ctx *gin.Context, id int64) {
+	var request AdminListReferralLinksRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminListReferralLinks(ctx, request.(AdminListReferralLinksRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminListReferralLinks")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminListReferralLinksResponseObject); ok {
+		if err := validResponse.VisitAdminListReferralLinksResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminCreateReferralLink operation middleware
+func (sh *strictHandler) AdminCreateReferralLink(ctx *gin.Context, id int64) {
+	var request AdminCreateReferralLinkRequestObject
+
+	request.Id = id
+
+	var body AdminCreateReferralLinkJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminCreateReferralLink(ctx, request.(AdminCreateReferralLinkRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminCreateReferralLink")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminCreateReferralLinkResponseObject); ok {
+		if err := validResponse.VisitAdminCreateReferralLinkResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {
@@ -7029,6 +8189,39 @@ func (sh *strictHandler) AdminUndoRacepack(ctx *gin.Context, id int64) {
 	}
 }
 
+// AdminUpdateReferralLink operation middleware
+func (sh *strictHandler) AdminUpdateReferralLink(ctx *gin.Context, id int64) {
+	var request AdminUpdateReferralLinkRequestObject
+
+	request.Id = id
+
+	var body AdminUpdateReferralLinkJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminUpdateReferralLink(ctx, request.(AdminUpdateReferralLinkRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminUpdateReferralLink")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminUpdateReferralLinkResponseObject); ok {
+		if err := validResponse.VisitAdminUpdateReferralLinkResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // AdminListStaff operation middleware
 func (sh *strictHandler) AdminListStaff(ctx *gin.Context) {
 	var request AdminListStaffRequestObject
@@ -7189,6 +8382,65 @@ func (sh *strictHandler) AppGetConsent(ctx *gin.Context, params AppGetConsentPar
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AppGetConsentResponseObject); ok {
 		if err := validResponse.VisitAppGetConsentResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppGetCompRequest operation middleware
+func (sh *strictHandler) AppGetCompRequest(ctx *gin.Context, slug string) {
+	var request AppGetCompRequestRequestObject
+
+	request.Slug = slug
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppGetCompRequest(ctx, request.(AppGetCompRequestRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppGetCompRequest")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppGetCompRequestResponseObject); ok {
+		if err := validResponse.VisitAppGetCompRequestResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppCreateCompRequest operation middleware
+func (sh *strictHandler) AppCreateCompRequest(ctx *gin.Context, slug string) {
+	var request AppCreateCompRequestRequestObject
+
+	request.Slug = slug
+
+	var body AppCreateCompRequestJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppCreateCompRequest(ctx, request.(AppCreateCompRequestRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppCreateCompRequest")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppCreateCompRequestResponseObject); ok {
+		if err := validResponse.VisitAppCreateCompRequestResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {
@@ -7714,6 +8966,32 @@ func (sh *strictHandler) GetReadyz(ctx *gin.Context) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(GetReadyzResponseObject); ok {
 		if err := validResponse.VisitGetReadyzResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// VisitReferral operation middleware
+func (sh *strictHandler) VisitReferral(ctx *gin.Context, slug string) {
+	var request VisitReferralRequestObject
+
+	request.Slug = slug
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.VisitReferral(ctx, request.(VisitReferralRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "VisitReferral")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(VisitReferralResponseObject); ok {
+		if err := validResponse.VisitVisitReferralResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

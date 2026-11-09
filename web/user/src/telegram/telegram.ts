@@ -91,8 +91,12 @@ export function applyTelegramTheme(webApp: TelegramWebApp, root: HTMLElement = d
 const START_PARAM = /^[A-Za-z0-9_-]{1,64}$/;
 const EVENT_PARAM = /^event-([A-Za-z0-9][A-Za-z0-9_-]*)$/;
 const ORDER_PARAM = /^order-([A-Za-z0-9]+)$/;
+const REF_PARAM = /^ref-([a-z0-9-]{2,32})$/;
 
-/** 把 start_param 换成应用内路径：event-<slug> → 赛事详情，order-<orderNo> → 订单详情；其他值返回 null */
+/**
+ * 把 start_param 换成应用内路径：event-<slug> → 赛事详情，order-<orderNo> → 订单详情，
+ * ref-<slug> → 推荐链接落地页；其他值返回 null
+ */
 export function startParamTarget(param: string | null | undefined): string | null {
   if (!param || !START_PARAM.test(param)) {
     return null;
@@ -104,6 +108,10 @@ export function startParamTarget(param: string | null | undefined): string | nul
   const order = ORDER_PARAM.exec(param);
   if (order) {
     return `/orders/${encodeURIComponent(order[1]!)}`;
+  }
+  const ref = REF_PARAM.exec(param);
+  if (ref) {
+    return `/r/${ref[1]!}`;
   }
   return null;
 }

@@ -6,6 +6,7 @@ import (
 	"werun/api/internal/iam"
 	"werun/api/internal/payment"
 	"werun/api/internal/pricing"
+	"werun/api/internal/promo"
 	"werun/api/internal/racepack"
 	"werun/api/internal/registration"
 	"werun/api/internal/runner"
@@ -21,6 +22,7 @@ type (
 	RunnerHandlers       = runner.Handlers
 	RegistrationHandlers = registration.Handlers
 	RacepackHandlers     = racepack.Handlers
+	PromoHandlers        = promo.Handlers
 )
 
 // Server 组合各模块的 handler，实现 apigen.StrictServerInterface。
@@ -34,6 +36,7 @@ type Server struct {
 	*RunnerHandlers
 	*RegistrationHandlers
 	*RacepackHandlers
+	*PromoHandlers
 }
 
 var _ apigen.StrictServerInterface = (*Server)(nil)
@@ -49,5 +52,6 @@ func NewServer(d RouterDeps) *Server {
 		RunnerHandlers:       runner.NewHandlers(d.Runner),
 		RegistrationHandlers: registration.NewHandlers(d.Registration),
 		RacepackHandlers:     racepack.NewHandlers(d.Racepack),
+		PromoHandlers:        promo.NewHandlers(d.Promo),
 	}
 }

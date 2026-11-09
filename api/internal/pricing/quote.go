@@ -34,6 +34,7 @@ type QuoteInput struct {
 	EventID          int64
 	RaceDate         time.Time
 	CouponCode       string // 空串表示不用
+	UserID           *int64 // 下单跑者；专属优惠码（owner_user_id）只认这位跑者
 	Participants     []ParticipantInput
 	Now              time.Time
 	PaymentAccountID *int64
@@ -140,8 +141,13 @@ func isLeapYear(y int) bool {
 	return y%4 == 0 && (y%100 != 0 || y%400 == 0)
 }
 
-// CouponDiscount 计算优惠码减免：PERCENT 向下取整，AMOUNT 不超过原价，WAIVER 全免。
-func CouponDiscount(c CouponRule, listAmount int64) int64 {
+// CouponDiscount 计算优惠码减免：PERCENT 向下取整，AMOUNT 不超过原价，WAIVER 全免，
+// PRICE 让每位参赛人按固定价付（原价已不高于固定价的人不变）。
+func CouponDiscount(c CouponRule, listPrices []int64) int64 {
+	var listAmount int64
+	for _, p := range listPrices {
+		listAmount += p
+	}
 	if listAmount <= 0 {
 		return 0
 	}
@@ -152,6 +158,12 @@ func CouponDiscount(c CouponRule, listAmount int64) int64 {
 		return min(max(c.DiscountValue, 0), listAmount)
 	case DiscountWaiver:
 		return listAmount
+	case DiscountPrice:
+		var off int64
+		for _, p := range listPrices {
+			off += max(p-max(c.DiscountValue, 0), 0)
+		}
+		return off
 	}
 	return 0
 }
@@ -281,13 +293,17 @@ func (s *Service) Quote(ctx context.Context, tx pgx.Tx, in QuoteInput) (Quote, e
 		return Quote{}, verr
 	}
 
+	prices := make([]int64, len(out.Participants))
+	for i, p := range out.Participants {
+		prices[i] = p.ListPriceCents
+	}
 	if code := strings.ToUpper(strings.TrimSpace(in.CouponCode)); code != "" {
 		id, rule, err := checkCoupon(ctx, q, code, in)
 		if err != nil {
 			return Quote{}, err
 		}
 		out.CouponID = &id
-		out.CouponDiscountCents = CouponDiscount(rule, out.ListAmountCents)
+		out.CouponDiscountCents = CouponDiscount(rule, prices)
 	}
 
 	afterCoupon := out.ListAmountCents - out.CouponDiscountCents
@@ -301,10 +317,6 @@ func (s *Service) Quote(ctx context.Context, tx pgx.Tx, in QuoteInput) (Quote, e
 	out.DiscountCents = out.CouponDiscountCents + out.IdentOffsetCents
 	out.AmountCents = out.ListAmountCents - out.DiscountCents
 
-	prices := make([]int64, len(out.Participants))
-	for i, p := range out.Participants {
-		prices[i] = p.ListPriceCents
-	}
 	for i, paid := range Allocate(prices, out.DiscountCents) {
 		out.Participants[i].PaidCents = paid
 	}
@@ -326,7 +338,9 @@ func checkCoupon(ctx context.Context, q *store.Queries, code string, in QuoteInp
 		(c.EventID != nil && *c.EventID != in.EventID) ||
 		(c.ValidFrom != nil && c.ValidFrom.After(in.Now)) ||
 		(c.ValidUntil != nil && !c.ValidUntil.After(in.Now)) ||
-		(c.MinRunners != nil && int(*c.MinRunners) > len(in.Participants)) {
+		(c.MinRunners != nil && int(*c.MinRunners) > len(in.Participants)) ||
+		(c.MaxRunners != nil && int(*c.MaxRunners) < len(in.Participants)) ||
+		(c.OwnerUserID != nil && (in.UserID == nil || *in.UserID != *c.OwnerUserID)) {
 		return 0, CouponRule{}, invalid
 	}
 	if int64(c.UsedCount)+int64(c.ReservedCount) >= int64(c.Quota) {

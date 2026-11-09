@@ -158,6 +158,24 @@ type CommunityReport struct {
 	CreatedAt  time.Time
 }
 
+type CompRequest struct {
+	ID            int64
+	EventID       int64
+	UserID        int64
+	ApplicantName string
+	Kind          string
+	ProfileUrl    *string
+	Audience      *string
+	Note          *string
+	Status        string
+	CouponID      *int64
+	ReviewNote    *string
+	ReviewedBy    *int64
+	ReviewedAt    *time.Time
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+}
+
 type ContactViewLog struct {
 	ID           int64
 	ActivityID   int64
@@ -210,6 +228,8 @@ type Coupon struct {
 	Status        string
 	CreatedBy     *int64
 	CreatedAt     time.Time
+	OwnerUserID   *int64
+	MaxRunners    *int16
 }
 
 type CouponRedemption struct {
@@ -273,6 +293,7 @@ type Event struct {
 	Version                 int32
 	CreatedAt               time.Time
 	UpdatedAt               time.Time
+	CompQuota               *int32
 }
 
 type EventCategory struct {
@@ -761,6 +782,20 @@ type ReconciliationDiscrepancy struct {
 	Note             *string
 }
 
+type ReferralLink struct {
+	ID         int64
+	EventID    int64
+	Slug       string
+	Label      string
+	Kind       string
+	CouponID   *int64
+	ClickCount int64
+	Status     string
+	CreatedBy  *int64
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
 type RefundCorrection struct {
 	ID                   int64
 	CorrectionNo         string
@@ -810,6 +845,7 @@ type RegOrder struct {
 	Version                int32
 	CreatedAt              time.Time
 	UpdatedAt              time.Time
+	ReferralLinkID         *int64
 }
 
 type RegRefund struct {

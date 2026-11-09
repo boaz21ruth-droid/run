@@ -24,6 +24,7 @@ import (
 	"werun/api/internal/platform/piicrypt"
 	"werun/api/internal/platform/storage"
 	"werun/api/internal/pricing"
+	"werun/api/internal/promo"
 	"werun/api/internal/racepack"
 	"werun/api/internal/registration"
 	"werun/api/internal/runner"
@@ -44,6 +45,7 @@ type App struct {
 	Registration *registration.Service
 	Payment      *payment.Service
 	Racepack     *racepack.Service
+	Promo        *promo.Service
 	Runner       *runner.Service
 	Notify       *notify.Service // Task 20
 }
@@ -91,6 +93,7 @@ func Bootstrap(ctx context.Context) (*App, error) {
 	app.Registration = registration.NewService(app.Pool, app.Runner, app.Pricing, app.Notify, time.Now)
 	app.Payment = payment.NewService(app.Pool, app.Store, app.Registration, app.Notify, time.Now)
 	app.Racepack = racepack.NewService(app.Pool, time.Now)
+	app.Promo = promo.NewService(app.Pool, time.Now)
 	return app, nil
 }
 

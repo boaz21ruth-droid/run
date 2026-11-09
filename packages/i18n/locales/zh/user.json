@@ -415,5 +415,56 @@
     },
     "deadline_one": "{{name}}还剩 {{count}} 天，之后涨到 {{price}}。",
     "deadline_other": "{{name}}还剩 {{count}} 天，之后涨到 {{price}}。"
+  },
+  "referral": {
+    "title": "推荐链接",
+    "opening": "正在打开推荐链接…",
+    "invalidTitle": "推荐链接无效",
+    "invalid": "这个推荐链接已停用或不存在，你仍然可以直接报名。",
+    "browse": "看看所有赛事",
+    "via": "经 {{label}} 推荐",
+    "code": "推荐码",
+    "offer": {
+      "price": "推荐价 {{price}} / 人，不随档位上涨",
+      "amount": "立减 {{amount}}",
+      "percent": "{{n}}% 折扣",
+      "free": "免报名费"
+    },
+    "ctaName": "推荐价"
+  },
+  "comp": {
+    "title": "申请免费入场",
+    "entryTitle": "KOL、跑团团长、赞助商或媒体？",
+    "entryHint": "申请免费入场，主办方审核后发你专属的免费报名码",
+    "intro": "主办方会看你的主页或跑团情况，通常 48 小时内答复。批准后在这里拿到免费报名码，只限你本人、1 人使用。",
+    "kind": "你是",
+    "kinds": {
+      "KOL": "KOL / 博主",
+      "CLUB": "跑团团长",
+      "SPONSOR": "赞助商",
+      "MEDIA": "媒体"
+    },
+    "name": "姓名或账号名",
+    "nameRequired": "请填写姓名或账号名。",
+    "profileUrl": "主页或作品链接",
+    "profileUrlHint": "Instagram、TikTok、Facebook 或跑团 Telegram 群都可以",
+    "audience": "影响力（选填）",
+    "audiencePlaceholder": "例如 Instagram 4.8 万粉丝 / 跑团 120 人",
+    "note": "想对主办方说的话（选填）",
+    "submit": "提交申请",
+    "submitting": "提交中…",
+    "closed": "这场赛事暂不接受免费入场申请。",
+    "status": {
+      "PENDING": "审核中",
+      "APPROVED": "已批准",
+      "REJECTED": "未通过"
+    },
+    "pending": "已收到 {{name}} 的申请。",
+    "pendingHint": "主办方审核后会在这里显示结果。",
+    "approved": "申请已批准，这是你的免费报名码：",
+    "approvedHint": "只限你本人使用、一单 1 人。报名时会自动填好。",
+    "register": "用免费码报名",
+    "rejected": "这次申请没有通过。",
+    "reapply": "重新申请"
   }
 }

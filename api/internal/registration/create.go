@@ -42,6 +42,7 @@ func normalizeCreateInput(in CreateOrderInput) (CreateOrderInput, error) {
 	out := CreateOrderInput{
 		EventSlug:      strings.TrimSpace(in.EventSlug),
 		CouponCode:     strings.ToUpper(strings.TrimSpace(in.CouponCode)),
+		Referral:       strings.ToLower(strings.TrimSpace(in.Referral)),
 		IdempotencyKey: in.IdempotencyKey,
 		Consent: runner.ConsentAcceptance{
 			Version:      strings.TrimSpace(in.Consent.Version),
@@ -277,7 +278,8 @@ func (s *Service) createOrderTx(ctx context.Context, tx pgx.Tx, q *store.Queries
 	}
 
 	// 5–6. 算价（含识别分，Quote 内加收款账户 advisory 锁）与预留
-	quoteIn := pricing.QuoteInput{EventID: ev.ID, RaceDate: ev.RaceDate, CouponCode: in.CouponCode, Now: now, PaymentAccountID: &accountID}
+	userID := u.ID
+	quoteIn := pricing.QuoteInput{EventID: ev.ID, RaceDate: ev.RaceDate, CouponCode: in.CouponCode, UserID: &userID, Now: now, PaymentAccountID: &accountID}
 	for _, p := range parts {
 		quoteIn.Participants = append(quoteIn.Participants, pricing.ParticipantInput{
 			CategoryID: p.input.CategoryID, Nationality: p.profile.Nationality, BirthDate: p.profile.BirthDate})
@@ -289,6 +291,10 @@ func (s *Service) createOrderTx(ctx context.Context, tx pgx.Tx, q *store.Queries
 	if err := s.prices.Reserve(ctx, tx, quote); err != nil {
 		return OrderDetail{}, err
 	}
+	referralID, err := resolveReferral(ctx, q, ev.ID, quote.CouponID, in.Referral)
+	if err != nil {
+		return OrderDetail{}, err
+	}
 
 	// 7. 订单
 	pay, err := settings.LoadPayment(ctx, tx)
@@ -297,7 +303,6 @@ func (s *Service) createOrderTx(ctx context.Context, tx pgx.Tx, q *store.Queries
 	}
 	deadline := now.Add(pay.UploadWindow)
 	buyer := parts[0].profile
-	userID := u.ID
 	var orderID int64
 	err = idgen.Retry("reg_orders_order_no_key", func() error {
 		return withSavepoint(ctx, tx, func(sp pgx.Tx) error {
@@ -313,6 +318,7 @@ func (s *Service) createOrderTx(ctx context.Context, tx pgx.Tx, q *store.Queries
 				IdentOffsetCents: int16(quote.IdentOffsetCents),
 				AmountCents:      quote.AmountCents,
 				CouponID:         quote.CouponID,
+				ReferralLinkID:   referralID,
 				PaymentAccountID: &accountID,
 				DeadlineAt:       &deadline,
 			})
@@ -381,6 +387,7 @@ func (s *Service) createOrderTx(ctx context.Context, tx pgx.Tx, q *store.Queries
 	// 11. 审计（不含参赛人资料与证件号）
 	after := map[string]any{
 		"couponCode":       in.CouponCode,
+		"referralLinkId":   referralID,
 		"participants":     len(parts),
 		"listAmountCents":  quote.ListAmountCents,
 		"discountCents":    quote.DiscountCents,
@@ -403,6 +410,32 @@ func (s *Service) createOrderTx(ctx context.Context, tx pgx.Tx, q *store.Queries
 		}
 	}
 	return s.loadDetail(ctx, q, orderID)
+}
+
+// resolveReferral 做渠道归因：用了某条推荐链接自带的优惠码，记到那条链接（码比来源更明确）；
+// 否则记到跑者打开的推荐链接（同一赛事、启用中）。都没有返回 nil，算「直接 / 其他」。
+// 推荐链接 slug 无效不报错：归因只是统计，不该挡住报名。
+func resolveReferral(ctx context.Context, q *store.Queries, eventID int64, couponID *int64, slug string) (*int64, error) {
+	if couponID != nil {
+		id, err := q.ReferralLinkByCoupon(ctx, store.ReferralLinkByCouponParams{EventID: eventID, CouponID: couponID})
+		if err == nil {
+			return &id, nil
+		}
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("referral by coupon: %w", err)
+		}
+	}
+	if slug == "" {
+		return nil, nil
+	}
+	id, err := q.ReferralLinkBySlug(ctx, store.ReferralLinkBySlugParams{EventID: eventID, Slug: slug})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("referral by slug: %w", err)
+	}
+	return &id, nil
 }
 
 func (s *Service) resolveParticipants(ctx context.Context, tx pgx.Tx, u runner.User, in CreateOrderInput) ([]resolvedParticipant, error) {
@@ -518,7 +551,7 @@ func (s *Service) ConfirmPaid(ctx context.Context, tx pgx.Tx, orderID int64, pai
 }
 
 // PreviewQuote 返回算价预览：赛事须为已发布的 RACE，不占名额、不选识别分。
-func (s *Service) PreviewQuote(ctx context.Context, _ runner.User, slug string, in QuotePreviewInput) (pricing.Quote, error) {
+func (s *Service) PreviewQuote(ctx context.Context, u runner.User, slug string, in QuotePreviewInput) (pricing.Quote, error) {
 	fe := newFieldErrors()
 	if n := len(in.Participants); n < MinParticipants || n > MaxParticipants {
 		fe.add("participants", "field.invalid", nil)
@@ -553,6 +586,7 @@ func (s *Service) PreviewQuote(ctx context.Context, _ runner.User, slug string, 
 			EventID:      ev.ID,
 			RaceDate:     ev.RaceDate,
 			CouponCode:   in.CouponCode,
+			UserID:       &u.ID,
 			Participants: in.Participants,
 			Now:          now,
 		})

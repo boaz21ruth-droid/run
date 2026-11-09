@@ -77,5 +77,11 @@
   "OTP_ATTEMPTS_EXCEEDED": "Too many wrong attempts. Request a new code.",
   "RACEPACK_NOT_PAID": "Payment is not verified yet, so the race pack can't be issued. Send the runner to support or the payment desk.",
   "RACEPACK_ID_REQUIRED": "Check the runner's ID in person before issuing a Cambodian-rate race pack.",
-  "RACEPACK_NOT_PICKED": "This race pack hasn't been issued, so there is nothing to undo."
+  "RACEPACK_NOT_PICKED": "This race pack hasn't been issued, so there is nothing to undo.",
+  "REFERRAL_SLUG_TAKEN": "This referral link address is already taken. Pick another.",
+  "COMP_CLOSED": "This event isn't accepting complimentary entry requests.",
+  "COMP_REQUEST_EXISTS": "You've already applied. The organizer will review it.",
+  "COMP_REQUEST_REVIEWED": "This request has already been reviewed.",
+  "COMP_QUOTA_FULL": "All complimentary places are taken. Raise the quota first.",
+  "field.url_format": "Enter a link starting with https:// or http://."
 }

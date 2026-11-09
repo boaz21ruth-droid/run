@@ -89,6 +89,9 @@ func createInputFromAPI(b apigen.CreateOrderRequest, key string) CreateOrderInpu
 	if b.CouponCode != nil {
 		in.CouponCode = *b.CouponCode
 	}
+	if b.Referral != nil {
+		in.Referral = *b.Referral
+	}
 	for _, p := range b.Participants {
 		op := OrderParticipantInput{CategoryID: p.CategoryId, ProfileID: p.ProfileId}
 		if p.SaveAsProfile != nil {

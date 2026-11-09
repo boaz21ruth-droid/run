@@ -51,7 +51,8 @@ export function CouponsTab({ event }: { event: AdminEvent }) {
     {
       title: t("coupons.col.discount"),
       key: "discount",
-      render: (_, coupon) => formatDiscount(coupon, t("coupons.discountType.WAIVER")),
+      render: (_, coupon) =>
+        formatDiscount(coupon, t("coupons.discountType.WAIVER"), (price) => t("coupons.priceEach", { price })),
     },
     {
       title: t("coupons.col.quota"),
@@ -181,6 +182,7 @@ function CouponModal({ event, coupon, onClose }: CouponModalProps) {
                 options={[
                   { value: "PERCENT", label: t("coupons.discountType.PERCENT") },
                   { value: "AMOUNT", label: t("coupons.discountType.AMOUNT") },
+                  { value: "PRICE", label: t("coupons.discountType.PRICE") },
                   { value: "WAIVER", label: t("coupons.discountType.WAIVER") },
                 ]}
               />
@@ -197,7 +199,12 @@ function CouponModal({ event, coupon, onClose }: CouponModalProps) {
                     if (parseDiscountValue(discountType, value) !== null) {
                       return Promise.resolve();
                     }
-                    const key = discountType === "PERCENT" ? "coupons.form.percentInvalid" : "coupons.form.amountInvalid";
+                    const key =
+                      discountType === "PERCENT"
+                        ? "coupons.form.percentInvalid"
+                        : discountType === "PRICE"
+                          ? "coupons.form.priceInvalid"
+                          : "coupons.form.amountInvalid";
                     return Promise.reject(new Error(t(key)));
                   },
                 },
@@ -206,7 +213,7 @@ function CouponModal({ event, coupon, onClose }: CouponModalProps) {
               <Input
                 inputMode="decimal"
                 disabled={discountType === "WAIVER"}
-                addonBefore={discountType === "AMOUNT" ? "$" : undefined}
+                addonBefore={discountType === "AMOUNT" || discountType === "PRICE" ? "$" : undefined}
                 addonAfter={discountType === "PERCENT" ? "%" : undefined}
               />
             </Form.Item>

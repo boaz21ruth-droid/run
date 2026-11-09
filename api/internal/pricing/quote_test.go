@@ -88,16 +88,19 @@ func TestCouponDiscount(t *testing.T) {
 	cases := []struct {
 		name string
 		rule pricing.CouponRule
-		list int64
+		list []int64
 		want int64
 	}{
-		{"百分比向下取整", pricing.CouponRule{DiscountType: "PERCENT", DiscountValue: 15}, 3333, 499},
-		{"百分比 100", pricing.CouponRule{DiscountType: "PERCENT", DiscountValue: 100}, 5000, 5000},
-		{"固定金额小于原价", pricing.CouponRule{DiscountType: "AMOUNT", DiscountValue: 500}, 5000, 500},
-		{"固定金额超过原价按原价", pricing.CouponRule{DiscountType: "AMOUNT", DiscountValue: 9000}, 5000, 5000},
-		{"免单", pricing.CouponRule{DiscountType: "WAIVER"}, 5000, 5000},
-		{"原价为 0", pricing.CouponRule{DiscountType: "PERCENT", DiscountValue: 50}, 0, 0},
-		{"未知类型不减免", pricing.CouponRule{DiscountType: "BOGUS", DiscountValue: 50}, 5000, 0},
+		{"百分比向下取整", pricing.CouponRule{DiscountType: "PERCENT", DiscountValue: 15}, []int64{3333}, 499},
+		{"百分比 100", pricing.CouponRule{DiscountType: "PERCENT", DiscountValue: 100}, []int64{2000, 3000}, 5000},
+		{"固定金额小于原价", pricing.CouponRule{DiscountType: "AMOUNT", DiscountValue: 500}, []int64{5000}, 500},
+		{"固定金额超过原价按原价", pricing.CouponRule{DiscountType: "AMOUNT", DiscountValue: 9000}, []int64{5000}, 5000},
+		{"免单", pricing.CouponRule{DiscountType: "WAIVER"}, []int64{5000}, 5000},
+		{"固定价按人计", pricing.CouponRule{DiscountType: "PRICE", DiscountValue: 1800}, []int64{2400, 1900}, 700},
+		{"固定价不给便宜的人加价", pricing.CouponRule{DiscountType: "PRICE", DiscountValue: 1800}, []int64{1500, 2400}, 600},
+		{"固定价 0 即免费", pricing.CouponRule{DiscountType: "PRICE", DiscountValue: 0}, []int64{2400, 1900}, 4300},
+		{"原价为 0", pricing.CouponRule{DiscountType: "PERCENT", DiscountValue: 50}, []int64{0}, 0},
+		{"未知类型不减免", pricing.CouponRule{DiscountType: "BOGUS", DiscountValue: 50}, []int64{5000}, 0},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

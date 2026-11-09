@@ -116,7 +116,8 @@
       "save": "Save registration settings",
       "saved": "Registration settings saved"
     },
-    "tabStaff": "Field staff"
+    "tabStaff": "Field staff",
+    "tabPromo": "Promotion"
   },
   "pricing": {
     "hint": "When several tiers apply to a category, runners automatically get the lowest price.",
@@ -181,7 +182,8 @@
     "discountType": {
       "PERCENT": "Percentage",
       "AMOUNT": "Fixed amount",
-      "WAIVER": "Free entry"
+      "WAIVER": "Free entry",
+      "PRICE": "Fixed price per runner"
     },
     "status": {
       "ACTIVE": "Active",
@@ -199,8 +201,10 @@
       "minRunnersHelp": "Leave empty for no minimum",
       "validFrom": "Valid from",
       "validUntil": "Valid until",
-      "status": "Status"
-    }
+      "status": "Status",
+      "priceInvalid": "Enter 0 or more, e.g. 18. 0 means free."
+    },
+    "priceEach": "{{price}} each"
   },
   "paymentAccounts": {
     "title": "Payment accounts",
@@ -469,6 +473,82 @@
       "role": "Role",
       "window": "Valid",
       "enabled": "Enabled"
+    }
+  },
+  "promo": {
+    "kind": {
+      "CLUB": "Run club",
+      "KOL": "KOL",
+      "SPONSOR": "Sponsor",
+      "CHANNEL": "Channel",
+      "OTHER": "Other"
+    },
+    "compKind": {
+      "KOL": "KOL / creator",
+      "CLUB": "Run club captain",
+      "SPONSOR": "Sponsor",
+      "MEDIA": "Media"
+    },
+    "links": {
+      "title": "Channel attribution",
+      "intro": "Each referral link is one channel. Opening a link counts a click. Orders are attributed to a link when they use its referral code or start from the link.",
+      "create": "New referral link",
+      "createTitle": "New referral link",
+      "created": "Referral link created",
+      "saved": "Saved",
+      "empty": "No referral links yet",
+      "direct": "Direct / other",
+      "startapp": "Telegram start parameter {{param}}",
+      "toggle": "Enable or disable {{label}}",
+      "col": {
+        "source": "Source",
+        "link": "Link",
+        "coupon": "Referral code",
+        "clicks": "Clicks",
+        "orders": "Orders",
+        "paid": "Paid",
+        "conversion": "Conversion",
+        "status": "Active"
+      },
+      "form": {
+        "label": "Channel name",
+        "labelPlaceholder": "e.g. BKK Runners (club)",
+        "kind": "Channel type",
+        "slug": "Link address",
+        "slugHelp": "2–32 lowercase letters, digits or hyphens. Can't be changed later.",
+        "slugInvalid": "Use 2–32 lowercase letters, digits or hyphens",
+        "withOffer": "Include a referral code",
+        "priceHelp": "Every runner pays this price, regardless of tier. Runners already on a lower price pay their lower price."
+      }
+    },
+    "comp": {
+      "title": "Complimentary entry",
+      "intro": "KOLs, run club captains, sponsors and media apply from the event page. Approving issues a free registration code for that person only, 1 runner per order, shown on their request page.",
+      "summary": "Approved {{approved}} / quota {{quota}} · pending {{pending}}",
+      "open": "Accept requests",
+      "quota": "Quota",
+      "saveQuota": "Save quota",
+      "quotaSaved": "Quota saved",
+      "empty": "No requests yet",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approved": "Approved. The free code is now visible to the applicant.",
+      "rejected": "Rejected",
+      "used": "Registered",
+      "rejectTitle": "Reject {{name}}'s request",
+      "rejectHelp": "The reason is shown to the applicant (optional). They can apply again.",
+      "status": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      },
+      "col": {
+        "applicant": "Applicant",
+        "profile": "Profile / reach",
+        "submitted": "Submitted",
+        "status": "Status / code",
+        "actions": "Actions"
+      }
     }
   }
 }

@@ -167,7 +167,7 @@ func (q *Queries) AdminListOrderReceipts(ctx context.Context, orderID int64) ([]
 }
 
 const adminListRegOrders = `-- name: AdminListRegOrders :many
-SELECT o.id, o.order_no, o.event_id, o.buyer_user_id, o.buyer_name, o.buyer_phone_e164, o.buyer_email, o.status, o.reservation_state, o.reservation_release_kind, o.list_amount_cents, o.discount_cents, o.ident_offset_cents, o.amount_cents, o.currency, o.coupon_id, o.payment_account_id, o.deadline_at, o.paid_at, o.expired_at, o.cancelled_at, o.cancel_reason, o.source, o.archived, o.version, o.created_at, o.updated_at,
+SELECT o.id, o.order_no, o.event_id, o.buyer_user_id, o.buyer_name, o.buyer_phone_e164, o.buyer_email, o.status, o.reservation_state, o.reservation_release_kind, o.list_amount_cents, o.discount_cents, o.ident_offset_cents, o.amount_cents, o.currency, o.coupon_id, o.payment_account_id, o.deadline_at, o.paid_at, o.expired_at, o.cancelled_at, o.cancel_reason, o.source, o.archived, o.version, o.created_at, o.updated_at, o.referral_link_id,
        e.slug AS event_slug,
        e.name AS event_name,
        (SELECT count(*) FROM order_participants op WHERE op.order_id = o.id)::int AS participant_count
@@ -243,6 +243,7 @@ func (q *Queries) AdminListRegOrders(ctx context.Context, arg AdminListRegOrders
 			&i.RegOrder.Version,
 			&i.RegOrder.CreatedAt,
 			&i.RegOrder.UpdatedAt,
+			&i.RegOrder.ReferralLinkID,
 			&i.EventSlug,
 			&i.EventName,
 			&i.ParticipantCount,
@@ -720,11 +721,11 @@ const insertRegOrder = `-- name: InsertRegOrder :one
 INSERT INTO reg_orders (
   order_no, event_id, buyer_user_id, buyer_name, buyer_phone_e164, buyer_email,
   status, reservation_state, list_amount_cents, discount_cents, ident_offset_cents, amount_cents,
-  currency, coupon_id, payment_account_id, deadline_at, source
+  currency, coupon_id, referral_link_id, payment_account_id, deadline_at, source
 ) VALUES (
   $1, $2, $3, $4, $5, $6,
   'PENDING_PAYMENT', 'RESERVED', $7, $8, $9, $10,
-  'USD', $11, $12, $13, 'TELEGRAM'
+  'USD', $11, $12, $13, $14, 'TELEGRAM'
 )
 RETURNING id
 `
@@ -741,6 +742,7 @@ type InsertRegOrderParams struct {
 	IdentOffsetCents int16
 	AmountCents      int64
 	CouponID         *int64
+	ReferralLinkID   *int64
 	PaymentAccountID *int64
 	DeadlineAt       *time.Time
 }
@@ -758,6 +760,7 @@ func (q *Queries) InsertRegOrder(ctx context.Context, arg InsertRegOrderParams) 
 		arg.IdentOffsetCents,
 		arg.AmountCents,
 		arg.CouponID,
+		arg.ReferralLinkID,
 		arg.PaymentAccountID,
 		arg.DeadlineAt,
 	)
@@ -1213,7 +1216,7 @@ func (q *Queries) LockOrderForBuyer(ctx context.Context, arg LockOrderForBuyerPa
 }
 
 const lockRegOrderByID = `-- name: LockRegOrderByID :one
-SELECT id, order_no, event_id, buyer_user_id, buyer_name, buyer_phone_e164, buyer_email, status, reservation_state, reservation_release_kind, list_amount_cents, discount_cents, ident_offset_cents, amount_cents, currency, coupon_id, payment_account_id, deadline_at, paid_at, expired_at, cancelled_at, cancel_reason, source, archived, version, created_at, updated_at FROM reg_orders
+SELECT id, order_no, event_id, buyer_user_id, buyer_name, buyer_phone_e164, buyer_email, status, reservation_state, reservation_release_kind, list_amount_cents, discount_cents, ident_offset_cents, amount_cents, currency, coupon_id, payment_account_id, deadline_at, paid_at, expired_at, cancelled_at, cancel_reason, source, archived, version, created_at, updated_at, referral_link_id FROM reg_orders
 WHERE id = $1
 FOR UPDATE
 `
@@ -1249,12 +1252,13 @@ func (q *Queries) LockRegOrderByID(ctx context.Context, id int64) (RegOrder, err
 		&i.Version,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ReferralLinkID,
 	)
 	return i, err
 }
 
 const lockRegOrderByNo = `-- name: LockRegOrderByNo :one
-SELECT id, order_no, event_id, buyer_user_id, buyer_name, buyer_phone_e164, buyer_email, status, reservation_state, reservation_release_kind, list_amount_cents, discount_cents, ident_offset_cents, amount_cents, currency, coupon_id, payment_account_id, deadline_at, paid_at, expired_at, cancelled_at, cancel_reason, source, archived, version, created_at, updated_at FROM reg_orders
+SELECT id, order_no, event_id, buyer_user_id, buyer_name, buyer_phone_e164, buyer_email, status, reservation_state, reservation_release_kind, list_amount_cents, discount_cents, ident_offset_cents, amount_cents, currency, coupon_id, payment_account_id, deadline_at, paid_at, expired_at, cancelled_at, cancel_reason, source, archived, version, created_at, updated_at, referral_link_id FROM reg_orders
 WHERE order_no = $1
 FOR UPDATE
 `
@@ -1290,6 +1294,7 @@ func (q *Queries) LockRegOrderByNo(ctx context.Context, orderNo string) (RegOrde
 		&i.Version,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ReferralLinkID,
 	)
 	return i, err
 }
@@ -1345,6 +1350,38 @@ func (q *Queries) PurgeExpiredIdempotencyKeys(ctx context.Context, arg PurgeExpi
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const referralLinkByCoupon = `-- name: ReferralLinkByCoupon :one
+SELECT id FROM referral_links WHERE event_id = $1 AND coupon_id = $2
+`
+
+type ReferralLinkByCouponParams struct {
+	EventID  int64
+	CouponID *int64
+}
+
+func (q *Queries) ReferralLinkByCoupon(ctx context.Context, arg ReferralLinkByCouponParams) (int64, error) {
+	row := q.db.QueryRow(ctx, referralLinkByCoupon, arg.EventID, arg.CouponID)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const referralLinkBySlug = `-- name: ReferralLinkBySlug :one
+SELECT id FROM referral_links WHERE event_id = $1 AND slug = $2 AND status = 'ACTIVE'
+`
+
+type ReferralLinkBySlugParams struct {
+	EventID int64
+	Slug    string
+}
+
+func (q *Queries) ReferralLinkBySlug(ctx context.Context, arg ReferralLinkBySlugParams) (int64, error) {
+	row := q.db.QueryRow(ctx, referralLinkBySlug, arg.EventID, arg.Slug)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const releaseOrderCancelled = `-- name: ReleaseOrderCancelled :execrows

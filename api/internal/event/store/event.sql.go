@@ -26,7 +26,7 @@ func (q *Queries) CountRegistrationPaymentAccounts(ctx context.Context, eventID 
 }
 
 const getEventByID = `-- name: GetEventByID :one
-SELECT id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at FROM events
+SELECT id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at, comp_quota FROM events
 WHERE id = $1
 `
 
@@ -60,12 +60,13 @@ func (q *Queries) GetEventByID(ctx context.Context, id int64) (Event, error) {
 		&i.Version,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CompQuota,
 	)
 	return i, err
 }
 
 const getEventForUpdate = `-- name: GetEventForUpdate :one
-SELECT id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at FROM events
+SELECT id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at, comp_quota FROM events
 WHERE id = $1
 FOR UPDATE
 `
@@ -100,12 +101,13 @@ func (q *Queries) GetEventForUpdate(ctx context.Context, id int64) (Event, error
 		&i.Version,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CompQuota,
 	)
 	return i, err
 }
 
 const getPublicEventBySlug = `-- name: GetPublicEventBySlug :one
-SELECT id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at FROM events
+SELECT id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at, comp_quota FROM events
 WHERE slug = $1 AND status = 'PUBLISHED' AND public_visible
 `
 
@@ -139,6 +141,7 @@ func (q *Queries) GetPublicEventBySlug(ctx context.Context, slug string) (Event,
 		&i.Version,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CompQuota,
 	)
 	return i, err
 }
@@ -194,7 +197,7 @@ func (q *Queries) InsertCategory(ctx context.Context, arg InsertCategoryParams) 
 const insertEvent = `-- name: InsertEvent :one
 INSERT INTO events (slug, event_type, organizer_type, name, city, race_date, created_by)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at
+RETURNING id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at, comp_quota
 `
 
 type InsertEventParams struct {
@@ -245,6 +248,7 @@ func (q *Queries) InsertEvent(ctx context.Context, arg InsertEventParams) (Event
 		&i.Version,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CompQuota,
 	)
 	return i, err
 }
@@ -318,7 +322,7 @@ func (q *Queries) ListCategoryCodesWithoutPriceRule(ctx context.Context, eventID
 }
 
 const listEvents = `-- name: ListEvents :many
-SELECT id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at FROM events
+SELECT id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at, comp_quota FROM events
 ORDER BY race_date DESC, id DESC
 `
 
@@ -358,6 +362,7 @@ func (q *Queries) ListEvents(ctx context.Context) ([]Event, error) {
 			&i.Version,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CompQuota,
 		); err != nil {
 			return nil, err
 		}
@@ -370,7 +375,7 @@ func (q *Queries) ListEvents(ctx context.Context) ([]Event, error) {
 }
 
 const listPublicEvents = `-- name: ListPublicEvents :many
-SELECT id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at FROM events
+SELECT id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at, comp_quota FROM events
 WHERE status = 'PUBLISHED' AND public_visible
 ORDER BY race_date, id
 `
@@ -411,6 +416,7 @@ func (q *Queries) ListPublicEvents(ctx context.Context) ([]Event, error) {
 			&i.Version,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CompQuota,
 		); err != nil {
 			return nil, err
 		}
@@ -530,7 +536,7 @@ SET status = 'PUBLISHED',
     published_by = $2,
     version = version + 1
 WHERE id = $3
-RETURNING id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at
+RETURNING id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at, comp_quota
 `
 
 type PublishEventParams struct {
@@ -569,6 +575,7 @@ func (q *Queries) PublishEvent(ctx context.Context, arg PublishEventParams) (Eve
 		&i.Version,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CompQuota,
 	)
 	return i, err
 }
@@ -581,7 +588,7 @@ SET registration_open = $1,
     version = version + 1,
     updated_at = now()
 WHERE id = $4
-RETURNING id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at
+RETURNING id, slug, event_type, organizer_type, name, summary, description, city, venue, race_date, timezone, cover_file_id, status, registration_open, public_visible, registration_opens_at, registration_closes_at, race_pack_configured, community_review_required, activity_info, published_at, published_by, created_by, version, created_at, updated_at, comp_quota
 `
 
 type UpdateEventRegistrationParams struct {
@@ -626,6 +633,7 @@ func (q *Queries) UpdateEventRegistration(ctx context.Context, arg UpdateEventRe
 		&i.Version,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CompQuota,
 	)
 	return i, err
 }

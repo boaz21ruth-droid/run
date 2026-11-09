@@ -1477,8 +1477,479 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /referrals/{slug}/visit:
+    post:
+      operationId: visitReferral
+      summary: 打开推荐链接：计一次点击，返回赛事与推荐码（公开）
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralVisit'
+        default:
+          description: 错误（NOT_FOUND）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /app/events/{slug}/comp-request:
+    get:
+      operationId: appGetCompRequest
+      summary: 本人在该赛事的免费入场申请（open=false 表示不开放申请）
+      x-auth: app
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppCompStatus'
+        default:
+          description: 错误（EVENT_NOT_FOUND）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: appCreateCompRequest
+      summary: 提交免费入场申请（KOL / 跑团团长 / 赞助商 / 媒体）
+      x-auth: app
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCompRequest'
+      responses:
+        '201':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompRequest'
+        default:
+          description: 错误（COMP_CLOSED、COMP_REQUEST_EXISTS、VALIDATION_FAILED、EVENT_NOT_FOUND）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/events/{id}/referral-links:
+    get:
+      operationId: adminListReferralLinks
+      summary: 赛事的推荐链接与渠道归因统计
+      x-permission: coupon_manage
+      x-access: read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralLinkList'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: adminCreateReferralLink
+      summary: 新建推荐链接，可同时建一个只限本赛事的优惠码
+      x-permission: coupon_manage
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReferralLinkRequest'
+      responses:
+        '201':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralLink'
+        default:
+          description: 错误（REFERRAL_SLUG_TAKEN、COUPON_CODE_TAKEN、VALIDATION_FAILED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/referral-links/{id}:
+    put:
+      operationId: adminUpdateReferralLink
+      summary: 修改推荐链接名称、启用状态（停用同时停用它的优惠码）
+      x-permission: coupon_manage
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateReferralLinkRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralLink'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/events/{id}/comp-requests:
+    get:
+      operationId: adminListCompRequests
+      summary: 免费入场申请与名额
+      x-permission: coupon_manage
+      x-access: read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompRequestList'
+        default:
+          description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/events/{id}/comp-quota:
+    put:
+      operationId: adminUpdateCompQuota
+      summary: 设置免费入场名额（null 关闭申请）
+      x-permission: coupon_manage
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCompQuotaRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompRequestList'
+        default:
+          description: 错误（VALIDATION_FAILED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/comp-requests/{id}/approve:
+    post:
+      operationId: adminApproveCompRequest
+      summary: 批准免费入场：发一个本人专用、限 1 人的免费报名码
+      x-permission: coupon_manage
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCompRequest'
+        default:
+          description: 错误（COMP_REQUEST_REVIEWED、COMP_QUOTA_FULL）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/comp-requests/{id}/reject:
+    post:
+      operationId: adminRejectCompRequest
+      summary: 拒绝免费入场申请
+      x-permission: coupon_manage
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectCompRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCompRequest'
+        default:
+          description: 错误（COMP_REQUEST_REVIEWED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
+    ReferralKind:
+      type: string
+      enum: [CLUB, KOL, SPONSOR, CHANNEL, OTHER]
+    CompKind:
+      type: string
+      enum: [KOL, CLUB, SPONSOR, MEDIA]
+    CompStatus:
+      type: string
+      enum: [PENDING, APPROVED, REJECTED]
+    CouponOffer:
+      type: object
+      required: [discountType, discountValue]
+      properties:
+        discountType:
+          $ref: '#/components/schemas/DiscountType'
+        discountValue:
+          type: integer
+          format: int64
+    ReferralVisit:
+      type: object
+      required: [eventSlug, label, kind, couponCode, offer]
+      properties:
+        eventSlug: { type: string }
+        label: { type: string }
+        kind:
+          $ref: '#/components/schemas/ReferralKind'
+        couponCode: { type: string, nullable: true }
+        offer:
+          allOf:
+            - $ref: '#/components/schemas/CouponOffer'
+          nullable: true
+    CompRequest:
+      type: object
+      required: [id, status, kind, applicantName, profileUrl, audience, note, couponCode, reviewNote, createdAt]
+      properties:
+        id: { type: integer, format: int64 }
+        status:
+          $ref: '#/components/schemas/CompStatus'
+        kind:
+          $ref: '#/components/schemas/CompKind'
+        applicantName: { type: string }
+        profileUrl: { type: string, nullable: true }
+        audience: { type: string, nullable: true }
+        note: { type: string, nullable: true }
+        couponCode:
+          type: string
+          nullable: true
+          description: 批准后发的免费报名码（本人专用、限 1 人）
+        reviewNote: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+    AppCompStatus:
+      type: object
+      required: [open, request]
+      properties:
+        open:
+          type: boolean
+          description: 赛事是否接受免费入场申请
+        request:
+          allOf:
+            - $ref: '#/components/schemas/CompRequest'
+          nullable: true
+    CreateCompRequest:
+      type: object
+      required: [applicantName, kind]
+      properties:
+        applicantName: { type: string, maxLength: 80 }
+        kind:
+          $ref: '#/components/schemas/CompKind'
+        profileUrl: { type: string, maxLength: 300 }
+        audience: { type: string, maxLength: 80, description: 例如「Instagram 4.8 万粉丝」「跑团 120 人」 }
+        note: { type: string, maxLength: 500 }
+    AdminCompRequest:
+      allOf:
+        - $ref: '#/components/schemas/CompRequest'
+        - type: object
+          required: [userId, telegramUsername, couponUsed, reviewedAt]
+          properties:
+            userId: { type: integer, format: int64 }
+            telegramUsername: { type: string, nullable: true }
+            couponUsed:
+              type: boolean
+              description: 免费报名码是否已用于报名
+            reviewedAt: { type: string, format: date-time, nullable: true }
+    CompRequestList:
+      type: object
+      required: [quota, approved, pending, items]
+      properties:
+        quota:
+          type: integer
+          format: int32
+          nullable: true
+          description: 免费入场名额；null 表示不开放申请
+        approved: { type: integer, format: int32 }
+        pending: { type: integer, format: int32 }
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminCompRequest'
+    UpdateCompQuotaRequest:
+      type: object
+      required: [quota]
+      properties:
+        quota:
+          type: integer
+          format: int32
+          nullable: true
+          minimum: 0
+    RejectCompRequest:
+      type: object
+      properties:
+        note: { type: string, maxLength: 200 }
+    ReferralCoupon:
+      type: object
+      required: [id, code, discountType, discountValue, quota, usedCount, reservedCount, status]
+      properties:
+        id: { type: integer, format: int64 }
+        code: { type: string }
+        discountType:
+          $ref: '#/components/schemas/DiscountType'
+        discountValue: { type: integer, format: int64 }
+        quota: { type: integer, format: int32 }
+        usedCount: { type: integer, format: int32 }
+        reservedCount: { type: integer, format: int32 }
+        status:
+          $ref: '#/components/schemas/CouponStatus'
+    ReferralLink:
+      type: object
+      required: [id, eventId, slug, label, kind, status, clickCount, orders, paidOrders, coupon, createdAt]
+      properties:
+        id: { type: integer, format: int64 }
+        eventId: { type: integer, format: int64 }
+        slug: { type: string }
+        label: { type: string }
+        kind:
+          $ref: '#/components/schemas/ReferralKind'
+        status:
+          $ref: '#/components/schemas/CouponStatus'
+        clickCount: { type: integer, format: int64 }
+        orders:
+          type: integer
+          format: int32
+          description: 归因到这条链接的订单数（含未付款、已取消）
+        paidOrders:
+          type: integer
+          format: int32
+          description: 其中已付款的订单数
+        coupon:
+          allOf:
+            - $ref: '#/components/schemas/ReferralCoupon'
+          nullable: true
+        createdAt: { type: string, format: date-time }
+    ReferralLinkList:
+      type: object
+      required: [items, directOrders, directPaidOrders]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReferralLink'
+        directOrders:
+          type: integer
+          format: int32
+          description: 没有归因到任何推荐链接的订单数
+        directPaidOrders: { type: integer, format: int32 }
+    ReferralOfferInput:
+      type: object
+      required: [code, discountType, discountValue, quota]
+      properties:
+        code: { type: string, maxLength: 32 }
+        discountType:
+          $ref: '#/components/schemas/DiscountType'
+        discountValue: { type: integer, format: int64 }
+        quota: { type: integer, format: int32 }
+    CreateReferralLinkRequest:
+      type: object
+      required: [slug, label, kind]
+      properties:
+        slug: { type: string, maxLength: 32 }
+        label: { type: string, maxLength: 60 }
+        kind:
+          $ref: '#/components/schemas/ReferralKind'
+        offer:
+          $ref: '#/components/schemas/ReferralOfferInput'
+    UpdateReferralLinkRequest:
+      type: object
+      required: [label, status]
+      properties:
+        label: { type: string, maxLength: 60 }
+        status:
+          $ref: '#/components/schemas/CouponStatus'
     RacepackEvent:
       type: object
       required: [id, name, city, raceDate, timezone]
@@ -1818,8 +2289,11 @@ components:
           description: max(capacity - used_count - reserved_count, 0)
     PublicEvent:
       type: object
-      required: [id, slug, eventType, name, city, raceDate, registrationOpen, registrationOpensAt, registrationClosesAt, categories, fromPriceCents, coverUrl, priceTiers, registeredCount]
+      required: [id, slug, eventType, name, city, raceDate, registrationOpen, registrationOpensAt, registrationClosesAt, categories, fromPriceCents, coverUrl, priceTiers, registeredCount, compOpen]
       properties:
+        compOpen:
+          type: boolean
+          description: 是否接受免费入场申请（KOL / 跑团团长 / 赞助商 / 媒体）
         id:
           type: integer
           format: int64
@@ -2142,7 +2616,8 @@ components:
             $ref: '#/components/schemas/PriceRule'
     DiscountType:
       type: string
-      enum: [PERCENT, AMOUNT, WAIVER]
+      description: PRICE = 每位参赛人按固定价（discountValue 为每人价格，单位分）
+      enum: [PERCENT, AMOUNT, WAIVER, PRICE]
     CouponStatus:
       type: string
       enum: [ACTIVE, DISABLED]
@@ -2743,6 +3218,10 @@ components:
         couponCode:
           type: string
           maxLength: 64
+        referral:
+          type: string
+          maxLength: 64
+          description: 推荐链接 slug（来自 /r/<slug>），只用于渠道归因
         consent:
           $ref: '#/components/schemas/OrderConsentInput'
         participants:

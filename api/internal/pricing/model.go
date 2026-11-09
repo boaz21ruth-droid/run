@@ -38,12 +38,13 @@ const (
 	DiscountPercent = "PERCENT"
 	DiscountAmount  = "AMOUNT"
 	DiscountWaiver  = "WAIVER"
+	DiscountPrice   = "PRICE" // 每人固定价，discount_value 为价格（分）
 
 	CouponActive   = "ACTIVE"
 	CouponDisabled = "DISABLED"
 )
 
-// CouponInput 是后台新建或修改优惠码的输入。DiscountValue：PERCENT 为 1–100，AMOUNT 为分，WAIVER 为 0。
+// CouponInput 是后台新建或修改优惠码的输入。DiscountValue：PERCENT 为 1–100，AMOUNT 为分，WAIVER 为 0，PRICE 为每人价格（分）。
 type CouponInput struct {
 	Code          string
 	EventID       *int64 // nil = 全场通用
