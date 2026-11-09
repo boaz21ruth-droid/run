@@ -23,3 +23,9 @@ WHERE id = @id;
 UPDATE notification_logs
 SET status = @status, attempts = attempts + 1, last_error = @last_error
 WHERE id = @id;
+
+-- name: InsertBroadcastLog :one
+INSERT INTO notification_logs (channel, recipient, template, locale, entity_type, entity_id, dedupe_key)
+VALUES ('TELEGRAM', @recipient, 'event_broadcast', @locale, 'event_broadcast', @entity_id, @dedupe_key)
+ON CONFLICT (dedupe_key) DO NOTHING
+RETURNING id;

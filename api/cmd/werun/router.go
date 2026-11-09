@@ -22,6 +22,7 @@ func newRouter(app *App) *gin.Engine {
 		Promo:        app.Promo,
 		Volunteer:    app.Volunteer,
 		Community:    app.Community,
+		Broadcast:    app.Broadcast,
 		Notify:       app.Notify,
 		Env:          app.Cfg.Env,
 	})

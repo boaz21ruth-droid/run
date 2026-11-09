@@ -101,5 +101,9 @@
   "COMMUNITY_CLOSED": "សកម្មភាពនេះបានចាប់ផ្តើម បានលុបចោល ឬត្រូវបានដកចេញ មិនអាចចូលរួមបានទេ។",
   "COMMUNITY_STATE_CONFLICT": "សកម្មភាពនេះបានផ្លាស់ប្តូរ។ សូមផ្ទុកឡើងវិញ។",
   "field.community_starts_soon": "ពេលចាប់ផ្តើមត្រូវយ៉ាងហោចណាស់ 1 ម៉ោងពីឥឡូវ។",
-  "field.community_contact_required": "សូមទុកឈ្មោះ Telegram ឬលេខទូរស័ព្ទ។"
+  "field.community_contact_required": "សូមទុកឈ្មោះ Telegram ឬលេខទូរស័ព្ទ។",
+  "notify.event_broadcast": "[{eventName}] សារពីអ្នករៀបចំ\n\n{body}",
+  "notify.open_my_events": "ព្រឹត្តិការណ៍របស់ខ្ញុំ",
+  "BROADCAST_DUPLICATE": "សារនេះបានផ្ញើទៅក្រុមដដែលក្នុង 10 នាទីចុងក្រោយ។",
+  "BROADCAST_NO_RECIPIENTS": "ក្រុមនេះមិនទាន់មាននរណាម្នាក់ទេ។"
 }

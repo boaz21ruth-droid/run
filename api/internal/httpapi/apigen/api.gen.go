@@ -312,6 +312,30 @@ func (e AppUserLocale) Valid() bool {
 	}
 }
 
+// Defines values for BroadcastAudience.
+const (
+	BroadcastAudienceELITE      BroadcastAudience = "ELITE"
+	BroadcastAudiencePAID       BroadcastAudience = "PAID"
+	BroadcastAudiencePENDING    BroadcastAudience = "PENDING"
+	BroadcastAudienceVOLUNTEERS BroadcastAudience = "VOLUNTEERS"
+)
+
+// Valid indicates whether the value is a known member of the BroadcastAudience enum.
+func (e BroadcastAudience) Valid() bool {
+	switch e {
+	case BroadcastAudienceELITE:
+		return true
+	case BroadcastAudiencePAID:
+		return true
+	case BroadcastAudiencePENDING:
+		return true
+	case BroadcastAudienceVOLUNTEERS:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CommunityActivityContactVisibility.
 const (
 	CommunityActivityContactVisibilityJOINED CommunityActivityContactVisibility = "JOINED"
@@ -1848,6 +1872,37 @@ type AssignVolunteerRequest struct {
 	RoleId int64 `json:"roleId"`
 }
 
+// BroadcastAudience PAID 已确认报名（含免费活动报名）· PENDING 待付款 · ELITE 精英组（资格未被拒）· VOLUNTEERS 已分配岗位的志愿者
+type BroadcastAudience string
+
+// BroadcastAudienceCount defines model for BroadcastAudienceCount.
+type BroadcastAudienceCount struct {
+	// Audience PAID 已确认报名（含免费活动报名）· PENDING 待付款 · ELITE 精英组（资格未被拒）· VOLUNTEERS 已分配岗位的志愿者
+	Audience BroadcastAudience `json:"audience"`
+	Count    int32             `json:"count"`
+}
+
+// BroadcastBoard defines model for BroadcastBoard.
+type BroadcastBoard struct {
+	Audiences []BroadcastAudienceCount `json:"audiences"`
+	Items     []BroadcastItem          `json:"items"`
+}
+
+// BroadcastItem defines model for BroadcastItem.
+type BroadcastItem struct {
+	// Audience PAID 已确认报名（含免费活动报名）· PENDING 待付款 · ELITE 精英组（资格未被拒）· VOLUNTEERS 已分配岗位的志愿者
+	Audience       BroadcastAudience `json:"audience"`
+	Body           string            `json:"body"`
+	CreatedAt      time.Time         `json:"createdAt"`
+	FailedCount    int32             `json:"failedCount"`
+	Id             int64             `json:"id"`
+	RecipientCount int32             `json:"recipientCount"`
+	SenderName     string            `json:"senderName"`
+
+	// SentCount Telegram 已送达数（没有 Telegram 的跑者只在「我的赛事」看到）
+	SentCount int32 `json:"sentCount"`
+}
+
 // CommunityActivity defines model for CommunityActivity.
 type CommunityActivity struct {
 	AuthorName        string                             `json:"authorName"`
@@ -2297,6 +2352,20 @@ type LoginRequest struct {
 type Me struct {
 	Permissions map[string]Access `json:"permissions"`
 	Staff       Staff             `json:"staff"`
+}
+
+// Notice defines model for Notice.
+type Notice struct {
+	Body      string    `json:"body"`
+	CreatedAt time.Time `json:"createdAt"`
+	EventName string    `json:"eventName"`
+	EventSlug string    `json:"eventSlug"`
+	Id        int64     `json:"id"`
+}
+
+// NoticeList defines model for NoticeList.
+type NoticeList struct {
+	Items []Notice `json:"items"`
 }
 
 // OrderConsentInput defines model for OrderConsentInput.
@@ -2999,6 +3068,13 @@ type RunnerProfileList struct {
 	Items []RunnerProfile `json:"items"`
 }
 
+// SendBroadcastRequest defines model for SendBroadcastRequest.
+type SendBroadcastRequest struct {
+	// Audience PAID 已确认报名（含免费活动报名）· PENDING 待付款 · ELITE 精英组（资格未被拒）· VOLUNTEERS 已分配岗位的志愿者
+	Audience BroadcastAudience `json:"audience"`
+	Body     string            `json:"body"`
+}
+
 // Staff defines model for Staff.
 type Staff struct {
 	FullName string `json:"fullName"`
@@ -3261,6 +3337,9 @@ type AdminUpdateCouponJSONRequestBody = UpdateCouponRequest
 // AdminCreateEventJSONRequestBody defines body for AdminCreateEvent for application/json ContentType.
 type AdminCreateEventJSONRequestBody = CreateEventRequest
 
+// AdminSendBroadcastJSONRequestBody defines body for AdminSendBroadcast for application/json ContentType.
+type AdminSendBroadcastJSONRequestBody = SendBroadcastRequest
+
 // AdminUpdateCompQuotaJSONRequestBody defines body for AdminUpdateCompQuota for application/json ContentType.
 type AdminUpdateCompQuotaJSONRequestBody = UpdateCompQuotaRequest
 
@@ -3413,6 +3492,12 @@ type ServerInterface interface {
 	// AdminGetEvent 后台赛事详情（任意状态，含报名设置与组别）
 	// (GET /admin/events/{id})
 	AdminGetEvent(c *gin.Context, id int64)
+	// AdminGetBroadcasts 发通知：各人群人数与已发记录
+	// (GET /admin/events/{id}/broadcasts)
+	AdminGetBroadcasts(c *gin.Context, id int64)
+	// AdminSendBroadcast 给一批人发通知（Telegram 推送，同时显示在「我的赛事」）
+	// (POST /admin/events/{id}/broadcasts)
+	AdminSendBroadcast(c *gin.Context, id int64)
 	// AdminUpdateCompQuota 设置免费入场名额（null 关闭申请）
 	// (PUT /admin/events/{id}/comp-quota)
 	AdminUpdateCompQuota(c *gin.Context, id int64)
@@ -3602,6 +3687,9 @@ type ServerInterface interface {
 	// AppUpdateMe 修改显示名或语言
 	// (PATCH /app/me)
 	AppUpdateMe(c *gin.Context)
+	// AppListNotices 主办方发给我的通知（最近 20 条）
+	// (GET /app/notices)
+	AppListNotices(c *gin.Context)
 	// AppListOrders 我的订单（最近 100 张，新的在前）
 	// (GET /app/orders)
 	AppListOrders(c *gin.Context)
@@ -4006,6 +4094,56 @@ func (siw *ServerInterfaceWrapper) AdminGetEvent(c *gin.Context) {
 	}
 
 	siw.Handler.AdminGetEvent(c, id)
+}
+
+// AdminGetBroadcasts operation middleware
+func (siw *ServerInterfaceWrapper) AdminGetBroadcasts(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminGetBroadcasts(c, id)
+}
+
+// AdminSendBroadcast operation middleware
+func (siw *ServerInterfaceWrapper) AdminSendBroadcast(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AdminSendBroadcast(c, id)
 }
 
 // AdminUpdateCompQuota operation middleware
@@ -5445,6 +5583,19 @@ func (siw *ServerInterfaceWrapper) AppUpdateMe(c *gin.Context) {
 	siw.Handler.AppUpdateMe(c)
 }
 
+// AppListNotices operation middleware
+func (siw *ServerInterfaceWrapper) AppListNotices(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AppListNotices(c)
+}
+
 // AppListOrders operation middleware
 func (siw *ServerInterfaceWrapper) AppListOrders(c *gin.Context) {
 
@@ -5949,6 +6100,9 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/admin/community/activities/:id/reject", wrapper.AdminRejectCommunityActivity)
 	router.POST(options.BaseURL+"/admin/community/activities/:id/freeze", wrapper.AdminFreezeCommunityActivity)
 	router.POST(options.BaseURL+"/admin/community/activities/:id/unfreeze", wrapper.AdminUnfreezeCommunityActivity)
+	router.GET(options.BaseURL+"/admin/events/:id/broadcasts", wrapper.AdminGetBroadcasts)
+	router.POST(options.BaseURL+"/admin/events/:id/broadcasts", wrapper.AdminSendBroadcast)
+	router.GET(options.BaseURL+"/app/notices", wrapper.AppListNotices)
 }
 
 type AdminLoginRequestObject struct {
@@ -6561,6 +6715,85 @@ type AdminGetEventdefaultJSONResponse struct {
 }
 
 func (response AdminGetEventdefaultJSONResponse) VisitAdminGetEventResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminGetBroadcastsRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type AdminGetBroadcastsResponseObject interface {
+	VisitAdminGetBroadcastsResponse(w http.ResponseWriter) error
+}
+
+type AdminGetBroadcasts200JSONResponse BroadcastBoard
+
+func (response AdminGetBroadcasts200JSONResponse) VisitAdminGetBroadcastsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminGetBroadcastsdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminGetBroadcastsdefaultJSONResponse) VisitAdminGetBroadcastsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminSendBroadcastRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *AdminSendBroadcastJSONRequestBody
+}
+
+type AdminSendBroadcastResponseObject interface {
+	VisitAdminSendBroadcastResponse(w http.ResponseWriter) error
+}
+
+type AdminSendBroadcast201JSONResponse BroadcastBoard
+
+func (response AdminSendBroadcast201JSONResponse) VisitAdminSendBroadcastResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminSendBroadcastdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AdminSendBroadcastdefaultJSONResponse) VisitAdminSendBroadcastResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -9045,6 +9278,44 @@ func (response AppUpdateMedefaultJSONResponse) VisitAppUpdateMeResponse(w http.R
 	return err
 }
 
+type AppListNoticesRequestObject struct {
+}
+
+type AppListNoticesResponseObject interface {
+	VisitAppListNoticesResponse(w http.ResponseWriter) error
+}
+
+type AppListNotices200JSONResponse NoticeList
+
+func (response AppListNotices200JSONResponse) VisitAppListNoticesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AppListNoticesdefaultJSONResponse struct {
+	Body       ErrorResponse
+	StatusCode int
+}
+
+func (response AppListNoticesdefaultJSONResponse) VisitAppListNoticesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type AppListOrdersRequestObject struct {
 }
 
@@ -9771,6 +10042,12 @@ type StrictServerInterface interface {
 	// AdminGetEvent 后台赛事详情（任意状态，含报名设置与组别）
 	// (GET /admin/events/{id})
 	AdminGetEvent(ctx context.Context, request AdminGetEventRequestObject) (AdminGetEventResponseObject, error)
+	// AdminGetBroadcasts 发通知：各人群人数与已发记录
+	// (GET /admin/events/{id}/broadcasts)
+	AdminGetBroadcasts(ctx context.Context, request AdminGetBroadcastsRequestObject) (AdminGetBroadcastsResponseObject, error)
+	// AdminSendBroadcast 给一批人发通知（Telegram 推送，同时显示在「我的赛事」）
+	// (POST /admin/events/{id}/broadcasts)
+	AdminSendBroadcast(ctx context.Context, request AdminSendBroadcastRequestObject) (AdminSendBroadcastResponseObject, error)
 	// AdminUpdateCompQuota 设置免费入场名额（null 关闭申请）
 	// (PUT /admin/events/{id}/comp-quota)
 	AdminUpdateCompQuota(ctx context.Context, request AdminUpdateCompQuotaRequestObject) (AdminUpdateCompQuotaResponseObject, error)
@@ -9960,6 +10237,9 @@ type StrictServerInterface interface {
 	// AppUpdateMe 修改显示名或语言
 	// (PATCH /app/me)
 	AppUpdateMe(ctx context.Context, request AppUpdateMeRequestObject) (AppUpdateMeResponseObject, error)
+	// AppListNotices 主办方发给我的通知（最近 20 条）
+	// (GET /app/notices)
+	AppListNotices(ctx context.Context, request AppListNoticesRequestObject) (AppListNoticesResponseObject, error)
 	// AppListOrders 我的订单（最近 100 张，新的在前）
 	// (GET /app/orders)
 	AppListOrders(ctx context.Context, request AppListOrdersRequestObject) (AppListOrdersResponseObject, error)
@@ -10525,6 +10805,65 @@ func (sh *strictHandler) AdminGetEvent(ctx *gin.Context, id int64) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AdminGetEventResponseObject); ok {
 		if err := validResponse.VisitAdminGetEventResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminGetBroadcasts operation middleware
+func (sh *strictHandler) AdminGetBroadcasts(ctx *gin.Context, id int64) {
+	var request AdminGetBroadcastsRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminGetBroadcasts(ctx, request.(AdminGetBroadcastsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminGetBroadcasts")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminGetBroadcastsResponseObject); ok {
+		if err := validResponse.VisitAdminGetBroadcastsResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminSendBroadcast operation middleware
+func (sh *strictHandler) AdminSendBroadcast(ctx *gin.Context, id int64) {
+	var request AdminSendBroadcastRequestObject
+
+	request.Id = id
+
+	var body AdminSendBroadcastJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminSendBroadcast(ctx, request.(AdminSendBroadcastRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminSendBroadcast")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AdminSendBroadcastResponseObject); ok {
+		if err := validResponse.VisitAdminSendBroadcastResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {
@@ -12341,6 +12680,30 @@ func (sh *strictHandler) AppUpdateMe(ctx *gin.Context) {
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(AppUpdateMeResponseObject); ok {
 		if err := validResponse.VisitAppUpdateMeResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AppListNotices operation middleware
+func (sh *strictHandler) AppListNotices(ctx *gin.Context) {
+	var request AppListNoticesRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AppListNotices(ctx, request.(AppListNoticesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AppListNotices")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(AppListNoticesResponseObject); ok {
+		if err := validResponse.VisitAppListNoticesResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

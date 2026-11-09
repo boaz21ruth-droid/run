@@ -119,7 +119,8 @@
     "tabStaff": "现场人员",
     "tabPromo": "推广",
     "tabRules": "报名规则",
-    "tabVolunteers": "志愿者"
+    "tabVolunteers": "志愿者",
+    "tabBroadcast": "发通知"
   },
   "pricing": {
     "hint": "同一组别有多个可用价格档时，跑者自动获得最低价。",
@@ -763,6 +764,33 @@
       "FAMILY": "亲子",
       "CYCLING": "骑行",
       "OTHER": "其他"
+    }
+  },
+  "broadcast": {
+    "title": "发通知",
+    "audience": {
+      "PAID": "已付款",
+      "PENDING": "待付款",
+      "ELITE": "精英组",
+      "VOLUNTEERS": "志愿者"
+    },
+    "placeholder": "如：领物地点已公布：11.13–14 永旺 1 期一楼中庭，17:00–20:00。带上参考码与证件，可委托代领。",
+    "hint": "通过 Telegram 推送 · 同时显示在「我的赛事」。没绑定 Telegram 的跑者只在「我的赛事」看到。",
+    "send": "发送",
+    "cancel": "取消",
+    "confirmTitle": "发给「{{audience}}」{{n}} 人？",
+    "confirmBody": "发出后不能撤回，跑者会立刻收到 Telegram 消息。",
+    "sent": "已发给 {{n}} 人",
+    "history": "已发的通知",
+    "empty": "还没发过通知",
+    "recipients": "{{n}} 人",
+    "delivery": "Telegram 已送达 {{sent}} · 失败 {{failed}}",
+    "col": {
+      "time": "时间",
+      "audience": "人群",
+      "body": "内容",
+      "delivery": "送达",
+      "sender": "发送人"
     }
   }
 }

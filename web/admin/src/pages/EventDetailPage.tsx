@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router";
 import { PERM_ACCESS_MANAGE, PERM_COUPON_MANAGE, PERM_EVENT_CONFIG, PERM_PRICE_CONFIG, can } from "../auth/can";
 import { useMe } from "../auth/useMe";
+import { BroadcastTab } from "../broadcasts/BroadcastTab";
 import { CouponsTab } from "../coupons/CouponsTab";
 import { RegistrationCard } from "../events/RegistrationCard";
 import { AssignmentsTab } from "../racepack/AssignmentsTab";
@@ -130,6 +131,13 @@ export function EventDetailPage() {
       key: "volunteers",
       label: <span data-testid="event-tab-volunteers">{t("eventDetail.tabVolunteers")}</span>,
       children: <VolunteersTab event={event} />,
+    });
+  }
+  if (event.status === "PUBLISHED" && can(me?.permissions, PERM_EVENT_CONFIG, "read")) {
+    items.push({
+      key: "broadcast",
+      label: <span data-testid="event-tab-broadcast">{t("eventDetail.tabBroadcast")}</span>,
+      children: <BroadcastTab event={event} />,
     });
   }
   if (event.eventType === "RACE" && can(me?.permissions, PERM_COUPON_MANAGE, "read")) {

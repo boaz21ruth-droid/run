@@ -101,5 +101,9 @@
   "COMMUNITY_CLOSED": "This run has started, been cancelled or taken down, so you can't join.",
   "COMMUNITY_STATE_CONFLICT": "This run has changed. Refresh and try again.",
   "field.community_starts_soon": "The start time must be at least 1 hour from now.",
-  "field.community_contact_required": "Leave a Telegram username or a phone number."
+  "field.community_contact_required": "Leave a Telegram username or a phone number.",
+  "notify.event_broadcast": "[{eventName}] Message from the organizer\n\n{body}",
+  "notify.open_my_events": "My events",
+  "BROADCAST_DUPLICATE": "This message went to the same group in the last 10 minutes. Try again later if you really want to resend.",
+  "BROADCAST_NO_RECIPIENTS": "Nobody is in this group yet, so there's no one to send to."
 }

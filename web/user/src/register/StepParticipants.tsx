@@ -21,6 +21,9 @@ export function StepParticipants({ event, participants, profiles, errors, onChan
 
   return (
     <div className={styles.stack}>
+      <p className={rules.noAccount} data-testid="register-no-account">
+        {t("register.noAccount")}
+      </p>
       {participants.map((draft, i) => {
         const categoryError = errors[participantField(i, "categoryId")];
         const profileError = errors[participantField(i, "profileId")];

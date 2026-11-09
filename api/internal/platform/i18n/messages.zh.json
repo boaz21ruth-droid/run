@@ -101,5 +101,9 @@
   "COMMUNITY_CLOSED": "这个活动已开始、已取消或暂时下架，不能报名了。",
   "COMMUNITY_STATE_CONFLICT": "活动状态已经变了，请刷新后再操作。",
   "field.community_starts_soon": "开始时间至少要在 1 小时以后。",
-  "field.community_contact_required": "请至少留一个 Telegram 用户名或手机号。"
+  "field.community_contact_required": "请至少留一个 Telegram 用户名或手机号。",
+  "notify.event_broadcast": "【{eventName}】主办方通知\n\n{body}",
+  "notify.open_my_events": "查看我的赛事",
+  "BROADCAST_DUPLICATE": "这条通知 10 分钟内已经发给同一批人了，确认要再发请稍后再试。",
+  "BROADCAST_NO_RECIPIENTS": "这批人里还没有人，没有可发送的对象。"
 }

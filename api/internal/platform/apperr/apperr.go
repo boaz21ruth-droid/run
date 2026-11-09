@@ -72,6 +72,8 @@ const (
 	CodeCommunityTooMany          = "COMMUNITY_TOO_MANY"
 	CodeCommunityClosed           = "COMMUNITY_CLOSED"
 	CodeCommunityStateConflict    = "COMMUNITY_STATE_CONFLICT"
+	CodeBroadcastDuplicate        = "BROADCAST_DUPLICATE"
+	CodeBroadcastNoRecipients     = "BROADCAST_NO_RECIPIENTS"
 )
 
 // AllCodes 列出全部错误码，供文案完整性测试使用。新增错误码时必须同时加到这里。
@@ -139,6 +141,8 @@ var AllCodes = []string{
 	CodeCommunityTooMany,
 	CodeCommunityClosed,
 	CodeCommunityStateConflict,
+	CodeBroadcastDuplicate,
+	CodeBroadcastNoRecipients,
 }
 
 // FieldError 描述某个字段的错误：文案 key 与参数。
