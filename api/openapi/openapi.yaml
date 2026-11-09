@@ -1896,6 +1896,281 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /app/events/{slug}/volunteer:
+    get:
+      operationId: appGetVolunteer
+      summary: 志愿者报名页：岗位与实时席位、本人最近一份申请
+      x-auth: app
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppVolunteerInfo'
+        default:
+          description: 错误（EVENT_NOT_FOUND）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: appApplyVolunteer
+      summary: 申请当志愿者：选日期与 1–3 个岗位
+      x-auth: app
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVolunteerApplication'
+      responses:
+        '201':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolunteerApplication'
+        default:
+          description: 错误（VOLUNTEER_CLOSED、VOLUNTEER_APPLIED、VALIDATION_FAILED、EVENT_NOT_FOUND）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /app/events/{slug}/volunteer/withdraw:
+    post:
+      operationId: appWithdrawVolunteer
+      summary: 撤回志愿者申请（已分配的岗位席位随之释放）
+      x-auth: app
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolunteerApplication'
+        default:
+          description: 错误（NOT_FOUND）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/events/{id}/volunteers:
+    get:
+      operationId: adminGetVolunteers
+      summary: 志愿者：设置、岗位与申请
+      x-permission: event_config
+      x-access: read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolunteerBoard'
+        default:
+          description: 错误（EVENT_NOT_FOUND）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/events/{id}/volunteer-settings:
+    put:
+      operationId: adminUpdateVolunteerSettings
+      summary: 开关志愿者报名、需要志愿者的日期与说明
+      x-permission: event_config
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VolunteerSettings'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolunteerBoard'
+        default:
+          description: 错误（VALIDATION_FAILED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/events/{id}/volunteer-roles:
+    post:
+      operationId: adminCreateVolunteerRole
+      summary: 新建志愿者岗位
+      x-permission: event_config
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VolunteerRoleInput'
+      responses:
+        '201':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolunteerBoard'
+        default:
+          description: 错误（VALIDATION_FAILED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/volunteer-roles/{id}:
+    put:
+      operationId: adminUpdateVolunteerRole
+      summary: 修改岗位（席位不能少于已分配人数）
+      x-permission: event_config
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVolunteerRoleRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolunteerBoard'
+        default:
+          description: 错误（VALIDATION_FAILED）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/volunteer-applications/{id}/assign:
+    post:
+      operationId: adminAssignVolunteer
+      summary: 分配到岗位（占一个席位；已在别的岗位时换岗）
+      x-permission: event_config
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignVolunteerRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolunteerBoard'
+        default:
+          description: 错误（VOLUNTEER_ROLE_FULL、VOLUNTEER_STATE_CONFLICT）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/volunteer-applications/{id}/waitlist:
+    post:
+      operationId: adminWaitlistVolunteer
+      summary: 转候补（已分配的释放席位）
+      x-permission: event_config
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolunteerBoard'
+        default:
+          description: 错误（VOLUNTEER_STATE_CONFLICT）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/volunteer-applications/{id}/reject:
+    post:
+      operationId: adminRejectVolunteer
+      summary: 拒绝申请（已分配的释放席位）
+      x-permission: event_config
+      x-access: write
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectVolunteerRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolunteerBoard'
+        default:
+          description: 错误（VOLUNTEER_STATE_CONFLICT）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     ReferralKind:
@@ -2160,6 +2435,199 @@ components:
           items:
             $ref: '#/components/schemas/AdminQualificationProof'
     RejectQualificationProofRequest:
+      type: object
+      properties:
+        note: { type: string, maxLength: 200 }
+    VolunteerStatus:
+      type: string
+      enum: [PENDING, ASSIGNED, WAITLIST, REJECTED, WITHDRAWN]
+    PublicVolunteerRole:
+      type: object
+      required: [id, name, schedule, capacity, remaining]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        schedule:
+          type: string
+          nullable: true
+        capacity: { type: integer, format: int32 }
+        remaining:
+          type: integer
+          format: int32
+          description: 剩余席位；0 表示满员，申请会进候补
+    VolunteerApplication:
+      type: object
+      required: [id, status, fullAvailability, dates, roleIds, assignedRoleName, reviewNote, createdAt]
+      properties:
+        id: { type: integer, format: int64 }
+        status:
+          $ref: '#/components/schemas/VolunteerStatus'
+        fullAvailability: { type: boolean }
+        dates:
+          type: array
+          items: { type: string, format: date }
+        roleIds:
+          type: array
+          items: { type: integer, format: int64 }
+        assignedRoleName:
+          type: string
+          nullable: true
+        reviewNote:
+          type: string
+          nullable: true
+        createdAt: { type: string, format: date-time }
+    AppVolunteerInfo:
+      type: object
+      required: [open, dates, note, roles, application]
+      properties:
+        open: { type: boolean }
+        dates:
+          type: array
+          description: 需要志愿者的日期
+          items: { type: string, format: date }
+        note:
+          type: string
+          nullable: true
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicVolunteerRole'
+        application:
+          allOf:
+            - $ref: '#/components/schemas/VolunteerApplication'
+          nullable: true
+    CreateVolunteerApplication:
+      type: object
+      required: [fullName, phone, fullAvailability, roleIds, conductAccepted]
+      properties:
+        fullName: { type: string, maxLength: 80 }
+        phone: { type: string, maxLength: 20, description: E.164 }
+        fullAvailability: { type: boolean }
+        dates:
+          type: array
+          maxItems: 14
+          description: 不是全程参加时必填，须是赛事列出的日期
+          items: { type: string, format: date }
+        roleIds:
+          type: array
+          minItems: 1
+          maxItems: 3
+          items: { type: integer, format: int64 }
+        tshirtSize:
+          type: string
+          enum: [XS, S, M, L, XL, XXL]
+        note: { type: string, maxLength: 500 }
+        mediaConsent: { type: boolean }
+        conductAccepted:
+          type: boolean
+          description: 必须为 true：同意志愿者行为准则、理解岗位按席位分配
+    VolunteerSettings:
+      type: object
+      required: [open, dates, note]
+      properties:
+        open: { type: boolean }
+        dates:
+          type: array
+          maxItems: 14
+          items: { type: string, format: date }
+        note:
+          allOf:
+            - $ref: '#/components/schemas/LocalizedText'
+          nullable: true
+    AdminVolunteerRole:
+      type: object
+      required: [id, name, schedule, capacity, assignedCount, sortOrder, active, candidates]
+      properties:
+        id: { type: integer, format: int64 }
+        name:
+          $ref: '#/components/schemas/LocalizedText'
+        schedule:
+          allOf:
+            - $ref: '#/components/schemas/LocalizedText'
+          nullable: true
+        capacity: { type: integer, format: int32 }
+        assignedCount: { type: integer, format: int32 }
+        sortOrder: { type: integer, format: int32 }
+        active: { type: boolean }
+        candidates:
+          type: integer
+          format: int32
+          description: 选了这个岗位、还在待处理或候补的申请数
+    AdminVolunteerApplication:
+      type: object
+      required: [id, status, fullName, phone, telegramUsername, fullAvailability, dates, roleIds, tshirtSize, note, mediaConsent, assignedRoleId, reviewNote, createdAt]
+      properties:
+        id: { type: integer, format: int64 }
+        status:
+          $ref: '#/components/schemas/VolunteerStatus'
+        fullName: { type: string }
+        phone: { type: string }
+        telegramUsername:
+          type: string
+          nullable: true
+        fullAvailability: { type: boolean }
+        dates:
+          type: array
+          items: { type: string, format: date }
+        roleIds:
+          type: array
+          items: { type: integer, format: int64 }
+        tshirtSize:
+          type: string
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        mediaConsent: { type: boolean }
+        assignedRoleId:
+          type: integer
+          format: int64
+          nullable: true
+        reviewNote:
+          type: string
+          nullable: true
+        createdAt: { type: string, format: date-time }
+    VolunteerBoard:
+      type: object
+      required: [settings, roles, applications]
+      properties:
+        settings:
+          $ref: '#/components/schemas/VolunteerSettings'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminVolunteerRole'
+        applications:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminVolunteerApplication'
+    VolunteerRoleInput:
+      type: object
+      required: [name, capacity]
+      properties:
+        name:
+          $ref: '#/components/schemas/LocalizedText'
+        schedule:
+          $ref: '#/components/schemas/LocalizedText'
+        capacity: { type: integer, format: int32, minimum: 0 }
+        sortOrder: { type: integer, format: int32 }
+    UpdateVolunteerRoleRequest:
+      type: object
+      required: [name, capacity, active]
+      properties:
+        name:
+          $ref: '#/components/schemas/LocalizedText'
+        schedule:
+          $ref: '#/components/schemas/LocalizedText'
+        capacity: { type: integer, format: int32, minimum: 0 }
+        sortOrder: { type: integer, format: int32 }
+        active: { type: boolean }
+    AssignVolunteerRequest:
+      type: object
+      required: [roleId]
+      properties:
+        roleId: { type: integer, format: int64 }
+    RejectVolunteerRequest:
       type: object
       properties:
         note: { type: string, maxLength: 200 }
@@ -2590,8 +3058,11 @@ components:
           description: 精英组的资格要求；普通组为空
     PublicEvent:
       type: object
-      required: [id, slug, eventType, name, city, raceDate, registrationOpen, registrationOpensAt, registrationClosesAt, categories, fromPriceCents, coverUrl, priceTiers, registeredCount, compOpen, refundPolicy]
+      required: [id, slug, eventType, name, city, raceDate, registrationOpen, registrationOpensAt, registrationClosesAt, categories, fromPriceCents, coverUrl, priceTiers, registeredCount, compOpen, refundPolicy, volunteerOpen]
       properties:
+        volunteerOpen:
+          type: boolean
+          description: 是否在招志愿者
         refundPolicy:
           allOf:
             - $ref: '#/components/schemas/RefundPolicy'

@@ -500,5 +500,60 @@
       "APPROVED": "Elite entry approved",
       "REJECTED": "Not verified, moved from {{category}}"
     }
+  },
+  "volunteer": {
+    "title": "Volunteer at this race",
+    "entryTitle": "Want to volunteer?",
+    "entryHint": "Pick your days and roles; the organizer assigns seats",
+    "closed": "This race isn't looking for volunteers right now.",
+    "datesTitle": "Days you can help",
+    "full": "All days",
+    "partial": "Some days",
+    "fullHint": "All days = {{dates}}",
+    "rolesTitle": "Pick 1–{{max}} roles",
+    "picked": "Live seats · {{n}} picked",
+    "seats": "seats",
+    "fullBadge": "Full · waitlist",
+    "rolesHint": "All picks count equally and seats decide. Full roles go to the waitlist and the organizer contacts you if a seat opens.",
+    "aboutTitle": "How to reach you",
+    "name": "Name",
+    "phone": "Phone",
+    "tshirt": "Volunteer T-shirt size",
+    "tshirtNone": "Not needed / not sure",
+    "noteLabel": "Note (optional)",
+    "notePlaceholder": "Languages you speak, past volunteering…",
+    "conductTitle": "Volunteer code of conduct",
+    "conductText": "Arrive on time and check in with your lead · Wear the volunteer T-shirt · Stay reachable on Telegram and report incidents · Handle runner data with care · Never trade bibs, medals or passes",
+    "agreeConduct": "I agree to the code of conduct",
+    "agreeMedia": "My photos may be used to promote the race",
+    "agreeSeats": "I understand roles depend on seats and I may be waitlisted",
+    "submit": "Send application",
+    "submitting": "Sending…",
+    "pending": "Got it. The organizer will assign a role and reach you on Telegram.",
+    "waitlist": "Your roles are full for now, so you're on the waitlist. The organizer will reach you if a seat opens.",
+    "assigned": "Your role: {{role}}",
+    "rejected": "We couldn't fit you in this time. Thanks for applying.",
+    "reapply": "Apply again",
+    "contactHint": "Your lead and meeting time will come on Telegram.",
+    "withdraw": "Withdraw",
+    "withdrawConfirm": "Your seat goes to someone else, but you can apply again later. Withdraw?",
+    "keep": "Keep it",
+    "summary": {
+      "dates": "Days",
+      "roles": "Roles picked"
+    },
+    "status": {
+      "PENDING": "Waiting",
+      "ASSIGNED": "Assigned",
+      "WAITLIST": "Waitlisted",
+      "REJECTED": "Not assigned",
+      "WITHDRAWN": "Withdrawn"
+    },
+    "errors": {
+      "phone": "Enter a phone number with country code, e.g. +855 12 345 678.",
+      "dates": "Pick at least one day.",
+      "roles": "Pick at least one role.",
+      "conduct": "Tick the code of conduct and the seats note."
+    }
   }
 }

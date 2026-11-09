@@ -500,5 +500,60 @@
       "APPROVED": "精英组资格已通过",
       "REJECTED": "资格未通过，已从「{{category}}」转组"
     }
+  },
+  "volunteer": {
+    "title": "成为赛事志愿者",
+    "entryTitle": "想当志愿者？",
+    "entryHint": "选能参加的日期和岗位，主办方按席位安排",
+    "closed": "这场赛事目前不招志愿者。",
+    "datesTitle": "你能参加的日期",
+    "full": "全程参加",
+    "partial": "选部分日期",
+    "fullHint": "全程 = {{dates}}",
+    "rolesTitle": "选 1–{{max}} 个岗位",
+    "picked": "实时席位 · 已选 {{n}}",
+    "seats": "席位",
+    "fullBadge": "满 · 排候补",
+    "rolesHint": "几个选择同等考虑，最终按席位分配；满员的岗位可以排候补，有空位时主办方会联系你。",
+    "aboutTitle": "你的联系方式",
+    "name": "姓名",
+    "phone": "手机号",
+    "tshirt": "志愿者 T 恤尺码",
+    "tshirtNone": "不需要 / 不确定",
+    "noteLabel": "备注（可选）",
+    "notePlaceholder": "会的语言、做过的志愿者经历等",
+    "conductTitle": "志愿者行为准则",
+    "conductText": "守时到岗并向组长报到 · 穿志愿者 T 恤 · 保持 Telegram 在线并上报事故 · 妥善处理跑者信息 · 不以号码布、奖牌或通行证换取任何好处",
+    "agreeConduct": "我同意志愿者行为准则",
+    "agreeMedia": "同意在赛事宣传中使用我的影像",
+    "agreeSeats": "我理解岗位按席位分配，可能进入候补",
+    "submit": "提交申请",
+    "submitting": "正在提交…",
+    "pending": "申请已收到，主办方会按席位安排岗位并通过 Telegram 联系你。",
+    "waitlist": "你选的岗位暂时满了，已排进候补；有空位时主办方会联系你。",
+    "assigned": "你的岗位：{{role}}",
+    "rejected": "这次没能安排上，谢谢你的报名。",
+    "reapply": "重新申请",
+    "contactHint": "具体集合时间与组长会在 Telegram 里通知。",
+    "withdraw": "撤回申请",
+    "withdrawConfirm": "撤回后岗位会让给别人，之后还可以重新申请。确定撤回？",
+    "keep": "先不撤回",
+    "summary": {
+      "dates": "日期",
+      "roles": "选的岗位"
+    },
+    "status": {
+      "PENDING": "待安排",
+      "ASSIGNED": "已安排",
+      "WAITLIST": "候补中",
+      "REJECTED": "未安排",
+      "WITHDRAWN": "已撤回"
+    },
+    "errors": {
+      "phone": "请填写带国家区号的手机号，如 +855 12 345 678。",
+      "dates": "请至少选一天。",
+      "roles": "请至少选一个岗位。",
+      "conduct": "请勾选行为准则和席位说明。"
+    }
   }
 }

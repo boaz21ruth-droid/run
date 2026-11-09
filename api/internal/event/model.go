@@ -72,6 +72,7 @@ type Event struct {
 	CoverFileID          *int64
 	CompOpen             bool // 接受免费入场申请（comp_quota 非空）
 	RefundPolicy         *RefundPolicy
+	VolunteerOpen        bool
 	Categories           []Category
 	// FromPriceCents 是当前在售价格档中的最低价（分）；仅公开列表/详情会填充，nil 表示没有在售价格档。
 	FromPriceCents *int64

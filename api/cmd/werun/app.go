@@ -28,6 +28,7 @@ import (
 	"werun/api/internal/racepack"
 	"werun/api/internal/registration"
 	"werun/api/internal/runner"
+	"werun/api/internal/volunteer"
 )
 
 // App 持有进程级依赖。各业务服务在引入它的任务里追加字段。
@@ -46,6 +47,7 @@ type App struct {
 	Payment      *payment.Service
 	Racepack     *racepack.Service
 	Promo        *promo.Service
+	Volunteer    *volunteer.Service
 	Runner       *runner.Service
 	Notify       *notify.Service // Task 20
 }
@@ -94,6 +96,7 @@ func Bootstrap(ctx context.Context) (*App, error) {
 	app.Payment = payment.NewService(app.Pool, app.Store, app.Registration, app.Notify, time.Now)
 	app.Racepack = racepack.NewService(app.Pool, time.Now)
 	app.Promo = promo.NewService(app.Pool, time.Now)
+	app.Volunteer = volunteer.NewService(app.Pool, time.Now)
 	return app, nil
 }
 

@@ -118,7 +118,8 @@
     },
     "tabStaff": "现场人员",
     "tabPromo": "推广",
-    "tabRules": "报名规则"
+    "tabRules": "报名规则",
+    "tabVolunteers": "志愿者"
   },
   "pricing": {
     "hint": "同一组别有多个可用价格档时，跑者自动获得最低价。",
@@ -623,6 +624,93 @@
       "rejectBody": "报名会转到 {{code}}，名额随之转移，跑者在订单页能看到。组别价格不同时，差价请按退款流程处理。",
       "rejectConfirm": "确认转组",
       "notePlaceholder": "给跑者的说明（可选），如：成绩页查不到这个名字"
+    }
+  },
+  "volunteers": {
+    "save": "保存",
+    "cancel": "取消",
+    "required": "必填",
+    "settings": {
+      "title": "招募设置",
+      "open": "在招志愿者（赛事页显示入口）",
+      "dates": "需要志愿者的日期",
+      "datesHelp": "跑者选「全程」或其中几天；开放招募时至少选一天。",
+      "raceDay": "{{date}} 比赛日",
+      "note": {
+        "zh": "说明（中文）",
+        "en": "说明（英文）",
+        "km": "说明（高棉语）"
+      },
+      "notePlaceholder": "如：需柬英双语 · 提供 T 恤与餐食",
+      "saved": "招募设置已保存"
+    },
+    "roles": {
+      "title": "岗位与席位",
+      "create": "新建岗位",
+      "createTitle": "新建岗位",
+      "editTitle": "修改岗位",
+      "edit": "修改",
+      "empty": "还没有岗位",
+      "inactive": "已停用",
+      "full": "满",
+      "col": {
+        "name": "岗位",
+        "seats": "已分配 / 席位",
+        "candidates": "待处理的申请",
+        "actions": "操作"
+      },
+      "name": {
+        "zh": "名称（中文）",
+        "en": "名称（英文）",
+        "km": "名称（高棉语）"
+      },
+      "schedule": {
+        "zh": "时间与说明（中文）",
+        "en": "时间与说明（英文）",
+        "km": "时间与说明（高棉语）"
+      },
+      "schedulePlaceholder": "如：16:00 起 · 核对参考码与证件",
+      "capacity": "席位",
+      "capacityHelp": "已分配 {{n}} 人，不能少于这个数",
+      "sortOrder": "排序",
+      "active": "跑者可以选",
+      "saved": "岗位已保存"
+    },
+    "apps": {
+      "title": "申请",
+      "summary": "待处理 {{pending}} · 已分配 {{assigned}} · 候补 {{waitlist}}",
+      "empty": "还没有人申请",
+      "col": {
+        "applicant": "申请人",
+        "availability": "日期",
+        "choices": "选的岗位",
+        "submitted": "提交时间",
+        "status": "状态",
+        "actions": "处理"
+      },
+      "allDays": "全程",
+      "tshirt": "T 恤 {{size}}",
+      "media": "同意使用影像",
+      "pickRole": "选岗位",
+      "assign": "分配",
+      "move": "换岗",
+      "waitlist": "候补",
+      "reject": "不安排",
+      "rejectTitle": "不安排 {{name}}",
+      "rejectConfirm": "确认",
+      "notePlaceholder": "给申请人的说明（可选）",
+      "done": {
+        "assign": "已分配",
+        "waitlist": "已转候补",
+        "reject": "已标为不安排"
+      }
+    },
+    "status": {
+      "PENDING": "待处理",
+      "ASSIGNED": "已分配",
+      "WAITLIST": "候补",
+      "REJECTED": "不安排",
+      "WITHDRAWN": "已撤回"
     }
   }
 }

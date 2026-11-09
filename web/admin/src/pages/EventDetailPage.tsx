@@ -14,6 +14,7 @@ import { useAdminEvent } from "../events/queries";
 import { PricingTab } from "../pricing/PricingTab";
 import { PromoTab } from "../promo/PromoTab";
 import { RulesTab } from "../rules/RulesTab";
+import { VolunteersTab } from "../volunteers/VolunteersTab";
 
 type AdminCategory = Schemas["AdminCategory"];
 
@@ -122,6 +123,13 @@ export function EventDetailPage() {
       key: "rules",
       label: <span data-testid="event-tab-rules">{t("eventDetail.tabRules")}</span>,
       children: <RulesTab event={event} />,
+    });
+  }
+  if (event.eventType === "RACE" && can(me?.permissions, PERM_EVENT_CONFIG, "read")) {
+    items.push({
+      key: "volunteers",
+      label: <span data-testid="event-tab-volunteers">{t("eventDetail.tabVolunteers")}</span>,
+      children: <VolunteersTab event={event} />,
     });
   }
   if (event.eventType === "RACE" && can(me?.permissions, PERM_COUPON_MANAGE, "read")) {

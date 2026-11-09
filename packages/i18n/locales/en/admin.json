@@ -118,7 +118,8 @@
     },
     "tabStaff": "Field staff",
     "tabPromo": "Promotion",
-    "tabRules": "Rules"
+    "tabRules": "Rules",
+    "tabVolunteers": "Volunteers"
   },
   "pricing": {
     "hint": "When several tiers apply to a category, runners automatically get the lowest price.",
@@ -623,6 +624,93 @@
       "rejectBody": "The entry moves to {{code}} with its spot, and the runner sees this on their order. If the prices differ, refund the difference through the refund process.",
       "rejectConfirm": "Move entry",
       "notePlaceholder": "A note for the runner (optional), e.g. The name isn't on the results page"
+    }
+  },
+  "volunteers": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "required": "Required",
+    "settings": {
+      "title": "Recruiting",
+      "open": "Recruiting volunteers (shows on the event page)",
+      "dates": "Days you need volunteers",
+      "datesHelp": "Runners pick all days or some of them. Pick at least one day to open.",
+      "raceDay": "{{date}} race day",
+      "note": {
+        "zh": "Note (Chinese)",
+        "en": "Note (English)",
+        "km": "Note (Khmer)"
+      },
+      "notePlaceholder": "e.g. Khmer and English · T-shirt and meals",
+      "saved": "Recruiting settings saved"
+    },
+    "roles": {
+      "title": "Roles and seats",
+      "create": "New role",
+      "createTitle": "New role",
+      "editTitle": "Edit role",
+      "edit": "Edit",
+      "empty": "No roles yet",
+      "inactive": "Hidden",
+      "full": "Full",
+      "col": {
+        "name": "Role",
+        "seats": "Assigned / seats",
+        "candidates": "Open applications",
+        "actions": "Actions"
+      },
+      "name": {
+        "zh": "Name (Chinese)",
+        "en": "Name (English)",
+        "km": "Name (Khmer)"
+      },
+      "schedule": {
+        "zh": "Time and details (Chinese)",
+        "en": "Time and details (English)",
+        "km": "Time and details (Khmer)"
+      },
+      "schedulePlaceholder": "e.g. From 16:00 · check codes and IDs",
+      "capacity": "Seats",
+      "capacityHelp": "{{n}} already assigned; can't go lower",
+      "sortOrder": "Order",
+      "active": "Runners can pick it",
+      "saved": "Role saved"
+    },
+    "apps": {
+      "title": "Applications",
+      "summary": "{{pending}} waiting · {{assigned}} assigned · {{waitlist}} waitlisted",
+      "empty": "No applications yet",
+      "col": {
+        "applicant": "Applicant",
+        "availability": "Days",
+        "choices": "Roles picked",
+        "submitted": "Submitted",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "allDays": "All days",
+      "tshirt": "T-shirt {{size}}",
+      "media": "Photos OK",
+      "pickRole": "Pick a role",
+      "assign": "Assign",
+      "move": "Move",
+      "waitlist": "Waitlist",
+      "reject": "Decline",
+      "rejectTitle": "Decline {{name}}",
+      "rejectConfirm": "Decline",
+      "notePlaceholder": "A note for the applicant (optional)",
+      "done": {
+        "assign": "Assigned",
+        "waitlist": "Moved to the waitlist",
+        "reject": "Declined"
+      }
+    },
+    "status": {
+      "PENDING": "Waiting",
+      "ASSIGNED": "Assigned",
+      "WAITLIST": "Waitlisted",
+      "REJECTED": "Declined",
+      "WITHDRAWN": "Withdrawn"
     }
   }
 }
