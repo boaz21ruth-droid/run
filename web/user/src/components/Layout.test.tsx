@@ -76,7 +76,7 @@ describe("Layout 底部标签栏", () => {
     expect(tabbar).toHaveAttribute("aria-label", "Main navigation");
     const links = within(tabbar).getAllByRole("link");
     expect(links.map((link) => link.getAttribute("href"))).toEqual(["/", "/events", "/orders", "/profiles"]);
-    expect(links.map((link) => link.textContent)).toEqual(["Home", "Events", "Orders", "Runners"]);
+    expect(links.map((link) => link.textContent)).toEqual(["Home", "Events", "My events", "Runners"]);
     // 图标是内联描边 SVG，对读屏隐藏
     for (const link of links) {
       const svg = link.querySelector("svg");

@@ -163,6 +163,30 @@ func TestPublicEventFromPriceRemainingAndCover(t *testing.T) {
 	require.NotNil(t, detail.FromPriceCents)
 	require.Equal(t, int64(2500), *detail.FromPriceCents, "应取在售价格档中最低者，跳过未开售/已结束/配额用尽")
 	require.Equal(t, int32(800-2-3), detail.Categories[0].Remaining)
+	require.Equal(t, int32(2), detail.RegisteredCount, "已报名人数只计 used_count，不含待付款")
+
+	// 价格档时间线：五档都返回，按状态区分。
+	require.Len(t, detail.PriceTiers, 5)
+	states := map[int64]apigen.PublicPriceTierState{}
+	for _, tier := range detail.PriceTiers {
+		states[tier.PriceCents] = tier.State
+	}
+	require.Equal(t, map[int64]apigen.PublicPriceTierState{
+		1000: apigen.PublicPriceTierStateUPCOMING,
+		1200: apigen.PublicPriceTierStateENDED,
+		1500: apigen.PublicPriceTierStateSOLDOUT,
+		2500: apigen.PublicPriceTierStateONSALE,
+		3000: apigen.PublicPriceTierStateONSALE,
+	}, states)
+	for _, tier := range detail.PriceTiers {
+		if tier.PriceCents == 1500 {
+			require.NotNil(t, tier.Remaining)
+			require.Equal(t, int32(0), *tier.Remaining)
+		}
+		if tier.PriceCents == 2500 {
+			require.Nil(t, tier.Remaining, "不限配额时剩余为空")
+		}
+	}
 	require.NotNil(t, detail.CoverUrl)
 	require.Equal(t, fmt.Sprintf("/api/files/%d", fileID), *detail.CoverUrl)
 

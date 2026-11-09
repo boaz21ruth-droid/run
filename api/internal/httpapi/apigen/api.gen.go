@@ -747,6 +747,48 @@ func (e PublicEventEventType) Valid() bool {
 	}
 }
 
+// Defines values for PublicPriceTierAudience.
+const (
+	PublicPriceTierAudienceALL   PublicPriceTierAudience = "ALL"
+	PublicPriceTierAudienceLOCAL PublicPriceTierAudience = "LOCAL"
+)
+
+// Valid indicates whether the value is a known member of the PublicPriceTierAudience enum.
+func (e PublicPriceTierAudience) Valid() bool {
+	switch e {
+	case PublicPriceTierAudienceALL:
+		return true
+	case PublicPriceTierAudienceLOCAL:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PublicPriceTierState.
+const (
+	PublicPriceTierStateENDED    PublicPriceTierState = "ENDED"
+	PublicPriceTierStateONSALE   PublicPriceTierState = "ON_SALE"
+	PublicPriceTierStateSOLDOUT  PublicPriceTierState = "SOLD_OUT"
+	PublicPriceTierStateUPCOMING PublicPriceTierState = "UPCOMING"
+)
+
+// Valid indicates whether the value is a known member of the PublicPriceTierState enum.
+func (e PublicPriceTierState) Valid() bool {
+	switch e {
+	case PublicPriceTierStateENDED:
+		return true
+	case PublicPriceTierStateONSALE:
+		return true
+	case PublicPriceTierStateSOLDOUT:
+		return true
+	case PublicPriceTierStateUPCOMING:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for QuoteParticipantAudience.
 const (
 	QuoteParticipantAudienceALL   QuoteParticipantAudience = "ALL"
@@ -1720,14 +1762,20 @@ type PublicEvent struct {
 	EventType PublicEventEventType `json:"eventType"`
 
 	// FromPriceCents 当前在售价格档中的最低价（分）；没有在售价格档（如免费活动）时为空
-	FromPriceCents       *int64             `json:"fromPriceCents"`
-	Id                   int64              `json:"id"`
-	Name                 string             `json:"name"`
-	RaceDate             openapi_types.Date `json:"raceDate"`
-	RegistrationClosesAt *time.Time         `json:"registrationClosesAt"`
-	RegistrationOpen     bool               `json:"registrationOpen"`
-	RegistrationOpensAt  *time.Time         `json:"registrationOpensAt"`
-	Slug                 string             `json:"slug"`
+	FromPriceCents *int64 `json:"fromPriceCents"`
+	Id             int64  `json:"id"`
+	Name           string `json:"name"`
+
+	// PriceTiers 价格档时间线（按后台排序），含已售罄、未开始与已结束的档位
+	PriceTiers []PublicPriceTier  `json:"priceTiers"`
+	RaceDate   openapi_types.Date `json:"raceDate"`
+
+	// RegisteredCount 已确认的报名人数（各组别 used_count 之和，不含待付款）
+	RegisteredCount      int32      `json:"registeredCount"`
+	RegistrationClosesAt *time.Time `json:"registrationClosesAt"`
+	RegistrationOpen     bool       `json:"registrationOpen"`
+	RegistrationOpensAt  *time.Time `json:"registrationOpensAt"`
+	Slug                 string     `json:"slug"`
 }
 
 // PublicEventEventType defines model for PublicEvent.EventType.
@@ -1737,6 +1785,32 @@ type PublicEventEventType string
 type PublicEventList struct {
 	Items []PublicEvent `json:"items"`
 }
+
+// PublicPriceTier defines model for PublicPriceTier.
+type PublicPriceTier struct {
+	Audience   PublicPriceTierAudience `json:"audience"`
+	Currency   string                  `json:"currency"`
+	Id         int64                   `json:"id"`
+	Name       string                  `json:"name"`
+	PriceCents int64                   `json:"priceCents"`
+
+	// Quota 配额；为空表示不限
+	Quota *int32 `json:"quota"`
+
+	// Remaining 配额剩余（quota - used - reserved，下限 0）；不限时为空
+	Remaining    *int32     `json:"remaining"`
+	SaleEndsAt   *time.Time `json:"saleEndsAt"`
+	SaleStartsAt *time.Time `json:"saleStartsAt"`
+
+	// State 配额用尽为 SOLD_OUT；否则按销售窗口判定
+	State PublicPriceTierState `json:"state"`
+}
+
+// PublicPriceTierAudience defines model for PublicPriceTier.Audience.
+type PublicPriceTierAudience string
+
+// PublicPriceTierState 配额用尽为 SOLD_OUT；否则按销售窗口判定
+type PublicPriceTierState string
 
 // Quote defines model for Quote.
 type Quote struct {

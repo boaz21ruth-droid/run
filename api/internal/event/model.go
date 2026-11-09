@@ -52,6 +52,30 @@ type Event struct {
 	Categories           []Category
 	// FromPriceCents 是当前在售价格档中的最低价（分）；仅公开列表/详情会填充，nil 表示没有在售价格档。
 	FromPriceCents *int64
+	// PriceTiers 是价格档时间线；仅公开列表/详情会填充。
+	PriceTiers []PriceTier
+}
+
+// 价格档在公开页上的状态。
+const (
+	TierUpcoming = "UPCOMING" // 销售窗口还没开始
+	TierOnSale   = "ON_SALE"
+	TierSoldOut  = "SOLD_OUT" // 配额用尽
+	TierEnded    = "ENDED"    // 销售窗口已结束
+)
+
+// PriceTier 是公开赛事页展示的一个价格档。
+type PriceTier struct {
+	ID           int64
+	Name         i18n.Text
+	Audience     string // ALL | LOCAL
+	PriceCents   int64
+	Currency     string
+	Quota        *int32 // nil = 不限
+	Remaining    *int32 // 配额剩余；不限时为 nil
+	SaleStartsAt *time.Time
+	SaleEndsAt   *time.Time
+	State        string
 }
 
 // CategoryInput 是新建赛事时提交的组别。

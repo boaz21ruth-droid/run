@@ -56,3 +56,12 @@ export function formatDateTime(isoDateTime: string, lang: Lang): string {
     hourCycle: "h23",
   }).format(new Date(isoDateTime));
 }
+
+/** 价格档销售窗口用的短日期（如 11/6），按赛事所在地金边时间 */
+export function formatMonthDay(isoDateTime: string, lang: Lang): string {
+  return new Intl.DateTimeFormat(INTL_LOCALES[lang], {
+    month: "numeric",
+    day: "numeric",
+    timeZone: RACE_TIME_ZONE,
+  }).format(new Date(isoDateTime));
+}

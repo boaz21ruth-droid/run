@@ -780,6 +780,42 @@ export interface components {
             fromPriceCents: number | null;
             /** @description 封面图公开访问地址（/api/files/{id}）；未设置封面时为空 */
             coverUrl: string | null;
+            /** @description 价格档时间线（按后台排序），含已售罄、未开始与已结束的档位 */
+            priceTiers: components["schemas"]["PublicPriceTier"][];
+            /**
+             * Format: int32
+             * @description 已确认的报名人数（各组别 used_count 之和，不含待付款）
+             */
+            registeredCount: number;
+        };
+        PublicPriceTier: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** @enum {string} */
+            audience: "ALL" | "LOCAL";
+            /** Format: int64 */
+            priceCents: number;
+            currency: string;
+            /**
+             * Format: int32
+             * @description 配额；为空表示不限
+             */
+            quota: number | null;
+            /**
+             * Format: int32
+             * @description 配额剩余（quota - used - reserved，下限 0）；不限时为空
+             */
+            remaining: number | null;
+            /** Format: date-time */
+            saleStartsAt: string | null;
+            /** Format: date-time */
+            saleEndsAt: string | null;
+            /**
+             * @description 配额用尽为 SOLD_OUT；否则按销售窗口判定
+             * @enum {string}
+             */
+            state: "UPCOMING" | "ON_SALE" | "SOLD_OUT" | "ENDED";
         };
         PublicEventList: {
             items: components["schemas"]["PublicEvent"][];

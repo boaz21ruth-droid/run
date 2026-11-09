@@ -80,3 +80,12 @@ WHERE event_id = ANY(@event_ids::bigint[])
   AND (sale_ends_at IS NULL OR sale_ends_at > @now::timestamptz)
   AND (quota IS NULL OR used_count + reserved_count < quota)
 GROUP BY event_id;
+
+-- name: ListPublicPriceTiersByEvents :many
+-- 公开赛事页展示的价格档时间线（早鸟 / 标准 / 最后一轮……），按 sort_order 排序。
+-- 只给展示用：是否在售由调用方按销售窗口与配额判定，口径同 MinAvailablePriceCentsByEvents。
+SELECT id, event_id, name, audience, price_cents, currency, quota, used_count, reserved_count,
+       sale_starts_at, sale_ends_at
+FROM price_rules
+WHERE event_id = ANY(@event_ids::bigint[])
+ORDER BY event_id, sort_order, id;

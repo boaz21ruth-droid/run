@@ -3,8 +3,11 @@ import { useLang } from "@werun/i18n";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router";
 import { EventCover } from "../components/EventCover";
+import { PriceTiers } from "../components/PriceTiers";
 import { QueryState } from "../components/QueryState";
+import { ShareButton } from "../components/ShareButton";
 import { eventStatus, totalRemaining } from "../events/status";
+import { currentTier } from "../events/tiers";
 import { formatKm, formatNumber, formatRaceDate, formatTime, raceDayParts } from "../format";
 import { usePublicEvent } from "../queries";
 import { registrationAvailable } from "../register/model";
@@ -29,6 +32,7 @@ export function EventDetailPage() {
         const canRegister = registrationAvailable(data) && data.categories.some((c) => !c.soldOut);
         const allSoldOut = registrationAvailable(data) && !data.categories.some((c) => !c.soldOut);
         const freeOpen = data.eventType === "FREE_ACTIVITY" && data.registrationOpen;
+        const tier = currentTier(data.priceTiers);
 
         // 桌面端按钮在横幅里，手机端固定在底部；同一动作渲染两份，测试 id 只挂在横幅那一份上
         const renderAction = (primary: boolean) =>
@@ -38,7 +42,7 @@ export function EventDetailPage() {
               className={styles.cta}
               data-testid={primary ? "register-button" : undefined}
             >
-              {t("register.cta")}
+              {tier ? t("register.ctaTier", { name: tier.name, price: formatUsd(tier.priceCents) }) : t("register.cta")}
             </Link>
           ) : freeOpen ? (
             <Link
@@ -80,9 +84,21 @@ export function EventDetailPage() {
                   </span>
                   <span className={styles.statusText}>{t(`events.status.${status}`)}</span>
                 </p>
+                <div className={styles.social}>
+                  {data.registeredCount > 0 ? (
+                    <span data-testid="registered-count">
+                      {t("event.registered", { count: data.registeredCount, n: formatNumber(data.registeredCount, lang) })}
+                    </span>
+                  ) : (
+                    <span />
+                  )}
+                  <ShareButton url={`${window.location.origin}/events/${data.slug}`} title={data.name} />
+                </div>
                 <div className={styles.actions}>{action}</div>
               </div>
             </header>
+
+            <PriceTiers tiers={data.priceTiers} />
 
             <section className={styles.section} aria-labelledby="categories-title">
               <h2 id="categories-title" className={styles.sectionTitle}>
