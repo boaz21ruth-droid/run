@@ -507,6 +507,8 @@
      "racePackFacts", "regExceptions"].forEach(function (k) {
       if (!Array.isArray(o[k])) o[k] = base[k];
     });
+    if (!Array.isArray(o.freeRegs)) o.freeRegs = [];                       /* D-130 · 免费活动登记 */
+    if (!o.eventMap || typeof o.eventMap !== "object" || Array.isArray(o.eventMap)) o.eventMap = {};
     if (!o.compat || typeof o.compat !== "object" || Array.isArray(o.compat)) o.compat = { legacyWorkerRacePack: false };
     if (typeof o.compat.legacyWorkerRacePack !== "boolean") o.compat.legacyWorkerRacePack = false;
     migrateRacePackFacts(o);
@@ -630,8 +632,16 @@
     if (!raw) { state = seed(); backfillPriceFacts(state); return state; }
     var parsed = null;
     try { parsed = JSON.parse(raw); } catch (e) { parsed = null; }
-    try { state = ensureShape(parsed); }
-    catch (e) { state = seed(); }
+    var fellBack = false;
+    try { state = ensureShape(parsed); fellBack = !parsed || parsed.schemaVersion !== SCHEMA; }
+    catch (e) { state = seed(); fellBack = true; }
+    /* 审核修复 · 旧版本 / 损坏的数据不再静默丢弃：先留一份备份键，再回落种子 */
+    if (fellBack) {
+      try {
+        global.localStorage.setItem(KEY + ".backup-" + Date.now(), raw);
+        if (global.console && console.warn) console.warn("[RUNDomain] 本地数据与当前 schema 不兼容，已回落到种子数据；原数据已备份到 " + KEY + ".backup-*");
+      } catch (e) {}
+    }
     return state;
   }
 
@@ -1289,6 +1299,19 @@
      两种情况下钱都是真的到了，处理必须一致 —— 所以不复制一份逻辑。 */
   function merchLateArrival(o, actor, txn, why) {
     var id = o.id;
+    /* 审核修复 · 同一订单已有一条 OPEN 的 LATE_ARRIVAL 时不再重复登记（第二条永远关不掉） */
+    var openLate = (state.merch.exceptions || []).filter(function (x) {
+      return x.orderId === id && x.type === "LATE_ARRIVAL" && x.status === "OPEN";
+    })[0];
+    if (openLate) {
+      if (txn && openLate.txn !== txn) {
+        openLate.extraTxns = openLate.extraTxns || [];
+        if (openLate.extraTxns.indexOf(txn) < 0) openLate.extraTxns.push(txn);
+        openLate.note = (openLate.note || "") + "；又收到一笔到账 " + txn + "（合并在同一条异常里处理）";
+      }
+      return { ok: false, lateArrival: true, duplicate: true, order: o, exc: openLate,
+               msg: "这张订单已有一条待处理的超时后到账 " + openLate.id + "，本次到账已合并记录，不再重复登记。" };
+    }
     /* 先如实超时（可能早就过期了，这一步是幂等的），再如实入账，绝不履约。 */
     var rel = expireMerchOrder(id, { who: "system", role: "SYSTEM" });
     var amt = o.amount;
@@ -1734,6 +1757,21 @@
       return { ok: false, registrationClosed: true,
         msg: "报名已暂停，请返回赛事详情。<b>本次没有创建任何订单 / 报名，也没有占用任何名额。</b>" };
     }
+    /* 审核修复 · 只有 PUBLISHED 的赛事能建单：DRAFT 赛事的报名开关再开也不算数 */
+    if (evForOpen.status !== "PUBLISHED") {
+      return { ok: false, notPublished: true,
+        msg: "赛事尚未发布，暂不接受报名。<b>本次没有创建任何订单 / 报名，也没有占用任何名额。</b>" };
+    }
+    /* 审核修复 · 同一付款人在同一赛事只允许一张待付款订单，避免重复预留名额 */
+    var buyerKey = String(input.phone || input.buyer || actor.who || "");
+    var pendingDup = buyerKey ? (state.orders || []).filter(function (o) {
+      return o.eventId === evId && o.status === "PENDING_PAYMENT" &&
+             String(o.phone || o.buyer || "") === buyerKey && !pastDeadline(o);
+    })[0] : null;
+    if (pendingDup) {
+      return { ok: false, duplicatePending: true, order: pendingDup,
+        msg: "你在这场赛事已有一张待付款订单 " + pendingDup.orderNo + "，请先完成或等它超时释放，再重新报名。" };
+    }
 
     var raw = input.participants || [];
     if (!raw.length) return { ok: false, msg: "订单必须至少有一个参赛人" };
@@ -1873,6 +1911,7 @@
     var mv = consumeOrderReservation(o);
     if (!mv.ok) return { ok: false, order: o, msg: mv.why };
     o.status = "PAID";
+    consumeCoupon(o.discountCode);   /* 审核修复 · 优惠码用量在付款成功那一刻累计 */
     o.paidAt = now();
     o.txn = txn || o.txn || null;
     o.participants.forEach(function (p) {
@@ -2682,12 +2721,33 @@
       sponsors: payload.sponsors || [{ name: "BlueWave Sports Drink", watermark: true, freeClaim: true }]
     };
     state.events.push(newEv);
+    if (payload.feId) eventMapData()[payload.feId] = evId;   /* D-130 · 映射是数据，不是常量 */
     save();
     return { ok: true, event: newEv };
   }
 
+  /* 审核修复 · 内置优惠码也放进 state.coupons，`used` 才能真的累计并持久化 */
+  var BUILTIN_COUPONS = [
+    { id: "CP-VIP100", code: "VIP100", type: "WAIVER", value: 100, quota: 999, used: 0, desc: "100% VIP 特邀优免直通（0元免单）" },
+    { id: "CP-RUN2026", code: "RUN2026", type: "PERCENT", value: 10, quota: 999, used: 12, desc: "全场 9 折特惠" },
+    { id: "CP-GROUP15", code: "GROUP15", type: "PERCENT", value: 15, quota: 500, used: 5, minRunners: 3, desc: "3人及以上跑团团购 85 折特惠" },
+    { id: "CP-EARLY5", code: "EARLY5", type: "AMOUNT", value: 5, quota: 300, used: 28, desc: "早鸟立减 $5" }
+  ];
+  function allCoupons() {
+    if (!Array.isArray(state.coupons)) state.coupons = [];
+    BUILTIN_COUPONS.forEach(function (b) {
+      if (!state.coupons.some(function (c) { return c.code === b.code; })) state.coupons.push(JSON.parse(JSON.stringify(b)));
+    });
+    return state.coupons;
+  }
+  function consumeCoupon(code) {
+    if (!code) return null;
+    var cp = allCoupons().filter(function (c) { return c.code === String(code).trim().toUpperCase(); })[0];
+    if (cp) cp.used = (Number(cp.used) || 0) + 1;
+    return cp || null;
+  }
   function coupons() {
-    return (state.coupons || []).slice();
+    return allCoupons().slice();
   }
 
   function createCoupon(payload, actor) {
@@ -2717,15 +2777,11 @@
   function verifyCoupon(code, eventId, subtotal, runnerCount) {
     if (!code) return { ok: false, msg: "请输入优惠码" };
     var cd = String(code).trim().toUpperCase();
-    var list = (state.coupons || []).concat([
-      { id: "CP-VIP100", code: "VIP100", type: "WAIVER", value: 100, quota: 999, used: 0, desc: "100% VIP 特邀优免直通（0元免单）" },
-      { id: "CP-RUN2026", code: "RUN2026", type: "PERCENT", value: 10, quota: 999, used: 12, desc: "全场 9 折特惠" },
-      { id: "CP-GROUP15", code: "GROUP15", type: "PERCENT", value: 15, quota: 500, used: 5, minRunners: 3, desc: "3人及以上跑团团购 85 折特惠" },
-      { id: "CP-EARLY5", code: "EARLY5", type: "AMOUNT", value: 5, quota: 300, used: 28, desc: "早鸟立减 $5" }
-    ]);
+    var list = allCoupons();
     var cp = list.filter(function(c) { return c.code === cd; })[0];
     if (!cp) return { ok: false, msg: "优惠码不存在或已失效" };
     if (cp.eventId && cp.eventId !== eventId) return { ok: false, msg: "该优惠码不适用于本赛事" };
+    if (cp.validUntil && ts(cp.validUntil) && ts(cp.validUntil) < Date.now()) return { ok: false, msg: "该优惠码已过期（有效期至 " + cp.validUntil + "）" };
     if (cp.used >= cp.quota) return { ok: false, msg: "该优惠码核销次数已达上限" };
     if (cp.minRunners && (Number(runnerCount) || 1) < cp.minRunners) {
       return { ok: false, msg: "该团购优惠码需至少 " + cp.minRunners + " 名参赛者同时报名" };
@@ -2929,6 +2985,212 @@
     return found;
   }
 
+
+  /* ================================================================
+     15) D-130 · 审核修复 · 报名侧状态机收编
+     ----------------------------------------------------------------
+     以前退款 REQUESTED → APPROVED → SETTLED / REJECTED / WITHDRAWN、订单聚合、
+     Bib 换号 / 作废、赛事发布全部散落在 admin.html 里直接改写 state；
+     用户端只能读，不可能「两边走同一个函数」。现在状态变化与不变量校验只在这里，
+     后台只负责 UI、留痕文案与角色闸门。这些函数<b>不写 Audit</b>——留痕由调用方
+     以自己的身份写一条，避免同一动作两条记录。
+     ================================================================ */
+  function domActor(a) { return { who: (a && a.who) || "system", role: (a && a.role) || "SYSTEM" }; }
+  function uniqueId(prefix, key, list) {
+    var id;
+    do { id = nextId(prefix, key); } while ((list || []).some(function (x) { return x.id === id; }));
+    return id;
+  }
+  function refundById(rfId) { return (state.refunds || []).filter(function (r) { return r.id === rfId; })[0] || null; }
+  function positiveAmount(v) { var n = Number(v); return (typeof n === "number" && isFinite(n) && n > 0) ? n : null; }
+
+  /* 订单聚合：只统计「退赛退款」已结算金额；PENDING / CANCELLED / EXPIRED 的生命周期不被聚合改写（D-031 R2） */
+  function recalcOrderStatus(o) {
+    if (!o) return;
+    if (o.status === "PENDING_PAYMENT" || o.status === "CANCELLED" || o.status === "EXPIRED") return;
+    var sum = (state.refunds || []).filter(function (r) {
+      return r.orderId === o.id && r.status === "SETTLED" && r.kind === "PARTICIPANT_CANCEL";
+    }).reduce(function (a, b) { return a + (Number(b.amount) || 0); }, 0);
+    o.status = sum === 0 ? "PAID" : (cents(sum) >= cents(o.amount) ? "REFUNDED" : "PARTIALLY_REFUNDED");
+  }
+
+  function refundRequest(opId, actor, opts) {
+    var a = domActor(actor), reason = opts && opts.reason;
+    if (!reason) return { ok: false, msg: "退款原因不能为空" };
+    var gate = canCreateParticipantRefund(opId);
+    if (!gate.ok) return gate;
+    var f = gate.f;
+    var r = { id: uniqueId("RF-", "RF", state.refunds), orderId: f.o.id, opId: opId,
+      kind: "PARTICIPANT_CANCEL", type: "STANDARD", requestedAmount: f.p.paid, amount: f.p.paid,
+      status: "REQUESTED", by: a.who, initiatedBy: a.role, at: now(), reason: reason };
+    state.refunds.push(r);
+    f.p.opStatus = "REFUND_PENDING";
+    var sr = openSupportRequest(opId);
+    if (sr) supportRequestClose(sr.id, a, r.id);
+    return { ok: true, refund: r, f: f };
+  }
+
+  function refundApprove(rfId, amount, actor, opts) {
+    var a = domActor(actor), r = refundById(rfId);
+    if (!r) return { ok: false, msg: "找不到退款 " + rfId };
+    if (r.type && r.type !== "STANDARD") return { ok: false, msg: "只有 STANDARD 退赛退款走审批路径" };
+    if (r.status !== "REQUESTED") return { ok: false, msg: "只有 REQUESTED 的退款可以审批（当前 " + r.status + "）" };
+    var amt = positiveAmount(amount);
+    if (amt === null) return { ok: false, msg: "批准金额必须是有效的正数" };
+    var reqAmt = (r.requestedAmount != null) ? r.requestedAmount : r.amount;
+    if (cents(amt) > cents(reqAmt)) return { ok: false, msg: "批准金额 " + fmt(amt) + " 不能高于申请金额 " + fmt(reqAmt) };
+    var f = findOP(r.opId);
+    if (f && typeof f.p.paid === "number" && cents(amt) > cents(f.p.paid)) return { ok: false, msg: "批准金额 " + fmt(amt) + " 超过该参赛人实付 " + fmt(f.p.paid) };
+    var diff = cents(amt) !== cents(reqAmt);
+    if (diff && !(opts && opts.reason)) return { ok: false, msg: "批准金额与申请金额不一致，必须写明原因" };
+    r.requestedAmount = reqAmt; r.approvedAmount = amt; r.amount = amt;
+    r.approveDiffReason = diff ? opts.reason : null;
+    r.approvedBy = a.who; r.approvedAt = now(); r.status = "APPROVED";
+    return { ok: true, refund: r, diff: diff, reqAmt: reqAmt, f: f };
+  }
+
+  function refundSettle(rfId, amount, proof, actor) {
+    var a = domActor(actor), r = refundById(rfId);
+    if (!r) return { ok: false, msg: "找不到退款 " + rfId };
+    if (r.type && r.type !== "STANDARD") return { ok: false, msg: "只有 STANDARD 退赛退款走结算路径" };
+    if (r.status !== "APPROVED") return { ok: false, msg: "只有 APPROVED 的退款可以结算（当前 " + r.status + "）" };
+    if (!proof) return { ok: false, msg: "打款凭证号必填" };
+    var amt = positiveAmount(amount);
+    if (amt === null) return { ok: false, msg: "实际打款金额必须是有效的正数" };
+    var cap = (r.approvedAmount != null) ? r.approvedAmount : r.amount;
+    if (cents(amt) > cents(cap)) return { ok: false, msg: "实际打款 " + fmt(amt) + " 不能高于批准金额 " + fmt(cap) };
+    var f = findOP(r.opId);
+    if (!f) return { ok: false, msg: "找不到该退款对应的参赛人" };
+    if (typeof f.p.paid === "number" && cents(amt) > cents(f.p.paid)) return { ok: false, msg: "实际打款 " + fmt(amt) + " 超过该参赛人实付 " + fmt(f.p.paid) };
+    /* D-035 · 只有 Registration 当前为 CONFIRMED 时才取消报名并释放一次名额；价格档配额不恢复 */
+    var regIsConfirmed = f.p.regStatus === "CONFIRMED";
+    var regBefore = f.p.regStatus + "(" + (f.p.cancelReason || "-") + ")";
+    var cat = categoryById(f.o.eventId, f.p.cat);
+    var capBefore = cat ? cat.used : null;
+    r.status = "SETTLED"; r.amount = amt; r.settledAmount = amt; r.proof = proof;
+    r.settledAt = now(); r.settledBy = a.who;
+    f.p.opStatus = "REFUNDED";
+    if (regIsConfirmed) {
+      f.p.regStatus = "CANCELLED"; f.p.cancelReason = "REFUND_SETTLED";
+      releaseCapacity(f.o.eventId, f.p.cat);
+    }
+    recalcOrderStatus(f.o);
+    return { ok: true, refund: r, f: f, regIsConfirmed: regIsConfirmed, regBefore: regBefore,
+             capBefore: capBefore, capAfter: cat ? cat.used : null };
+  }
+
+  function refundReject(rfId, kind, reason, actor, userConfirmation) {
+    var a = domActor(actor), r = refundById(rfId);
+    if (!r) return { ok: false, msg: "找不到退款 " + rfId };
+    if (r.type && r.type !== "STANDARD") return { ok: false, msg: "只有 STANDARD 退赛退款走这条路径" };
+    if (r.status !== "REQUESTED" && r.status !== "APPROVED") return { ok: false, msg: "只有 REQUESTED / APPROVED 的退款可以拒绝或撤回（当前 " + r.status + "）" };
+    if (kind !== "REJECTED" && kind !== "WITHDRAWN") return { ok: false, msg: "处置类型不合法" };
+    if (!reason) return { ok: false, msg: "拒绝 / 撤回原因必填" };
+    if (kind === "WITHDRAWN" && !userConfirmation) return { ok: false, msg: "撤回必须记录用户确认" };
+    var before = r.status;
+    r.status = kind; r.at = now(); r.rejectReason = reason; r.rejectedBy = a.who; r.rejectedAt = now();
+    if (kind === "WITHDRAWN") r.userConfirmation = userConfirmation;
+    var f = findOP(r.opId);
+    if (f) {
+      var stillSettled = state.refunds.some(function (x) { return x.opId === r.opId && x.status === "SETTLED"; });
+      f.p.opStatus = stillSettled ? "REFUNDED" : "ACTIVE";
+    }
+    return { ok: true, refund: r, before: before, f: f };
+  }
+
+  /* Bib 换号：旧记录置 SUPERSEDED、新建 ASSIGNED、同步参赛人镜像与后台照片标注 */
+  function bibSwap(oldBib, newBib, actor, reason) {
+    var a = domActor(actor);
+    if (!newBib || !reason) return { ok: false, msg: "新号码与原因都必填" };
+    var old = (state.bibs || []).filter(function (x) { return x.bib === oldBib && x.status === "ASSIGNED"; })[0];
+    if (!old) return { ok: false, msg: "原号 " + oldBib + " 已不是当前有效绑定" };
+    var vs = validateBibAssignment(old.regId, newBib, { swap: true });
+    if (!vs.ok) return { ok: false, msg: vs.errs.join("；"), errs: vs.errs };
+    old.status = "SUPERSEDED"; old.note = reason; old.at = now(); old.by = a.who;
+    var nb = { bib: newBib, eventId: old.eventId, regId: old.regId, name: old.name, status: "ASSIGNED",
+               at: now(), by: a.who, note: "由 " + oldBib + " 换来" };
+    state.bibs.push(nb);
+    state.orders.forEach(function (o) { (o.participants || []).forEach(function (p) { if (p.regId === old.regId) p.bib = newBib; }); });
+    var retagged = 0;
+    ((state.admin && state.admin.photos) || []).forEach(function (ph) {
+      (ph.tags || []).forEach(function (t) {
+        if (String(t.bib) === String(oldBib) && (!ph.eventId || ph.eventId === old.eventId)) { t.bib = newBib; t.swappedFrom = oldBib; retagged++; }
+      });
+    });
+    return { ok: true, old: old, nb: nb, retagged: retagged };
+  }
+
+  function bibVoid(bib, actor, reason) {
+    var a = domActor(actor);
+    if (!reason) return { ok: false, msg: "作废原因必填" };
+    var b = (state.bibs || []).filter(function (x) { return x.bib === bib && (x.status === "ASSIGNED" || x.status === "RESERVED"); })[0];
+    if (!b) return { ok: false, msg: "只有 ASSIGNED / RESERVED 的号可以作废" };
+    b.status = "VOIDED"; b.note = reason; b.at = now(); b.by = a.who;
+    if (b.regId) state.orders.forEach(function (o) { (o.participants || []).forEach(function (p) { if (p.regId === b.regId && p.bib === bib) p.bib = null; }); });
+    return { ok: true, bib: b };
+  }
+
+  /* 赛事发布：DRAFT → PUBLISHED，一次性，附发布快照 */
+  function publishEvent(evId, actor) {
+    var e = eventById(evId);
+    if (!e) return { ok: false, msg: "赛事不存在：" + evId };
+    if (e.status !== "DRAFT") return { ok: false, msg: "只有 DRAFT 可以发布（当前 " + e.status + "）" };
+    var errs = [];
+    if (!(e.categories && e.categories.length)) errs.push("没有任何组别");
+    (e.categories || []).forEach(function (c) { if (!(c.cap > 0)) errs.push((c.name || c.id) + " 名额未配置"); });
+    if (!e.isFree && !(e.priceRules && e.priceRules.length)) errs.push("没有价格档");
+    if (!e.racePackConfigured) errs.push("Race Pack 未配置");
+    if (errs.length) return { ok: false, msg: errs.join("；"), errs: errs };
+    e.status = "PUBLISHED";
+    e.publishedSnapshotAt = now();
+    e.publishedSnapshot = JSON.parse(JSON.stringify({ at: e.publishedSnapshotAt, categories: e.categories,
+      priceRules: e.priceRules, racePackConfigured: e.racePackConfigured }));
+    return { ok: true, event: e };
+  }
+
+  /* ---- 免费活动登记（用户端原来只写本地 S.regs，后台看不到）---- */
+  function freeRegs() { if (!Array.isArray(state.freeRegs)) state.freeRegs = []; return state.freeRegs; }
+  function freeRegsOf(feId) { return freeRegs().filter(function (r) { return r.feId === feId; }); }
+  function freeSeatsLeft(feId, cap) {
+    if (cap == null) return null;
+    var used = freeRegsOf(feId).filter(function (r) { return r.status === "REGISTERED"; }).length;
+    return Math.max(0, Number(cap) - used);
+  }
+  function freeRegister(input, actor) {
+    var a = domActor(actor);
+    if (!input || !input.feId || !input.holder) return { ok: false, msg: "缺少活动或登记人" };
+    var ex = freeRegsOf(input.feId).filter(function (r) { return r.holder === input.holder && r.status !== "CANCELLED"; })[0];
+    if (ex) return { ok: true, reg: ex, existing: true };
+    var left = freeSeatsLeft(input.feId, input.cap);
+    var status = input.status || ((left === null || left > 0) ? "REGISTERED" : "WAITLIST");
+    var r = { id: uniqueId("FR-", "FR", freeRegs()), feId: input.feId, title: input.title || null,
+      holder: input.holder, phone: input.phone || null, status: status, code: input.code || null,
+      channel: input.channel || "web", at: now(), by: a.who };
+    freeRegs().push(r);
+    return { ok: true, reg: r };
+  }
+  function freeCancel(id, actor) {
+    var r = freeRegs().filter(function (x) { return x.id === id; })[0];
+    if (!r) return { ok: false, msg: "找不到登记 " + id };
+    if (r.status === "CANCELLED") return { ok: true, reg: r, already: true };
+    r.status = "CANCELLED"; r.cancelledAt = now(); r.cancelledBy = domActor(actor).who;
+    return { ok: true, reg: r };
+  }
+
+  /* ---- 赛事 id 映射：数据优先，常量只做种子兜底 ---- */
+  function eventMapData() { if (!state.eventMap || typeof state.eventMap !== "object") state.eventMap = {}; return state.eventMap; }
+  function adminEventId(feId) { return eventMapData()[feId] || EVENT_MAP[feId] || null; }
+  function feEventId(adminId) {
+    var m = eventMapData();
+    for (var k in m) if (m[k] === adminId) return k;
+    return EVENT_MAP_R[adminId] || null;
+  }
+  function registerEventMap(feId, adminId) {
+    if (!feId || !adminId) return { ok: false, msg: "feId 与 adminId 都必填" };
+    eventMapData()[feId] = adminId;
+    return { ok: true };
+  }
+
   var API = {
     getEventComments: getEventComments,
     addEventComment: addEventComment,
@@ -2938,8 +3200,12 @@
     addStoryComment: addStoryComment,
     KEY: KEY, SCHEMA: SCHEMA,
     EVENT_MAP: EVENT_MAP, EVENT_MAP_R: EVENT_MAP_R,
-    adminEventId: function (feId) { return EVENT_MAP[feId] || null; },
-    feEventId: function (adminId) { return EVENT_MAP_R[adminId] || null; },
+    adminEventId: adminEventId, feEventId: feEventId, registerEventMap: registerEventMap, eventMapData: eventMapData,
+    /* D-130 · 报名侧状态机 */
+    recalcOrderStatus: recalcOrderStatus, refundById: refundById,
+    refundRequest: refundRequest, refundApprove: refundApprove, refundSettle: refundSettle, refundReject: refundReject,
+    bibSwap: bibSwap, bibVoid: bibVoid, publishEvent: publishEvent,
+    freeRegister: freeRegister, freeCancel: freeCancel, freeRegsOf: freeRegsOf, freeSeatsLeft: freeSeatsLeft,
     load: load, save: save, reset: reset, watch: watch, seed: seed,
     now: now, plusMinutes: plusMinutes, ts: ts, nextId: nextId, audit: audit,
 
